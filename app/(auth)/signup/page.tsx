@@ -95,8 +95,9 @@ function SignupForm() {
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
   const [referralCode, setReferralCode]       = useState('')
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
+  const [loading, setLoading]             = useState(false)
+  const [error, setError]                 = useState('')
+  const [showEmailForm, setShowEmailForm] = useState(false)
 
   useEffect(() => {
     const ref = searchParams.get('ref')
@@ -326,7 +327,7 @@ function SignupForm() {
   }
 
   // ════════════════════════════════════════════════════════
-  // STEP 1 — Email + name + phone
+  // STEP 1 — Google first, email form secondary
   // ════════════════════════════════════════════════════════
   if (step === 1) {
     return (
@@ -338,103 +339,132 @@ function SignupForm() {
 
           <ErrorBox error={error} />
 
-          <form onSubmit={handleSendOTP} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-                placeholder="Your full name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                placeholder="your@email.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                required
-                placeholder="08012345678"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
+          {/* ── PRIMARY: Google Sign-Up ── */}
+          <div className="mb-2">
+            <GoogleAuthButton
+              mode="signup"
+              payload={{
+                universityId: selectedUniversity?.id,
+                referralCode: referralCode || undefined,
+              }}
+              onError={setError}
+              onLoading={setLoading}
+              onSuccess={(data) => {
+                if (data?.requiresProfile && data?.signupToken) {
+                  if (data?.profile?.email) setEmail(String(data.profile.email))
+                  if (data?.profile?.name) setName(String(data.profile.name))
+                  setOtpSessionToken(String(data.signupToken))
+                  setStep(3)
+                  return
+                }
 
-            {/* ── REMOVED: "I also want to sell" checkbox ── */}
-            {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
-                which redirects them to /become-seller to upgrade their account. */}
+                if (data?.token && data?.user) {
+                  localStorage.setItem('token', data.token)
+                  localStorage.setItem('userName', data.user.name)
+                  localStorage.setItem('userRole', data.user.role || '')
+                  localStorage.setItem('userId', data.user.id)
+                  document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+                  window.dispatchEvent(new Event('auth-change'))
+                  window.location.href = '/marketplace'
+                }
+              }}
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Referral Code (Optional)</label>
-              <input
-                type="text"
-                value={referralCode}
-                onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
-                placeholder="e.g. BATAMART-ABC123"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
-              <p className="text-xs text-gray-400 mt-1">Paste code from a friend or use their referral link.</p>
-            </div>
+          <p className="text-center text-xs text-gray-400 mb-5">
+            Recommended · No password needed · Fast setup
+          </p>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
-              style={btnStyle}
-            >
-              {loading ? 'Sending OTP…' : 'Continue →'}
-            </button>
-          </form>
-
-          <div className="my-5 flex items-center gap-3">
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-5">
             <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-xs text-gray-400 font-semibold">OR</span>
+            <span className="text-xs text-gray-400 font-semibold">or sign up with email</span>
             <div className="h-px bg-gray-200 flex-1" />
           </div>
 
-          <GoogleAuthButton
-            mode="signup"
-            payload={{
-              universityId: selectedUniversity?.id,
-              referralCode: referralCode || undefined,
-            }}
-            onError={setError}
-            onLoading={setLoading}
-            onSuccess={(data) => {
-              if (data?.requiresProfile && data?.signupToken) {
-                if (data?.profile?.email) setEmail(String(data.profile.email))
-                if (data?.profile?.name) setName(String(data.profile.name))
-                setOtpSessionToken(String(data.signupToken))
-                setStep(3)
-                return
-              }
+          {/* ── SECONDARY: Email form (collapsed by default) ── */}
+          {!showEmailForm ? (
+            <button
+              onClick={() => setShowEmailForm(true)}
+              className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Use email &amp; password instead
+            </button>
+          ) : (
+            <form onSubmit={handleSendOTP} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                  placeholder="Your full name"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  required
+                  placeholder="08012345678"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-              if (data?.token && data?.user) {
-                localStorage.setItem('token', data.token)
-                localStorage.setItem('userName', data.user.name)
-                localStorage.setItem('userRole', data.user.role || '')
-                localStorage.setItem('userId', data.user.id)
-                document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-                window.dispatchEvent(new Event('auth-change'))
-                window.location.href = '/marketplace'
-              }
-            }}
-          />
+              {/* ── REMOVED: "I also want to sell" checkbox ── */}
+              {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
+                  which redirects them to /become-seller to upgrade their account. */}
 
-          <button onClick={() => setStep(0)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Referral Code (Optional)</label>
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
+                  placeholder="e.g. BATAMART-ABC123"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                />
+                <p className="text-xs text-gray-400 mt-1">Paste code from a friend or use their referral link.</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
+                style={btnStyle}
+              >
+                {loading ? 'Sending OTP…' : 'Continue →'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                ← Back to Google Sign-Up
+              </button>
+            </form>
+          )}
+
+          <button onClick={() => setStep(0)} className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600">
             ← Change campus
           </button>
           <p className="text-center text-sm text-gray-500 mt-4">

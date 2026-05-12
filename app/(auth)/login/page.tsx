@@ -13,6 +13,7 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [showEmailForm, setShowEmailForm] = useState(false)
   const [suspensionMessage, setSuspensionMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -65,7 +66,6 @@ function LoginForm() {
         router.push('/marketplace')
 
       } else if (response.status === 403 && data.isRider) {
-        // ── Rider tried to log in here — show clear message, do NOT log them in ──
         setError('__RIDER__')
 
       } else if (response.status === 403 && data.suspended) {
@@ -87,6 +87,8 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
+
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg">
@@ -104,6 +106,7 @@ function LoginForm() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
 
+          {/* Suspension message */}
           {suspensionMessage && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
@@ -116,7 +119,7 @@ function LoginForm() {
             </div>
           )}
 
-          {/* ── Rider-specific error block ─────────────────────────────────── */}
+          {/* Rider error */}
           {error === '__RIDER__' ? (
             <div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
@@ -139,59 +142,88 @@ function LoginForm() {
             <p className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>
           ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
-                placeholder="you@example.com"
-              />
-            </div>
+          {/* ── PRIMARY: Google Sign-In ── */}
+          <div className="mb-2">
+            <GoogleAuthButton
+              mode="login"
+              onError={setError}
+              onLoading={setLoading}
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
-                placeholder="Enter your password"
-              />
-            </div>
+          <p className="text-center text-xs text-gray-400 mb-5">
+            Recommended · Fast · Secure
+          </p>
 
-            <div className="text-right">
-              <Link href="/forgot-password" className="text-sm text-BATAMART-primary hover:underline font-semibold">
-                Forgot Password?
-              </Link>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-
-          <div className="my-5 flex items-center gap-3">
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-5">
             <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-xs text-gray-400 font-semibold">OR</span>
+            <span className="text-xs text-gray-400 font-semibold">or continue with email</span>
             <div className="h-px bg-gray-200 flex-1" />
           </div>
 
-          <GoogleAuthButton
-            mode="login"
-            onError={setError}
-            onLoading={setLoading}
-          />
+          {/* ── SECONDARY: Email/Password (collapsed by default) ── */}
+          {!showEmailForm ? (
+            <button
+              onClick={() => setShowEmailForm(true)}
+              className="w-full py-3 rounded-lg border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Use email &amp; password instead
+            </button>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm text-BATAMART-primary hover:underline font-semibold">
+                  Forgot Password?
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowEmailForm(false)}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                ← Back to Google Sign-In
+              </button>
+            </form>
+          )}
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">
