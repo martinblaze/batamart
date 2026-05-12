@@ -93,8 +93,8 @@ const PROFILE_CSS = `
     transform: translateY(-1px);
   }
 
-  .dark .profile-page { background: #050b16 !important; }
-  .dark .profile-page .bg-white { background-color: #0f172a !important; }
+  .dark .profile-page { background: #121212 !important; }
+  .dark .profile-page .bg-white { background-color: #121212 !important; }
   .dark .profile-page .bg-gray-50 { background-color: #1f2937 !important; }
   .dark .profile-page .bg-gray-100 { background-color: #243244 !important; }
   .dark .profile-page .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.2) !important; }
@@ -120,7 +120,7 @@ const PROFILE_CSS = `
   .dark .profile-page .text-blue-600 { color: #93c5fd !important; }
   .dark .profile-page .text-amber-500 { color: #fcd34d !important; }
   .dark .profile-page .nav-item:hover {
-    background: #1e293b;
+    background: #1E1E1E;
     color: #a5b4fc;
   }
   .dark .profile-page .section-card:hover { box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45); }
@@ -132,7 +132,7 @@ const PROFILE_CSS = `
   .dark .profile-page .input-field::placeholder { color: #64748b; }
   .dark .profile-page .input-field:focus {
     border-color: #818cf8 !important;
-    background: #0f172a !important;
+    background: #121212 !important;
     box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
   }
   .dark .profile-page .shimmer {
@@ -243,7 +243,7 @@ export default function MyProfilePage() {
   const handleLogout = () => { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
 
   if (loading || !user) return (
-    <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-slate-950">
+    <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#121212]">
       <div className="text-center">
         <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -269,7 +269,7 @@ export default function MyProfilePage() {
   const activeTheme = mounted ? theme : 'light'
 
   return (
-    <div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-slate-950">
+    <div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#121212]">
 
       {/* ── iOS Install Modal ── */}
       {showIOSInstallModal && (
@@ -330,7 +330,7 @@ export default function MyProfilePage() {
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-slate-900 z-50 lg:hidden shadow-2xl`}>
+          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#1E1E1E] z-50 lg:hidden shadow-2xl`}>
             <div className="flex flex-col h-full">
               {/* Menu header */}
               <div className="header-gradient px-5 py-6">
@@ -810,3 +810,4 @@ function SearchHistory() {
     </div>
   )
 }
+

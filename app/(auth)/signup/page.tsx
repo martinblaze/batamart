@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 interface University {
   id:            string
@@ -15,8 +16,8 @@ interface University {
 }
 
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
-const bgStyle  = { background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#0f172a)' }
-const btnStyle = { background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)' }
+const bgStyle  = { background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }
+const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
 const PageShell = ({
   children,
@@ -209,6 +210,9 @@ function SignupForm() {
     const pwdError = validatePassword(password)
     if (pwdError) { setError(pwdError); return }
     if (password !== confirmPassword) { setError('Passwords do not match'); return }
+    const accountPhone = (phone || deliveryPhone || '').trim()
+    const phoneErr = validatePhone(accountPhone)
+    if (phoneErr) { setError(phoneErr); return }
     setLoading(true)
     setError('')
     try {
@@ -216,7 +220,7 @@ function SignupForm() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, name, phone, password, otpSessionToken,
+          email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           universityId: selectedUniversity!.id,
@@ -373,6 +377,18 @@ function SignupForm() {
             {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                 which redirects them to /become-seller to upgrade their account. */}
 
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Referral Code (Optional)</label>
+              <input
+                type="text"
+                value={referralCode}
+                onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
+                placeholder="e.g. BATAMART-ABC123"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              />
+              <p className="text-xs text-gray-400 mt-1">Paste code from a friend or use their referral link.</p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -382,6 +398,41 @@ function SignupForm() {
               {loading ? 'Sending OTP…' : 'Continue →'}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-xs text-gray-400 font-semibold">OR</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
+
+          <GoogleAuthButton
+            mode="signup"
+            payload={{
+              universityId: selectedUniversity?.id,
+              referralCode: referralCode || undefined,
+            }}
+            onError={setError}
+            onLoading={setLoading}
+            onSuccess={(data) => {
+              if (data?.requiresProfile && data?.signupToken) {
+                if (data?.profile?.email) setEmail(String(data.profile.email))
+                if (data?.profile?.name) setName(String(data.profile.name))
+                setOtpSessionToken(String(data.signupToken))
+                setStep(3)
+                return
+              }
+
+              if (data?.token && data?.user) {
+                localStorage.setItem('token', data.token)
+                localStorage.setItem('userName', data.user.name)
+                localStorage.setItem('userRole', data.user.role || '')
+                localStorage.setItem('userId', data.user.id)
+                document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+                window.dispatchEvent(new Event('auth-change'))
+                window.location.href = '/marketplace'
+              }
+            }}
+          />
 
           <button onClick={() => setStep(0)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
             ← Change campus
@@ -633,7 +684,7 @@ export default function SignupPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#0f172a)' }}>
+        style={{ background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }}>
         <div className="text-white text-xl font-bold">Loading…</div>
       </div>
     }>

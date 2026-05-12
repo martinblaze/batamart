@@ -54,7 +54,7 @@ function AppTopBar({
             <Link
               href="/login?app=true"
               className="px-4 py-1.5 rounded-lg text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+              style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
             >
               Login
             </Link>
@@ -74,13 +74,13 @@ function RiderTopBar({
 }) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800"
-      style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}
+      style={{ background: 'linear-gradient(135deg, #121212, #1E1E1E)' }}
     >
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+            style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
           >
             <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <circle cx="5.5" cy="17.5" r="3.5" />
@@ -187,8 +187,8 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 border-t"
         style={{
-          background: '#0f172a',
-          borderColor: '#1e293b',
+          background: '#121212',
+          borderColor: '#343434',
           boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
           transform: 'translate3d(0,0,0)',
           WebkitTransform: 'translate3d(0,0,0)',
@@ -216,7 +216,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
               >
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
                   />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
@@ -228,7 +228,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
           })}
 
           <div className="flex-1 flex items-center justify-center relative">
-            <div className="absolute inset-0" style={{ background: '#0f172a' }} />
+            <div className="absolute inset-0" style={{ background: '#121212' }} />
             <button
               onClick={toggleAvailability}
               disabled={toggling || isAvailable === null}
@@ -274,7 +274,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
               >
                 {active && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
                   />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
@@ -308,7 +308,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
           <div
             className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl shadow-2xl border-t border-gray-800"
             style={{
-              background: '#0f172a',
+              background: '#121212',
               paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))',
             }}
           >
@@ -505,7 +505,7 @@ function AppBottomNav({
               <div
                 className="w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95"
                 style={{
-                  background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)',
+                  background: 'linear-gradient(135deg, #3D95E8, #4DABFF)',
                   boxShadow: '0 4px 20px rgba(26,63,143,0.45)',
                 }}
               >
@@ -620,7 +620,7 @@ function AppBottomNav({
                         <button
                           onClick={() => { onToggleMode() }}
                           className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                          style={{ background: isSellerMode ? 'linear-gradient(135deg,#1a3f8f,#3b9ef5)' : '#d1d5db' }}
+                          style={{ background: isSellerMode ? 'linear-gradient(135deg,#3D95E8,#4DABFF)' : '#d1d5db' }}
                         >
                           <span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
@@ -656,7 +656,7 @@ function AppBottomNav({
                   href="/signup?app=true"
                   onClick={() => setProfileOpen(false)}
                   className="text-center py-3 text-white rounded-xl font-semibold"
-                  style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+                  style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
                 >
                   Create Account
                 </Link>
@@ -861,7 +861,7 @@ export function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 shadow-sm transition-transform duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#121212]/90 backdrop-blur-md border-b border-gray-200 dark:border-[#343434] shadow-sm transition-transform duration-300 ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
@@ -879,7 +879,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center space-x-2">
             {isLoggedIn && (
-              <Link href="/cart" className="relative p-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-indigo-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-full transition-all">
+              <Link href="/cart" className="relative p-2 text-gray-600 dark:text-[#C8C8C8] hover:text-blue-600 dark:hover:text-[#4DABFF] hover:bg-blue-50 dark:hover:bg-[#2A2A2A] rounded-full transition-all">
                 <ShoppingBag className="w-6 h-6" />
                 {cartCount > 0 && (
                   <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -893,18 +893,18 @@ export function Navbar() {
               <div className="relative ml-2" ref={dropdownRef}>
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-all"
                 >
                   <div className="flex flex-col items-end">
-                    <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Hi, {userName || 'User'}</span>
-                    <span className="text-xs text-gray-500 dark:text-slate-400">
+                    <span className="text-sm font-medium text-gray-700 dark:text-[#D7D7D7]">Hi, {userName || 'User'}</span>
+                    <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
                       {userRole === 'ADMIN' ? 'Admin' : userRole === 'SELLER' ? (isSellerMode ? 'Selling' : 'Buying') : userRole === 'RIDER' ? 'Rider' : 'Buyer'}
                     </span>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-slate-400 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-[#A0A0A0] transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-2xl border border-gray-200 dark:border-[#343434] py-2 z-50">
                     {/* Rider-specific dropdown */}
                     {userRole === 'RIDER' ? (
                       <>
@@ -985,13 +985,13 @@ export function Navbar() {
             ) : (
               <div className="flex items-center space-x-3">
                 <Link href="/login" className="font-semibold text-blue-900 hover:text-blue-700 transition-colors">Login</Link>
-                <Link href="/signup" className="text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg text-sm" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}>Sign Up</Link>
+                <Link href="/signup" className="text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg text-sm" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>Sign Up</Link>
               </div>
             )}
           </div>
 
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors">
-            <svg className="w-6 h-6 text-gray-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors">
+            <svg className="w-6 h-6 text-gray-700 dark:text-[#D7D7D7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -1003,7 +1003,7 @@ export function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="md:hidden border-t border-gray-200 dark:border-[#343434] bg-white dark:bg-[#1E1E1E] max-h-[calc(100vh-4rem)] overflow-y-auto">
           <div className="px-4 py-4">
             <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-gray-200">
               {isLoggedIn && userRole !== 'RIDER' && (
@@ -1042,7 +1042,7 @@ export function Navbar() {
                 ) : (
                   /* Regular buyer/seller mobile menu */
                   <>
-                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}>
+                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>
                       <User className="w-5 h-5 mr-3" /><span className="font-medium">My Account</span>
                     </Link>
                     <Link href="/marketplace" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/marketplace') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}>
@@ -1098,7 +1098,7 @@ export function Navbar() {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-center py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-medium hover:bg-blue-900 hover:text-white transition-all">Login</Link>
-                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="text-center py-3 text-white rounded-lg font-medium transition-all" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}>Sign Up</Link>
+                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="text-center py-3 text-white rounded-lg font-medium transition-all" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>Sign Up</Link>
               </div>
             )}
           </div>

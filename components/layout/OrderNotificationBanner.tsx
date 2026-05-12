@@ -68,7 +68,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
           <div
             className="relative w-full rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg,#0f2464 0%,#1a3f8f 55%,#1e56b0 100%)',
+              background: 'linear-gradient(135deg,#3D95E8 0%,#3D95E8 55%,#4DABFF 100%)',
               boxShadow: '0 4px 24px rgba(26,63,143,0.28)',
             }}
           >
@@ -135,7 +135,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                   className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 rounded-xl text-sm font-bold transition-all disabled:opacity-60 active:scale-95"
                   style={{
                     background: 'rgba(255,255,255,0.96)',
-                    color: '#1a3f8f',
+                    color: '#3D95E8',
                     boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
                     minHeight: '44px',
                   }}
@@ -186,7 +186,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                   className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
                   style={{ background: 'rgba(26,63,143,0.1)' }}
                 >
-                  <BellOff className="w-4 h-4" style={{ color: '#1a3f8f' }} />
+                  <BellOff className="w-4 h-4" style={{ color: '#3D95E8' }} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-800 leading-tight">
@@ -204,7 +204,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                 disabled={isBusy}
                 className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 active:scale-95"
                 style={{
-                  background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)',
+                  background: 'linear-gradient(135deg,#3D95E8,#4DABFF)',
                   boxShadow: '0 2px 8px rgba(26,63,143,0.25)',
                   minHeight: '44px',
                 }}

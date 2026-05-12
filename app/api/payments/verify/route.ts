@@ -389,7 +389,7 @@ async function notifySellerOfNewOrder(
           <tr>
             <td align="center" style="padding-bottom:24px;">
               <span style="font-size:28px;font-weight:800;color:#111827;letter-spacing:-1px;">BATAMART</span>
-              <span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;">UNIZIK Campus Marketplace</span>
+              <span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;">Campus Marketplace</span>
             </td>
           </tr>
           <tr>
@@ -424,7 +424,7 @@ async function notifySellerOfNewOrder(
           <tr>
             <td align="center" style="padding-top:24px;">
               <p style="font-size:12px;color:#9ca3af;margin:0;">
-                BATAMART — UNIZIK Campus Marketplace · Awka, Anambra State
+                BATAMART — Campus Marketplace · Awka, Anambra State
               </p>
             </td>
           </tr>
@@ -441,3 +441,4 @@ async function notifySellerOfNewOrder(
 
   await Promise.allSettled(tasks)
 }
+

@@ -12,7 +12,7 @@ const sections = [
     title: 'Eligibility',
     icon: '🎓',
     content: [
-      'You must be a currently enrolled student, staff member, or affiliated member of UNIZIK (Nnamdi Azikiwe University) to sell on BATAMART.',
+      'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
       'You must be at least 18 years of age or have the consent of a parent or guardian.',
       'You must complete identity verification, including face ID registration, before your seller account is activated.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
@@ -24,7 +24,7 @@ const sections = [
     icon: '📦',
     content: [
       'You may sell physical goods, digital items, and campus-relevant services that comply with university policies and Nigerian law.',
-      'Prohibited items include: weapons, alcohol, tobacco, counterfeit goods, stolen property, explicit/adult content, prescription medications, and any item banned by UNIZIK regulations.',
+      'Prohibited items include: weapons, alcohol, tobacco, counterfeit goods, stolen property, explicit/adult content, prescription medications, and any item banned by campus regulations.',
       'BATAMART reserves the right to remove any listing without notice if it violates these terms or is deemed inappropriate for the campus marketplace.',
       'Selling items under false descriptions or misrepresenting condition (e.g. listing a used item as new) is strictly prohibited and may result in account suspension.',
     ],

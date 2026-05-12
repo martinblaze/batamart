@@ -94,14 +94,14 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
           subject: 'Your BATAMART Verification Code',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #1a3f8f, #3b9ef5); padding: 20px; text-align: center;">
+              <div style="background: linear-gradient(135deg, #3D95E8, #4DABFF); padding: 20px; text-align: center;">
                 <h1 style="color: white; margin: 0;">BATAMART</h1>
               </div>
               <div style="padding: 30px; background: #f9f9f9;">
                 <h2 style="color: #333;">Verification Code</h2>
                 <p style="color: #666;">Enter this code to continue. It expires in 10 minutes.</p>
-                <div style="background: white; border: 2px solid #1a3f8f; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-                  <span style="font-size: 36px; font-weight: bold; color: #1a3f8f; letter-spacing: 8px;">${code}</span>
+                <div style="background: white; border: 2px solid #3D95E8; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
+                  <span style="font-size: 36px; font-weight: bold; color: #3D95E8; letter-spacing: 8px;">${code}</span>
                 </div>
                 <p style="color: #999; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
               </div>
@@ -196,3 +196,4 @@ export const getUserFromRequest = async (request: Request) => {
 
   return user
 }
+

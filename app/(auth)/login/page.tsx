@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 function LoginForm() {
   const router = useRouter()
@@ -179,6 +180,18 @@ function LoginForm() {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px bg-gray-200 flex-1" />
+            <span className="text-xs text-gray-400 font-semibold">OR</span>
+            <div className="h-px bg-gray-200 flex-1" />
+          </div>
+
+          <GoogleAuthButton
+            mode="login"
+            onError={setError}
+            onLoading={setLoading}
+          />
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">

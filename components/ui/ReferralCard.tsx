@@ -49,11 +49,11 @@ export function ReferralCard() {
   if (loading) return null
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
-      <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between">
+    <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#343434] overflow-hidden">
+      <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-100 dark:border-[#343434] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Gift className="w-4 h-4 text-BATAMART-primary" />
-          <h2 className="font-bold text-gray-900 dark:text-slate-100 text-sm lg:text-base">REFERRAL PROGRAMME</h2>
+          <h2 className="font-bold text-gray-900 dark:text-[#E0E0E0] text-sm lg:text-base">REFERRAL PROGRAMME</h2>
         </div>
         <Link href="/referrals" className="text-BATAMART-primary text-sm font-medium flex items-center gap-1">
           View All <ChevronRight className="w-4 h-4" />
@@ -65,20 +65,20 @@ export function ReferralCard() {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-purple-50 dark:bg-purple-900/30 rounded-xl p-3 text-center">
             <Users className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-            <p className="font-bold text-gray-900 dark:text-slate-100">{totalReferrals}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Referrals</p>
+            <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{totalReferrals}</p>
+            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Referrals</p>
           </div>
           <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-3 text-center">
             <TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
-            <p className="font-bold text-gray-900 dark:text-slate-100">{fmt(totalEarnings)}</p>
-            <p className="text-xs text-gray-500 dark:text-slate-400">Earned</p>
+            <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{fmt(totalEarnings)}</p>
+            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Earned</p>
           </div>
         </div>
 
         {/* Referral code */}
         <div>
-          <p className="text-xs text-gray-400 dark:text-slate-400 mb-1.5">Your referral code</p>
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-slate-700">
+          <p className="text-xs text-gray-400 dark:text-[#A0A0A0] mb-1.5">Your referral code</p>
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#232323] rounded-lg px-3 py-2 border border-gray-200 dark:border-[#343434]">
             <span className="font-extrabold text-BATAMART-primary tracking-widest flex-1 text-sm">
               {referralCode}
             </span>
@@ -98,3 +98,4 @@ export function ReferralCard() {
     </div>
   )
 }
+

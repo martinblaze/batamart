@@ -23,7 +23,7 @@ function baseTemplate(content: string) {
           <tr>
             <td align="center" style="padding-bottom:24px;">
               <span style="font-size:28px;font-weight:800;color:#111827;letter-spacing:-1px;">BATAMART</span>
-              <span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;">UNIZIK Campus Marketplace</span>
+              <span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;">Campus Marketplace</span>
             </td>
           </tr>
 
@@ -39,7 +39,7 @@ function baseTemplate(content: string) {
             <td align="center" style="padding-top:24px;">
               <p style="font-size:12px;color:#9ca3af;margin:0;">
                 You're receiving this because you have an account on BATAMART.<br/>
-                UNIZIK Campus Marketplace &mdash; Awka, Anambra State.
+                Campus Marketplace.
               </p>
             </td>
           </tr>

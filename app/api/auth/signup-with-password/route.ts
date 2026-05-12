@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
+import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,15 +58,17 @@ export async function POST(request: NextRequest) {
 
     // ── OTP session token verification ────────────────────────────────────
     const verifiedIdentifier = verifyOtpSessionToken(otpSessionToken)
+    const googleSignup = verifiedIdentifier ? null : verifyGoogleSignupToken(otpSessionToken)
 
-    if (!verifiedIdentifier) {
+    if (!verifiedIdentifier && !googleSignup) {
       return NextResponse.json(
-        { error: 'OTP session expired or invalid. Please verify your email again.' },
+        { error: 'Session expired or invalid. Please restart signup.' },
         { status: 400 }
       )
     }
 
-    if (verifiedIdentifier.toLowerCase() !== email.toLowerCase()) {
+    const verifiedEmail = verifiedIdentifier || googleSignup?.email || ''
+    if (verifiedEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(
         { error: 'Email does not match the verified address. Please restart the signup flow.' },
         { status: 400 }

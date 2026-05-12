@@ -374,7 +374,7 @@ export default function HomePage() {
         .section-blue   { background: linear-gradient(135deg, rgba(239,246,255,0.92), rgba(224,242,254,0.92)); }
 
         .dark .bm-page {
-          background: #050b16 !important;
+          background: #121212 !important;
         }
         .dark .grid-bg {
           background-image:
@@ -394,7 +394,7 @@ export default function HomePage() {
           background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.94));
         }
         .dark .pill-hover:hover {
-          background: #1e293b;
+          background: #1E1E1E;
           border-color: #475569;
           color: #c7d2fe;
         }
@@ -739,3 +739,4 @@ export default function HomePage() {
     </>
   )
 }
+

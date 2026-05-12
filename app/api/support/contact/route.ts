@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
                 <tr>
                   <td align="center" style="padding-bottom:20px;">
                     <span style="font-size:26px;font-weight:800;color:#111827;">BATAMART</span>
-                    <span style="font-size:11px;color:#6b7280;display:block;">UNIZIK Campus Marketplace</span>
+                    <span style="font-size:11px;color:#6b7280;display:block;">Campus Marketplace</span>
                   </td>
                 </tr>
                 <tr>
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
                 </tr>
                 <tr>
                   <td align="center" style="padding-top:20px;">
-                    <p style="font-size:12px;color:#9ca3af;margin:0;">BATAMART — UNIZIK Campus Marketplace, Awka, Anambra State.</p>
+                    <p style="font-size:12px;color:#9ca3af;margin:0;">BATAMART — Campus Marketplace, Awka, Anambra State.</p>
                   </td>
                 </tr>
               </table>
@@ -190,3 +190,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 500 })
   }
 }
+

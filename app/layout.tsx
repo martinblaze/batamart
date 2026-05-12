@@ -18,8 +18,8 @@ import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'BATAMART - UNIZIK Campus Marketplace',
-  description: 'Student-to-student commerce at UNIZIK. Buy, sell, and deliver within campus.',
+  title: 'BATAMART - Campus Marketplace',
+  description: 'Student-to-student commerce across campuses. Buy, sell, and get fast local delivery.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon-192x192.png',

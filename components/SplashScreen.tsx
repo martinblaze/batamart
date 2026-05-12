@@ -162,7 +162,7 @@ export default function SplashScreen() {
       <p
         style={{
           marginTop: '12px',
-          color: '#1a3f8f',
+          color: '#4DABFF',
           fontSize: '16px',
           fontWeight: 600,
           ...textStyle,
@@ -173,3 +173,4 @@ export default function SplashScreen() {
     </div>
   )
 }
+

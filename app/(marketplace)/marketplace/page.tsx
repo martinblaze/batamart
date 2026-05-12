@@ -136,7 +136,7 @@ const ANIM_CSS = `
   }
   .dark .marketplace-shell .search-input:focus-within {
     box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 6px 16px rgba(2,6,23,0.45) !important;
-    background: #0f172a !important;
+    background: #121212 !important;
   }
 
   @keyframes dropIn {
@@ -2178,7 +2178,7 @@ export default function MarketplacePage() {
   const shareReferralWhatsApp = () => {
     if (!referralLink) return
     const text = encodeURIComponent(
-      `🔥 I'm on BATAMART — the hottest campus marketplace at ${universityShortName || 'UNIZIK'}!\nSign up with my link and start buying & selling today:\n${referralLink}`
+      `🔥 I'm on BATAMART — the hottest campus marketplace at ${universityShortName || 'my campus'}!\nSign up with my link and start buying & selling today:\n${referralLink}`
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -2389,7 +2389,7 @@ export default function MarketplacePage() {
           <div
             className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
             style={{
-              background: 'linear-gradient(145deg, #0f172a 0%, #1e3a5f 50%, #0ea5e9 100%)',
+              background: 'linear-gradient(145deg, #121212 0%, #1E1E1E 50%, #0ea5e9 100%)',
               animation: 'referralPopIn 0.45s cubic-bezier(0.34,1.4,0.64,1) both',
             }}
             onClick={e => e.stopPropagation()}
@@ -2443,7 +2443,7 @@ export default function MarketplacePage() {
                   </div>
                   <button
                     onClick={copyReferralCode}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1e3a5f] font-bold text-xs px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1E1E1E] font-bold text-xs px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors"
                   >
                     {referralCopied
                       ? <><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Copied!</>
@@ -2997,3 +2997,4 @@ export default function MarketplacePage() {
     </div>
   )
 }
+

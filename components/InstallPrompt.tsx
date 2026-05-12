@@ -59,7 +59,7 @@ export default function InstallPrompt() {
           100% { background-position: 200% center; }
         }
         .install-btn-shimmer {
-          background: linear-gradient(90deg, #1a3f8f 0%, #3b9ef5 40%, #1a3f8f 60%, #1a3f8f 100%);
+          background: linear-gradient(90deg, #3D95E8 0%, #4DABFF 40%, #3D95E8 60%, #3D95E8 100%);
           background-size: 200% auto;
           animation: shimmer 2.4s linear infinite;
         }
@@ -76,7 +76,7 @@ export default function InstallPrompt() {
         {/* Top accent bar */}
         <div
           className="h-1 w-full"
-          style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+          style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
         />
 
         <div className="p-4 flex items-center gap-3">
