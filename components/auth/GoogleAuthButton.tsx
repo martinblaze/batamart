@@ -25,6 +25,7 @@ export default function GoogleAuthButton({
 }: GoogleAuthButtonProps) {
   const buttonRef = useRef<HTMLDivElement | null>(null)
   const [ready, setReady] = useState(false)
+  const [scriptError, setScriptError] = useState<string | null>(null)
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function GoogleAuthButton({
       script.async = true
       script.defer = true
       script.onload = () => setReady(true)
+      script.onerror = () => setScriptError('Could not load Google Sign-In script.')
       document.head.appendChild(script)
     } else {
       setReady(true)
@@ -109,8 +111,29 @@ export default function GoogleAuthButton({
   }, [ready, clientId, mode, payload, onError, onLoading, onSuccess])
 
   if (!clientId) {
-    return null
+    return (
+      <div className="w-full text-center text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+        Google Sign-In is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID.
+      </div>
+    )
   }
 
-  return <div ref={buttonRef} className="w-full flex justify-center" />
+  if (scriptError) {
+    return (
+      <div className="w-full text-center text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+        {scriptError}
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full">
+      <div ref={buttonRef} className="w-full flex justify-center" />
+      {!ready && (
+        <div className="mt-2 text-center text-xs text-gray-500">
+          Loading Google sign-in…
+        </div>
+      )}
+    </div>
+  )
 }
