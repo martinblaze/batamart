@@ -517,6 +517,12 @@ function SignupForm() {
 
           <ErrorBox error={error} />
 
+          {referralCode && (
+            <div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
+              🎁 Referral code <strong>{referralCode}</strong> applied
+            </div>
+          )}
+
           <form onSubmit={handleLocationContinue} className="space-y-5">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-2">Select Your Area</label>

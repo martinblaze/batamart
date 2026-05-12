@@ -211,6 +211,9 @@ const ANIM_CSS = `
   .section-stripe         { background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%); }
   .section-stripe-orange  { background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); }
   .section-stripe-emerald { background: linear-gradient(135deg, #059669 0%, #0891b2 100%); }
+  .dark .marketplace-shell .section-stripe         { background: linear-gradient(135deg, #2a2f45 0%, #232839 100%); }
+  .dark .marketplace-shell .section-stripe-orange  { background: linear-gradient(135deg, #433025 0%, #3b2628 100%); }
+  .dark .marketplace-shell .section-stripe-emerald { background: linear-gradient(135deg, #213a36 0%, #223544 100%); }
 
   .discount-badge {
     background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -228,6 +231,10 @@ const ANIM_CSS = `
     background-size: 200% 100%;
     animation: shimmerBg 4s linear infinite;
   }
+  .dark .marketplace-shell .promo-bar {
+    background: linear-gradient(90deg, #252c40, #2b3248, #252c40);
+    background-size: 200% 100%;
+  }
   @keyframes shimmerBg {
     0%   { background-position:   0% 50%; }
     100% { background-position: 200% 50%; }
@@ -235,6 +242,9 @@ const ANIM_CSS = `
 
   .batamart-header {
     background: linear-gradient(135deg, #4c1d95 0%, #6366f1 60%, #4c1d95 100%);
+  }
+  .dark .marketplace-shell .batamart-header {
+    background: linear-gradient(135deg, #1f2538 0%, #28324a 60%, #1f2538 100%);
   }
 
   .cat-tile {
@@ -368,6 +378,16 @@ const ANIM_CSS = `
     background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
     background-size: 200% 100%;
     animation: shimmerBg 3s linear infinite;
+  }
+  .dark .marketplace-shell .trust-bar {
+    background: linear-gradient(90deg, #262d42, #2d3550, #262d42);
+    background-size: 200% 100%;
+  }
+
+  .dark .marketplace-shell .cat-tile,
+  .dark .marketplace-shell .flash-card,
+  .dark .marketplace-shell .mega-cat-card {
+    filter: saturate(0.72) brightness(0.82);
   }
 
   @keyframes ripple {
@@ -1435,7 +1455,7 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-[#252c40] dark:to-[#2d3550] px-5 py-4">
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-white" />
           <div>
@@ -1476,7 +1496,7 @@ function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string
           <button
             key={cat.name}
             onClick={() => onCategorySelect(cat.name)}
-            className={`card-enter relative overflow-hidden rounded-2xl bg-gradient-to-br ${cat.bg} p-4 text-left group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
+            className={`mega-cat-card card-enter relative overflow-hidden rounded-2xl bg-gradient-to-br ${cat.bg} p-4 text-left group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <span className="text-3xl mb-2 block group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
@@ -1702,7 +1722,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 gradient-animated px-5 py-4">
+      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-[#3a2927] dark:via-[#423225] dark:to-[#3d3326] gradient-animated px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-white" />
@@ -1765,7 +1785,7 @@ function LiveActivityMarquee({ products }: { products: any[] }) {
   const doubled = [...items, ...items]
 
   return (
-    <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl overflow-hidden py-2.5 px-0">
+    <div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-[#252c40] dark:to-[#2d3550] rounded-2xl overflow-hidden py-2.5 px-0">
       <div className="flex items-center gap-3 overflow-hidden">
         <div className="flex-shrink-0 flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-r-xl">
           <span className="live-ping w-2 h-2 rounded-full bg-green-400 inline-block" />
