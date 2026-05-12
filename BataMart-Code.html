@@ -18,8 +18,8 @@ import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'BATAMART - UNIZIK Campus Marketplace',
-  description: 'Student-to-student commerce at UNIZIK. Buy, sell, and deliver within campus.',
+  title: 'BATAMART - Campus Marketplace',
+  description: 'Student-to-student commerce across campuses. Buy, sell, and get fast local delivery.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon-192x192.png',
@@ -572,7 +572,7 @@ export default function HomePage() {
         .section-blue   { background: linear-gradient(135deg, rgba(239,246,255,0.92), rgba(224,242,254,0.92)); }
 
         .dark .bm-page {
-          background: #050b16 !important;
+          background: #121212 !important;
         }
         .dark .grid-bg {
           background-image:
@@ -592,7 +592,7 @@ export default function HomePage() {
           background: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.94));
         }
         .dark .pill-hover:hover {
-          background: #1e293b;
+          background: #1E1E1E;
           border-color: #475569;
           color: #c7d2fe;
         }
@@ -937,6 +937,7 @@ export default function HomePage() {
     &lt;/&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(admin)/admin/layout.tsx</div><pre>'use client'
 
@@ -3952,6 +3953,7 @@ export default function ForgotPasswordPage() {
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 function LoginForm() {
   const router = useRouter()
@@ -4129,6 +4131,18 @@ function LoginForm() {
             &lt;/button&gt;
           &lt;/form&gt;
 
+          &lt;div className="my-5 flex items-center gap-3"&gt;
+            &lt;div className="h-px bg-gray-200 flex-1" /&gt;
+            &lt;span className="text-xs text-gray-400 font-semibold"&gt;OR&lt;/span&gt;
+            &lt;div className="h-px bg-gray-200 flex-1" /&gt;
+          &lt;/div&gt;
+
+          &lt;GoogleAuthButton
+            mode="login"
+            onError={setError}
+            onLoading={setLoading}
+          /&gt;
+
           &lt;div className="mt-6 text-center"&gt;
             &lt;p className="text-gray-600 text-sm"&gt;
               Don&amp;apos;t have an account?{' '}
@@ -4165,7 +4179,8 @@ function buildSuspensionMessage(reason: string | null, until: string | null): st
     return `Your account has been permanently suspended.\n\nReason: ${reasonText}\n\nContact support if you believe this is an error.`
   }
   return `Your account is suspended until ${untilDate.toLocaleDateString('en-NG', { dateStyle: 'long' })}.\n\nReason: ${reasonText}\n\nContact support if you believe this is an error.`
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/profile/setup/page.tsx</div><pre>'use client'
 
 import { useState } from 'react'
@@ -4553,6 +4568,7 @@ import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 interface University {
   id:            string
@@ -4564,8 +4580,8 @@ interface University {
 }
 
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
-const bgStyle  = { background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#0f172a)' }
-const btnStyle = { background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)' }
+const bgStyle  = { background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }
+const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
 const PageShell = ({
   children,
@@ -4758,6 +4774,9 @@ function SignupForm() {
     const pwdError = validatePassword(password)
     if (pwdError) { setError(pwdError); return }
     if (password !== confirmPassword) { setError('Passwords do not match'); return }
+    const accountPhone = (phone || deliveryPhone || '').trim()
+    const phoneErr = validatePhone(accountPhone)
+    if (phoneErr) { setError(phoneErr); return }
     setLoading(true)
     setError('')
     try {
@@ -4765,7 +4784,7 @@ function SignupForm() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email, name, phone, password, otpSessionToken,
+          email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           universityId: selectedUniversity!.id,
@@ -4922,6 +4941,18 @@ function SignupForm() {
             {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                 which redirects them to /become-seller to upgrade their account. */}
 
+            &lt;div&gt;
+              &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Referral Code (Optional)&lt;/label&gt;
+              &lt;input
+                type="text"
+                value={referralCode}
+                onChange={e =&gt; setReferralCode(e.target.value.toUpperCase().trim())}
+                placeholder="e.g. BATAMART-ABC123"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              /&gt;
+              &lt;p className="text-xs text-gray-400 mt-1"&gt;Paste code from a friend or use their referral link.&lt;/p&gt;
+            &lt;/div&gt;
+
             &lt;button
               type="submit"
               disabled={loading}
@@ -4931,6 +4962,41 @@ function SignupForm() {
               {loading ? 'Sending OTP…' : 'Continue →'}
             &lt;/button&gt;
           &lt;/form&gt;
+
+          &lt;div className="my-5 flex items-center gap-3"&gt;
+            &lt;div className="h-px bg-gray-200 flex-1" /&gt;
+            &lt;span className="text-xs text-gray-400 font-semibold"&gt;OR&lt;/span&gt;
+            &lt;div className="h-px bg-gray-200 flex-1" /&gt;
+          &lt;/div&gt;
+
+          &lt;GoogleAuthButton
+            mode="signup"
+            payload={{
+              universityId: selectedUniversity?.id,
+              referralCode: referralCode || undefined,
+            }}
+            onError={setError}
+            onLoading={setLoading}
+            onSuccess={(data) =&gt; {
+              if (data?.requiresProfile &amp;&amp; data?.signupToken) {
+                if (data?.profile?.email) setEmail(String(data.profile.email))
+                if (data?.profile?.name) setName(String(data.profile.name))
+                setOtpSessionToken(String(data.signupToken))
+                setStep(3)
+                return
+              }
+
+              if (data?.token &amp;&amp; data?.user) {
+                localStorage.setItem('token', data.token)
+                localStorage.setItem('userName', data.user.name)
+                localStorage.setItem('userRole', data.user.role || '')
+                localStorage.setItem('userId', data.user.id)
+                document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+                window.dispatchEvent(new Event('auth-change'))
+                window.location.href = '/marketplace'
+              }
+            }}
+          /&gt;
 
           &lt;button onClick={() =&gt; setStep(0)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600"&gt;
             ← Change campus
@@ -5014,6 +5080,12 @@ function SignupForm() {
           &lt;/div&gt;
 
           &lt;ErrorBox error={error} /&gt;
+
+          {referralCode &amp;&amp; (
+            &lt;div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700"&gt;
+              🎁 Referral code &lt;strong&gt;{referralCode}&lt;/strong&gt; applied
+            &lt;/div&gt;
+          )}
 
           &lt;form onSubmit={handleLocationContinue} className="space-y-5"&gt;
             &lt;div&gt;
@@ -5182,14 +5254,15 @@ export default function SignupPage() {
   return (
     &lt;Suspense fallback={
       &lt;div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f,#0f172a)' }}&gt;
+        style={{ background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }}&gt;
         &lt;div className="text-white text-xl font-bold"&gt;Loading…&lt;/div&gt;
       &lt;/div&gt;
     }&gt;
       &lt;SignupForm /&gt;
     &lt;/Suspense&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/verify/page.tsx</div><pre>'use client'
 
 import { useState, useEffect } from 'react'
@@ -6347,466 +6420,196 @@ export default function CheckoutPage() {
   )
 }
 </pre></div>
-<div class='file-block'><div class='file-header'>app/(marketplace)/dispute/select-order/page.tsx</div><pre>// app/(marketplace)/rider-dashboard/page.tsx
-// ── FIX #7 (race condition): acceptOrder uses authFetch which handles 409
-//    conflict responses from the server. The server must use a DB transaction
-//    to atomically check + assign the order, so only one rider wins.
-//
-// ── FIX #8 (stock reservation): No change needed here — stock locking
-//    is handled server-side in the payment flow.
-//
-// ── FIX #10 (alert/confirm dialogs): All alert() and confirm() calls
-//    replaced with inline toast/banner UI. No more browser popups.
-//
-// ── FIX #6: Uses authFetch so expired tokens auto-redirect to /login.
-//
-// ── Rider availability: If the toggle API fails, the UI reverts to the
-//    previous state instead of staying optimistically wrong.
-'use client'
+<div class='file-block'><div class='file-header'>app/(marketplace)/dispute/select-order/page.tsx</div><pre>'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Loader2, AlertTriangle, MapPin, Phone, Package, CheckCircle, X } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { Loader2, AlertTriangle, Package, ChevronRight, ShoppingBag } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
 
-// ── Simple inline toast — no alert() ─────────────────────────────────────────
-function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error' | 'info'; onClose: () =&gt; void }) {
-  const colors = {
-    success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    error:   'bg-red-50 border-red-200 text-red-800',
-    info:    'bg-blue-50 border-blue-200 text-blue-800',
-  }
-  return (
-    &lt;div className={`fixed top-4 left-0 right-0 z-50 flex justify-center px-4`}&gt;
-      &lt;div className={`flex items-start gap-3 px-4 py-3 rounded-2xl border shadow-lg max-w-sm w-full ${colors[type]}`}&gt;
-        &lt;p className="text-sm font-semibold flex-1"&gt;{message}&lt;/p&gt;
-        &lt;button onClick={onClose} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity"&gt;
-          &lt;X className="w-4 h-4" /&gt;
-        &lt;/button&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  )
+interface Order {
+  id: string
+  orderNumber?: string
+  status: string
+  totalAmount: number
+  createdAt: string
+  deliveredAt?: string
+  completedAt?: string
+  isDisputed?: boolean
+  product: { id: string; name: string; images: string[] }
+  seller: { id: string; name: string }
 }
 
-export default function RiderDashboardPage() {
-  const router = useRouter()
-  const [rider, setRider] = useState&lt;any&gt;(null)
-  const [availableOrders, setAvailableOrders] = useState&lt;any[]&gt;([])
-  const [disputePickups, setDisputePickups] = useState&lt;any[]&gt;([])
-  const [myDeliveries, setMyDeliveries] = useState&lt;any[]&gt;([])
-  const [loading, setLoading] = useState(true)
-  const [isAvailable, setIsAvailable] = useState(true)
-  const [actionLoading, setActionLoading] = useState&lt;Record&lt;string, boolean&gt;&gt;({})
+const DISPUTE_ELIGIBLE = ['DELIVERED', 'COMPLETED']
 
-  // ── FIX #10: Toast state instead of alert() ───────────────────────────────
-  const [toast, setToast] = useState&lt;{ message: string; type: 'success' | 'error' | 'info' } | null&gt;(null)
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') =&gt; {
-    setToast({ message, type })
-    setTimeout(() =&gt; setToast(null), 4000)
-  }
+export default function SelectOrderForDisputePage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const isApp = searchParams.get('app') === 'true'
+
+  const [orders, setOrders] = useState&lt;Order[]&gt;([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() =&gt; {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
-    fetchRiderData()
+    if (!token) {
+      router.push('/login?returnTo=/dispute/select-order')
+      return
+    }
+    fetchOrders()
   }, [])
 
-  const fetchRiderData = async () =&gt; {
+  const fetchOrders = async () =&gt; {
     try {
-      const [profileRes, ordersRes, deliveriesRes] = await Promise.all([
-        authFetch('/api/auth/me'),
-        authFetch('/api/riders/available-orders'),
-        authFetch('/api/riders/my-deliveries'),
-      ])
-
-      const profileData    = await profileRes.json()
-      const ordersData     = await ordersRes.json()
-      const deliveriesData = await deliveriesRes.json()
-
-      setRider(profileData.user)
-      setAvailableOrders(ordersData.orders || [])
-      setDisputePickups(ordersData.disputePickups || [])
-      setMyDeliveries(deliveriesData.deliveries || [])
-      setIsAvailable(profileData.user.isAvailable)
-    } catch (error) {
-      console.error('Error fetching rider data:', error)
+      const res = await authFetch('/api/orders/my-orders')
+      if (!res.ok) throw new Error('Failed to fetch orders')
+      const data = await res.json()
+      setOrders(data.orders || [])
+    } catch (err) {
+      setError('Could not load your orders. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  // ── FIX (availability revert): Save previous state so we can roll back ────
-  const toggleAvailability = async () =&gt; {
-    if (actionLoading['toggle-availability']) return
-    const previousState = isAvailable
-    setActionLoading(prev =&gt; ({ ...prev, 'toggle-availability': true }))
-
-    // Optimistic update
-    setIsAvailable(!previousState)
-
-    try {
-      const res = await authFetch('/api/riders/toggle-availability', { method: 'POST' })
-      if (!res.ok) {
-        // Revert on failure instead of staying in wrong state
-        setIsAvailable(previousState)
-        showToast('Failed to update availability. Please try again.', 'error')
-      } else {
-        showToast(`You are now ${!previousState ? 'available' : 'unavailable'} for orders.`, 'success')
-      }
-    } catch {
-      setIsAvailable(previousState)
-      showToast('Network error updating availability.', 'error')
-    } finally {
-      setActionLoading(prev =&gt; ({ ...prev, 'toggle-availability': false }))
-    }
-  }
-
-  // ── FIX #7: Handle 409 conflict (another rider grabbed this order) ────────
-  const acceptOrder = async (orderId: string) =&gt; {
-    if (actionLoading[`accept-${orderId}`]) return
-    setActionLoading(prev =&gt; ({ ...prev, [`accept-${orderId}`]: true }))
-    try {
-      const res = await authFetch('/api/riders/accept-order', {
-        method: 'POST',
-        body: JSON.stringify({ orderId }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        showToast('Order accepted! Head to pickup location.', 'success')
-        await fetchRiderData()
-      } else if (res.status === 409) {
-        // Race condition — another rider accepted first
-        showToast('Sorry, another rider just accepted this order. Refreshing available orders.', 'info')
-        await fetchRiderData()
-      } else {
-        showToast(data.error || 'Failed to accept order. Please try again.', 'error')
-      }
-    } catch {
-      showToast('Network error. Please check your connection.', 'error')
-    } finally {
-      setActionLoading(prev =&gt; ({ ...prev, [`accept-${orderId}`]: false }))
-    }
-  }
-
-  const updateStatus = async (orderId: string, status: string) =&gt; {
-    if (actionLoading[`status-${orderId}`]) return
-    setActionLoading(prev =&gt; ({ ...prev, [`status-${orderId}`]: true }))
-    try {
-      const res = await authFetch('/api/riders/update-status', {
-        method: 'POST',
-        body: JSON.stringify({ orderId, status }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        await fetchRiderData()
-      } else {
-        showToast(data.error || 'Failed to update status.', 'error')
-      }
-    } catch {
-      showToast('Network error updating status.', 'error')
-    } finally {
-      setActionLoading(prev =&gt; ({ ...prev, [`status-${orderId}`]: false }))
-    }
-  }
-
-  const markDisputePickedUp = async (orderId: string) =&gt; {
-    if (actionLoading[`dispute-pickup-${orderId}`]) return
-    setActionLoading(prev =&gt; ({ ...prev, [`dispute-pickup-${orderId}`]: true }))
-    try {
-      const res = await authFetch('/api/riders/dispute-picked-up', {
-        method: 'POST',
-        body: JSON.stringify({ orderId }),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        showToast('Marked as collected. Return the item to complete this job.', 'success')
-        await fetchRiderData()
-      } else {
-        showToast(data.error || 'Failed to update.', 'error')
-      }
-    } catch {
-      showToast('Network error.', 'error')
-    } finally {
-      setActionLoading(prev =&gt; ({ ...prev, [`dispute-pickup-${orderId}`]: false }))
-    }
-  }
-
-  const hasDisputePickupPending = disputePickups.length &gt; 0
+  const eligibleOrders = orders.filter(
+    (o) =&gt; DISPUTE_ELIGIBLE.includes(o.status) &amp;&amp; !o.isDisputed
+  )
+  const disputedOrders = orders.filter((o) =&gt; o.isDisputed)
 
   if (loading) {
     return (
       &lt;div className="min-h-screen flex items-center justify-center"&gt;
-        &lt;div className="animate-spin rounded-full h-12 w-12 border-4 border-BATAMART-primary border-t-transparent" /&gt;
+        &lt;Loader2 className="w-8 h-8 animate-spin text-indigo-500" /&gt;
       &lt;/div&gt;
     )
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 py-8 px-4"&gt;
-      {/* ── FIX #10: Toast notification instead of alert() ── */}
-      {toast &amp;&amp; &lt;Toast message={toast.message} type={toast.type} onClose={() =&gt; setToast(null)} /&gt;}
-
-      &lt;div className="max-w-7xl mx-auto"&gt;
-
+    &lt;div className="min-h-screen bg-gray-50 pb-24"&gt;
+      &lt;div className="max-w-2xl mx-auto px-4 py-8"&gt;
         {/* Header */}
-        &lt;div className="bg-white rounded-xl shadow-md p-6 mb-8"&gt;
-          &lt;div className="flex justify-between items-center"&gt;
-            &lt;div&gt;
-              &lt;h1 className="text-3xl font-bold text-gray-900"&gt;Rider Dashboard&lt;/h1&gt;
-              &lt;p className="text-gray-600 mt-1"&gt;Welcome, {rider?.name}!&lt;/p&gt;
-            &lt;/div&gt;
-            &lt;button
-              onClick={toggleAvailability}
-              disabled={actionLoading['toggle-availability']}
-              className={`px-6 py-3 rounded-lg font-bold transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-                isAvailable ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-              }`}
-            &gt;
-              {actionLoading['toggle-availability']
-                ? &lt;&gt;&lt;Loader2 className="w-5 h-5 animate-spin" /&gt; Updating...&lt;/&gt;
-                : isAvailable ? '🟢 Available' : '⚫ Unavailable'
-              }
-            &lt;/button&gt;
+        &lt;div className="mb-6"&gt;
+          &lt;div className="flex items-center gap-2 mb-1"&gt;
+            &lt;AlertTriangle className="w-5 h-5 text-orange-500" /&gt;
+            &lt;h1 className="text-2xl font-bold text-gray-900"&gt;Open a Dispute&lt;/h1&gt;
           &lt;/div&gt;
-
-          &lt;div className="grid grid-cols-3 gap-4 mt-6"&gt;
-            &lt;div className="bg-green-50 p-4 rounded-lg"&gt;
-              &lt;p className="text-sm text-green-600"&gt;Completed&lt;/p&gt;
-              &lt;p className="text-2xl font-bold text-green-900"&gt;{rider?.completedOrders || 0}&lt;/p&gt;
-            &lt;/div&gt;
-            &lt;div className="bg-blue-50 p-4 rounded-lg"&gt;
-              &lt;p className="text-sm text-blue-600"&gt;Active&lt;/p&gt;
-              &lt;p className="text-2xl font-bold text-blue-900"&gt;{myDeliveries.length}&lt;/p&gt;
-            &lt;/div&gt;
-            &lt;div className="bg-purple-50 p-4 rounded-lg"&gt;
-              &lt;p className="text-sm text-purple-600"&gt;Earnings&lt;/p&gt;
-              &lt;p className="text-2xl font-bold text-purple-900"&gt;₦{((rider?.completedOrders || 0) * 560).toLocaleString()}&lt;/p&gt;
-            &lt;/div&gt;
-          &lt;/div&gt;
+          &lt;p className="text-gray-500 text-sm"&gt;
+            Select the delivered order you want to dispute. Disputes must be opened within 72 hours of delivery.
+          &lt;/p&gt;
         &lt;/div&gt;
 
-        {/* Dispute Pickup Jobs */}
-        {hasDisputePickupPending &amp;&amp; (
-          &lt;div className="mb-8"&gt;
-            &lt;div className="flex items-center gap-2 mb-4"&gt;
-              &lt;AlertTriangle className="w-5 h-5 text-red-500" /&gt;
-              &lt;h2 className="text-xl font-bold text-red-600"&gt;Return Pickup Required&lt;/h2&gt;
-              &lt;span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold"&gt;
-                {disputePickups.length} pending
-              &lt;/span&gt;
-            &lt;/div&gt;
-
-            &lt;div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 mb-4 flex items-start gap-2"&gt;
-              &lt;AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" /&gt;
-              &lt;span&gt;
-                You must complete this return pickup before accepting new orders.
-                You will earn &lt;strong&gt;₦560&lt;/strong&gt; once the item is confirmed received.
-              &lt;/span&gt;
-            &lt;/div&gt;
-
-            &lt;div className="space-y-4"&gt;
-              {disputePickups.map((order: any) =&gt; {
-                const pickup = order.dispute?.pickupAddress as any
-                return (
-                  &lt;div key={order.id} className="bg-white border-2 border-red-300 rounded-xl shadow-md p-6"&gt;
-                    &lt;div className="flex justify-between items-start mb-4"&gt;
-                      &lt;div&gt;
-                        &lt;span className="text-xs font-bold text-red-600 uppercase tracking-wide bg-red-50 px-2 py-1 rounded-full"&gt;
-                          Dispute Return
-                        &lt;/span&gt;
-                        &lt;p className="text-sm text-gray-500 mt-1"&gt;#{order.orderNumber}&lt;/p&gt;
-                        &lt;p className="font-bold text-gray-900 mt-0.5"&gt;{order.product.name}&lt;/p&gt;
-                      &lt;/div&gt;
-                      &lt;span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold"&gt;
-                        ₦560 on completion
-                      &lt;/span&gt;
-                    &lt;/div&gt;
-
-                    {order.dispute?.reason &amp;&amp; (
-                      &lt;div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600"&gt;
-                        &lt;p className="text-xs font-semibold text-gray-400 uppercase mb-1"&gt;Reason for return&lt;/p&gt;
-                        &lt;p&gt;{order.dispute.reason}&lt;/p&gt;
-                      &lt;/div&gt;
-                    )}
-
-                    &lt;div className="mb-4 p-3 bg-blue-50 rounded-lg"&gt;
-                      &lt;div className="flex items-center gap-1.5 mb-2"&gt;
-                        &lt;MapPin className="w-4 h-4 text-blue-500" /&gt;
-                        &lt;p className="text-xs font-semibold text-blue-600 uppercase tracking-wide"&gt;Collect from buyer&lt;/p&gt;
-                      &lt;/div&gt;
-                      {pickup ? (
-                        &lt;div className="text-sm space-y-0.5"&gt;
-                          &lt;p className="text-gray-800 font-medium"&gt;{pickup.hostel}{pickup.room ? `, Room ${pickup.room}` : ''}&lt;/p&gt;
-                          {pickup.landmark &amp;&amp; &lt;p className="text-gray-500"&gt;{pickup.landmark}&lt;/p&gt;}
-                          &lt;p className="text-blue-700 font-medium flex items-center gap-1 mt-1"&gt;
-                            &lt;Phone className="w-3 h-3" /&gt; {pickup.phone}
-                          &lt;/p&gt;
-                        &lt;/div&gt;
-                      ) : (
-                        &lt;div className="text-sm space-y-0.5"&gt;
-                          &lt;p className="text-gray-800 font-medium"&gt;{order.deliveryHostel}, Room {order.deliveryRoom}&lt;/p&gt;
-                          {order.deliveryLandmark &amp;&amp; &lt;p className="text-gray-500"&gt;{order.deliveryLandmark}&lt;/p&gt;}
-                          &lt;p className="text-blue-700 font-medium flex items-center gap-1 mt-1"&gt;
-                            &lt;Phone className="w-3 h-3" /&gt; {order.deliveryPhone}
-                          &lt;/p&gt;
-                        &lt;/div&gt;
-                      )}
-                    &lt;/div&gt;
-
-                    &lt;div className="mb-4 p-3 bg-orange-50 rounded-lg"&gt;
-                      &lt;div className="flex items-center gap-1.5 mb-1"&gt;
-                        &lt;Package className="w-4 h-4 text-orange-500" /&gt;
-                        &lt;p className="text-xs font-semibold text-orange-600 uppercase tracking-wide"&gt;Return item to admin / store&lt;/p&gt;
-                      &lt;/div&gt;
-                      &lt;p className="text-sm text-gray-600"&gt;Contact admin for drop-off location if unsure.&lt;/p&gt;
-                    &lt;/div&gt;
-
-                    &lt;button
-                      onClick={() =&gt; markDisputePickedUp(order.id)}
-                      disabled={actionLoading[`dispute-pickup-${order.id}`]}
-                      className="w-full flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
-                    &gt;
-                      {actionLoading[`dispute-pickup-${order.id}`]
-                        ? &lt;&gt;&lt;Loader2 className="w-4 h-4 animate-spin" /&gt; Updating...&lt;/&gt;
-                        : 'I Have Collected the Item from Buyer'
-                      }
-                    &lt;/button&gt;
-                  &lt;/div&gt;
-                )
-              })}
-            &lt;/div&gt;
+        {error &amp;&amp; (
+          &lt;div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm"&gt;
+            {error}
           &lt;/div&gt;
         )}
 
-        {/* Available Orders */}
-        &lt;div className="mb-8"&gt;
-          &lt;h2 className="text-2xl font-bold text-gray-900 mb-4"&gt;
-            Available Orders ({availableOrders.length})
-          &lt;/h2&gt;
-
-          {hasDisputePickupPending &amp;&amp; (
-            &lt;div className="mb-4 p-4 bg-yellow-50 border border-yellow-300 rounded-xl text-sm text-yellow-800 flex items-center gap-2"&gt;
-              &lt;AlertTriangle className="w-4 h-4 flex-shrink-0" /&gt;
-              New orders are locked until you complete the return pickup above.
-            &lt;/div&gt;
-          )}
-
-          {availableOrders.length === 0 ? (
-            &lt;div className="bg-white rounded-xl p-8 text-center"&gt;
-              &lt;p className="text-gray-500"&gt;No available orders at the moment&lt;/p&gt;
-            &lt;/div&gt;
-          ) : (
-            &lt;div className="grid md:grid-cols-2 gap-4"&gt;
-              {availableOrders.map((order: any) =&gt; (
-                &lt;div key={order.id} className={`bg-white rounded-xl shadow-md p-6 ${hasDisputePickupPending ? 'opacity-50 pointer-events-none' : ''}`}&gt;
-                  &lt;div className="flex justify-between items-start mb-4"&gt;
-                    &lt;div&gt;
-                      &lt;p className="text-sm text-gray-500"&gt;#{order.orderNumber}&lt;/p&gt;
-                      &lt;p className="font-bold text-gray-900 mt-1"&gt;{order.product.name}&lt;/p&gt;
-                    &lt;/div&gt;
-                    &lt;span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold"&gt;NEW&lt;/span&gt;
-                  &lt;/div&gt;
-
-                  &lt;div className="space-y-2 text-sm"&gt;
-                    &lt;p className="text-gray-600"&gt;&lt;strong&gt;Pickup:&lt;/strong&gt; {order.product.hostelName}&lt;/p&gt;
-                    &lt;p className="text-gray-600"&gt;&lt;strong&gt;Delivery:&lt;/strong&gt; {order.deliveryHostel}&lt;/p&gt;
-                    &lt;p className="text-green-600 font-bold"&gt;Earn: ₦560&lt;/p&gt;
-                  &lt;/div&gt;
-
-                  &lt;button
-                    onClick={() =&gt; acceptOrder(order.id)}
-                    disabled={actionLoading[`accept-${order.id}`] || hasDisputePickupPending}
-                    className="w-full mt-4 bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  &gt;
-                    {actionLoading[`accept-${order.id}`]
-                      ? &lt;&gt;&lt;Loader2 className="w-4 h-4 animate-spin" /&gt; Accepting...&lt;/&gt;
-                      : 'Accept Order'
-                    }
-                  &lt;/button&gt;
+        {/* Eligible orders */}
+        {eligibleOrders.length === 0 ? (
+          &lt;div className="bg-white rounded-2xl border border-gray-200 p-8 text-center"&gt;
+            &lt;ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-3" /&gt;
+            &lt;p className="text-gray-500 font-medium"&gt;No eligible orders&lt;/p&gt;
+            &lt;p className="text-gray-400 text-sm mt-1"&gt;
+              Only delivered or completed orders within 72 hours can be disputed.
+            &lt;/p&gt;
+            &lt;Link
+              href="/orders"
+              className="inline-block mt-4 text-indigo-600 text-sm font-semibold hover:underline"
+            &gt;
+              View all orders →
+            &lt;/Link&gt;
+          &lt;/div&gt;
+        ) : (
+          &lt;div className="space-y-3"&gt;
+            {eligibleOrders.map((order) =&gt; (
+              &lt;button
+                key={order.id}
+                onClick={() =&gt;
+                  router.push(
+                    `/orders/${order.id}/dispute${isApp ? '?app=true' : ''}`
+                  )
+                }
+                className="w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4 hover:border-indigo-400 hover:shadow-md transition-all text-left"
+              &gt;
+                {/* Product image */}
+                &lt;div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0"&gt;
+                  {order.product.images?.[0] ? (
+                    &lt;img
+                      src={order.product.images[0]}
+                      alt={order.product.name}
+                      className="w-full h-full object-cover"
+                    /&gt;
+                  ) : (
+                    &lt;Package className="w-6 h-6 text-gray-300 m-auto mt-4" /&gt;
+                  )}
                 &lt;/div&gt;
-              ))}
-            &lt;/div&gt;
-          )}
-        &lt;/div&gt;
 
-        {/* My Active Deliveries */}
-        &lt;div&gt;
-          &lt;h2 className="text-2xl font-bold text-gray-900 mb-4"&gt;My Active Deliveries&lt;/h2&gt;
-          {myDeliveries.length === 0 ? (
-            &lt;div className="bg-white rounded-xl p-8 text-center"&gt;
-              &lt;p className="text-gray-500"&gt;No active deliveries&lt;/p&gt;
-            &lt;/div&gt;
-          ) : (
-            &lt;div className="space-y-4"&gt;
-              {myDeliveries.map((delivery: any) =&gt; (
-                &lt;div key={delivery.id} className="bg-white rounded-xl shadow-md p-6"&gt;
-                  &lt;div className="flex justify-between items-start mb-4"&gt;
-                    &lt;div&gt;
-                      &lt;p className="text-sm text-gray-500"&gt;#{delivery.orderNumber}&lt;/p&gt;
-                      &lt;p className="font-bold text-gray-900 mt-1"&gt;{delivery.product.name}&lt;/p&gt;
-                    &lt;/div&gt;
-                    &lt;span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold"&gt;
-                      {delivery.status.replace('_', ' ')}
+                {/* Details */}
+                &lt;div className="flex-1 min-w-0"&gt;
+                  &lt;p className="font-semibold text-gray-900 truncate"&gt;
+                    {order.product.name}
+                  &lt;/p&gt;
+                  &lt;p className="text-sm text-gray-500"&gt;
+                    Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
+                  &lt;/p&gt;
+                  &lt;p className="text-sm text-gray-400"&gt;
+                    ₦{order.totalAmount.toLocaleString()} ·{' '}
+                    {new Date(
+                      order.deliveredAt ?? order.completedAt ?? order.createdAt
+                    ).toLocaleDateString()}
+                  &lt;/p&gt;
+                &lt;/div&gt;
+
+                &lt;ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" /&gt;
+              &lt;/button&gt;
+            ))}
+          &lt;/div&gt;
+        )}
+
+        {/* Already disputed orders */}
+        {disputedOrders.length &gt; 0 &amp;&amp; (
+          &lt;div className="mt-8"&gt;
+            &lt;h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3"&gt;
+              Existing Disputes
+            &lt;/h2&gt;
+            &lt;div className="space-y-3"&gt;
+              {disputedOrders.map((order) =&gt; (
+                &lt;Link
+                  key={order.id}
+                  href={`/orders/${order.id}`}
+                  className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 transition-all"
+                &gt;
+                  &lt;div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0"&gt;
+                    {order.product.images?.[0] ? (
+                      &lt;img
+                        src={order.product.images[0]}
+                        alt={order.product.name}
+                        className="w-full h-full object-cover"
+                      /&gt;
+                    ) : (
+                      &lt;Package className="w-6 h-6 text-gray-300 m-auto mt-4" /&gt;
+                    )}
+                  &lt;/div&gt;
+                  &lt;div className="flex-1 min-w-0"&gt;
+                    &lt;p className="font-semibold text-gray-900 truncate"&gt;
+                      {order.product.name}
+                    &lt;/p&gt;
+                    &lt;p className="text-sm text-gray-500"&gt;
+                      Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
+                    &lt;/p&gt;
+                    &lt;span className="inline-block text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full mt-1"&gt;
+                      Disputed
                     &lt;/span&gt;
                   &lt;/div&gt;
-
-                  &lt;div className="grid md:grid-cols-2 gap-4 mb-4 text-sm"&gt;
-                    &lt;div&gt;
-                      &lt;p className="text-gray-600"&gt;&lt;strong&gt;Pickup:&lt;/strong&gt;&lt;/p&gt;
-                      &lt;p&gt;{delivery.product.hostelName}&lt;/p&gt;
-                      &lt;p className="text-sm text-gray-500"&gt;{delivery.seller.phone}&lt;/p&gt;
-                    &lt;/div&gt;
-                    &lt;div&gt;
-                      &lt;p className="text-gray-600"&gt;&lt;strong&gt;Delivery:&lt;/strong&gt;&lt;/p&gt;
-                      &lt;p&gt;{delivery.deliveryHostel}, {delivery.deliveryRoom}&lt;/p&gt;
-                      &lt;p className="text-sm text-gray-500"&gt;{delivery.deliveryPhone}&lt;/p&gt;
-                    &lt;/div&gt;
-                  &lt;/div&gt;
-
-                  &lt;div className="flex gap-2"&gt;
-                    {delivery.status === 'RIDER_ASSIGNED' &amp;&amp; (
-                      &lt;button
-                        onClick={() =&gt; updateStatus(delivery.id, 'PICKED_UP')}
-                        disabled={actionLoading[`status-${delivery.id}`]}
-                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      &gt;
-                        {actionLoading[`status-${delivery.id}`]
-                          ? &lt;&gt;&lt;Loader2 className="w-4 h-4 animate-spin" /&gt; Updating...&lt;/&gt;
-                          : 'Mark as Picked Up'
-                        }
-                      &lt;/button&gt;
-                    )}
-                    {delivery.status === 'PICKED_UP' &amp;&amp; (
-                      &lt;button
-                        onClick={() =&gt; updateStatus(delivery.id, 'ON_THE_WAY')}
-                        disabled={actionLoading[`status-${delivery.id}`]}
-                        className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      &gt;
-                        {actionLoading[`status-${delivery.id}`]
-                          ? &lt;&gt;&lt;Loader2 className="w-4 h-4 animate-spin" /&gt; Updating...&lt;/&gt;
-                          : 'On The Way'
-                        }
-                      &lt;/button&gt;
-                    )}
-                    {delivery.status === 'ON_THE_WAY' &amp;&amp; (
-                      &lt;button
-                        onClick={() =&gt; updateStatus(delivery.id, 'DELIVERED')}
-                        disabled={actionLoading[`status-${delivery.id}`]}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      &gt;
-                        {actionLoading[`status-${delivery.id}`]
-                          ? &lt;&gt;&lt;Loader2 className="w-4 h-4 animate-spin" /&gt; Updating...&lt;/&gt;
-                          : 'Mark as Delivered'
-                        }
-                      &lt;/button&gt;
-                    )}
-                  &lt;/div&gt;
-                &lt;/div&gt;
+                  &lt;ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" /&gt;
+                &lt;/Link&gt;
               ))}
             &lt;/div&gt;
-          )}
-        &lt;/div&gt;
-
+          &lt;/div&gt;
+        )}
       &lt;/div&gt;
     &lt;/div&gt;
   )
@@ -6972,7 +6775,7 @@ const ANIM_CSS = `
   }
   .dark .marketplace-shell .search-input:focus-within {
     box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 6px 16px rgba(2,6,23,0.45) !important;
-    background: #0f172a !important;
+    background: #121212 !important;
   }
 
   @keyframes dropIn {
@@ -7047,6 +6850,9 @@ const ANIM_CSS = `
   .section-stripe         { background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%); }
   .section-stripe-orange  { background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); }
   .section-stripe-emerald { background: linear-gradient(135deg, #059669 0%, #0891b2 100%); }
+  .dark .marketplace-shell .section-stripe         { background: #000000; }
+  .dark .marketplace-shell .section-stripe-orange  { background: #000000; }
+  .dark .marketplace-shell .section-stripe-emerald { background: #000000; }
 
   .discount-badge {
     background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -7064,6 +6870,10 @@ const ANIM_CSS = `
     background-size: 200% 100%;
     animation: shimmerBg 4s linear infinite;
   }
+  .dark .marketplace-shell .promo-bar {
+    background: #000000;
+    background-size: 200% 100%;
+  }
   @keyframes shimmerBg {
     0%   { background-position:   0% 50%; }
     100% { background-position: 200% 50%; }
@@ -7072,6 +6882,7 @@ const ANIM_CSS = `
   .batamart-header {
     background: linear-gradient(135deg, #4c1d95 0%, #6366f1 60%, #4c1d95 100%);
   }
+  .dark .marketplace-shell .batamart-header { background: #000000; }
 
   .cat-tile {
     transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.25s ease;
@@ -7204,6 +7015,16 @@ const ANIM_CSS = `
     background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
     background-size: 200% 100%;
     animation: shimmerBg 3s linear infinite;
+  }
+  .dark .marketplace-shell .trust-bar {
+    background: #000000;
+    background-size: 200% 100%;
+  }
+
+  .dark .marketplace-shell .cat-tile,
+  .dark .marketplace-shell .flash-card,
+  .dark .marketplace-shell .mega-cat-card {
+    filter: saturate(0.72) brightness(0.82);
   }
 
   @keyframes ripple {
@@ -8271,7 +8092,7 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 function StudyEssentials({ onSearch }: { onSearch: (q: string) =&gt; void }) {
   return (
     &lt;div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm"&gt;
-      &lt;div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4"&gt;
+      &lt;div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-black dark:to-black px-5 py-4"&gt;
         &lt;div className="flex items-center gap-2"&gt;
           &lt;BookOpen className="w-5 h-5 text-white" /&gt;
           &lt;div&gt;
@@ -8312,7 +8133,7 @@ function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string
           &lt;button
             key={cat.name}
             onClick={() =&gt; onCategorySelect(cat.name)}
-            className={`card-enter relative overflow-hidden rounded-2xl bg-gradient-to-br ${cat.bg} p-4 text-left group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
+            className={`mega-cat-card card-enter relative overflow-hidden rounded-2xl bg-gradient-to-br ${cat.bg} p-4 text-left group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
             style={{ animationDelay: `${i * 60}ms` }}
           &gt;
             &lt;span className="text-3xl mb-2 block group-hover:scale-110 transition-transform duration-300"&gt;{cat.icon}&lt;/span&gt;
@@ -8538,7 +8359,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
   return (
     &lt;div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm"&gt;
       {/* Header */}
-      &lt;div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 gradient-animated px-5 py-4"&gt;
+      &lt;div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-black dark:via-black dark:to-black gradient-animated px-5 py-4"&gt;
         &lt;div className="flex items-center justify-between"&gt;
           &lt;div className="flex items-center gap-2"&gt;
             &lt;Zap className="w-5 h-5 text-white" /&gt;
@@ -8601,7 +8422,7 @@ function LiveActivityMarquee({ products }: { products: any[] }) {
   const doubled = [...items, ...items]
 
   return (
-    &lt;div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl overflow-hidden py-2.5 px-0"&gt;
+    &lt;div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-black dark:to-black rounded-2xl overflow-hidden py-2.5 px-0"&gt;
       &lt;div className="flex items-center gap-3 overflow-hidden"&gt;
         &lt;div className="flex-shrink-0 flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-r-xl"&gt;
           &lt;span className="live-ping w-2 h-2 rounded-full bg-green-400 inline-block" /&gt;
@@ -9014,7 +8835,7 @@ export default function MarketplacePage() {
   const shareReferralWhatsApp = () =&gt; {
     if (!referralLink) return
     const text = encodeURIComponent(
-      `🔥 I'm on BATAMART — the hottest campus marketplace at ${universityShortName || 'UNIZIK'}!\nSign up with my link and start buying &amp; selling today:\n${referralLink}`
+      `🔥 I'm on BATAMART — the hottest campus marketplace at ${universityShortName || 'my campus'}!\nSign up with my link and start buying &amp; selling today:\n${referralLink}`
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -9225,7 +9046,7 @@ export default function MarketplacePage() {
           &lt;div
             className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
             style={{
-              background: 'linear-gradient(145deg, #0f172a 0%, #1e3a5f 50%, #0ea5e9 100%)',
+              background: 'linear-gradient(145deg, #121212 0%, #1E1E1E 50%, #0ea5e9 100%)',
               animation: 'referralPopIn 0.45s cubic-bezier(0.34,1.4,0.64,1) both',
             }}
             onClick={e =&gt; e.stopPropagation()}
@@ -9279,7 +9100,7 @@ export default function MarketplacePage() {
                   &lt;/div&gt;
                   &lt;button
                     onClick={copyReferralCode}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1e3a5f] font-bold text-xs px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1E1E1E] font-bold text-xs px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors"
                   &gt;
                     {referralCopied
                       ? &lt;&gt;&lt;CheckCircle className="w-3.5 h-3.5 text-green-500" /&gt; Copied!&lt;/&gt;
@@ -9833,6 +9654,7 @@ export default function MarketplacePage() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/marketplace/deals/page.tsx</div><pre>'use client'
 
@@ -17326,8 +17148,8 @@ const PROFILE_CSS = `
     transform: translateY(-1px);
   }
 
-  .dark .profile-page { background: #050b16 !important; }
-  .dark .profile-page .bg-white { background-color: #0f172a !important; }
+  .dark .profile-page { background: #121212 !important; }
+  .dark .profile-page .bg-white { background-color: #121212 !important; }
   .dark .profile-page .bg-gray-50 { background-color: #1f2937 !important; }
   .dark .profile-page .bg-gray-100 { background-color: #243244 !important; }
   .dark .profile-page .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.2) !important; }
@@ -17353,7 +17175,7 @@ const PROFILE_CSS = `
   .dark .profile-page .text-blue-600 { color: #93c5fd !important; }
   .dark .profile-page .text-amber-500 { color: #fcd34d !important; }
   .dark .profile-page .nav-item:hover {
-    background: #1e293b;
+    background: #1E1E1E;
     color: #a5b4fc;
   }
   .dark .profile-page .section-card:hover { box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45); }
@@ -17365,7 +17187,7 @@ const PROFILE_CSS = `
   .dark .profile-page .input-field::placeholder { color: #64748b; }
   .dark .profile-page .input-field:focus {
     border-color: #818cf8 !important;
-    background: #0f172a !important;
+    background: #121212 !important;
     box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
   }
   .dark .profile-page .shimmer {
@@ -17476,7 +17298,7 @@ export default function MyProfilePage() {
   const handleLogout = () =&gt; { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
 
   if (loading || !user) return (
-    &lt;div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-slate-950"&gt;
+    &lt;div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#121212]"&gt;
       &lt;div className="text-center"&gt;
         &lt;div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4"&gt;
           &lt;Loader2 className="w-8 h-8 text-indigo-600 animate-spin" /&gt;
@@ -17502,7 +17324,7 @@ export default function MyProfilePage() {
   const activeTheme = mounted ? theme : 'light'
 
   return (
-    &lt;div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-slate-950"&gt;
+    &lt;div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#121212]"&gt;
 
       {/* ── iOS Install Modal ── */}
       {showIOSInstallModal &amp;&amp; (
@@ -17563,7 +17385,7 @@ export default function MyProfilePage() {
       {isMobileMenuOpen &amp;&amp; (
         &lt;&gt;
           &lt;div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() =&gt; setIsMobileMenuOpen(false)} /&gt;
-          &lt;div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-slate-900 z-50 lg:hidden shadow-2xl`}&gt;
+          &lt;div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#1E1E1E] z-50 lg:hidden shadow-2xl`}&gt;
             &lt;div className="flex flex-col h-full"&gt;
               {/* Menu header */}
               &lt;div className="header-gradient px-5 py-6"&gt;
@@ -18043,6 +17865,7 @@ function SearchHistory() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/privacy/page.tsx</div><pre>import Link from 'next/link'
 import { Shield, Eye, Lock, Database, UserCheck, Bell } from 'lucide-react'
@@ -18738,7 +18561,7 @@ const sections = [
     title: 'Eligibility',
     icon: '🎓',
     content: [
-      'You must be a currently enrolled student, staff member, or affiliated member of UNIZIK (Nnamdi Azikiwe University) to sell on BATAMART.',
+      'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
       'You must be at least 18 years of age or have the consent of a parent or guardian.',
       'You must complete identity verification, including face ID registration, before your seller account is activated.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
@@ -18750,7 +18573,7 @@ const sections = [
     icon: '📦',
     content: [
       'You may sell physical goods, digital items, and campus-relevant services that comply with university policies and Nigerian law.',
-      'Prohibited items include: weapons, alcohol, tobacco, counterfeit goods, stolen property, explicit/adult content, prescription medications, and any item banned by UNIZIK regulations.',
+      'Prohibited items include: weapons, alcohol, tobacco, counterfeit goods, stolen property, explicit/adult content, prescription medications, and any item banned by campus regulations.',
       'BATAMART reserves the right to remove any listing without notice if it violates these terms or is deemed inappropriate for the campus marketplace.',
       'Selling items under false descriptions or misrepresenting condition (e.g. listing a used item as new) is strictly prohibited and may result in account suspension.',
     ],
@@ -19088,7 +18911,7 @@ export default function InstallPrompt() {
           100% { background-position: 200% center; }
         }
         .install-btn-shimmer {
-          background: linear-gradient(90deg, #1a3f8f 0%, #3b9ef5 40%, #1a3f8f 60%, #1a3f8f 100%);
+          background: linear-gradient(90deg, #3D95E8 0%, #4DABFF 40%, #3D95E8 60%, #3D95E8 100%);
           background-size: 200% auto;
           animation: shimmer 2.4s linear infinite;
         }
@@ -19105,7 +18928,7 @@ export default function InstallPrompt() {
         {/* Top accent bar */}
         &lt;div
           className="h-1 w-full"
-          style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+          style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
         /&gt;
 
         &lt;div className="p-4 flex items-center gap-3"&gt;
@@ -19169,7 +18992,8 @@ export default function InstallPrompt() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>components/IosInstallPrompt.tsx</div><pre>'use client'
 
 import { useEffect, useState } from 'react'
@@ -19267,7 +19091,7 @@ export default function IosInstallPrompt() {
             &gt;
               &lt;div
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)', boxShadow: '0 4px 10px rgba(26,63,143,0.3)' }}
+                style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)', boxShadow: '0 4px 10px rgba(77,171,255,0.28)' }}
               &gt;
                 {/* iOS Share icon */}
                 &lt;svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}&gt;
@@ -19342,7 +19166,7 @@ export default function IosInstallPrompt() {
           &lt;button
             onClick={dismiss}
             className="mt-5 w-full py-3.5 rounded-2xl text-sm font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)', boxShadow: '0 4px 16px rgba(26,63,143,0.3)' }}
+            style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)', boxShadow: '0 4px 16px rgba(77,171,255,0.28)' }}
           &gt;
             Got it!
           &lt;/button&gt;
@@ -19366,7 +19190,8 @@ export default function IosInstallPrompt() {
       /&gt;
     &lt;/&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>components/PWARegister.tsx</div><pre>'use client'
 
 // components/PWARegister.tsx
@@ -19565,7 +19390,7 @@ export default function SplashScreen() {
       &lt;p
         style={{
           marginTop: '12px',
-          color: '#1a3f8f',
+          color: '#4DABFF',
           fontSize: '16px',
           fontWeight: 600,
           ...textStyle,
@@ -19573,6 +19398,147 @@ export default function SplashScreen() {
       &gt;
         Campus Marketplace
       &lt;/p&gt;
+    &lt;/div&gt;
+  )
+}
+
+</pre></div>
+<div class='file-block'><div class='file-header'>components/auth/GoogleAuthButton.tsx</div><pre>'use client'
+
+import { useEffect, useRef, useState } from 'react'
+
+declare global {
+  interface Window {
+    google?: any
+  }
+}
+
+type GoogleAuthButtonProps = {
+  mode: 'login' | 'signup'
+  payload?: Record&lt;string, unknown&gt;
+  onError?: (message: string) =&gt; void
+  onLoading?: (loading: boolean) =&gt; void
+  onSuccess?: (data: any) =&gt; void
+}
+
+export default function GoogleAuthButton({
+  mode,
+  payload,
+  onError,
+  onLoading,
+  onSuccess,
+}: GoogleAuthButtonProps) {
+  const buttonRef = useRef&lt;HTMLDivElement | null&gt;(null)
+  const [ready, setReady] = useState(false)
+  const [scriptError, setScriptError] = useState&lt;string | null&gt;(null)
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+  useEffect(() =&gt; {
+    if (!clientId) return
+    const scriptId = 'google-gsi-client'
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = () =&gt; setReady(true)
+      script.onerror = () =&gt; setScriptError('Could not load Google Sign-In script.')
+      document.head.appendChild(script)
+    } else {
+      setReady(true)
+    }
+  }, [clientId])
+
+  useEffect(() =&gt; {
+    if (!ready || !buttonRef.current || !window.google || !clientId) return
+
+    const handleCredentialResponse = async (response: { credential?: string }) =&gt; {
+      const idToken = response?.credential
+      if (!idToken) {
+        onError?.('Google sign-in failed. Please try again.')
+        return
+      }
+
+      onLoading?.(true)
+      onError?.('')
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            idToken,
+            mode,
+            ...(payload ?? {}),
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          onError?.(data.error || 'Google sign-in failed')
+          return
+        }
+
+        if (onSuccess) {
+          onSuccess(data)
+          return
+        }
+
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('userName', data.user.name)
+        localStorage.setItem('userRole', data.user.role || '')
+        localStorage.setItem('userId', data.user.id)
+        document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+        window.dispatchEvent(new Event('auth-change'))
+        window.location.href = '/marketplace'
+      } catch {
+        onError?.('Network error. Please try again.')
+      } finally {
+        onLoading?.(false)
+      }
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+    })
+
+    buttonRef.current.innerHTML = ''
+    window.google.accounts.id.renderButton(buttonRef.current, {
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      width: 320,
+      text: mode === 'signup' ? 'signup_with' : 'signin_with',
+    })
+  }, [ready, clientId, mode, payload, onError, onLoading, onSuccess])
+
+  if (!clientId) {
+    return (
+      &lt;div className="w-full text-center text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2"&gt;
+        Google Sign-In is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID.
+      &lt;/div&gt;
+    )
+  }
+
+  if (scriptError) {
+    return (
+      &lt;div className="w-full text-center text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"&gt;
+        {scriptError}
+      &lt;/div&gt;
+    )
+  }
+
+  return (
+    &lt;div className="w-full"&gt;
+      &lt;div ref={buttonRef} className="w-full flex justify-center" /&gt;
+      {!ready &amp;&amp; (
+        &lt;div className="mt-2 text-center text-xs text-gray-500"&gt;
+          Loading Google sign-in…
+        &lt;/div&gt;
+      )}
     &lt;/div&gt;
   )
 }
@@ -19907,7 +19873,7 @@ function AppTopBar({
             &lt;Link
               href="/login?app=true"
               className="px-4 py-1.5 rounded-lg text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+              style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
             &gt;
               Login
             &lt;/Link&gt;
@@ -19927,13 +19893,13 @@ function RiderTopBar({
 }) {
   return (
     &lt;nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800"
-      style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}
+      style={{ background: 'linear-gradient(135deg, #121212, #1E1E1E)' }}
     &gt;
       &lt;div className="flex items-center justify-between h-14 px-4"&gt;
         &lt;div className="flex items-center gap-2.5"&gt;
           &lt;div
             className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+            style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
           &gt;
             &lt;svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}&gt;
               &lt;circle cx="5.5" cy="17.5" r="3.5" /&gt;
@@ -20040,8 +20006,8 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
       &lt;nav
         className="fixed bottom-0 left-0 right-0 z-50 border-t"
         style={{
-          background: '#0f172a',
-          borderColor: '#1e293b',
+          background: '#121212',
+          borderColor: '#343434',
           boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
           transform: 'translate3d(0,0,0)',
           WebkitTransform: 'translate3d(0,0,0)',
@@ -20069,7 +20035,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
               &gt;
                 {active &amp;&amp; (
                   &lt;span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
                   /&gt;
                 )}
                 &lt;span className={active ? 'scale-110 transition-transform' : 'transition-transform'}&gt;
@@ -20081,7 +20047,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
           })}
 
           &lt;div className="flex-1 flex items-center justify-center relative"&gt;
-            &lt;div className="absolute inset-0" style={{ background: '#0f172a' }} /&gt;
+            &lt;div className="absolute inset-0" style={{ background: '#121212' }} /&gt;
             &lt;button
               onClick={toggleAvailability}
               disabled={toggling || isAvailable === null}
@@ -20127,7 +20093,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
               &gt;
                 {active &amp;&amp; (
                   &lt;span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #1a3f8f, #3b9ef5)' }}
+                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
                   /&gt;
                 )}
                 &lt;span className={active ? 'scale-110 transition-transform' : 'transition-transform'}&gt;
@@ -20161,7 +20127,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
           &lt;div
             className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl shadow-2xl border-t border-gray-800"
             style={{
-              background: '#0f172a',
+              background: '#121212',
               paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))',
             }}
           &gt;
@@ -20358,7 +20324,7 @@ function AppBottomNav({
               &lt;div
                 className="w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95"
                 style={{
-                  background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)',
+                  background: 'linear-gradient(135deg, #3D95E8, #4DABFF)',
                   boxShadow: '0 4px 20px rgba(26,63,143,0.45)',
                 }}
               &gt;
@@ -20473,7 +20439,7 @@ function AppBottomNav({
                         &lt;button
                           onClick={() =&gt; { onToggleMode() }}
                           className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                          style={{ background: isSellerMode ? 'linear-gradient(135deg,#1a3f8f,#3b9ef5)' : '#d1d5db' }}
+                          style={{ background: isSellerMode ? 'linear-gradient(135deg,#3D95E8,#4DABFF)' : '#d1d5db' }}
                         &gt;
                           &lt;span
                             className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
@@ -20509,7 +20475,7 @@ function AppBottomNav({
                   href="/signup?app=true"
                   onClick={() =&gt; setProfileOpen(false)}
                   className="text-center py-3 text-white rounded-xl font-semibold"
-                  style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}
+                  style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
                 &gt;
                   Create Account
                 &lt;/Link&gt;
@@ -20714,7 +20680,7 @@ export function Navbar() {
 
   return (
     &lt;nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-gray-200 dark:border-slate-700 shadow-sm transition-transform duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#121212]/90 backdrop-blur-md border-b border-gray-200 dark:border-[#343434] shadow-sm transition-transform duration-300 ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     &gt;
@@ -20732,7 +20698,7 @@ export function Navbar() {
 
           &lt;div className="hidden md:flex items-center space-x-2"&gt;
             {isLoggedIn &amp;&amp; (
-              &lt;Link href="/cart" className="relative p-2 text-gray-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-indigo-300 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-full transition-all"&gt;
+              &lt;Link href="/cart" className="relative p-2 text-gray-600 dark:text-[#C8C8C8] hover:text-blue-600 dark:hover:text-[#4DABFF] hover:bg-blue-50 dark:hover:bg-[#2A2A2A] rounded-full transition-all"&gt;
                 &lt;ShoppingBag className="w-6 h-6" /&gt;
                 {cartCount &gt; 0 &amp;&amp; (
                   &lt;span className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"&gt;
@@ -20746,18 +20712,18 @@ export function Navbar() {
               &lt;div className="relative ml-2" ref={dropdownRef}&gt;
                 &lt;button
                   onClick={() =&gt; setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-all"
                 &gt;
                   &lt;div className="flex flex-col items-end"&gt;
-                    &lt;span className="text-sm font-medium text-gray-700 dark:text-slate-200"&gt;Hi, {userName || 'User'}&lt;/span&gt;
-                    &lt;span className="text-xs text-gray-500 dark:text-slate-400"&gt;
+                    &lt;span className="text-sm font-medium text-gray-700 dark:text-[#D7D7D7]"&gt;Hi, {userName || 'User'}&lt;/span&gt;
+                    &lt;span className="text-xs text-gray-500 dark:text-[#A0A0A0]"&gt;
                       {userRole === 'ADMIN' ? 'Admin' : userRole === 'SELLER' ? (isSellerMode ? 'Selling' : 'Buying') : userRole === 'RIDER' ? 'Rider' : 'Buyer'}
                     &lt;/span&gt;
                   &lt;/div&gt;
-                  &lt;ChevronDown className={`w-4 h-4 text-gray-500 dark:text-slate-400 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} /&gt;
+                  &lt;ChevronDown className={`w-4 h-4 text-gray-500 dark:text-[#A0A0A0] transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} /&gt;
                 &lt;/button&gt;
                 {isUserDropdownOpen &amp;&amp; (
-                  &lt;div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 py-2 z-50"&gt;
+                  &lt;div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-2xl border border-gray-200 dark:border-[#343434] py-2 z-50"&gt;
                     {/* Rider-specific dropdown */}
                     {userRole === 'RIDER' ? (
                       &lt;&gt;
@@ -20838,13 +20804,13 @@ export function Navbar() {
             ) : (
               &lt;div className="flex items-center space-x-3"&gt;
                 &lt;Link href="/login" className="font-semibold text-blue-900 hover:text-blue-700 transition-colors"&gt;Login&lt;/Link&gt;
-                &lt;Link href="/signup" className="text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg text-sm" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}&gt;Sign Up&lt;/Link&gt;
+                &lt;Link href="/signup" className="text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg text-sm" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}&gt;Sign Up&lt;/Link&gt;
               &lt;/div&gt;
             )}
           &lt;/div&gt;
 
-          &lt;button onClick={() =&gt; setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"&gt;
-            &lt;svg className="w-6 h-6 text-gray-700 dark:text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"&gt;
+          &lt;button onClick={() =&gt; setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors"&gt;
+            &lt;svg className="w-6 h-6 text-gray-700 dark:text-[#D7D7D7]" fill="none" viewBox="0 0 24 24" stroke="currentColor"&gt;
               {isMenuOpen ? (
                 &lt;path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /&gt;
               ) : (
@@ -20856,7 +20822,7 @@ export function Navbar() {
       &lt;/div&gt;
 
       {isMenuOpen &amp;&amp; (
-        &lt;div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 max-h-[calc(100vh-4rem)] overflow-y-auto"&gt;
+        &lt;div className="md:hidden border-t border-gray-200 dark:border-[#343434] bg-white dark:bg-[#1E1E1E] max-h-[calc(100vh-4rem)] overflow-y-auto"&gt;
           &lt;div className="px-4 py-4"&gt;
             &lt;div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-gray-200"&gt;
               {isLoggedIn &amp;&amp; userRole !== 'RIDER' &amp;&amp; (
@@ -20895,7 +20861,7 @@ export function Navbar() {
                 ) : (
                   /* Regular buyer/seller mobile menu */
                   &lt;&gt;
-                    &lt;Link href="/myprofile" onClick={() =&gt; setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}&gt;
+                    &lt;Link href="/myprofile" onClick={() =&gt; setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}&gt;
                       &lt;User className="w-5 h-5 mr-3" /&gt;&lt;span className="font-medium"&gt;My Account&lt;/span&gt;
                     &lt;/Link&gt;
                     &lt;Link href="/marketplace" onClick={() =&gt; setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/marketplace') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}&gt;
@@ -20951,7 +20917,7 @@ export function Navbar() {
             ) : (
               &lt;div className="grid grid-cols-2 gap-3"&gt;
                 &lt;Link href="/login" onClick={() =&gt; setIsMenuOpen(false)} className="text-center py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-medium hover:bg-blue-900 hover:text-white transition-all"&gt;Login&lt;/Link&gt;
-                &lt;Link href="/signup" onClick={() =&gt; setIsMenuOpen(false)} className="text-center py-3 text-white rounded-lg font-medium transition-all" style={{ background: 'linear-gradient(135deg, #1a3f8f, #3b9ef5)' }}&gt;Sign Up&lt;/Link&gt;
+                &lt;Link href="/signup" onClick={() =&gt; setIsMenuOpen(false)} className="text-center py-3 text-white rounded-lg font-medium transition-all" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}&gt;Sign Up&lt;/Link&gt;
               &lt;/div&gt;
             )}
           &lt;/div&gt;
@@ -21419,7 +21385,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
           &lt;div
             className="relative w-full rounded-2xl overflow-hidden"
             style={{
-              background: 'linear-gradient(135deg,#0f2464 0%,#1a3f8f 55%,#1e56b0 100%)',
+              background: 'linear-gradient(135deg,#3D95E8 0%,#3D95E8 55%,#4DABFF 100%)',
               boxShadow: '0 4px 24px rgba(26,63,143,0.28)',
             }}
           &gt;
@@ -21486,7 +21452,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                   className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 rounded-xl text-sm font-bold transition-all disabled:opacity-60 active:scale-95"
                   style={{
                     background: 'rgba(255,255,255,0.96)',
-                    color: '#1a3f8f',
+                    color: '#3D95E8',
                     boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
                     minHeight: '44px',
                   }}
@@ -21537,7 +21503,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                   className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
                   style={{ background: 'rgba(26,63,143,0.1)' }}
                 &gt;
-                  &lt;BellOff className="w-4 h-4" style={{ color: '#1a3f8f' }} /&gt;
+                  &lt;BellOff className="w-4 h-4" style={{ color: '#3D95E8' }} /&gt;
                 &lt;/div&gt;
                 &lt;div className="min-w-0"&gt;
                   &lt;p className="text-sm font-bold text-gray-800 leading-tight"&gt;
@@ -21555,7 +21521,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                 disabled={isBusy}
                 className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 active:scale-95"
                 style={{
-                  background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)',
+                  background: 'linear-gradient(135deg,#3D95E8,#4DABFF)',
                   boxShadow: '0 2px 8px rgba(26,63,143,0.25)',
                   minHeight: '44px',
                 }}
@@ -21572,7 +21538,8 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
       &lt;/div&gt;
     &lt;/&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>components/layout/RoutePrefetcher.tsx</div><pre>'use client'
 
 import { useEffect } from 'react'
@@ -22765,11 +22732,11 @@ export function ReferralCard() {
   if (loading) return null
 
   return (
-    &lt;div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden"&gt;
-      &lt;div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between"&gt;
+    &lt;div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#343434] overflow-hidden"&gt;
+      &lt;div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-100 dark:border-[#343434] flex items-center justify-between"&gt;
         &lt;div className="flex items-center gap-2"&gt;
           &lt;Gift className="w-4 h-4 text-BATAMART-primary" /&gt;
-          &lt;h2 className="font-bold text-gray-900 dark:text-slate-100 text-sm lg:text-base"&gt;REFERRAL PROGRAMME&lt;/h2&gt;
+          &lt;h2 className="font-bold text-gray-900 dark:text-[#E0E0E0] text-sm lg:text-base"&gt;REFERRAL PROGRAMME&lt;/h2&gt;
         &lt;/div&gt;
         &lt;Link href="/referrals" className="text-BATAMART-primary text-sm font-medium flex items-center gap-1"&gt;
           View All &lt;ChevronRight className="w-4 h-4" /&gt;
@@ -22781,20 +22748,20 @@ export function ReferralCard() {
         &lt;div className="grid grid-cols-2 gap-3"&gt;
           &lt;div className="bg-purple-50 dark:bg-purple-900/30 rounded-xl p-3 text-center"&gt;
             &lt;Users className="w-5 h-5 text-purple-600 mx-auto mb-1" /&gt;
-            &lt;p className="font-bold text-gray-900 dark:text-slate-100"&gt;{totalReferrals}&lt;/p&gt;
-            &lt;p className="text-xs text-gray-500 dark:text-slate-400"&gt;Referrals&lt;/p&gt;
+            &lt;p className="font-bold text-gray-900 dark:text-[#E0E0E0]"&gt;{totalReferrals}&lt;/p&gt;
+            &lt;p className="text-xs text-gray-500 dark:text-[#A0A0A0]"&gt;Referrals&lt;/p&gt;
           &lt;/div&gt;
           &lt;div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-3 text-center"&gt;
             &lt;TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" /&gt;
-            &lt;p className="font-bold text-gray-900 dark:text-slate-100"&gt;{fmt(totalEarnings)}&lt;/p&gt;
-            &lt;p className="text-xs text-gray-500 dark:text-slate-400"&gt;Earned&lt;/p&gt;
+            &lt;p className="font-bold text-gray-900 dark:text-[#E0E0E0]"&gt;{fmt(totalEarnings)}&lt;/p&gt;
+            &lt;p className="text-xs text-gray-500 dark:text-[#A0A0A0]"&gt;Earned&lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
 
         {/* Referral code */}
         &lt;div&gt;
-          &lt;p className="text-xs text-gray-400 dark:text-slate-400 mb-1.5"&gt;Your referral code&lt;/p&gt;
-          &lt;div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800 rounded-lg px-3 py-2 border border-gray-200 dark:border-slate-700"&gt;
+          &lt;p className="text-xs text-gray-400 dark:text-[#A0A0A0] mb-1.5"&gt;Your referral code&lt;/p&gt;
+          &lt;div className="flex items-center gap-2 bg-gray-50 dark:bg-[#232323] rounded-lg px-3 py-2 border border-gray-200 dark:border-[#343434]"&gt;
             &lt;span className="font-extrabold text-BATAMART-primary tracking-widest flex-1 text-sm"&gt;
               {referralCode}
             &lt;/span&gt;
@@ -22814,6 +22781,7 @@ export function ReferralCard() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>components/ui/Toast.tsx</div><pre>'use client';
 
@@ -26132,13 +26100,116 @@ export async function POST(request: NextRequest) {
   }
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>app/api/auth/google/route.ts</div><pre>export const dynamic = 'force-dynamic'
+
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
+import { generateToken } from '@/lib/auth/auth'
+import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
+
+const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
+
+function googleAudience() {
+  return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { idToken, mode, universityId, referralCode } = await request.json()
+
+    if (!idToken || typeof idToken !== 'string') {
+      return NextResponse.json({ error: 'Google token is required' }, { status: 400 })
+    }
+
+    const aud = googleAudience()
+    if (!aud) {
+      return NextResponse.json({ error: 'Google auth is not configured' }, { status: 500 })
+    }
+
+    const { payload } = await jwtVerify(idToken, GOOGLE_JWKS, {
+      issuer: ['https://accounts.google.com', 'accounts.google.com'],
+      audience: aud,
+    })
+
+    const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : null
+    const name = typeof payload.name === 'string' ? payload.name : 'Google User'
+
+    if (!email) {
+      return NextResponse.json({ error: 'Google account has no email' }, { status: 400 })
+    }
+
+    let user = await prisma.user.findUnique({ where: { email } })
+
+    if (!user) {
+      if (mode !== 'signup') {
+        return NextResponse.json({ error: 'No account found. Use Sign up with Google first.' }, { status: 404 })
+      }
+
+      const signupToken = issueGoogleSignupToken({
+        email,
+        name,
+        universityId: typeof universityId === 'string' &amp;&amp; universityId.trim() ? universityId : undefined,
+        referralCode: typeof referralCode === 'string' &amp;&amp; referralCode.trim() ? referralCode.trim().toUpperCase() : undefined,
+      })
+
+      return NextResponse.json({
+        success: true,
+        requiresProfile: true,
+        signupToken,
+        profile: { email, name },
+      })
+    }
+
+    if (user.role === 'RIDER') {
+      return NextResponse.json(
+        { error: 'Rider accounts cannot use this login. Use Rider Login.', isRider: true },
+        { status: 403 }
+      )
+    }
+
+    if (user.isSuspended) {
+      return NextResponse.json(
+        {
+          error: 'Account suspended',
+          suspended: true,
+          reason: user.suspensionReason ?? 'Violation of platform terms',
+          until: user.suspendedUntil ?? null,
+        },
+        { status: 403 }
+      )
+    }
+
+    const token = generateToken(user.id, user.phone)
+
+    return NextResponse.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        hostelName: user.hostelName,
+      },
+    })
+  } catch (error) {
+    console.error('Google auth error:', error)
+    return NextResponse.json({ error: 'Google authentication failed' }, { status: 500 })
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/auth/login-with-password/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/auth/login-with-password/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateToken, comparePassword } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
-import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { checkRateLimitDistributed, incrementRateLimit, getIpKey } from '@/lib/security/rate-limit'
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+const LOGIN_MAX_FAILURES = 10
 
 export async function POST(request: NextRequest) {
   try {
@@ -26147,12 +26218,16 @@ export async function POST(request: NextRequest) {
     const originErr = enforceSameOrigin(request)
     if (originErr) return originErr
 
-    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const ip = getIpKey(
+      request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip')
+    )
+    const rateLimitKey = `login-fail:${ip}`
+
+    // Check if this IP has too many FAILED attempts
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
-      `login-with-password:${ip}`,
-      10,
-      15 * 60 * 1000,
-      { requireDistributedInProduction: true }
+      rateLimitKey,
+      LOGIN_MAX_FAILURES,
+      LOGIN_WINDOW_MS
     )
     if (!allowed) {
       return NextResponse.json(
@@ -26171,22 +26246,23 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
+      // Count as a failure to prevent email enumeration abuse
+      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }
 
     // Riders have a separate login at /rider/login.
     if (user.role === 'RIDER') {
       return NextResponse.json(
-        {
-          error: 'Rider accounts cannot log in here.',
-          isRider: true,
-        },
+        { error: 'Rider accounts cannot log in here.', isRider: true },
         { status: 403 }
       )
     }
 
     const isValidPassword = await comparePassword(password, user.password)
     if (!isValidPassword) {
+      // Only increment counter on actual wrong password
+      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
     }
 
@@ -26229,8 +26305,7 @@ export async function POST(request: NextRequest) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
-}
-</pre></div>
+}</pre></div>
 <div class='file-block'><div class='file-header'>app/api/auth/me/route.ts</div><pre>// app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/auth'
@@ -26571,6 +26646,7 @@ import { prisma } from '@/lib/prisma'
 import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
+import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26623,15 +26699,17 @@ export async function POST(request: NextRequest) {
 
     // ── OTP session token verification ────────────────────────────────────
     const verifiedIdentifier = verifyOtpSessionToken(otpSessionToken)
+    const googleSignup = verifiedIdentifier ? null : verifyGoogleSignupToken(otpSessionToken)
 
-    if (!verifiedIdentifier) {
+    if (!verifiedIdentifier &amp;&amp; !googleSignup) {
       return NextResponse.json(
-        { error: 'OTP session expired or invalid. Please verify your email again.' },
+        { error: 'Session expired or invalid. Please restart signup.' },
         { status: 400 }
       )
     }
 
-    if (verifiedIdentifier.toLowerCase() !== email.toLowerCase()) {
+    const verifiedEmail = verifiedIdentifier || googleSignup?.email || ''
+    if (verifiedEmail.toLowerCase() !== email.toLowerCase()) {
       return NextResponse.json(
         { error: 'Email does not match the verified address. Please restart the signup flow.' },
         { status: 400 }
@@ -26720,7 +26798,8 @@ export async function POST(request: NextRequest) {
     console.error('Signup error:', error)
     return NextResponse.json({ error: 'Signup failed' }, { status: 500 })
   }
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/auth/suspension-info/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/auth/suspension-info/route.ts
 //
@@ -29323,7 +29402,7 @@ async function notifySellerOfNewOrder(
           &lt;tr&gt;
             &lt;td align="center" style="padding-bottom:24px;"&gt;
               &lt;span style="font-size:28px;font-weight:800;color:#111827;letter-spacing:-1px;"&gt;BATAMART&lt;/span&gt;
-              &lt;span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;"&gt;UNIZIK Campus Marketplace&lt;/span&gt;
+              &lt;span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;"&gt;Campus Marketplace&lt;/span&gt;
             &lt;/td&gt;
           &lt;/tr&gt;
           &lt;tr&gt;
@@ -29358,7 +29437,7 @@ async function notifySellerOfNewOrder(
           &lt;tr&gt;
             &lt;td align="center" style="padding-top:24px;"&gt;
               &lt;p style="font-size:12px;color:#9ca3af;margin:0;"&gt;
-                BATAMART — UNIZIK Campus Marketplace · Awka, Anambra State
+                BATAMART — Campus Marketplace · Awka, Anambra State
               &lt;/p&gt;
             &lt;/td&gt;
           &lt;/tr&gt;
@@ -29375,6 +29454,7 @@ async function notifySellerOfNewOrder(
 
   await Promise.allSettled(tasks)
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/product-filters/route.ts</div><pre>export const dynamic = 'force-dynamic'
 
@@ -32687,7 +32767,7 @@ export async function POST(request: NextRequest) {
                 &lt;tr&gt;
                   &lt;td align="center" style="padding-bottom:20px;"&gt;
                     &lt;span style="font-size:26px;font-weight:800;color:#111827;"&gt;BATAMART&lt;/span&gt;
-                    &lt;span style="font-size:11px;color:#6b7280;display:block;"&gt;UNIZIK Campus Marketplace&lt;/span&gt;
+                    &lt;span style="font-size:11px;color:#6b7280;display:block;"&gt;Campus Marketplace&lt;/span&gt;
                   &lt;/td&gt;
                 &lt;/tr&gt;
                 &lt;tr&gt;
@@ -32719,7 +32799,7 @@ export async function POST(request: NextRequest) {
                 &lt;/tr&gt;
                 &lt;tr&gt;
                   &lt;td align="center" style="padding-top:20px;"&gt;
-                    &lt;p style="font-size:12px;color:#9ca3af;margin:0;"&gt;BATAMART — UNIZIK Campus Marketplace, Awka, Anambra State.&lt;/p&gt;
+                    &lt;p style="font-size:12px;color:#9ca3af;margin:0;"&gt;BATAMART — Campus Marketplace, Awka, Anambra State.&lt;/p&gt;
                   &lt;/td&gt;
                 &lt;/tr&gt;
               &lt;/table&gt;
@@ -32740,6 +32820,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 500 })
   }
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/test-db-speed/route.ts</div><pre>// app/api/test-db-speed/route.ts
 import { prisma } from '@/lib/prisma'
@@ -36598,14 +36679,14 @@ export async function sendEmailOTP(email: string, code: string): Promise&lt;bool
           subject: 'Your BATAMART Verification Code',
           html: `
             &lt;div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"&gt;
-              &lt;div style="background: linear-gradient(135deg, #1a3f8f, #3b9ef5); padding: 20px; text-align: center;"&gt;
+              &lt;div style="background: linear-gradient(135deg, #3D95E8, #4DABFF); padding: 20px; text-align: center;"&gt;
                 &lt;h1 style="color: white; margin: 0;"&gt;BATAMART&lt;/h1&gt;
               &lt;/div&gt;
               &lt;div style="padding: 30px; background: #f9f9f9;"&gt;
                 &lt;h2 style="color: #333;"&gt;Verification Code&lt;/h2&gt;
                 &lt;p style="color: #666;"&gt;Enter this code to continue. It expires in 10 minutes.&lt;/p&gt;
-                &lt;div style="background: white; border: 2px solid #1a3f8f; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;"&gt;
-                  &lt;span style="font-size: 36px; font-weight: bold; color: #1a3f8f; letter-spacing: 8px;"&gt;${code}&lt;/span&gt;
+                &lt;div style="background: white; border: 2px solid #3D95E8; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;"&gt;
+                  &lt;span style="font-size: 36px; font-weight: bold; color: #3D95E8; letter-spacing: 8px;"&gt;${code}&lt;/span&gt;
                 &lt;/div&gt;
                 &lt;p style="color: #999; font-size: 14px;"&gt;If you didn't request this, you can safely ignore this email.&lt;/p&gt;
               &lt;/div&gt;
@@ -36700,6 +36781,43 @@ export const getUserFromRequest = async (request: Request) =&gt; {
 
   return user
 }
+
+</pre></div>
+<div class='file-block'><div class='file-header'>lib/auth/google-signup-token.ts</div><pre>import jwt from 'jsonwebtoken'
+
+type GoogleSignupPayload = {
+  email: string
+  name: string
+  universityId?: string
+  referralCode?: string
+}
+
+function getSecret(): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) throw new Error('Server misconfiguration: JWT_SECRET is not set.')
+  return secret
+}
+
+export function issueGoogleSignupToken(payload: GoogleSignupPayload): string {
+  return jwt.sign({ t: 'google-signup', ...payload }, getSecret(), { expiresIn: '15m' })
+}
+
+export function verifyGoogleSignupToken(token: string): GoogleSignupPayload | null {
+  try {
+    const decoded = jwt.verify(token, getSecret()) as any
+    if (decoded?.t !== 'google-signup') return null
+    if (!decoded?.email || !decoded?.name) return null
+    return {
+      email: String(decoded.email),
+      name: String(decoded.name),
+      universityId: decoded.universityId ? String(decoded.universityId) : undefined,
+      referralCode: decoded.referralCode ? String(decoded.referralCode) : undefined,
+    }
+  } catch {
+    return null
+  }
+}
+
 </pre></div>
 <div class='file-block'><div class='file-header'>lib/auth/index.ts</div><pre>import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
@@ -36788,7 +36906,7 @@ function baseTemplate(content: string) {
           &lt;tr&gt;
             &lt;td align="center" style="padding-bottom:24px;"&gt;
               &lt;span style="font-size:28px;font-weight:800;color:#111827;letter-spacing:-1px;"&gt;BATAMART&lt;/span&gt;
-              &lt;span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;"&gt;UNIZIK Campus Marketplace&lt;/span&gt;
+              &lt;span style="font-size:12px;color:#6b7280;display:block;margin-top:2px;"&gt;Campus Marketplace&lt;/span&gt;
             &lt;/td&gt;
           &lt;/tr&gt;
 
@@ -36804,7 +36922,7 @@ function baseTemplate(content: string) {
             &lt;td align="center" style="padding-top:24px;"&gt;
               &lt;p style="font-size:12px;color:#9ca3af;margin:0;"&gt;
                 You're receiving this because you have an account on BATAMART.&lt;br/&gt;
-                UNIZIK Campus Marketplace &amp;mdash; Awka, Anambra State.
+                Campus Marketplace.
               &lt;/p&gt;
             &lt;/td&gt;
           &lt;/tr&gt;
@@ -36983,7 +37101,8 @@ export function newReviewEmail(productName: string) {
       ${ctaButton('View Review', `${APP_URL}/reviews`)}
     `)
   }
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/email/sendEmail.ts</div><pre>// lib/email/sendEmail.ts
 // Server-side only — never import this in client components
 
@@ -37851,15 +37970,17 @@ export async function processReferralReward(
   })
 }
 </pre></div>
-<div class='file-block'><div class='file-header'>lib/security/rate-limit.ts</div><pre>type Bucket = { count: number; resetAt: number }
+<div class='file-block'><div class='file-header'>lib/security/rate-limit.ts</div><pre>import { randomUUID } from 'crypto'
+
+type Bucket = { count: number; resetAt: number }
 
 const buckets = new Map&lt;string, Bucket&gt;()
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
 
 export function getIpKey(raw: string | null | undefined): string {
-  if (!raw) return 'unknown'
-  return raw.split(',')[0].trim() || 'unknown'
+  if (!raw) return 'fallback-' + randomUUID()
+  return raw.split(',')[0].trim() || 'fallback-' + randomUUID()
 }
 
 export function checkRateLimit(key: string, max: number, windowMs: number): { allowed: boolean; retryAfterSecs: number } {
@@ -37876,6 +37997,33 @@ export function checkRateLimit(key: string, max: number, windowMs: number): { al
   return { allowed: true, retryAfterSecs: 0 }
 }
 
+export async function incrementRateLimit(
+  key: string,
+  windowMs: number
+): Promise&lt;void&gt; {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+    // just let checkRateLimit handle it on next check
+    return
+  }
+  try {
+    const ttlSecs = Math.max(1, Math.ceil(windowMs / 1000))
+    await fetch(`${UPSTASH_URL}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${UPSTASH_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        ['INCR', key],
+        ['EXPIRE', key, ttlSecs],
+      ]),
+      cache: 'no-store',
+    })
+  } catch {
+    // silent fail — don't block the user
+  }
+}
+
 export async function checkRateLimitDistributed(
   key: string,
   max: number,
@@ -37884,41 +38032,40 @@ export async function checkRateLimitDistributed(
 ): Promise&lt;{ allowed: boolean; retryAfterSecs: number }&gt; {
   const requireDistributedInProduction = options?.requireDistributedInProduction ?? false
   const isProd = process.env.NODE_ENV === 'production'
+
   if (!UPSTASH_URL || !UPSTASH_TOKEN) {
     if (isProd &amp;&amp; requireDistributedInProduction) {
-      // Fail closed for critical abuse-sensitive endpoints in production.
-      return { allowed: false, retryAfterSecs: 60 }
+      console.warn('[rate-limit] Upstash not configured, falling back to in-memory rate limit')
     }
     return checkRateLimit(key, max, windowMs)
   }
 
   try {
-    const url = `${UPSTASH_URL}/pipeline`
     const ttlSecs = Math.max(1, Math.ceil(windowMs / 1000))
-    const body = JSON.stringify([
-      ['INCR', key],
-      ['EXPIRE', key, ttlSecs],
-      ['TTL', key],
-    ])
-    const res = await fetch(url, {
+    const res = await fetch(`${UPSTASH_URL}/pipeline`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
         'Content-Type': 'application/json',
       },
-      body,
+      body: JSON.stringify([
+        ['GET', key],
+        ['TTL', key],
+      ]),
       cache: 'no-store',
     })
+
     if (!res.ok) return checkRateLimit(key, max, windowMs)
 
     const data = await res.json()
     const count = Number(data?.[0]?.result ?? 0)
-    const ttl = Number(data?.[2]?.result ?? ttlSecs)
+    const ttl = Number(data?.[1]?.result ?? ttlSecs)
+
     if (!Number.isFinite(count) || !Number.isFinite(ttl)) {
       return checkRateLimit(key, max, windowMs)
     }
 
-    if (count &gt; max) {
+    if (count &gt;= max) {
       return { allowed: false, retryAfterSecs: Math.max(1, ttl) }
     }
     return { allowed: true, retryAfterSecs: 0 }
@@ -37932,8 +38079,7 @@ setInterval(() =&gt; {
   for (const [k, v] of buckets.entries()) {
     if (now &gt; v.resetAt) buckets.delete(k)
   }
-}, 60_000)
-</pre></div>
+}, 60_000)</pre></div>
 <div class='file-block'><div class='file-header'>lib/security/request.ts</div><pre>import { NextRequest, NextResponse } from 'next/server'
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
@@ -39477,55 +39623,65 @@ html.splash-pending body &gt; div &gt; * {
   }
 
   .dark {
-    --background: #020617;
-    --surface: #0f172a;
-    --text: #e5e7eb;
+    --primary: #4DABFF;
+    --background: #121212;
+    --surface: #1E1E1E;
+    --text: #E0E0E0;
   }
 
   /* Global utility remap so existing light-tailwind pages render cleanly in dark mode */
-  .dark .bg-white { background-color: #0f172a !important; }
-  .dark .bg-gray-50 { background-color: #111827 !important; }
-  .dark .bg-gray-100 { background-color: #1f2937 !important; }
-  .dark .bg-gray-200 { background-color: #334155 !important; }
-  .dark .bg-light-surface { background-color: #0f172a !important; }
+  .dark .bg-white { background-color: #1E1E1E !important; }
+  .dark .bg-gray-50 { background-color: #1E1E1E !important; }
+  .dark .bg-gray-100 { background-color: #232323 !important; }
+  .dark .bg-gray-200 { background-color: #2C2C2C !important; }
+  .dark .bg-light-surface { background-color: #121212 !important; }
   .dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.16) !important; }
   .dark .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.18) !important; }
   .dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.16) !important; }
   .dark .bg-violet-50 { background-color: rgba(139, 92, 246, 0.18) !important; }
   .dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.16) !important; }
   .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.16) !important; }
-  .dark .bg-\[\#f0f2f5\] { background-color: #050b16 !important; }
-  .dark .bg-\[\#f7f8fa\] { background-color: #050b16 !important; }
-  .dark .bg-\[\#e7ebf2\] { background-color: #081225 !important; }
-  .dark .bg-white\/95 { background-color: rgba(15, 23, 42, 0.95) !important; }
-  .dark .bg-white\/92 { background-color: rgba(15, 23, 42, 0.92) !important; }
-  .dark .bg-white\/90 { background-color: rgba(15, 23, 42, 0.9) !important; }
-  .dark .bg-white\/88 { background-color: rgba(15, 23, 42, 0.88) !important; }
-  .dark .bg-white\/80 { background-color: rgba(15, 23, 42, 0.8) !important; }
-  .dark .bg-white\/70 { background-color: rgba(15, 23, 42, 0.7) !important; }
-  .dark .bg-white\/60 { background-color: rgba(15, 23, 42, 0.6) !important; }
+  .dark .bg-\[\#f0f2f5\] { background-color: #121212 !important; }
+  .dark .bg-\[\#f7f8fa\] { background-color: #121212 !important; }
+  .dark .bg-\[\#e7ebf2\] { background-color: #161616 !important; }
+  .dark .bg-white\/95 { background-color: rgba(30, 30, 30, 0.95) !important; }
+  .dark .bg-white\/92 { background-color: rgba(30, 30, 30, 0.92) !important; }
+  .dark .bg-white\/90 { background-color: rgba(30, 30, 30, 0.9) !important; }
+  .dark .bg-white\/88 { background-color: rgba(30, 30, 30, 0.88) !important; }
+  .dark .bg-white\/80 { background-color: rgba(30, 30, 30, 0.8) !important; }
+  .dark .bg-white\/70 { background-color: rgba(30, 30, 30, 0.7) !important; }
+  .dark .bg-white\/60 { background-color: rgba(30, 30, 30, 0.6) !important; }
 
-  .dark .text-gray-900 { color: #f8fafc !important; }
-  .dark .text-gray-800 { color: #e2e8f0 !important; }
-  .dark .text-gray-700 { color: #cbd5e1 !important; }
-  .dark .text-gray-600 { color: #94a3b8 !important; }
-  .dark .text-gray-500 { color: #94a3b8 !important; }
-  .dark .text-gray-400 { color: #64748b !important; }
-  .dark .text-\[\#1e3a5f\] { color: #cbd5e1 !important; }
-  .dark .placeholder\:text-gray-400::placeholder { color: #64748b !important; }
+  .dark .text-gray-900 { color: #E0E0E0 !important; }
+  .dark .text-gray-800 { color: #D7D7D7 !important; }
+  .dark .text-gray-700 { color: #C8C8C8 !important; }
+  .dark .text-gray-600 { color: #AFAFAF !important; }
+  .dark .text-gray-500 { color: #A0A0A0 !important; }
+  .dark .text-gray-400 { color: #909090 !important; }
+  .dark .text-\[\#1e3a5f\] { color: #A0A0A0 !important; }
+  .dark .placeholder\:text-gray-400::placeholder { color: #8E8E8E !important; }
 
   .dark .border-gray-50 { border-color: #1f2937 !important; }
-  .dark .border-gray-100 { border-color: #273449 !important; }
-  .dark .border-gray-200 { border-color: #334155 !important; }
-  .dark .border-gray-300 { border-color: #475569 !important; }
-  .dark .border-gray-600 { border-color: #475569 !important; }
-  .dark .border-gray-700 { border-color: #334155 !important; }
-  .dark .border-gray-800 { border-color: #1f2937 !important; }
+  .dark .border-gray-100 { border-color: #2A2A2A !important; }
+  .dark .border-gray-200 { border-color: #343434 !important; }
+  .dark .border-gray-300 { border-color: #444444 !important; }
+  .dark .border-gray-600 { border-color: #444444 !important; }
+  .dark .border-gray-700 { border-color: #343434 !important; }
+  .dark .border-gray-800 { border-color: #2A2A2A !important; }
 
-  .dark .hover\:bg-gray-50:hover { background-color: #1f2937 !important; }
-  .dark .hover\:bg-gray-100:hover { background-color: #273449 !important; }
+  .dark .hover\:bg-gray-50:hover { background-color: #242424 !important; }
+  .dark .hover\:bg-gray-100:hover { background-color: #2A2A2A !important; }
   .dark .hover\:bg-blue-50:hover { background-color: rgba(59, 130, 246, 0.22) !important; }
-  .dark .hover\:text-gray-900:hover { color: #f8fafc !important; }
+  .dark .hover\:text-gray-900:hover { color: #EAEAEA !important; }
+
+  .dark .text-blue-600,
+  .dark .text-blue-500,
+  .dark .text-indigo-300,
+  .dark .text-indigo-400,
+  .dark .text-indigo-500,
+  .dark .text-BATAMART-primary {
+    color: #4DABFF !important;
+  }
 
   .dark .from-gray-50 {
     --tw-gradient-from: #111827 var(--tw-gradient-from-position) !important;
@@ -39538,7 +39694,7 @@ html.splash-pending body &gt; div &gt; * {
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
   .dark .from-indigo-50 {
-    --tw-gradient-from: #1e293b var(--tw-gradient-from-position) !important;
+    --tw-gradient-from: #1E1E1E var(--tw-gradient-from-position) !important;
     --tw-gradient-to: rgb(30 41 59 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
@@ -39587,14 +39743,14 @@ html.splash-pending body &gt; div &gt; * {
     --tw-gradient-to: rgb(59 7 100 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
-  .dark .to-white { --tw-gradient-to: #0f172a var(--tw-gradient-to-position) !important; }
-  .dark .to-indigo-50 { --tw-gradient-to: #1e293b var(--tw-gradient-to-position) !important; }
+  .dark .to-white { --tw-gradient-to: #1E1E1E var(--tw-gradient-to-position) !important; }
+  .dark .to-indigo-50 { --tw-gradient-to: #1E1E1E var(--tw-gradient-to-position) !important; }
   .dark .to-rose-50 { --tw-gradient-to: #3f172a var(--tw-gradient-to-position) !important; }
   .dark .to-blue-50 { --tw-gradient-to: #172554 var(--tw-gradient-to-position) !important; }
   .dark .to-amber-50 { --tw-gradient-to: #451a03 var(--tw-gradient-to-position) !important; }
   .dark .to-green-50 { --tw-gradient-to: #052e16 var(--tw-gradient-to-position) !important; }
   .dark .to-pink-50 { --tw-gradient-to: #3b0824 var(--tw-gradient-to-position) !important; }
-  .dark .via-white { --tw-gradient-stops: var(--tw-gradient-from), #0f172a var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+  .dark .via-white { --tw-gradient-stops: var(--tw-gradient-from), #1E1E1E var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
 
   .dark .shadow-sm,
   .dark .shadow,
@@ -39610,7 +39766,9 @@ html.splash-pending body &gt; div &gt; * {
   }
 
   body {
-    @apply bg-light-surface text-gray-900 dark:bg-slate-950 dark:text-gray-100;
+    @apply bg-light-surface text-gray-900 dark:text-gray-100;
+    background-color: var(--background);
+    color: var(--text);
     font-family: 'Inter', system-ui, sans-serif;
     /* Prevent WebView momentum scroll from dragging fixed elements */
     -webkit-overflow-scrolling: auto;
@@ -39694,7 +39852,7 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-slate-800;
+  @apply bg-gray-100 dark:bg-[#232323];
 }
 
 ::-webkit-scrollbar-thumb {
@@ -39767,7 +39925,7 @@ html.app-mode body {
 }
 
 html.dark.app-mode body {
-  background: #050b16 !important;
+  background: #121212 !important;
 }
 
 html.app-mode #page-scroll-container,
@@ -39781,7 +39939,7 @@ html.dark.app-mode #page-scroll-container,
 html.dark.app-mode #ios-scroll-area {
   background:
     radial-gradient(130% 60% at 50% -8%, rgba(99, 102, 241, 0.2), transparent 56%),
-    linear-gradient(180deg, #0b1325 0%, #060d1d 100%);
+    linear-gradient(180deg, #121212 0%, #161616 100%);
 }
 
 html.app-mode .bg-white.rounded-2xl {
@@ -39855,13 +40013,13 @@ html.app-mode .marketplace-shell {
 html.dark.app-mode .marketplace-shell {
   background:
     radial-gradient(140% 80% at 50% -15%, rgba(99, 102, 241, 0.22), transparent 54%),
-    linear-gradient(180deg, #0b1325 0%, #060d1d 45%, #040a16 100%) !important;
+    linear-gradient(180deg, #121212 0%, #161616 45%, #121212 100%) !important;
 }
 
 .dark .marketplace-shell {
   background:
     radial-gradient(120% 70% at 50% -10%, rgba(99, 102, 241, 0.2), transparent 55%),
-    linear-gradient(180deg, #0b1325 0%, #060d1d 50%, #040a16 100%) !important;
+    linear-gradient(180deg, #121212 0%, #161616 50%, #121212 100%) !important;
 }
 
 html.app-mode .marketplace-header {
@@ -39914,6 +40072,7 @@ html.app-mode .marketplace-feed .bg-white.rounded-2xl {
     0 12px 26px rgba(15, 23, 42, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>styles/mobile.css</div><pre>/* Mobile-first responsive utilities */
 
