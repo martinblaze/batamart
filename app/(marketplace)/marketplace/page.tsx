@@ -136,7 +136,7 @@ const ANIM_CSS = `
   }
   .dark .marketplace-shell .search-input:focus-within {
     box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 6px 16px rgba(2,6,23,0.45) !important;
-    background: #181c24 !important;
+    background: #0f1115 !important;
   }
 
   @keyframes dropIn {
@@ -211,9 +211,9 @@ const ANIM_CSS = `
   .section-stripe         { background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%); }
   .section-stripe-orange  { background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); }
   .section-stripe-emerald { background: linear-gradient(135deg, #059669 0%, #0891b2 100%); }
-  .dark .marketplace-shell .section-stripe         { background: linear-gradient(135deg, #1f2937 0%, #334155 100%); }
-  .dark .marketplace-shell .section-stripe-orange  { background: linear-gradient(135deg, #3f2b23 0%, #5b3a2f 100%); }
-  .dark .marketplace-shell .section-stripe-emerald { background: linear-gradient(135deg, #1d3f3a 0%, #244e5f 100%); }
+  .dark .marketplace-shell .section-stripe         { background: linear-gradient(135deg, #0d1016 0%, #171c26 100%); }
+  .dark .marketplace-shell .section-stripe-orange  { background: linear-gradient(135deg, #1a1311 0%, #241a17 100%); }
+  .dark .marketplace-shell .section-stripe-emerald { background: linear-gradient(135deg, #0f1515 0%, #162024 100%); }
 
   .discount-badge {
     background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -232,7 +232,7 @@ const ANIM_CSS = `
     animation: shimmerBg 4s linear infinite;
   }
   .dark .marketplace-shell .promo-bar {
-    background: linear-gradient(90deg, #1e293b, #334155, #1e293b);
+    background: linear-gradient(90deg, #0f1115, #1a1f2a, #0f1115);
     background-size: 200% 100%;
   }
   @keyframes shimmerBg {
@@ -243,7 +243,7 @@ const ANIM_CSS = `
   .batamart-header {
     background: linear-gradient(135deg, #4c1d95 0%, #6366f1 60%, #4c1d95 100%);
   }
-  .dark .marketplace-shell .batamart-header { background: linear-gradient(135deg, #1e293b 0%, #334155 60%, #1e293b 100%); }
+  .dark .marketplace-shell .batamart-header { background: linear-gradient(135deg, #0c0f15 0%, #171c26 60%, #0c0f15 100%); }
 
   .cat-tile {
     transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.25s ease;
@@ -378,7 +378,7 @@ const ANIM_CSS = `
     animation: shimmerBg 3s linear infinite;
   }
   .dark .marketplace-shell .trust-bar {
-    background: linear-gradient(90deg, #334155, #475569, #334155);
+    background: linear-gradient(90deg, #161a22, #232937, #161a22);
     background-size: 200% 100%;
   }
 
@@ -1453,7 +1453,7 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-slate-700 dark:to-slate-600 px-5 py-4">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-[#12161f] dark:to-[#1b2230] px-5 py-4">
         <div className="flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-white" />
           <div>
@@ -1720,7 +1720,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
   return (
     <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-slate-700 dark:via-slate-600 dark:to-slate-700 gradient-animated px-5 py-4">
+      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-[#151313] dark:via-[#201a18] dark:to-[#151313] gradient-animated px-5 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-white" />
@@ -1783,7 +1783,7 @@ function LiveActivityMarquee({ products }: { products: any[] }) {
   const doubled = [...items, ...items]
 
   return (
-    <div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-slate-700 dark:to-slate-600 rounded-2xl overflow-hidden py-2.5 px-0">
+    <div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-[#12161f] dark:to-[#1b2230] rounded-2xl overflow-hidden py-2.5 px-0">
       <div className="flex items-center gap-3 overflow-hidden">
         <div className="flex-shrink-0 flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-r-xl">
           <span className="live-ping w-2 h-2 rounded-full bg-green-400 inline-block" />

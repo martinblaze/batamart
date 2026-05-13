@@ -41,19 +41,19 @@ html.splash-pending body > div > * {
 
   .dark {
     --primary: #60A5FA;
-    --background: #0b1220;
-    --surface: #111a2e;
+    --background: #000000;
+    --surface: #0f1115;
     --text: #e5e7eb;
-    --muted: #94a3b8;
-    --border: #2b3548;
-    --surface-elevated: #162238;
+    --muted: #98a2b3;
+    --border: #272b33;
+    --surface-elevated: #151922;
   }
 
   /* Global utility remap so existing light-tailwind pages render cleanly in dark mode */
   .dark .bg-white { background-color: var(--surface) !important; }
   .dark .bg-gray-50 { background-color: var(--surface) !important; }
   .dark .bg-gray-100 { background-color: var(--surface-elevated) !important; }
-  .dark .bg-gray-200 { background-color: #1f2b40 !important; }
+  .dark .bg-gray-200 { background-color: #1d212b !important; }
   .dark .bg-light-surface { background-color: var(--background) !important; }
   .dark .bg-\[\#fff\],
   .dark .bg-\[\#ffffff\] { background-color: var(--surface) !important; }
@@ -65,14 +65,14 @@ html.splash-pending body > div > * {
   .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.16) !important; }
   .dark .bg-\[\#f0f2f5\],
   .dark .bg-\[\#f7f8fa\] { background-color: var(--background) !important; }
-  .dark .bg-\[\#e7ebf2\] { background-color: #101a2b !important; }
-  .dark .bg-white\/95 { background-color: rgba(17, 26, 46, 0.95) !important; }
-  .dark .bg-white\/92 { background-color: rgba(17, 26, 46, 0.92) !important; }
-  .dark .bg-white\/90 { background-color: rgba(17, 26, 46, 0.9) !important; }
-  .dark .bg-white\/88 { background-color: rgba(17, 26, 46, 0.88) !important; }
-  .dark .bg-white\/80 { background-color: rgba(17, 26, 46, 0.8) !important; }
-  .dark .bg-white\/70 { background-color: rgba(17, 26, 46, 0.7) !important; }
-  .dark .bg-white\/60 { background-color: rgba(17, 26, 46, 0.6) !important; }
+  .dark .bg-\[\#e7ebf2\] { background-color: #0b0d12 !important; }
+  .dark .bg-white\/95 { background-color: rgba(15, 17, 21, 0.95) !important; }
+  .dark .bg-white\/92 { background-color: rgba(15, 17, 21, 0.92) !important; }
+  .dark .bg-white\/90 { background-color: rgba(15, 17, 21, 0.9) !important; }
+  .dark .bg-white\/88 { background-color: rgba(15, 17, 21, 0.88) !important; }
+  .dark .bg-white\/80 { background-color: rgba(15, 17, 21, 0.8) !important; }
+  .dark .bg-white\/70 { background-color: rgba(15, 17, 21, 0.7) !important; }
+  .dark .bg-white\/60 { background-color: rgba(15, 17, 21, 0.6) !important; }
 
   .dark .text-gray-900 { color: #e5e7eb !important; }
   .dark .text-gray-800 { color: #d1d5db !important; }
@@ -115,8 +115,8 @@ html.splash-pending body > div > * {
   .dark .ring-white\/30,
   .dark .ring-white\/20 { --tw-ring-color: rgba(100, 116, 139, 0.55) !important; }
 
-  .dark .hover\:bg-gray-50:hover { background-color: #1a2538 !important; }
-  .dark .hover\:bg-gray-100:hover { background-color: #223049 !important; }
+  .dark .hover\:bg-gray-50:hover { background-color: #141821 !important; }
+  .dark .hover\:bg-gray-100:hover { background-color: #1a1f2a !important; }
   .dark .hover\:bg-blue-50:hover { background-color: rgba(59, 130, 246, 0.22) !important; }
   .dark .hover\:text-gray-900:hover { color: #EAEAEA !important; }
 
@@ -378,7 +378,7 @@ html.app-mode body {
 }
 
 html.dark.app-mode body {
-  background: #0b1220 !important;
+  background: #000000 !important;
 }
 
 html.app-mode #page-scroll-container,
@@ -392,7 +392,7 @@ html.dark.app-mode #page-scroll-container,
 html.dark.app-mode #ios-scroll-area {
   background:
     radial-gradient(130% 60% at 50% -8%, rgba(99, 102, 241, 0.2), transparent 56%),
-    linear-gradient(180deg, #0b1220 0%, #101a2b 100%);
+    linear-gradient(180deg, #000000 0%, #090b10 100%);
 }
 
 html.app-mode .bg-white.rounded-2xl {
@@ -466,13 +466,13 @@ html.app-mode .marketplace-shell {
 html.dark.app-mode .marketplace-shell {
   background:
     radial-gradient(140% 80% at 50% -15%, rgba(99, 102, 241, 0.22), transparent 54%),
-    linear-gradient(180deg, #0b1220 0%, #111a2e 45%, #0b1220 100%) !important;
+    linear-gradient(180deg, #000000 0%, #0c0f15 45%, #000000 100%) !important;
 }
 
 .dark .marketplace-shell {
   background:
     radial-gradient(120% 70% at 50% -10%, rgba(99, 102, 241, 0.2), transparent 55%),
-    linear-gradient(180deg, #0b1220 0%, #111a2e 50%, #0b1220 100%) !important;
+    linear-gradient(180deg, #000000 0%, #0c0f15 50%, #000000 100%) !important;
 }
 
 html.app-mode .marketplace-header {
