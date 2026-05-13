@@ -14,18 +14,18 @@ export default function AboutPage() {
   const features = [
     {
       icon: Shield,
-      title: 'Secure Transactions',
-      description: 'Your money is held safely in escrow until delivery is confirmed'
+      title: 'Protected Checkout Flow',
+      description: 'Payments are processed securely, with seller settlement tied to order completion rules in-app'
     },
     {
       icon: Users,
-      title: 'Student Community',
-      description: 'Buy and sell exclusively within the CAMPUS student community'
+      title: 'Campus Community',
+      description: 'Built for student-to-student commerce with profiles, reviews, and order history'
     },
     {
       icon: Zap,
       title: 'Fast Delivery',
-      description: 'Get your items delivered to your hostel within hours'
+      description: 'Delivery is available through the BATAMART rider workflow where supported'
     },
     {
       icon: Package,
@@ -35,16 +35,16 @@ export default function AboutPage() {
   ]
 
   const stats = [
-    { number: '2,000+', label: 'Active Students' },
-    { number: '5,000+', label: 'Products Listed' },
-    { number: '10,000+', label: 'Successful Deliveries' },
-    { number: '98%', label: 'Satisfaction Rate' }
+    { number: '24/7', label: 'Marketplace Access' },
+    { number: '72h', label: 'Dispute Window After Delivery' },
+    { number: '₦800', label: 'Per-Order Delivery Fee Rule' },
+    { number: '10%', label: 'Platform Commission on Completed Sales' }
   ]
 
   const values = [
     {
       title: 'Trust & Safety',
-      description: 'We verify every student seller and use escrow payments to ensure secure transactions.'
+      description: 'We combine order tracking, dispute handling, and account-level controls to improve marketplace safety.'
     },
     {
       title: 'Community First',
@@ -73,8 +73,8 @@ export default function AboutPage() {
             Your Campus Marketplace, Reimagined
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            BATAMART is the trusted peer-to-peer marketplace connecting CAMPUS students for safe,
-            convenient buying and selling right on campus.
+            BATAMART is a campus-focused peer-to-peer marketplace for simpler,
+            more reliable buying and selling.
           </p>
         </div>
       </section>
@@ -99,8 +99,7 @@ export default function AboutPage() {
             <p className="text-lg leading-relaxed">
               We created BATAMART to solve these problems. A platform exclusively for CAMPUS students,
               where you can buy textbooks from a classmate, sell your old phone to someone in the
-              next hostel, or order food delivered right to your door — all with the confidence
-              that comes from our secure escrow system and verified student community.
+              next hostel, and manage orders in one place with transparent status updates and support tools.
             </p>
 
             <p className="text-lg leading-relaxed">
@@ -232,8 +231,8 @@ export default function AboutPage() {
             Join the BATAMART Community Today
           </h2>
           <p className="text-xl mb-8 text-white/90">
-            Thousands of CAMPUS students are already buying and selling on BATAMART.
-            Start your journey today!
+            BATAMART is built for practical, everyday campus commerce.
+            Start your journey today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

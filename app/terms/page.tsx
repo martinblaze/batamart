@@ -13,7 +13,7 @@ export default function TermsPage() {
     {
       icon: ShieldCheck,
       title: "Eligibility",
-      content: "BATAMART is exclusively for verified students of University. You must be at least 18 years old to use this platform. You are responsible for providing accurate student verification information."
+      content: "BATAMART is designed for campus commerce users. You must be at least 18 years old to use this platform and provide accurate account and profile information."
     }
   ]
 
@@ -65,8 +65,8 @@ export default function TermsPage() {
       title: "Payment & Escrow",
       points: [
         "All payments are processed through secure payment gateways",
-        "Funds are held in escrow until delivery confirmation",
-        "Sellers receive payment after successful delivery",
+        "Seller settlement follows BATAMART order completion and dispute rules",
+        "Sellers do not receive immediate payout at checkout",
         "Refunds are processed according to our dispute resolution policy",
         "BATAMART charges a 10% commission on completed sales"
       ]
@@ -74,9 +74,9 @@ export default function TermsPage() {
     {
       title: "Delivery & Shipping",
       points: [
-        "Delivery is facilitated by verified BATAMART riders",
+        "Delivery may be facilitated through BATAMART rider flows where available",
         "Standard delivery fee is ₦800 per order",
-        "Most deliveries completed within 2-6 hours",
+        "Delivery timing depends on rider availability, distance, and seller readiness",
         "Sellers must package items securely",
         "Buyers must be available to receive deliveries"
       ]
@@ -261,7 +261,7 @@ export default function TermsPage() {
                 </li>
               </ul>
               <p className="font-semibold">
-                Suspended accounts may lose access to funds in escrow and pending balances.
+                Suspended accounts may have temporary limits while reviews are ongoing, including payout restrictions where applicable.
               </p>
             </div>
           </div>

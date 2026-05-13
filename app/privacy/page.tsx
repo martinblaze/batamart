@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Account Information",
-          text: "When you create a BATAMART account, we collect your name, email phone number, and location address like your hostel information for verification purposes."
+          text: "When you create a BATAMART account, we collect details such as your name, email, phone number, and profile information you provide."
         },
         {
           subtitle: "Transaction Data",
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         },
         {
           subtitle: "Safety & Security",
-          text: "Your data helps us verify student identity, prevent fraud, resolve disputes, and maintain a safe trading environment."
+          text: "Your data helps us prevent fraud, support dispute handling, secure accounts, and maintain a safer trading environment."
         },
         {
           subtitle: "Communication",
@@ -194,7 +194,7 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">✓</span>
-                <span><strong>Deleted accounts:</strong> Most data is deleted within 30 days of account deletion</span>
+                <span><strong>Deleted accounts:</strong> We aim to delete or anonymise most data within a reasonable processing window after approved deletion requests</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">✓</span>
@@ -202,7 +202,7 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">✓</span>
-                <span><strong>Dispute records:</strong> Retained for 2 years after dispute resolution</span>
+                <span><strong>Dispute records:</strong> Retained as needed for support, fraud prevention, and legal compliance</span>
               </li>
             </ul>
           </div>

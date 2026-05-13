@@ -14,7 +14,7 @@ const sections = [
     content: [
       'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
       'You must be at least 18 years of age or have the consent of a parent or guardian.',
-      'You must complete identity verification, including face ID registration, before your seller account is activated.',
+      'Seller access is enabled through your BATAMART account role and may be restricted if your account violates platform policy.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
     ],
   },
@@ -53,13 +53,13 @@ const sections = [
   },
   {
     id: '5',
-    title: 'Withdrawals & Face Verification',
+    title: 'Withdrawals & Security',
     icon: '🔐',
     content: [
-      'All withdrawal requests from your BATAMART wallet require face verification to confirm your identity.',
-      'Your face descriptor is encrypted and stored securely. It is never shared with third parties.',
-      'If face verification repeatedly fails, your withdrawal will be temporarily locked and you must contact support.',
-      'BATAMART is not liable for failed withdrawals caused by poor lighting, device malfunction, or changes in appearance. Contact support if you experience persistent issues.',
+      'All withdrawal requests from your BATAMART wallet require your configured security checks (such as withdrawal PIN and account validation).',
+      'You are responsible for keeping your account credentials and payout details accurate and confidential.',
+      'BATAMART may temporarily hold or review withdrawal requests flagged by our risk and security systems.',
+      'If a withdrawal fails repeatedly, contact support for manual review and resolution.',
     ],
   },
   {
@@ -141,9 +141,9 @@ export default function SellerTermsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Seller Terms & Conditions</h1>
-              <p className="text-gray-500 mt-1 text-sm">
-                BATAMART Campus Marketplace &nbsp;·&nbsp; Effective: January 2025 &nbsp;·&nbsp; Version 1.0
-              </p>
+          <p className="text-gray-500 mt-1 text-sm">
+                BATAMART Campus Marketplace &nbsp;·&nbsp; Effective: May 2026 &nbsp;·&nbsp; Version 1.1
+          </p>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export default function SellerTermsPage() {
         <div className="mt-10 bg-white border border-gray-200 rounded-2xl p-8 text-center">
           <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
             By clicking{' '}
-            <strong className="text-gray-700">"Scan Face & Become a Seller"</strong>{' '}
+            <strong className="text-gray-700">"Become a Seller"</strong>{' '}
             on the previous page, you confirm that you have read, understood, and agree to these Seller Terms & Conditions.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">

@@ -433,8 +433,8 @@ export default function HomePage() {
 
             <Reveal delay={160}>
               <p className="text-gray-500 text-lg max-w-md mx-auto leading-relaxed mb-10 font-light">
-                The smartest way for campus students to trade — secure escrow payments,
-                campus-wide delivery, real seller verification.
+                The smartest way for campus students to trade — secure checkout,
+                structured order flow, and built-in support tools.
               </p>
             </Reveal>
 
@@ -495,9 +495,9 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-3 gap-4">
               {[
-                { num: '01', title: 'Browse & Buy',    desc: 'Explore products from verified students across all faculties and hostels.', icon: '🔍', featured: false },
-                { num: '02', title: 'Secure Escrow',   desc: 'Your money is held safely in escrow. Released to the seller only after you confirm delivery.', icon: '🔐', featured: true  },
-                { num: '03', title: 'Fast Delivery',   desc: 'Campus riders deliver to your hostel or pickup point — often within the hour.', icon: '🛵', featured: false },
+                { num: '01', title: 'Browse & Buy',    desc: 'Explore products from campus sellers across different categories.', icon: '🔍', featured: false },
+                { num: '02', title: 'Protected Payments',   desc: 'Payments run through secure providers, with seller settlement tied to order and dispute milestones.', icon: '🔐', featured: true  },
+                { num: '03', title: 'Delivery Flow',   desc: 'Orders can be fulfilled through BATAMART rider workflow where available.', icon: '🛵', featured: false },
               ].map(({ num, title, desc, icon, featured }, i) => (
                 <Reveal key={title} delay={i * 100}>
                   <MagneticCard
@@ -570,7 +570,7 @@ export default function HomePage() {
                 Delivering Across Your Campus
               </h2>
               <p className="text-gray-400 text-sm mb-12 max-w-xs mx-auto leading-relaxed">
-                Our rider network covers every major location on and around campus.
+                Delivery availability and timing depend on riders, distance, and seller readiness.
               </p>
             </Reveal>
 
@@ -602,7 +602,7 @@ export default function HomePage() {
               {[
                 { value: 2000, suffix: '+', label: 'Active Users',      sub: 'Students trading daily',  icon: '👥' },
                 { value: 5000, suffix: '+', label: 'Products Listed',   sub: 'Across all categories',   icon: '📦' },
-                { value: 98,   suffix: '%', label: 'Satisfaction Rate', sub: 'Verified buyer reviews',  icon: '⭐' },
+                { value: 98,   suffix: '%', label: 'Positive Experience Rate', sub: 'Based on platform review trends',  icon: '⭐' },
               ].map(({ value, suffix, label, sub, icon }, i) => (
                 <Reveal key={label} delay={i * 90}>
                   <MagneticCard>
@@ -647,7 +647,7 @@ export default function HomePage() {
                 <span className="hero-gradient" style={{ fontFamily: "'Instrument Serif', serif", fontWeight: 400, fontStyle: 'italic' }}>Trading?</span>
               </h2>
               <p className="text-gray-400 text-base max-w-sm mx-auto mb-10 leading-relaxed font-light">
-                Join thousands of campus students using BATAMART. Free to join, easy to use.
+                Join the growing campus community using BATAMART. Free to join, easy to use.
               </p>
             </Reveal>
 

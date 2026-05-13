@@ -25,11 +25,11 @@ const faqs = [
   },
   {
     question: 'Is my payment secure?',
-    answer: 'Yes! All payments are held in escrow until you confirm delivery. Your money is safe and only released to the seller after you receive your item.'
+    answer: 'Yes. Payments are processed through secure providers, and BATAMART applies settlement and dispute rules before seller payouts are finalized.'
   },
   {
     question: 'How long does delivery take?',
-    answer: 'Most deliveries are completed within a few hours. You can track your order in real-time through the app.'
+    answer: 'Delivery time varies by rider availability, seller readiness, and distance. You can monitor order status updates inside your account.'
   },
   {
     question: 'What if I have an issue with my order?',
@@ -37,11 +37,11 @@ const faqs = [
   },
   {
     question: 'How do I become a seller?',
-    answer: 'Any verified student can sell on BATAMART. Just toggle to seller mode in your account and start listing products!'
+    answer: 'From your account, use the Become Seller flow to enable seller access, then start listing products.'
   },
   {
     question: 'Can I become a rider?',
-    answer: 'Yes! Riders earn ₦560 per delivery. Visit the "Become a Rider" page to sign up and start earning.'
+    answer: 'Rider onboarding is currently managed internally by BATAMART admins. Contact support if you want to express interest.'
   },
 ]
 
@@ -337,7 +337,7 @@ export default function ContactPage() {
             {[
               { href: '/marketplace', emoji: '🛍️', title: 'Browse Marketplace', desc: 'Explore products from students' },
               { href: '/sell', emoji: '💰', title: 'Start Selling', desc: 'List your products for free' },
-              { href: '/rider-signup', emoji: '🚴', title: 'Become a Rider', desc: 'Earn ₦560 per delivery' },
+              { href: '/contact', emoji: '🚴', title: 'Rider Interest', desc: 'Contact support for rider opportunities' },
             ].map(l => (
               <Link key={l.href} href={l.href}
                 className="bg-gray-50 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-all text-center group">
