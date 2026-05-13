@@ -33,7 +33,11 @@ const faqs = [
   },
   {
     question: 'What if I have an issue with my order?',
-    answer: 'You can open a dispute within 72 hours of delivery. Our team will review and help resolve the issue fairly.'
+    answer: 'Dispute flow: order must be delivered/completed, you must open within 72 hours, and you must attach at least one evidence image. Support then reviews both parties.'
+  },
+  {
+    question: 'How exactly does referral earning work?',
+    answer: 'You share your referral link, your friend signs up, and when eligible delivery orders complete you earn referral rewards to your wallet (currently displayed in-app as ₦120 per eligible referral delivery).'
   },
   {
     question: 'How do I become a seller?',

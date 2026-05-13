@@ -68,7 +68,7 @@ export default function TermsPage() {
         "Seller settlement follows BATAMART order completion and dispute rules",
         "Sellers do not receive immediate payout at checkout",
         "Refunds are processed according to our dispute resolution policy",
-        "BATAMART charges a 10% commission on completed sales"
+        "BATAMART charges a 5% commission on completed sales"
       ]
     },
     {
@@ -93,6 +93,21 @@ export default function TermsPage() {
     }
   ]
 
+  const disputeFlow = [
+    "Buyer can open a dispute only after order is DELIVERED or COMPLETED.",
+    "Dispute must be opened within 72 hours of delivery/completion timestamp.",
+    "At least one evidence image is required when submitting a dispute.",
+    "When dispute opens, order status is marked DISPUTED and support reviews both sides.",
+    "If no dispute is raised in the 72-hour window, seller escrow can be released by the platform flow."
+  ]
+
+  const referralFlow = [
+    "Each user gets a personal referral code/link from their BATAMART account.",
+    "Referral reward is tied to completed eligible delivery orders from referred users.",
+    "Current reward logic pays from delivery economics (shown in-app as ₦120 per eligible referral delivery).",
+    "Rewards are credited to wallet balance and appear in referral/wallet history."
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -112,6 +127,40 @@ export default function TermsPage() {
           <p className="text-sm text-white/75 mt-6">
             Last Updated: {lastUpdated}
           </p>
+        </div>
+      </section>
+
+      {/* Dispute Flow */}
+      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dispute Flow (How It Works)</h2>
+            <ul className="space-y-2">
+              {disputeFlow.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-gray-700">
+                  <span className="text-BATAMART-primary font-bold mt-1">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Referral Flow */}
+      <section className="py-12 px-4 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Referral Flow (How It Works)</h2>
+            <ul className="space-y-2">
+              {referralFlow.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-gray-700">
+                  <span className="text-BATAMART-primary font-bold mt-1">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
