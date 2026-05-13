@@ -909,9 +909,13 @@ const TRUST_POINTS = [
   { icon: '🔒', title: 'Escrow Protected',   desc: 'Money held safely until you confirm delivery' },
   { icon: '🎓', title: 'Campus Verified',     desc: 'Only students from your university can sell' },
   { icon: '⚡', title: 'Fast Campus Delivery', desc: 'Delivered to your hostel door' },
-  { icon: '💬', title: 'Seller Chat',         desc: 'Message sellers directly before buying' },
+  { icon: '🛡️', title: 'Dispute Protection', desc: 'Open and track order disputes from your dashboard' },
   { icon: '⭐', title: 'Ratings & Reviews',   desc: 'Buy from trusted, rated sellers only' },
   { icon: '🔄', title: 'Easy Disputes',       desc: 'Raise an issue, get it resolved fast' },
+  { icon: '🎁', title: 'Referral Rewards', desc: 'Invite friends and earn rewards when they join and buy' },
+  { icon: '📦', title: 'Order Tracking', desc: 'Track order status from confirmation to delivery' },
+  { icon: '🔔', title: 'Smart Notifications', desc: 'Get updates on orders, referrals, and account activity' },
+
 ]
 
 // ── Study essentials quick links ────────────────────────────────────────────
