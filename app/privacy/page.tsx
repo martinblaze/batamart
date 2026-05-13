@@ -1,5 +1,13 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Shield, Eye, Lock, Database, UserCheck, Bell } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'BATAMART privacy policy: how we collect, use, share, protect, and retain marketplace data.',
+  alternates: { canonical: '/privacy' },
+}
 
 export default function PrivacyPage() {
   const lastUpdated = "January 2026"

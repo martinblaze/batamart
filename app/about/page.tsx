@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import {
   ShoppingBag,
   Users,
@@ -9,6 +10,13 @@ import {
   CheckCircle,
   Zap
 } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'About',
+  description:
+    'Learn about BATAMART, the campus marketplace for student-to-student buying and selling.',
+  alternates: { canonical: '/about' },
+}
 
 export default function AboutPage() {
   const features = [

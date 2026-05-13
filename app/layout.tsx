@@ -16,10 +16,59 @@ import { IOSAppShell } from '@/components/layout/IOSAppShell'
 import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 
 const inter = Inter({ subsets: ['latin'] })
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
 
 export const metadata: Metadata = {
-  title: 'BATAMART - Campus Marketplace',
-  description: 'Student-to-student commerce across campuses. Buy, sell, and get fast local delivery.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'BATAMART - Campus Marketplace',
+    template: '%s | BATAMART',
+  },
+  description: 'BATAMART is a campus marketplace where students buy, sell, and manage delivery-backed orders with built-in support.',
+  applicationName: 'BATAMART',
+  keywords: [
+    'campus marketplace',
+    'student marketplace',
+    'buy and sell on campus',
+    'university marketplace',
+    'student commerce Nigeria',
+    'BATAMART',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    url: siteUrl,
+    siteName: 'BATAMART',
+    title: 'BATAMART - Campus Marketplace',
+    description: 'Buy and sell on campus with BATAMART.',
+    images: [
+      {
+        url: '/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'BATAMART logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BATAMART - Campus Marketplace',
+    description: 'Buy and sell on campus with BATAMART.',
+    images: ['/icon-512x512.png'],
+  },
   manifest: '/manifest.json',
   icons: {
     icon: '/icon-192x192.png',
@@ -50,6 +99,34 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="application-name" content="BataMart" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'BATAMART',
+              url: siteUrl,
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: `${siteUrl}/search?q={search_term_string}`,
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'BATAMART',
+              url: siteUrl,
+              logo: `${siteUrl}/icon-512x512.png`,
+            }),
+          }}
+        />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="BataMart" />

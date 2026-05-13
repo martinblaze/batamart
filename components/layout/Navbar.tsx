@@ -108,7 +108,9 @@ function RiderTopBar({
 }
 
 function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
+  const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [profileOpen, setProfileOpen] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [toggling, setToggling] = useState(false)
@@ -138,6 +140,17 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + '/')
+  const riderTab = searchParams.get('tab') || ''
+
+  const handleTabPress = (href: string, active: boolean) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (active) {
+      router.refresh()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    router.push(href)
+  }
 
   const leftTabs = [
     {
@@ -205,11 +218,14 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
           }}
         >
           {leftTabs.map(({ href, label, match, icon }) => {
-            const active = isActive(match)
+            const active = label === 'Deliveries'
+              ? pathname === '/rider-dashboard' && riderTab === 'deliveries'
+              : pathname === '/rider-dashboard' && riderTab !== 'deliveries'
             return (
               <Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-400' : 'text-gray-500'
                 }`}
@@ -268,6 +284,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
               <Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-400' : 'text-gray-500'
                 }`}
@@ -372,6 +389,7 @@ function AppBottomNav({
   onLogout: () => void
   onToggleMode: () => void
 }) {
+  const router = useRouter()
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -408,6 +426,16 @@ function AppBottomNav({
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + '/')
+
+  const handleTabPress = (href: string, active: boolean) => (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (active) {
+      router.refresh()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    router.push(href)
+  }
 
   const isSeller = userRole === 'SELLER' || userRole === 'ADMIN'
 
@@ -482,6 +510,7 @@ function AppBottomNav({
               <Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-600' : 'text-gray-400'
                 }`}
@@ -500,6 +529,7 @@ function AppBottomNav({
           <div className="flex-1 flex items-center justify-center relative">
             <Link
               href={sellHref}
+              onClick={handleTabPress(sellHref, isActive('/sell') || isActive('/become-seller'))}
               className="relative z-10 flex flex-col items-center justify-center -mt-5"
             >
               <div
@@ -521,6 +551,7 @@ function AppBottomNav({
               <Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-600' : 'text-gray-400'
                 }`}

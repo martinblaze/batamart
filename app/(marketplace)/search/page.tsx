@@ -156,21 +156,21 @@ function SearchPage() {
 
   const filterPanel = (
     <div className="space-y-4">
-      <div className="border border-gray-100 rounded-xl p-3">
-        <p className="text-xs font-bold text-gray-500 uppercase mb-2">Basic Filters</p>
+      <div className="border border-gray-100 dark:border-[#2b3548] rounded-xl p-3">
+        <p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2">Basic Filters</p>
         <div className="space-y-2">
           <select
             value={subcategoryKey || ''}
             onChange={(e) => setSubcategoryKey(e.target.value || null)}
             disabled={categoryKey === 'all'}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-gray-200 dark:border-[#2b3548] px-3 py-2 text-sm bg-white dark:bg-[#111a2e] text-gray-900 dark:text-[#e5e7eb]"
           >
             <option value="">All subcategories</option>
             {subcategories.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
           <div className="grid grid-cols-2 gap-2">
-            <input type="number" value={priceInput[0]} onChange={(e) => setPriceInput(([_, max]) => [Number(e.target.value || 0), max])} className="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-            <input type="number" value={priceInput[1]} onChange={(e) => setPriceInput(([min]) => [min, Number(e.target.value || priceBounds.max)])} className="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            <input type="number" value={priceInput[0]} onChange={(e) => setPriceInput(([_, max]) => [Number(e.target.value || 0), max])} className="rounded-xl border border-gray-200 dark:border-[#2b3548] px-3 py-2 text-sm bg-white dark:bg-[#111a2e] text-gray-900 dark:text-[#e5e7eb]" />
+            <input type="number" value={priceInput[1]} onChange={(e) => setPriceInput(([min]) => [min, Number(e.target.value || priceBounds.max)])} className="rounded-xl border border-gray-200 dark:border-[#2b3548] px-3 py-2 text-sm bg-white dark:bg-[#111a2e] text-gray-900 dark:text-[#e5e7eb]" />
           </div>
           {basicFilters.map((f) => (
             <FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) => setFilters((prev) => ({ ...prev, [f.key]: value }))} defaultOpen={false} />
@@ -179,8 +179,8 @@ function SearchPage() {
       </div>
 
       {attributeFilters.length > 0 && (
-        <div className="border border-gray-100 rounded-xl p-3">
-          <p className="text-xs font-bold text-gray-500 uppercase mb-2">Product Attributes</p>
+        <div className="border border-gray-100 dark:border-[#2b3548] rounded-xl p-3">
+          <p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2">Product Attributes</p>
           <div className="space-y-2">
             {attributeFilters.map((f) => (
               <FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) => setFilters((prev) => ({ ...prev, [f.key]: value }))} defaultOpen={false} />
@@ -190,8 +190,8 @@ function SearchPage() {
       )}
 
       {variantFilters.length > 0 && (
-        <div className="border border-gray-100 rounded-xl p-3">
-          <p className="text-xs font-bold text-gray-500 uppercase mb-2">Variant Filters</p>
+        <div className="border border-gray-100 dark:border-[#2b3548] rounded-xl p-3">
+          <p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2">Variant Filters</p>
           <div className="space-y-2">
             {variantFilters.map((f) => (
               <FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) => setFilters((prev) => ({ ...prev, [f.key]: value }))} defaultOpen={false} />
@@ -200,30 +200,30 @@ function SearchPage() {
         </div>
       )}
 
-      <button onClick={clearAll} className="w-full rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-700">Clear All</button>
+      <button onClick={clearAll} className="w-full rounded-xl border border-gray-200 dark:border-[#2b3548] py-2 text-sm font-semibold text-gray-700 dark:text-[#cbd5e1]">Clear All</button>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-[#f3f4f8]">
-      <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-[#f3f4f8] dark:bg-[#0b1220]">
+      <div className="sticky top-0 z-30 border-b border-gray-200 dark:border-[#2b3548] bg-white/95 dark:bg-[#111a2e]/95 backdrop-blur">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4">
           <div className="flex items-center gap-2">
-            <button onClick={() => router.push('/marketplace')} className="h-9 w-9 rounded-xl border border-gray-200 flex items-center justify-center">
+            <button onClick={() => router.push('/marketplace')} className="h-9 w-9 rounded-xl border border-gray-200 dark:border-[#2b3548] text-gray-700 dark:text-[#cbd5e1] flex items-center justify-center">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <div className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 flex items-center gap-2">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input value={inputQuery} onChange={(e) => setInputQuery(e.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm outline-none" />
+            <div className="flex-1 rounded-xl border border-gray-200 dark:border-[#2b3548] bg-white dark:bg-[#111a2e] px-3 py-2 flex items-center gap-2">
+              <Search className="h-4 w-4 text-gray-400 dark:text-[#94a3b8]" />
+              <input value={inputQuery} onChange={(e) => setInputQuery(e.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm text-gray-900 dark:text-[#e5e7eb] placeholder:text-gray-400 dark:placeholder:text-[#72819a] outline-none" />
               {inputQuery && <button onClick={() => setInputQuery('')}><X className="h-4 w-4 text-gray-400" /></button>}
             </div>
-            <button onClick={() => setIsFilterOpen(true)} className="md:hidden h-9 rounded-xl border border-gray-200 px-3 text-sm font-semibold flex items-center gap-1">
+            <button onClick={() => setIsFilterOpen(true)} className="md:hidden h-9 rounded-xl border border-gray-200 dark:border-[#2b3548] text-gray-700 dark:text-[#cbd5e1] px-3 text-sm font-semibold flex items-center gap-1">
               <Filter className="h-4 w-4" /> Filter
             </button>
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {TABS.map((tab) => (
-              <button key={tab.key} onClick={() => onCategoryChange(tab.key)} className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold ${categoryKey === tab.key ? 'bg-indigo-600 text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}>
+              <button key={tab.key} onClick={() => onCategoryChange(tab.key)} className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold ${categoryKey === tab.key ? 'bg-indigo-600 text-white border-transparent' : 'bg-white dark:bg-[#111a2e] text-gray-600 dark:text-[#cbd5e1] border-gray-200 dark:border-[#2b3548]'}`}>
                 {tab.label}
               </button>
             ))}
@@ -241,12 +241,12 @@ function SearchPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:grid md:grid-cols-[280px_1fr] md:gap-4">
-        <aside className="hidden md:block rounded-2xl border border-gray-200 bg-white p-4 h-fit sticky top-24">
+        <aside className="hidden md:block rounded-2xl border border-gray-200 dark:border-[#2b3548] bg-white dark:bg-[#111a2e] p-4 h-fit sticky top-24">
           {filterPanel}
         </aside>
         <main>
           <div className="mb-3">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-gray-200 dark:border-[#2b3548] px-3 py-2 text-sm bg-white dark:bg-[#111a2e] text-gray-900 dark:text-[#e5e7eb]">
               <option value="relevance">Most Relevant</option>
               <option value="newest">Newest</option>
               <option value="priceLow">Price: Low to High</option>
@@ -256,23 +256,23 @@ function SearchPage() {
           {isLoading ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-gray-200 bg-white p-2 animate-pulse">
-                  <div className="aspect-square rounded-xl bg-gray-100" />
-                  <div className="mt-2 h-3 w-4/5 bg-gray-100 rounded" />
-                  <div className="mt-2 h-3 w-2/5 bg-gray-100 rounded" />
+                <div key={i} className="rounded-2xl border border-gray-200 dark:border-[#2b3548] bg-white dark:bg-[#111a2e] p-2 animate-pulse">
+                  <div className="aspect-square rounded-xl bg-gray-100 dark:bg-[#1f2b40]" />
+                  <div className="mt-2 h-3 w-4/5 bg-gray-100 dark:bg-[#1f2b40] rounded" />
+                  <div className="mt-2 h-3 w-2/5 bg-gray-100 dark:bg-[#1f2b40] rounded" />
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
-              <p className="text-gray-600 font-semibold">No products found</p>
+            <div className="rounded-2xl border border-gray-200 dark:border-[#2b3548] bg-white dark:bg-[#111a2e] py-16 text-center">
+              <p className="text-gray-600 dark:text-[#cbd5e1] font-semibold">No products found</p>
               <button onClick={clearAll} className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">Clear filters</button>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => (
-                <button key={p.id} onClick={() => router.push(`/product/${p.id}`)} className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-left">
-                  <div className="relative aspect-square bg-gray-100">
+                <button key={p.id} onClick={() => router.push(`/product/${p.id}`)} className="rounded-2xl border border-gray-200 dark:border-[#2b3548] bg-white dark:bg-[#111a2e] overflow-hidden text-left">
+                  <div className="relative aspect-square bg-gray-100 dark:bg-[#1f2b40]">
                     {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" /> : null}
                     <div className="absolute left-2 top-2 flex gap-1">
                       {p.isHot && <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">HOT</span>}
@@ -281,11 +281,11 @@ function SearchPage() {
                     </div>
                   </div>
                   <div className="p-2.5">
-                    <p className="line-clamp-2 text-xs font-bold text-gray-900">{p.name}</p>
+                    <p className="line-clamp-2 text-xs font-bold text-gray-900 dark:text-[#e5e7eb]">{p.name}</p>
                     <p className="mt-1 text-sm font-black text-indigo-600">{p.priceDisplay || fmt(p.price)}</p>
                     <div className="mt-1 flex items-center justify-between">
-                      <p className="truncate text-[10px] text-gray-400">{p.seller?.name || 'Seller'}</p>
-                      {p.seller?.trustLevel ? <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">{p.seller.trustLevel}</span> : null}
+                      <p className="truncate text-[10px] text-gray-400 dark:text-[#94a3b8]">{p.seller?.name || 'Seller'}</p>
+                      {p.seller?.trustLevel ? <span className="rounded-full bg-gray-100 dark:bg-[#1f2b40] px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-[#cbd5e1]">{p.seller.trustLevel}</span> : null}
                     </div>
                   </div>
                 </button>
@@ -298,9 +298,9 @@ function SearchPage() {
       {isFilterOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setIsFilterOpen(false)} />
-          <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-white p-4 overflow-y-auto">
+          <div className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-white dark:bg-[#111a2e] p-4 overflow-y-auto">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-bold text-gray-900">Filters</h3>
+              <h3 className="font-bold text-gray-900 dark:text-[#e5e7eb]">Filters</h3>
               <button onClick={() => setIsFilterOpen(false)}><X className="h-5 w-5 text-gray-500" /></button>
             </div>
             {filterPanel}

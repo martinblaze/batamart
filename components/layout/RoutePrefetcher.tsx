@@ -5,10 +5,14 @@ import { useRouter } from 'next/navigation'
 
 const ROUTES_TO_PREFETCH = [
   '/marketplace',
+  '/search',
   '/orders',
   '/cart',
   '/sell',
-  '/profile',
+  '/wallet',
+  '/referrals',
+  '/myprofile',
+  '/dispute/select-order',
   '/most-bought',
 ]
 

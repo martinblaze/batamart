@@ -1,5 +1,13 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { FileText, AlertCircle, CheckCircle, XCircle, Scale, ShieldCheck } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'Read BATAMART terms covering orders, delivery, disputes, referrals, user responsibilities, and platform policies.',
+  alternates: { canonical: '/terms' },
+}
 
 export default function TermsPage() {
   const lastUpdated = "January 2026"
