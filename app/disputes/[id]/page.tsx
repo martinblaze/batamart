@@ -248,7 +248,7 @@ export default function DisputeDetailsPage() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm text-gray-500 font-medium">Loading case details…</p>
@@ -259,7 +259,7 @@ export default function DisputeDetailsPage() {
 
   if (!dispute) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-500" />
@@ -290,7 +290,7 @@ export default function DisputeDetailsPage() {
   const ticketId = `BATAMART-${dispute.id.slice(-8).toUpperCase()}`
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
 
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">

@@ -120,7 +120,7 @@ const sections = [
 
 export default function SellerTermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
@@ -243,3 +243,4 @@ export default function SellerTermsPage() {
     </div>
   )
 }
+

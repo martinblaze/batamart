@@ -154,7 +154,7 @@ export default function ReviewSellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"

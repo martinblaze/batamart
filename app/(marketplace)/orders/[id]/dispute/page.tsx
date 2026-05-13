@@ -229,7 +229,7 @@ export default function OpenDisputePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center gap-3 mb-6">

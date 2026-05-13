@@ -66,7 +66,7 @@ function RiderLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
 
         {/* Header */}
@@ -197,3 +197,4 @@ export default function RiderLoginPage() {
     </Suspense>
   )
 }
+

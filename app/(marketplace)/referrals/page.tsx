@@ -127,7 +127,7 @@ export default function ReferralsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] pb-16">
 
       {/* Hero Banner */}
       <div className="bg-gradient-to-br from-BATAMART-primary via-purple-600 to-BATAMART-secondary text-white">

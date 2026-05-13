@@ -51,6 +51,7 @@ html.splash-pending body > div > * {
 
   /* Global utility remap so existing light-tailwind pages render cleanly in dark mode */
   .dark .bg-white { background-color: var(--surface) !important; }
+  .dark .bg-black { background-color: var(--surface) !important; }
   .dark .bg-gray-50 { background-color: var(--surface) !important; }
   .dark .bg-gray-100 { background-color: var(--surface-elevated) !important; }
   .dark .bg-gray-200 { background-color: #1d212b !important; }
@@ -65,6 +66,8 @@ html.splash-pending body > div > * {
   .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.16) !important; }
   .dark .bg-\[\#f0f2f5\],
   .dark .bg-\[\#f7f8fa\] { background-color: var(--background) !important; }
+  .dark .bg-\[\#000\],
+  .dark .bg-\[\#000000\] { background-color: var(--surface) !important; }
   .dark .bg-\[\#e7ebf2\] { background-color: #0b0d12 !important; }
   .dark .bg-white\/95 { background-color: rgba(15, 17, 21, 0.95) !important; }
   .dark .bg-white\/92 { background-color: rgba(15, 17, 21, 0.92) !important; }
@@ -212,6 +215,24 @@ html.splash-pending body > div > * {
   .dark [style*="background: #ffffff"],
   .dark [style*="background:#ffffff"] {
     background: var(--surface) !important;
+  }
+
+  .dark [style*="background:#000"],
+  .dark [style*="background: #000"],
+  .dark [style*="background:#000000"],
+  .dark [style*="background: #000000"] {
+    background: var(--surface) !important;
+  }
+
+  .dark [style*="border: 1px solid #fff"],
+  .dark [style*="border:1px solid #fff"],
+  .dark [style*="border: 1px solid #ffffff"],
+  .dark [style*="border:1px solid #ffffff"],
+  .dark [style*="border-color:#fff"],
+  .dark [style*="border-color: #fff"],
+  .dark [style*="border-color:#ffffff"],
+  .dark [style*="border-color: #ffffff"] {
+    border-color: rgba(71, 85, 105, 0.6) !important;
   }
 
   * {

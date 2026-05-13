@@ -85,7 +85,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
 
         {/* Header */}
@@ -104,7 +104,7 @@ function LoginForm() {
           <p className="text-gray-500">Login to your BATAMART account</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-2xl shadow-xl p-8">
 
           {/* Suspension message */}
           {suspensionMessage && (
@@ -183,7 +183,7 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
                   placeholder="you@example.com"
                 />
               </div>
@@ -196,7 +196,7 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
                   placeholder="Enter your password"
                 />
               </div>
@@ -240,7 +240,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#000000]">
         <div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" />
       </div>
     }>
@@ -262,3 +262,4 @@ function buildSuspensionMessage(reason: string | null, until: string | null): st
   }
   return `Your account is suspended until ${untilDate.toLocaleDateString('en-NG', { dateStyle: 'long' })}.\n\nReason: ${reasonText}\n\nContact support if you believe this is an error.`
 }
+

@@ -100,7 +100,7 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -121,7 +121,7 @@ export default function VerifyPage() {
         </div>
 
         {/* Verification Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* OTP Input */}
             <div>
@@ -139,7 +139,7 @@ export default function VerifyPage() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
+                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
                   />
                 ))}
               </div>
@@ -190,3 +190,4 @@ export default function VerifyPage() {
     </div>
   )
 }
+

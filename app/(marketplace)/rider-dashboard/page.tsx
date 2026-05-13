@@ -349,7 +349,7 @@ export default function RiderDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-6 px-4 pb-24">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="max-w-2xl mx-auto space-y-6">
@@ -835,3 +835,4 @@ export default function RiderDashboardPage() {
     </div>
   )
 }
+

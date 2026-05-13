@@ -16,7 +16,7 @@ interface University {
 }
 
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
-const bgStyle  = { background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }
+const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
 const PageShell = ({
@@ -253,7 +253,7 @@ function SignupForm() {
   if (step === 0) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        <div className="bg-white rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}>
               <MapPin className="w-7 h-7 text-white" />
@@ -332,7 +332,7 @@ function SignupForm() {
   if (step === 1) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        <div className="bg-white rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={1} />
           <h2 className="text-xl font-black text-gray-900 mb-1">Create account</h2>
           <p className="text-sm text-gray-500 mb-6">Join the {selectedUniversity?.shortName} marketplace</p>
@@ -482,7 +482,7 @@ function SignupForm() {
   if (step === 2) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        <div className="bg-white rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={2} />
           <h2 className="text-xl font-black text-gray-900 mb-1">Verify your email</h2>
           <p className="text-sm text-gray-500 mb-6">
@@ -534,7 +534,7 @@ function SignupForm() {
 
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        <div className="bg-white rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={3} />
 
           <div className="text-center mb-6">
@@ -645,7 +645,7 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     <PageShell selectedUniversity={selectedUniversity}>
-      <div className="bg-white rounded-3xl p-8 shadow-2xl">
+      <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
         <StepDots current={4} />
         <h2 className="text-xl font-black text-gray-900 mb-1">Set your password</h2>
         <p className="text-sm text-gray-500 mb-6">Almost done, {name}!</p>
@@ -720,7 +720,7 @@ export default function SignupPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }}>
+        style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}>
         <div className="text-white text-xl font-bold">Loading…</div>
       </div>
     }>

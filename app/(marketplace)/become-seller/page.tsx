@@ -59,7 +59,7 @@ export default function BecomeSellerPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
           <div className="text-7xl mb-4">🎉</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-3">You're a Seller!</h1>
@@ -92,7 +92,7 @@ export default function BecomeSellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <Link href="/" className="text-BATAMART-primary hover:underline mb-6 inline-block">
           ← Back to Home

@@ -93,10 +93,10 @@ const PROFILE_CSS = `
     transform: translateY(-1px);
   }
 
-  .dark .profile-page { background: #121212 !important; }
-  .dark .profile-page .bg-white { background-color: #121212 !important; }
-  .dark .profile-page .bg-gray-50 { background-color: #1f2937 !important; }
-  .dark .profile-page .bg-gray-100 { background-color: #243244 !important; }
+  .dark .profile-page { background: #000000 !important; }
+  .dark .profile-page .bg-white { background-color: #0f1115 !important; }
+  .dark .profile-page .bg-gray-50 { background-color: #151922 !important; }
+  .dark .profile-page .bg-gray-100 { background-color: #1a1f2a !important; }
   .dark .profile-page .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.2) !important; }
   .dark .profile-page .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.18) !important; }
   .dark .profile-page .bg-violet-50 { background-color: rgba(139, 92, 246, 0.2) !important; }
@@ -104,7 +104,7 @@ const PROFILE_CSS = `
   .dark .profile-page .bg-amber-50 { background-color: rgba(245, 158, 11, 0.18) !important; }
   .dark .profile-page .border-gray-50,
   .dark .profile-page .border-gray-100,
-  .dark .profile-page .border-gray-200 { border-color: #273449 !important; }
+  .dark .profile-page .border-gray-200 { border-color: #272b33 !important; }
   .dark .profile-page .text-gray-900 { color: #f8fafc !important; }
   .dark .profile-page .text-gray-800 { color: #e2e8f0 !important; }
   .dark .profile-page .text-gray-700 { color: #cbd5e1 !important; }
@@ -120,29 +120,29 @@ const PROFILE_CSS = `
   .dark .profile-page .text-blue-600 { color: #93c5fd !important; }
   .dark .profile-page .text-amber-500 { color: #fcd34d !important; }
   .dark .profile-page .nav-item:hover {
-    background: #1E1E1E;
+    background: #161a22;
     color: #a5b4fc;
   }
   .dark .profile-page .section-card:hover { box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45); }
   .dark .profile-page .input-field {
-    background: #111827 !important;
-    border-color: #374151 !important;
+    background: #12161d !important;
+    border-color: #2f3642 !important;
     color: #f8fafc !important;
   }
   .dark .profile-page .input-field::placeholder { color: #64748b; }
   .dark .profile-page .input-field:focus {
     border-color: #818cf8 !important;
-    background: #121212 !important;
+    background: #0f1115 !important;
     box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
   }
   .dark .profile-page .shimmer {
-    background: linear-gradient(90deg, #1f2937 25%, #263244 50%, #1f2937 75%);
+    background: linear-gradient(90deg, #151922 25%, #1d2330 50%, #151922 75%);
     background-size: 1200px 100%;
   }
   .dark .profile-page .tag-chip {
-    background: #1f2937 !important;
+    background: #151922 !important;
     color: #cbd5e1 !important;
-    border-color: #334155 !important;
+    border-color: #272b33 !important;
   }
   .dark .profile-page .tag-chip:hover {
     background: #6366f1 !important;
@@ -243,7 +243,7 @@ export default function MyProfilePage() {
   const handleLogout = () => { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
 
   if (loading || !user) return (
-    <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#121212]">
+    <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#000000]">
       <div className="text-center">
         <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -269,7 +269,7 @@ export default function MyProfilePage() {
   const activeTheme = mounted ? theme : 'light'
 
   return (
-    <div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#121212]">
+    <div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#000000]">
 
       {/* ── iOS Install Modal ── */}
       {showIOSInstallModal && (
@@ -330,7 +330,7 @@ export default function MyProfilePage() {
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#1E1E1E] z-50 lg:hidden shadow-2xl`}>
+          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#0f1115] z-50 lg:hidden shadow-2xl`}>
             <div className="flex flex-col h-full">
               {/* Menu header */}
               <div className="header-gradient px-5 py-6">
