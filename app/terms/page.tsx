@@ -21,7 +21,7 @@ export default function TermsPage() {
     {
       icon: ShieldCheck,
       title: "Eligibility",
-      content: "BATAMART is designed for campus commerce users. You must be at least 18 years old to use this platform and provide accurate account and profile information."
+      content: "BATAMART is designed for campus commerce users. You must be at least 16 years old to use this platform and provide accurate account and profile information."
     }
   ]
 

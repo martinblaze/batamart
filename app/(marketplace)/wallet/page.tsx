@@ -10,6 +10,13 @@ import {
   CheckCircle2, X, ChevronDown, Search, Loader2, Eye,
   EyeOff, Key, RotateCcw, Zap, ChevronRight, Clock,
 } from 'lucide-react'
+import {
+  enableWithdrawalBiometrics,
+  getBiometricPreference,
+  isBiometricSupported,
+  setBiometricPreference,
+  verifyWithdrawalBiometrics,
+} from '@/lib/withdraw-biometrics'
 
 const WALLET_CSS = `
   @keyframes fadeUp {
@@ -214,6 +221,11 @@ export default function WalletPage() {
 
   // PIN required
   const [showPinRequired, setShowPinRequired] = useState(false)
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false)
+  const [biometricBusy, setBiometricBusy] = useState(false)
+  const [biometricError, setBiometricError] = useState('')
 
   useEffect(() => {
     if (document.getElementById('wallet-anim')) return
@@ -228,6 +240,22 @@ export default function WalletPage() {
   }, [])
 
   useEffect(() => { fetchWalletData() }, [])
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      const available = await isBiometricSupported()
+      if (mounted) setBiometricAvailable(available)
+    })()
+    return () => { mounted = false }
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const pref = getBiometricPreference(user.id)
+    setBiometricEnabled(pref === 'enabled')
+    setShowBiometricPrompt(Boolean(biometricAvailable && pref === null))
+  }, [user, biometricAvailable])
 
   const fetchWalletData = async () => {
     try {
@@ -267,17 +295,45 @@ export default function WalletPage() {
       }
     } catch {}
     setWithdrawAmount(''); setAccountNumber(''); setAccountName('')
-    setSelectedBank(NIGERIAN_BANKS[0]); setBankSearch(''); setPinError('')
+    setSelectedBank(NIGERIAN_BANKS[0]); setBankSearch(''); setPinError(''); setBiometricError('')
     setShowWithdrawModal(true)
   }
 
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
+  const authenticateWithBiometric = async () => {
+    if (!user) return false
+    if (!biometricAvailable) return false
+
+    setBiometricBusy(true)
+    setBiometricError('')
+
+    try {
+      await verifyWithdrawalBiometrics(user.id)
+      return true
+    } catch {
+      setBiometricError('Biometric check failed or was cancelled. Please try again.')
+      return false
+    } finally {
+      setBiometricBusy(false)
+    }
+  }
+
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = parseFloat(withdrawAmount)
     if (!amount || amount < 1000) { alert('Minimum withdrawal is ₦1,000'); return }
     if (wallet && amount > wallet.availableBalance) { alert('Insufficient balance'); return }
     if (!accountNumber || !accountName) { alert('Please fill all fields'); return }
-    setPendingWithdrawal({ amount, accountNumber, accountName, bankCode: selectedBank.code })
+
+    const payload = { amount, accountNumber, accountName, bankCode: selectedBank.code }
+    setPendingWithdrawal(payload)
+
+    if (biometricEnabled && biometricAvailable) {
+      const biometricOk = await authenticateWithBiometric()
+      if (!biometricOk) return
+      await executeWithdrawal(payload)
+      return
+    }
+
     setPinError(''); setPinValue(''); setShowPinEntry(true)
   }
 
@@ -299,15 +355,16 @@ export default function WalletPage() {
     finally { setPinLoading(false) }
   }
 
-  const executeWithdrawal = async () => {
-    if (!pendingWithdrawal) return
+  const executeWithdrawal = async (payloadOverride?: any) => {
+    const payload = payloadOverride || pendingWithdrawal
+    if (!payload) return
     setWithdrawing(true)
     try {
       const token = localStorage.getItem('token')
       const r = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(pendingWithdrawal),
+        body: JSON.stringify(payload),
       })
       const d = await r.json()
       if (!r.ok) {
@@ -315,9 +372,32 @@ export default function WalletPage() {
         alert(d.error || 'Withdrawal failed'); setPendingWithdrawal(null); return
       }
       setShowWithdrawModal(false); setPendingWithdrawal(null); fetchWalletData()
-      alert(`Withdrawal of ₦${pendingWithdrawal.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
+      alert(`Withdrawal of ₦${payload.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
     } catch { alert('Network error.'); setPendingWithdrawal(null) }
     finally { setWithdrawing(false) }
+  }
+
+  const handleEnableBiometric = async () => {
+    if (!user) return
+    setBiometricBusy(true)
+    setBiometricError('')
+    try {
+      await enableWithdrawalBiometrics(user)
+      setBiometricPreference(user.id, 'enabled')
+      setBiometricEnabled(true)
+      setShowBiometricPrompt(false)
+    } catch {
+      setBiometricError('Could not enable biometrics. Please try again.')
+    } finally {
+      setBiometricBusy(false)
+    }
+  }
+
+  const handleDeclineBiometric = () => {
+    if (!user) return
+    setBiometricPreference(user.id, 'disabled')
+    setBiometricEnabled(false)
+    setShowBiometricPrompt(false)
   }
 
   const handleSetPinSubmit = async () => {
@@ -551,6 +631,32 @@ export default function WalletPage() {
       ═══════════════════════════════════════════════════════════ */}
 
       {/* ── Withdraw Modal ── */}
+      {showBiometricPrompt && (
+        <ModalShell onClose={handleDeclineBiometric}>
+          <div className="p-6 space-y-4">
+            <div className="text-center">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-emerald-100">
+                <Shield className="w-7 h-7 text-emerald-600" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900">Use Biometrics for Withdrawal?</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Turn on fingerprint or face unlock for fast withdrawal approval on this device.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={handleDeclineBiometric}
+                className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700">
+                Not Interested
+              </button>
+              <button type="button" onClick={handleEnableBiometric} disabled={biometricBusy}
+                className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black disabled:opacity-50 shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                {biometricBusy ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Turn On'}
+              </button>
+            </div>
+          </div>
+        </ModalShell>
+      )}
       {showWithdrawModal && (
         <ModalShell onClose={() => { setShowWithdrawModal(false); setPendingWithdrawal(null); setPinError('') }}>
           <div className="p-6">
@@ -561,7 +667,9 @@ export default function WalletPage() {
               </div>
               <div>
                 <h2 className="text-lg font-black text-gray-900">Withdraw Funds</h2>
-                <p className="text-xs text-gray-400">PIN verification required 🔐</p>
+                <p className="text-xs text-gray-400">
+                  {biometricEnabled ? 'Biometric verification enabled' : 'PIN verification required'}
+                </p>
               </div>
               <button onClick={() => { setShowWithdrawModal(false); setPendingWithdrawal(null) }}
                 className="ml-auto w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors">
@@ -570,6 +678,11 @@ export default function WalletPage() {
             </div>
 
             <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+              {biometricAvailable && biometricEnabled && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
+                  <p className="text-xs font-bold text-emerald-700">Biometric withdrawal is active on this device. PIN is optional.</p>
+                </div>
+              )}
               {/* Amount */}
               <div>
                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Amount (NGN)</label>
@@ -661,15 +774,20 @@ export default function WalletPage() {
                 </div>
               )}
 
+              {biometricError && (
+                <p className="text-red-500 text-sm font-bold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" /> {biometricError}
+                </p>
+              )}
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowWithdrawModal(false)}
                   className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
                   Cancel
                 </button>
-                <button type="submit" disabled={withdrawing}
+                <button type="submit" disabled={withdrawing || biometricBusy}
                   className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50 shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
-                  {withdrawing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Enter PIN →'}
+                  {(withdrawing || biometricBusy) ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (biometricEnabled && biometricAvailable ? 'Verify Biometrics →' : 'Enter PIN →')}
                 </button>
               </div>
             </form>
@@ -901,3 +1019,6 @@ export default function WalletPage() {
     </div>
   )
 }
+
+
+

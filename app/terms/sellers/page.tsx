@@ -13,7 +13,7 @@ const sections = [
     icon: '🎓',
     content: [
       'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
-      'You must be at least 18 years of age or have the consent of a parent or guardian.',
+      'You must be at least 16 years of age or have the consent of a parent or guardian.',
       'Seller access is enabled through your BATAMART account role and may be restricted if your account violates platform policy.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
     ],

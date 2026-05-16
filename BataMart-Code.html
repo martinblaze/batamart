@@ -16,10 +16,59 @@ import { IOSAppShell } from '@/components/layout/IOSAppShell'
 import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 
 const inter = Inter({ subsets: ['latin'] })
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
 
 export const metadata: Metadata = {
-  title: 'BATAMART - Campus Marketplace',
-  description: 'Student-to-student commerce across campuses. Buy, sell, and get fast local delivery.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'BATAMART - Campus Marketplace',
+    template: '%s | BATAMART',
+  },
+  description: 'BATAMART is a campus marketplace where students buy, sell, and manage delivery-backed orders with built-in support.',
+  applicationName: 'BATAMART',
+  keywords: [
+    'campus marketplace',
+    'student marketplace',
+    'buy and sell on campus',
+    'university marketplace',
+    'student commerce Nigeria',
+    'BATAMART',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    url: siteUrl,
+    siteName: 'BATAMART',
+    title: 'BATAMART - Campus Marketplace',
+    description: 'Buy and sell on campus with BATAMART.',
+    images: [
+      {
+        url: '/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'BATAMART logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BATAMART - Campus Marketplace',
+    description: 'Buy and sell on campus with BATAMART.',
+    images: ['/icon-512x512.png'],
+  },
   manifest: '/manifest.json',
   icons: {
     icon: '/icon-192x192.png',
@@ -50,6 +99,34 @@ export default function RootLayout({
     &lt;html lang="en" suppressHydrationWarning&gt;
       &lt;head&gt;
         &lt;meta name="application-name" content="BataMart" /&gt;
+        &lt;script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'BATAMART',
+              url: siteUrl,
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: `${siteUrl}/search?q={search_term_string}`,
+                'query-input': 'required name=search_term_string',
+              },
+            }),
+          }}
+        /&gt;
+        &lt;script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'BATAMART',
+              url: siteUrl,
+              logo: `${siteUrl}/icon-512x512.png`,
+            }),
+          }}
+        /&gt;
         &lt;meta name="mobile-web-app-capable" content="yes" /&gt;
         &lt;meta name="apple-mobile-web-app-capable" content="yes" /&gt;
         &lt;meta name="apple-mobile-web-app-title" content="BataMart" /&gt;
@@ -631,8 +708,8 @@ export default function HomePage() {
 
             &lt;Reveal delay={160}&gt;
               &lt;p className="text-gray-500 text-lg max-w-md mx-auto leading-relaxed mb-10 font-light"&gt;
-                The smartest way for campus students to trade — secure escrow payments,
-                campus-wide delivery, real seller verification.
+                The smartest way for campus students to trade — secure checkout,
+                structured order flow, and built-in support tools.
               &lt;/p&gt;
             &lt;/Reveal&gt;
 
@@ -693,9 +770,9 @@ export default function HomePage() {
 
             &lt;div className="grid md:grid-cols-3 gap-4"&gt;
               {[
-                { num: '01', title: 'Browse &amp; Buy',    desc: 'Explore products from verified students across all faculties and hostels.', icon: '🔍', featured: false },
-                { num: '02', title: 'Secure Escrow',   desc: 'Your money is held safely in escrow. Released to the seller only after you confirm delivery.', icon: '🔐', featured: true  },
-                { num: '03', title: 'Fast Delivery',   desc: 'Campus riders deliver to your hostel or pickup point — often within the hour.', icon: '🛵', featured: false },
+                { num: '01', title: 'Browse &amp; Buy',    desc: 'Explore products from campus sellers across different categories.', icon: '🔍', featured: false },
+                { num: '02', title: 'Protected Payments',   desc: 'Payments run through secure providers, with seller settlement tied to order and dispute milestones.', icon: '🔐', featured: true  },
+                { num: '03', title: 'Delivery Flow',   desc: 'Orders can be fulfilled through BATAMART rider workflow where available.', icon: '🛵', featured: false },
               ].map(({ num, title, desc, icon, featured }, i) =&gt; (
                 &lt;Reveal key={title} delay={i * 100}&gt;
                   &lt;MagneticCard
@@ -768,7 +845,7 @@ export default function HomePage() {
                 Delivering Across Your Campus
               &lt;/h2&gt;
               &lt;p className="text-gray-400 text-sm mb-12 max-w-xs mx-auto leading-relaxed"&gt;
-                Our rider network covers every major location on and around campus.
+                Delivery availability and timing depend on riders, distance, and seller readiness.
               &lt;/p&gt;
             &lt;/Reveal&gt;
 
@@ -800,7 +877,7 @@ export default function HomePage() {
               {[
                 { value: 2000, suffix: '+', label: 'Active Users',      sub: 'Students trading daily',  icon: '👥' },
                 { value: 5000, suffix: '+', label: 'Products Listed',   sub: 'Across all categories',   icon: '📦' },
-                { value: 98,   suffix: '%', label: 'Satisfaction Rate', sub: 'Verified buyer reviews',  icon: '⭐' },
+                { value: 98,   suffix: '%', label: 'Positive Experience Rate', sub: 'Based on platform review trends',  icon: '⭐' },
               ].map(({ value, suffix, label, sub, icon }, i) =&gt; (
                 &lt;Reveal key={label} delay={i * 90}&gt;
                   &lt;MagneticCard&gt;
@@ -845,7 +922,7 @@ export default function HomePage() {
                 &lt;span className="hero-gradient" style={{ fontFamily: "'Instrument Serif', serif", fontWeight: 400, fontStyle: 'italic' }}&gt;Trading?&lt;/span&gt;
               &lt;/h2&gt;
               &lt;p className="text-gray-400 text-base max-w-sm mx-auto mb-10 leading-relaxed font-light"&gt;
-                Join thousands of campus students using BATAMART. Free to join, easy to use.
+                Join the growing campus community using BATAMART. Free to join, easy to use.
               &lt;/p&gt;
             &lt;/Reveal&gt;
 
@@ -3810,7 +3887,7 @@ export default function ForgotPasswordPage() {
   )
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12"&gt;
       &lt;div className="max-w-md w-full"&gt;
         &lt;BATAMARTLogo /&gt;
 
@@ -3947,7 +4024,9 @@ export default function ForgotPasswordPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/login/page.tsx</div><pre>'use client'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -3963,6 +4042,7 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [showEmailForm, setShowEmailForm] = useState(false)
   const [suspensionMessage, setSuspensionMessage] = useState&lt;string | null&gt;(null)
 
   useEffect(() =&gt; {
@@ -4015,7 +4095,6 @@ function LoginForm() {
         router.push('/marketplace')
 
       } else if (response.status === 403 &amp;&amp; data.isRider) {
-        // ── Rider tried to log in here — show clear message, do NOT log them in ──
         setError('__RIDER__')
 
       } else if (response.status === 403 &amp;&amp; data.suspended) {
@@ -4035,8 +4114,10 @@ function LoginForm() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12"&gt;
       &lt;div className="max-w-md w-full"&gt;
+
+        {/* Header */}
         &lt;div className="text-center mb-8"&gt;
           &lt;div className="inline-flex items-center space-x-2 mb-4"&gt;
             &lt;div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg"&gt;
@@ -4052,8 +4133,9 @@ function LoginForm() {
           &lt;p className="text-gray-500"&gt;Login to your BATAMART account&lt;/p&gt;
         &lt;/div&gt;
 
-        &lt;div className="bg-white rounded-2xl shadow-xl p-8"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-2xl shadow-xl p-8"&gt;
 
+          {/* Suspension message */}
           {suspensionMessage &amp;&amp; (
             &lt;div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4"&gt;
               &lt;div className="flex items-start gap-3"&gt;
@@ -4066,7 +4148,7 @@ function LoginForm() {
             &lt;/div&gt;
           )}
 
-          {/* ── Rider-specific error block ─────────────────────────────────── */}
+          {/* Rider error */}
           {error === '__RIDER__' ? (
             &lt;div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4"&gt;
               &lt;div className="flex items-start gap-3"&gt;
@@ -4089,59 +4171,88 @@ function LoginForm() {
             &lt;p className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"&gt;{error}&lt;/p&gt;
           ) : null}
 
-          &lt;form onSubmit={handleSubmit} className="space-y-5"&gt;
-            &lt;div&gt;
-              &lt;label className="block text-sm font-semibold text-gray-700 mb-2"&gt;Email Address&lt;/label&gt;
-              &lt;input
-                type="email"
-                value={email}
-                onChange={(e) =&gt; setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
-                placeholder="you@example.com"
-              /&gt;
-            &lt;/div&gt;
+          {/* ── PRIMARY: Google Sign-In ── */}
+          &lt;div className="mb-2"&gt;
+            &lt;GoogleAuthButton
+              mode="login"
+              onError={setError}
+              onLoading={setLoading}
+            /&gt;
+          &lt;/div&gt;
 
-            &lt;div&gt;
-              &lt;label className="block text-sm font-semibold text-gray-700 mb-2"&gt;Password&lt;/label&gt;
-              &lt;input
-                type="password"
-                value={password}
-                onChange={(e) =&gt; setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
-                placeholder="Enter your password"
-              /&gt;
-            &lt;/div&gt;
+          &lt;p className="text-center text-xs text-gray-400 mb-5"&gt;
+            Recommended · Fast · Secure
+          &lt;/p&gt;
 
-            &lt;div className="text-right"&gt;
-              &lt;Link href="/forgot-password" className="text-sm text-BATAMART-primary hover:underline font-semibold"&gt;
-                Forgot Password?
-              &lt;/Link&gt;
-            &lt;/div&gt;
-
-            &lt;button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
-            &gt;
-              {loading ? 'Logging in...' : 'Login'}
-            &lt;/button&gt;
-          &lt;/form&gt;
-
-          &lt;div className="my-5 flex items-center gap-3"&gt;
+          {/* Divider */}
+          &lt;div className="flex items-center gap-3 mb-5"&gt;
             &lt;div className="h-px bg-gray-200 flex-1" /&gt;
-            &lt;span className="text-xs text-gray-400 font-semibold"&gt;OR&lt;/span&gt;
+            &lt;span className="text-xs text-gray-400 font-semibold"&gt;or continue with email&lt;/span&gt;
             &lt;div className="h-px bg-gray-200 flex-1" /&gt;
           &lt;/div&gt;
 
-          &lt;GoogleAuthButton
-            mode="login"
-            onError={setError}
-            onLoading={setLoading}
-          /&gt;
+          {/* ── SECONDARY: Email/Password (collapsed by default) ── */}
+          {!showEmailForm ? (
+            &lt;button
+              onClick={() =&gt; setShowEmailForm(true)}
+              className="w-full py-3 rounded-lg border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            &gt;
+              &lt;svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"&gt;
+                &lt;path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /&gt;
+              &lt;/svg&gt;
+              Use email &amp;amp; password instead
+            &lt;/button&gt;
+          ) : (
+            &lt;form onSubmit={handleSubmit} className="space-y-5"&gt;
+              &lt;div&gt;
+                &lt;label className="block text-sm font-semibold text-gray-700 mb-2"&gt;Email Address&lt;/label&gt;
+                &lt;input
+                  type="email"
+                  value={email}
+                  onChange={(e) =&gt; setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
+                  placeholder="you@example.com"
+                /&gt;
+              &lt;/div&gt;
+
+              &lt;div&gt;
+                &lt;label className="block text-sm font-semibold text-gray-700 mb-2"&gt;Password&lt;/label&gt;
+                &lt;input
+                  type="password"
+                  value={password}
+                  onChange={(e) =&gt; setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
+                  placeholder="Enter your password"
+                /&gt;
+              &lt;/div&gt;
+
+              &lt;div className="text-right"&gt;
+                &lt;Link href="/forgot-password" className="text-sm text-BATAMART-primary hover:underline font-semibold"&gt;
+                  Forgot Password?
+                &lt;/Link&gt;
+              &lt;/div&gt;
+
+              &lt;button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
+              &gt;
+                {loading ? 'Logging in...' : 'Login'}
+              &lt;/button&gt;
+
+              &lt;button
+                type="button"
+                onClick={() =&gt; setShowEmailForm(false)}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              &gt;
+                ← Back to Google Sign-In
+              &lt;/button&gt;
+            &lt;/form&gt;
+          )}
 
           &lt;div className="mt-6 text-center"&gt;
             &lt;p className="text-gray-600 text-sm"&gt;
@@ -4158,7 +4269,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     &lt;Suspense fallback={
-      &lt;div className="min-h-screen flex items-center justify-center bg-gray-50"&gt;
+      &lt;div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#000000]"&gt;
         &lt;div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" /&gt;
       &lt;/div&gt;
     }&gt;
@@ -4180,6 +4291,7 @@ function buildSuspensionMessage(reason: string | null, until: string | null): st
   }
   return `Your account is suspended until ${untilDate.toLocaleDateString('en-NG', { dateStyle: 'long' })}.\n\nReason: ${reasonText}\n\nContact support if you believe this is an error.`
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/profile/setup/page.tsx</div><pre>'use client'
 
@@ -4250,7 +4362,7 @@ export default function ProfileSetupPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12"&gt;
       &lt;div className="max-w-md w-full"&gt;
         {/* Header */}
         &lt;div className="text-center mb-8"&gt;
@@ -4362,7 +4474,9 @@ export default function ProfileSetupPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/rider/login/page.tsx</div><pre>'use client'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -4431,7 +4545,7 @@ function RiderLoginForm() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12"&gt;
       &lt;div className="max-w-md w-full"&gt;
 
         {/* Header */}
@@ -4561,7 +4675,9 @@ export default function RiderLoginPage() {
       &lt;RiderLoginForm /&gt;
     &lt;/Suspense&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/signup/page.tsx</div><pre>'use client'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -4580,7 +4696,7 @@ interface University {
 }
 
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
-const bgStyle  = { background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }
+const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
 const PageShell = ({
@@ -4659,8 +4775,9 @@ function SignupForm() {
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
   const [referralCode, setReferralCode]       = useState('')
 
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
+  const [loading, setLoading]             = useState(false)
+  const [error, setError]                 = useState('')
+  const [showEmailForm, setShowEmailForm] = useState(false)
 
   useEffect(() =&gt; {
     const ref = searchParams.get('ref')
@@ -4816,7 +4933,7 @@ function SignupForm() {
   if (step === 0) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        &lt;div className="bg-white rounded-3xl p-8 shadow-2xl"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;div className="text-center mb-6"&gt;
             &lt;div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}&gt;
               &lt;MapPin className="w-7 h-7 text-white" /&gt;
@@ -4890,115 +5007,144 @@ function SignupForm() {
   }
 
   // ════════════════════════════════════════════════════════
-  // STEP 1 — Email + name + phone
+  // STEP 1 — Google first, email form secondary
   // ════════════════════════════════════════════════════════
   if (step === 1) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        &lt;div className="bg-white rounded-3xl p-8 shadow-2xl"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={1} /&gt;
           &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Create account&lt;/h2&gt;
           &lt;p className="text-sm text-gray-500 mb-6"&gt;Join the {selectedUniversity?.shortName} marketplace&lt;/p&gt;
 
           &lt;ErrorBox error={error} /&gt;
 
-          &lt;form onSubmit={handleSendOTP} className="space-y-4"&gt;
-            &lt;div&gt;
-              &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Full Name&lt;/label&gt;
-              &lt;input
-                type="text"
-                value={name}
-                onChange={e =&gt; setName(e.target.value)}
-                required
-                placeholder="Your full name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              /&gt;
-            &lt;/div&gt;
-            &lt;div&gt;
-              &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Email Address&lt;/label&gt;
-              &lt;input
-                type="email"
-                value={email}
-                onChange={e =&gt; setEmail(e.target.value)}
-                required
-                placeholder="your@email.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              /&gt;
-            &lt;/div&gt;
-            &lt;div&gt;
-              &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Phone Number&lt;/label&gt;
-              &lt;input
-                type="tel"
-                value={phone}
-                onChange={e =&gt; setPhone(e.target.value)}
-                required
-                placeholder="08012345678"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              /&gt;
-            &lt;/div&gt;
+          {/* ── PRIMARY: Google Sign-Up ── */}
+          &lt;div className="mb-2"&gt;
+            &lt;GoogleAuthButton
+              mode="signup"
+              payload={{
+                universityId: selectedUniversity?.id,
+                referralCode: referralCode || undefined,
+              }}
+              onError={setError}
+              onLoading={setLoading}
+              onSuccess={(data) =&gt; {
+                if (data?.requiresProfile &amp;&amp; data?.signupToken) {
+                  if (data?.profile?.email) setEmail(String(data.profile.email))
+                  if (data?.profile?.name) setName(String(data.profile.name))
+                  setOtpSessionToken(String(data.signupToken))
+                  setStep(3)
+                  return
+                }
 
-            {/* ── REMOVED: "I also want to sell" checkbox ── */}
-            {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
-                which redirects them to /become-seller to upgrade their account. */}
+                if (data?.token &amp;&amp; data?.user) {
+                  localStorage.setItem('token', data.token)
+                  localStorage.setItem('userName', data.user.name)
+                  localStorage.setItem('userRole', data.user.role || '')
+                  localStorage.setItem('userId', data.user.id)
+                  document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+                  window.dispatchEvent(new Event('auth-change'))
+                  window.location.href = '/marketplace'
+                }
+              }}
+            /&gt;
+          &lt;/div&gt;
 
-            &lt;div&gt;
-              &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Referral Code (Optional)&lt;/label&gt;
-              &lt;input
-                type="text"
-                value={referralCode}
-                onChange={e =&gt; setReferralCode(e.target.value.toUpperCase().trim())}
-                placeholder="e.g. BATAMART-ABC123"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              /&gt;
-              &lt;p className="text-xs text-gray-400 mt-1"&gt;Paste code from a friend or use their referral link.&lt;/p&gt;
-            &lt;/div&gt;
+          &lt;p className="text-center text-xs text-gray-400 mb-5"&gt;
+            Recommended · No password needed · Fast setup
+          &lt;/p&gt;
 
-            &lt;button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
-              style={btnStyle}
-            &gt;
-              {loading ? 'Sending OTP…' : 'Continue →'}
-            &lt;/button&gt;
-          &lt;/form&gt;
-
-          &lt;div className="my-5 flex items-center gap-3"&gt;
+          {/* Divider */}
+          &lt;div className="flex items-center gap-3 mb-5"&gt;
             &lt;div className="h-px bg-gray-200 flex-1" /&gt;
-            &lt;span className="text-xs text-gray-400 font-semibold"&gt;OR&lt;/span&gt;
+            &lt;span className="text-xs text-gray-400 font-semibold"&gt;or sign up with email&lt;/span&gt;
             &lt;div className="h-px bg-gray-200 flex-1" /&gt;
           &lt;/div&gt;
 
-          &lt;GoogleAuthButton
-            mode="signup"
-            payload={{
-              universityId: selectedUniversity?.id,
-              referralCode: referralCode || undefined,
-            }}
-            onError={setError}
-            onLoading={setLoading}
-            onSuccess={(data) =&gt; {
-              if (data?.requiresProfile &amp;&amp; data?.signupToken) {
-                if (data?.profile?.email) setEmail(String(data.profile.email))
-                if (data?.profile?.name) setName(String(data.profile.name))
-                setOtpSessionToken(String(data.signupToken))
-                setStep(3)
-                return
-              }
+          {/* ── SECONDARY: Email form (collapsed by default) ── */}
+          {!showEmailForm ? (
+            &lt;button
+              onClick={() =&gt; setShowEmailForm(true)}
+              className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            &gt;
+              &lt;svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"&gt;
+                &lt;path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /&gt;
+              &lt;/svg&gt;
+              Use email &amp;amp; password instead
+            &lt;/button&gt;
+          ) : (
+            &lt;form onSubmit={handleSendOTP} className="space-y-4"&gt;
+              &lt;div&gt;
+                &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Full Name&lt;/label&gt;
+                &lt;input
+                  type="text"
+                  value={name}
+                  onChange={e =&gt; setName(e.target.value)}
+                  required
+                  placeholder="Your full name"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                /&gt;
+              &lt;/div&gt;
+              &lt;div&gt;
+                &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Email Address&lt;/label&gt;
+                &lt;input
+                  type="email"
+                  value={email}
+                  onChange={e =&gt; setEmail(e.target.value)}
+                  required
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                /&gt;
+              &lt;/div&gt;
+              &lt;div&gt;
+                &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Phone Number&lt;/label&gt;
+                &lt;input
+                  type="tel"
+                  value={phone}
+                  onChange={e =&gt; setPhone(e.target.value)}
+                  required
+                  placeholder="08012345678"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                /&gt;
+              &lt;/div&gt;
 
-              if (data?.token &amp;&amp; data?.user) {
-                localStorage.setItem('token', data.token)
-                localStorage.setItem('userName', data.user.name)
-                localStorage.setItem('userRole', data.user.role || '')
-                localStorage.setItem('userId', data.user.id)
-                document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-                window.dispatchEvent(new Event('auth-change'))
-                window.location.href = '/marketplace'
-              }
-            }}
-          /&gt;
+              {/* ── REMOVED: "I also want to sell" checkbox ── */}
+              {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
+                  which redirects them to /become-seller to upgrade their account. */}
 
-          &lt;button onClick={() =&gt; setStep(0)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600"&gt;
+              &lt;div&gt;
+                &lt;label className="block text-xs font-semibold text-gray-600 mb-1.5"&gt;Referral Code (Optional)&lt;/label&gt;
+                &lt;input
+                  type="text"
+                  value={referralCode}
+                  onChange={e =&gt; setReferralCode(e.target.value.toUpperCase().trim())}
+                  placeholder="e.g. BATAMART-ABC123"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                /&gt;
+                &lt;p className="text-xs text-gray-400 mt-1"&gt;Paste code from a friend or use their referral link.&lt;/p&gt;
+              &lt;/div&gt;
+
+              &lt;button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
+                style={btnStyle}
+              &gt;
+                {loading ? 'Sending OTP…' : 'Continue →'}
+              &lt;/button&gt;
+
+              &lt;button
+                type="button"
+                onClick={() =&gt; setShowEmailForm(false)}
+                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              &gt;
+                ← Back to Google Sign-Up
+              &lt;/button&gt;
+            &lt;/form&gt;
+          )}
+
+          &lt;button onClick={() =&gt; setStep(0)} className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"&gt;
             ← Change campus
           &lt;/button&gt;
           &lt;p className="text-center text-sm text-gray-500 mt-4"&gt;
@@ -5016,7 +5162,7 @@ function SignupForm() {
   if (step === 2) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        &lt;div className="bg-white rounded-3xl p-8 shadow-2xl"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={2} /&gt;
           &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Verify your email&lt;/h2&gt;
           &lt;p className="text-sm text-gray-500 mb-6"&gt;
@@ -5068,7 +5214,7 @@ function SignupForm() {
 
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        &lt;div className="bg-white rounded-3xl p-8 shadow-2xl"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={3} /&gt;
 
           &lt;div className="text-center mb-6"&gt;
@@ -5179,7 +5325,7 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-      &lt;div className="bg-white rounded-3xl p-8 shadow-2xl"&gt;
+      &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
         &lt;StepDots current={4} /&gt;
         &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Set your password&lt;/h2&gt;
         &lt;p className="text-sm text-gray-500 mb-6"&gt;Almost done, {name}!&lt;/p&gt;
@@ -5254,7 +5400,7 @@ export default function SignupPage() {
   return (
     &lt;Suspense fallback={
       &lt;div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg,#121212,#1E1E1E,#121212)' }}&gt;
+        style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}&gt;
         &lt;div className="text-white text-xl font-bold"&gt;Loading…&lt;/div&gt;
       &lt;/div&gt;
     }&gt;
@@ -5365,7 +5511,7 @@ export default function VerifyPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12"&gt;
       &lt;div className="max-w-md w-full"&gt;
         {/* Logo */}
         &lt;div className="text-center mb-8"&gt;
@@ -5386,7 +5532,7 @@ export default function VerifyPage() {
         &lt;/div&gt;
 
         {/* Verification Form */}
-        &lt;div className="bg-white rounded-2xl shadow-xl p-8"&gt;
+        &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-2xl shadow-xl p-8"&gt;
           &lt;form onSubmit={handleSubmit} className="space-y-6"&gt;
             {/* OTP Input */}
             &lt;div&gt;
@@ -5404,7 +5550,7 @@ export default function VerifyPage() {
                     value={digit}
                     onChange={(e) =&gt; handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) =&gt; handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
+                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
                   /&gt;
                 ))}
               &lt;/div&gt;
@@ -5454,7 +5600,9 @@ export default function VerifyPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/become-seller/page.tsx</div><pre>'use client'
 
 import { useState, useEffect } from 'react'
@@ -5516,7 +5664,7 @@ export default function BecomeSellerPage() {
 
   if (done) {
     return (
-      &lt;div className="min-h-screen bg-gray-50 flex items-center justify-center px-4"&gt;
+      &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4"&gt;
         &lt;div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center"&gt;
           &lt;div className="text-7xl mb-4"&gt;🎉&lt;/div&gt;
           &lt;h1 className="text-3xl font-bold text-gray-900 mb-3"&gt;You're a Seller!&lt;/h1&gt;
@@ -5549,7 +5697,7 @@ export default function BecomeSellerPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 py-12 px-4"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-12 px-4"&gt;
       &lt;div className="max-w-3xl mx-auto"&gt;
         &lt;Link href="/" className="text-BATAMART-primary hover:underline mb-6 inline-block"&gt;
           ← Back to Home
@@ -5657,7 +5805,8 @@ export default function BecomeSellerPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/cart/page.tsx</div><pre>'use client'
 
 import { useState, useEffect } from 'react'
@@ -6488,7 +6637,7 @@ export default function SelectOrderForDisputePage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 pb-24"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] pb-24"&gt;
       &lt;div className="max-w-2xl mx-auto px-4 py-8"&gt;
         {/* Header */}
         &lt;div className="mb-6"&gt;
@@ -6613,7 +6762,8 @@ export default function SelectOrderForDisputePage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/marketplace/loading.tsx</div><pre>export default function MarketplaceLoading() {
   return (
     &lt;div className="min-h-screen bg-[#f0f2f5]"&gt;
@@ -6775,7 +6925,7 @@ const ANIM_CSS = `
   }
   .dark .marketplace-shell .search-input:focus-within {
     box-shadow: 0 0 0 3px rgba(99,102,241,0.35), 0 6px 16px rgba(2,6,23,0.45) !important;
-    background: #121212 !important;
+    background: #0f1115 !important;
   }
 
   @keyframes dropIn {
@@ -6850,9 +7000,9 @@ const ANIM_CSS = `
   .section-stripe         { background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%); }
   .section-stripe-orange  { background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); }
   .section-stripe-emerald { background: linear-gradient(135deg, #059669 0%, #0891b2 100%); }
-  .dark .marketplace-shell .section-stripe         { background: #000000; }
-  .dark .marketplace-shell .section-stripe-orange  { background: #000000; }
-  .dark .marketplace-shell .section-stripe-emerald { background: #000000; }
+  .dark .marketplace-shell .section-stripe         { background: linear-gradient(135deg, #0d1016 0%, #171c26 100%); }
+  .dark .marketplace-shell .section-stripe-orange  { background: linear-gradient(135deg, #1a1311 0%, #241a17 100%); }
+  .dark .marketplace-shell .section-stripe-emerald { background: linear-gradient(135deg, #0f1515 0%, #162024 100%); }
 
   .discount-badge {
     background: linear-gradient(135deg, #ef4444, #dc2626);
@@ -6871,7 +7021,7 @@ const ANIM_CSS = `
     animation: shimmerBg 4s linear infinite;
   }
   .dark .marketplace-shell .promo-bar {
-    background: #000000;
+    background: linear-gradient(90deg, #0f1115, #1a1f2a, #0f1115);
     background-size: 200% 100%;
   }
   @keyframes shimmerBg {
@@ -6882,7 +7032,7 @@ const ANIM_CSS = `
   .batamart-header {
     background: linear-gradient(135deg, #4c1d95 0%, #6366f1 60%, #4c1d95 100%);
   }
-  .dark .marketplace-shell .batamart-header { background: #000000; }
+  .dark .marketplace-shell .batamart-header { background: linear-gradient(135deg, #0c0f15 0%, #171c26 60%, #0c0f15 100%); }
 
   .cat-tile {
     transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.25s ease;
@@ -7017,14 +7167,14 @@ const ANIM_CSS = `
     animation: shimmerBg 3s linear infinite;
   }
   .dark .marketplace-shell .trust-bar {
-    background: #000000;
+    background: linear-gradient(90deg, #161a22, #232937, #161a22);
     background-size: 200% 100%;
   }
 
   .dark .marketplace-shell .cat-tile,
   .dark .marketplace-shell .flash-card,
   .dark .marketplace-shell .mega-cat-card {
-    filter: saturate(0.72) brightness(0.82);
+    filter: saturate(0.88) brightness(0.94);
   }
 
   @keyframes ripple {
@@ -7548,9 +7698,13 @@ const TRUST_POINTS = [
   { icon: '🔒', title: 'Escrow Protected',   desc: 'Money held safely until you confirm delivery' },
   { icon: '🎓', title: 'Campus Verified',     desc: 'Only students from your university can sell' },
   { icon: '⚡', title: 'Fast Campus Delivery', desc: 'Delivered to your hostel door' },
-  { icon: '💬', title: 'Seller Chat',         desc: 'Message sellers directly before buying' },
+  { icon: '🛡️', title: 'Dispute Protection', desc: 'Open and track order disputes from your dashboard' },
   { icon: '⭐', title: 'Ratings &amp; Reviews',   desc: 'Buy from trusted, rated sellers only' },
   { icon: '🔄', title: 'Easy Disputes',       desc: 'Raise an issue, get it resolved fast' },
+  { icon: '🎁', title: 'Referral Rewards', desc: 'Invite friends and earn rewards when they join and buy' },
+  { icon: '📦', title: 'Order Tracking', desc: 'Track order status from confirmation to delivery' },
+  { icon: '🔔', title: 'Smart Notifications', desc: 'Get updates on orders, referrals, and account activity' },
+
 ]
 
 // ── Study essentials quick links ────────────────────────────────────────────
@@ -8092,7 +8246,7 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 function StudyEssentials({ onSearch }: { onSearch: (q: string) =&gt; void }) {
   return (
     &lt;div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm"&gt;
-      &lt;div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-black dark:to-black px-5 py-4"&gt;
+      &lt;div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-[#12161f] dark:to-[#1b2230] px-5 py-4"&gt;
         &lt;div className="flex items-center gap-2"&gt;
           &lt;BookOpen className="w-5 h-5 text-white" /&gt;
           &lt;div&gt;
@@ -8359,7 +8513,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
   return (
     &lt;div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm"&gt;
       {/* Header */}
-      &lt;div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-black dark:via-black dark:to-black gradient-animated px-5 py-4"&gt;
+      &lt;div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-[#151313] dark:via-[#201a18] dark:to-[#151313] gradient-animated px-5 py-4"&gt;
         &lt;div className="flex items-center justify-between"&gt;
           &lt;div className="flex items-center gap-2"&gt;
             &lt;Zap className="w-5 h-5 text-white" /&gt;
@@ -8422,7 +8576,7 @@ function LiveActivityMarquee({ products }: { products: any[] }) {
   const doubled = [...items, ...items]
 
   return (
-    &lt;div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-black dark:to-black rounded-2xl overflow-hidden py-2.5 px-0"&gt;
+    &lt;div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-[#12161f] dark:to-[#1b2230] rounded-2xl overflow-hidden py-2.5 px-0"&gt;
       &lt;div className="flex items-center gap-3 overflow-hidden"&gt;
         &lt;div className="flex-shrink-0 flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-r-xl"&gt;
           &lt;span className="live-ping w-2 h-2 rounded-full bg-green-400 inline-block" /&gt;
@@ -11461,7 +11615,7 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n =&gt; !n.isRead).length
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 py-8"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-8"&gt;
       &lt;div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"&gt;
         {/* Header */}
         &lt;div className="bg-white rounded-xl shadow-sm p-6 mb-6"&gt;
@@ -11621,7 +11775,8 @@ export default function NotificationsPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/orders/loading.tsx</div><pre>export default function OrdersLoading() {
   return (
     &lt;div className="min-h-screen bg-[#f7f8fa] pb-20"&gt;
@@ -12281,7 +12436,7 @@ export default function ReferralsPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 pb-16"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] pb-16"&gt;
 
       {/* Hero Banner */}
       &lt;div className="bg-gradient-to-br from-BATAMART-primary via-purple-600 to-BATAMART-secondary text-white"&gt;
@@ -12446,7 +12601,8 @@ export default function ReferralsPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/report/page.tsx</div><pre>'use client'
 
 import { Suspense, useState } from 'react'
@@ -13250,7 +13406,7 @@ export default function RiderDashboardPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50 py-6 px-4 pb-24"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-6 px-4 pb-24"&gt;
       {toast &amp;&amp; &lt;Toast message={toast.message} type={toast.type} onClose={() =&gt; setToast(null)} /&gt;}
 
       &lt;div className="max-w-2xl mx-auto space-y-6"&gt;
@@ -13736,6 +13892,7 @@ export default function RiderDashboardPage() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/search/page.tsx</div><pre>'use client'
 
@@ -13895,21 +14052,21 @@ function SearchPage() {
 
   const filterPanel = (
     &lt;div className="space-y-4"&gt;
-      &lt;div className="border border-gray-100 rounded-xl p-3"&gt;
-        &lt;p className="text-xs font-bold text-gray-500 uppercase mb-2"&gt;Basic Filters&lt;/p&gt;
+      &lt;div className="border border-gray-100 dark:border-[#272b33] rounded-xl p-3"&gt;
+        &lt;p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2"&gt;Basic Filters&lt;/p&gt;
         &lt;div className="space-y-2"&gt;
           &lt;select
             value={subcategoryKey || ''}
             onChange={(e) =&gt; setSubcategoryKey(e.target.value || null)}
             disabled={categoryKey === 'all'}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-gray-200 dark:border-[#272b33] px-3 py-2 text-sm bg-white dark:bg-[#0f1115] text-gray-900 dark:text-[#e5e7eb]"
           &gt;
             &lt;option value=""&gt;All subcategories&lt;/option&gt;
             {subcategories.map((s) =&gt; &lt;option key={s.key} value={s.key}&gt;{s.label}&lt;/option&gt;)}
           &lt;/select&gt;
           &lt;div className="grid grid-cols-2 gap-2"&gt;
-            &lt;input type="number" value={priceInput[0]} onChange={(e) =&gt; setPriceInput(([_, max]) =&gt; [Number(e.target.value || 0), max])} className="rounded-xl border border-gray-200 px-3 py-2 text-sm" /&gt;
-            &lt;input type="number" value={priceInput[1]} onChange={(e) =&gt; setPriceInput(([min]) =&gt; [min, Number(e.target.value || priceBounds.max)])} className="rounded-xl border border-gray-200 px-3 py-2 text-sm" /&gt;
+            &lt;input type="number" value={priceInput[0]} onChange={(e) =&gt; setPriceInput(([_, max]) =&gt; [Number(e.target.value || 0), max])} className="rounded-xl border border-gray-200 dark:border-[#272b33] px-3 py-2 text-sm bg-white dark:bg-[#0f1115] text-gray-900 dark:text-[#e5e7eb]" /&gt;
+            &lt;input type="number" value={priceInput[1]} onChange={(e) =&gt; setPriceInput(([min]) =&gt; [min, Number(e.target.value || priceBounds.max)])} className="rounded-xl border border-gray-200 dark:border-[#272b33] px-3 py-2 text-sm bg-white dark:bg-[#0f1115] text-gray-900 dark:text-[#e5e7eb]" /&gt;
           &lt;/div&gt;
           {basicFilters.map((f) =&gt; (
             &lt;FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) =&gt; setFilters((prev) =&gt; ({ ...prev, [f.key]: value }))} defaultOpen={false} /&gt;
@@ -13918,8 +14075,8 @@ function SearchPage() {
       &lt;/div&gt;
 
       {attributeFilters.length &gt; 0 &amp;&amp; (
-        &lt;div className="border border-gray-100 rounded-xl p-3"&gt;
-          &lt;p className="text-xs font-bold text-gray-500 uppercase mb-2"&gt;Product Attributes&lt;/p&gt;
+        &lt;div className="border border-gray-100 dark:border-[#272b33] rounded-xl p-3"&gt;
+          &lt;p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2"&gt;Product Attributes&lt;/p&gt;
           &lt;div className="space-y-2"&gt;
             {attributeFilters.map((f) =&gt; (
               &lt;FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) =&gt; setFilters((prev) =&gt; ({ ...prev, [f.key]: value }))} defaultOpen={false} /&gt;
@@ -13929,8 +14086,8 @@ function SearchPage() {
       )}
 
       {variantFilters.length &gt; 0 &amp;&amp; (
-        &lt;div className="border border-gray-100 rounded-xl p-3"&gt;
-          &lt;p className="text-xs font-bold text-gray-500 uppercase mb-2"&gt;Variant Filters&lt;/p&gt;
+        &lt;div className="border border-gray-100 dark:border-[#272b33] rounded-xl p-3"&gt;
+          &lt;p className="text-xs font-bold text-gray-500 dark:text-[#94a3b8] uppercase mb-2"&gt;Variant Filters&lt;/p&gt;
           &lt;div className="space-y-2"&gt;
             {variantFilters.map((f) =&gt; (
               &lt;FilterGroup key={f.key} title={f.label} type={f.type} options={f.options} selectedValue={filters[f.key]} onChange={(value) =&gt; setFilters((prev) =&gt; ({ ...prev, [f.key]: value }))} defaultOpen={false} /&gt;
@@ -13939,30 +14096,30 @@ function SearchPage() {
         &lt;/div&gt;
       )}
 
-      &lt;button onClick={clearAll} className="w-full rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-700"&gt;Clear All&lt;/button&gt;
+      &lt;button onClick={clearAll} className="w-full rounded-xl border border-gray-200 dark:border-[#272b33] py-2 text-sm font-semibold text-gray-700 dark:text-[#cbd5e1]"&gt;Clear All&lt;/button&gt;
     &lt;/div&gt;
   )
 
   return (
-    &lt;div className="min-h-screen bg-[#f3f4f8]"&gt;
-      &lt;div className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur"&gt;
+    &lt;div className="min-h-screen bg-[#f3f4f8] dark:bg-[#000000]"&gt;
+      &lt;div className="sticky top-0 z-30 border-b border-gray-200 dark:border-[#272b33] bg-white/95 dark:bg-[#0f1115]/95 backdrop-blur"&gt;
         &lt;div className="mx-auto max-w-7xl px-3 py-3 sm:px-4"&gt;
           &lt;div className="flex items-center gap-2"&gt;
-            &lt;button onClick={() =&gt; router.push('/marketplace')} className="h-9 w-9 rounded-xl border border-gray-200 flex items-center justify-center"&gt;
+            &lt;button onClick={() =&gt; router.push('/marketplace')} className="h-9 w-9 rounded-xl border border-gray-200 dark:border-[#272b33] text-gray-700 dark:text-[#cbd5e1] flex items-center justify-center"&gt;
               &lt;ChevronLeft className="h-4 w-4" /&gt;
             &lt;/button&gt;
-            &lt;div className="flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 flex items-center gap-2"&gt;
-              &lt;Search className="h-4 w-4 text-gray-400" /&gt;
-              &lt;input value={inputQuery} onChange={(e) =&gt; setInputQuery(e.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm outline-none" /&gt;
+            &lt;div className="flex-1 rounded-xl border border-gray-200 dark:border-[#272b33] bg-white dark:bg-[#0f1115] px-3 py-2 flex items-center gap-2"&gt;
+              &lt;Search className="h-4 w-4 text-gray-400 dark:text-[#94a3b8]" /&gt;
+              &lt;input value={inputQuery} onChange={(e) =&gt; setInputQuery(e.target.value)} placeholder="Search products" className="w-full bg-transparent text-sm text-gray-900 dark:text-[#e5e7eb] placeholder:text-gray-400 dark:placeholder:text-[#72819a] outline-none" /&gt;
               {inputQuery &amp;&amp; &lt;button onClick={() =&gt; setInputQuery('')}&gt;&lt;X className="h-4 w-4 text-gray-400" /&gt;&lt;/button&gt;}
             &lt;/div&gt;
-            &lt;button onClick={() =&gt; setIsFilterOpen(true)} className="md:hidden h-9 rounded-xl border border-gray-200 px-3 text-sm font-semibold flex items-center gap-1"&gt;
+            &lt;button onClick={() =&gt; setIsFilterOpen(true)} className="md:hidden h-9 rounded-xl border border-gray-200 dark:border-[#272b33] text-gray-700 dark:text-[#cbd5e1] px-3 text-sm font-semibold flex items-center gap-1"&gt;
               &lt;Filter className="h-4 w-4" /&gt; Filter
             &lt;/button&gt;
           &lt;/div&gt;
           &lt;div className="mt-3 flex gap-2 overflow-x-auto pb-1"&gt;
             {TABS.map((tab) =&gt; (
-              &lt;button key={tab.key} onClick={() =&gt; onCategoryChange(tab.key)} className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold ${categoryKey === tab.key ? 'bg-indigo-600 text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}&gt;
+              &lt;button key={tab.key} onClick={() =&gt; onCategoryChange(tab.key)} className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold ${categoryKey === tab.key ? 'bg-indigo-600 text-white border-transparent' : 'bg-white dark:bg-[#0f1115] text-gray-600 dark:text-[#cbd5e1] border-gray-200 dark:border-[#272b33]'}`}&gt;
                 {tab.label}
               &lt;/button&gt;
             ))}
@@ -13980,12 +14137,12 @@ function SearchPage() {
       &lt;/div&gt;
 
       &lt;div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:grid md:grid-cols-[280px_1fr] md:gap-4"&gt;
-        &lt;aside className="hidden md:block rounded-2xl border border-gray-200 bg-white p-4 h-fit sticky top-24"&gt;
+        &lt;aside className="hidden md:block rounded-2xl border border-gray-200 dark:border-[#272b33] bg-white dark:bg-[#0f1115] p-4 h-fit sticky top-24"&gt;
           {filterPanel}
         &lt;/aside&gt;
         &lt;main&gt;
           &lt;div className="mb-3"&gt;
-            &lt;select value={sortBy} onChange={(e) =&gt; setSortBy(e.target.value)} className="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white"&gt;
+            &lt;select value={sortBy} onChange={(e) =&gt; setSortBy(e.target.value)} className="rounded-xl border border-gray-200 dark:border-[#272b33] px-3 py-2 text-sm bg-white dark:bg-[#0f1115] text-gray-900 dark:text-[#e5e7eb]"&gt;
               &lt;option value="relevance"&gt;Most Relevant&lt;/option&gt;
               &lt;option value="newest"&gt;Newest&lt;/option&gt;
               &lt;option value="priceLow"&gt;Price: Low to High&lt;/option&gt;
@@ -13995,23 +14152,23 @@ function SearchPage() {
           {isLoading ? (
             &lt;div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"&gt;
               {Array.from({ length: 8 }).map((_, i) =&gt; (
-                &lt;div key={i} className="rounded-2xl border border-gray-200 bg-white p-2 animate-pulse"&gt;
-                  &lt;div className="aspect-square rounded-xl bg-gray-100" /&gt;
-                  &lt;div className="mt-2 h-3 w-4/5 bg-gray-100 rounded" /&gt;
-                  &lt;div className="mt-2 h-3 w-2/5 bg-gray-100 rounded" /&gt;
+                &lt;div key={i} className="rounded-2xl border border-gray-200 dark:border-[#272b33] bg-white dark:bg-[#0f1115] p-2 animate-pulse"&gt;
+                  &lt;div className="aspect-square rounded-xl bg-gray-100 dark:bg-[#1a1f2a]" /&gt;
+                  &lt;div className="mt-2 h-3 w-4/5 bg-gray-100 dark:bg-[#1a1f2a] rounded" /&gt;
+                  &lt;div className="mt-2 h-3 w-2/5 bg-gray-100 dark:bg-[#1a1f2a] rounded" /&gt;
                 &lt;/div&gt;
               ))}
             &lt;/div&gt;
           ) : products.length === 0 ? (
-            &lt;div className="rounded-2xl border border-gray-200 bg-white py-16 text-center"&gt;
-              &lt;p className="text-gray-600 font-semibold"&gt;No products found&lt;/p&gt;
+            &lt;div className="rounded-2xl border border-gray-200 dark:border-[#272b33] bg-white dark:bg-[#0f1115] py-16 text-center"&gt;
+              &lt;p className="text-gray-600 dark:text-[#cbd5e1] font-semibold"&gt;No products found&lt;/p&gt;
               &lt;button onClick={clearAll} className="mt-3 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"&gt;Clear filters&lt;/button&gt;
             &lt;/div&gt;
           ) : (
             &lt;div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"&gt;
               {products.map((p) =&gt; (
-                &lt;button key={p.id} onClick={() =&gt; router.push(`/product/${p.id}`)} className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-left"&gt;
-                  &lt;div className="relative aspect-square bg-gray-100"&gt;
+                &lt;button key={p.id} onClick={() =&gt; router.push(`/product/${p.id}`)} className="rounded-2xl border border-gray-200 dark:border-[#272b33] bg-white dark:bg-[#0f1115] overflow-hidden text-left"&gt;
+                  &lt;div className="relative aspect-square bg-gray-100 dark:bg-[#1a1f2a]"&gt;
                     {p.images?.[0] ? &lt;img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" /&gt; : null}
                     &lt;div className="absolute left-2 top-2 flex gap-1"&gt;
                       {p.isHot &amp;&amp; &lt;span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white"&gt;HOT&lt;/span&gt;}
@@ -14020,11 +14177,11 @@ function SearchPage() {
                     &lt;/div&gt;
                   &lt;/div&gt;
                   &lt;div className="p-2.5"&gt;
-                    &lt;p className="line-clamp-2 text-xs font-bold text-gray-900"&gt;{p.name}&lt;/p&gt;
+                    &lt;p className="line-clamp-2 text-xs font-bold text-gray-900 dark:text-[#e5e7eb]"&gt;{p.name}&lt;/p&gt;
                     &lt;p className="mt-1 text-sm font-black text-indigo-600"&gt;{p.priceDisplay || fmt(p.price)}&lt;/p&gt;
                     &lt;div className="mt-1 flex items-center justify-between"&gt;
-                      &lt;p className="truncate text-[10px] text-gray-400"&gt;{p.seller?.name || 'Seller'}&lt;/p&gt;
-                      {p.seller?.trustLevel ? &lt;span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600"&gt;{p.seller.trustLevel}&lt;/span&gt; : null}
+                      &lt;p className="truncate text-[10px] text-gray-400 dark:text-[#94a3b8]"&gt;{p.seller?.name || 'Seller'}&lt;/p&gt;
+                      {p.seller?.trustLevel ? &lt;span className="rounded-full bg-gray-100 dark:bg-[#1a1f2a] px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-[#cbd5e1]"&gt;{p.seller.trustLevel}&lt;/span&gt; : null}
                     &lt;/div&gt;
                   &lt;/div&gt;
                 &lt;/button&gt;
@@ -14037,9 +14194,9 @@ function SearchPage() {
       {isFilterOpen &amp;&amp; (
         &lt;div className="fixed inset-0 z-50 md:hidden"&gt;
           &lt;div className="absolute inset-0 bg-black/40" onClick={() =&gt; setIsFilterOpen(false)} /&gt;
-          &lt;div className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-white p-4 overflow-y-auto"&gt;
+          &lt;div className="absolute right-0 top-0 h-full w-[88%] max-w-sm bg-white dark:bg-[#0f1115] p-4 overflow-y-auto"&gt;
             &lt;div className="mb-3 flex items-center justify-between"&gt;
-              &lt;h3 className="font-bold text-gray-900"&gt;Filters&lt;/h3&gt;
+              &lt;h3 className="font-bold text-gray-900 dark:text-[#e5e7eb]"&gt;Filters&lt;/h3&gt;
               &lt;button onClick={() =&gt; setIsFilterOpen(false)}&gt;&lt;X className="h-5 w-5 text-gray-500" /&gt;&lt;/button&gt;
             &lt;/div&gt;
             {filterPanel}
@@ -15622,6 +15779,18 @@ interface WalletData { availableBalance: number; pendingBalance: number; complet
 interface User { id: string; name: string; phone: string; email?: string; hasWithdrawalPin: boolean }
 interface Bank { code: string; name: string }
 
+const BIOMETRIC_KEY_PREFIX = 'batamart:withdraw:webauthn:'
+
+const toBase64Url = (bytes: Uint8Array) =&gt;
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+
+const fromBase64Url = (input: string) =&gt; {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  const raw = atob(padded)
+  return Uint8Array.from(raw, c =&gt; c.charCodeAt(0))
+}
+
 const NIGERIAN_BANKS: Bank[] = [
   { code: '999992', name: 'OPay' },{ code: '999991', name: 'PalmPay' },
   { code: '50211', name: 'Kuda Bank' },{ code: '50515', name: 'Moniepoint MFB' },
@@ -15734,6 +15903,9 @@ export default function WalletPage() {
 
   // PIN required
   const [showPinRequired, setShowPinRequired] = useState(false)
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricBusy, setBiometricBusy] = useState(false)
+  const [biometricError, setBiometricError] = useState('')
 
   useEffect(() =&gt; {
     if (document.getElementById('wallet-anim')) return
@@ -15748,6 +15920,18 @@ export default function WalletPage() {
   }, [])
 
   useEffect(() =&gt; { fetchWalletData() }, [])
+
+  useEffect(() =&gt; {
+    let mounted = true
+    ;(async () =&gt; {
+      if (typeof window === 'undefined' || typeof PublicKeyCredential === 'undefined' || !window.isSecureContext) return
+      try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+        if (mounted) setBiometricAvailable(available)
+      } catch {}
+    })()
+    return () =&gt; { mounted = false }
+  }, [])
 
   const fetchWalletData = async () =&gt; {
     try {
@@ -15787,16 +15971,75 @@ export default function WalletPage() {
       }
     } catch {}
     setWithdrawAmount(''); setAccountNumber(''); setAccountName('')
-    setSelectedBank(NIGERIAN_BANKS[0]); setBankSearch(''); setPinError('')
+    setSelectedBank(NIGERIAN_BANKS[0]); setBankSearch(''); setPinError(''); setBiometricError('')
     setShowWithdrawModal(true)
   }
 
-  const handleWithdrawSubmit = (e: React.FormEvent) =&gt; {
+  const authenticateWithBiometric = async () =&gt; {
+    if (!user) return false
+    if (!biometricAvailable) return true
+
+    setBiometricBusy(true)
+    setBiometricError('')
+    const storageKey = `${BIOMETRIC_KEY_PREFIX}${user.id}`
+
+    try {
+      const challenge = crypto.getRandomValues(new Uint8Array(32))
+      const storedCredentialId = localStorage.getItem(storageKey)
+
+      if (!storedCredentialId) {
+        const userHandle = crypto.getRandomValues(new Uint8Array(16))
+        const created = await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: 'BATAMART', id: window.location.hostname },
+            user: {
+              id: userHandle,
+              name: user.email || `${user.id}@batamart.local`,
+              displayName: user.name || 'BATAMART User',
+            },
+            pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+            authenticatorSelection: {
+              authenticatorAttachment: 'platform',
+              residentKey: 'required',
+              userVerification: 'required',
+            },
+            timeout: 60000,
+            attestation: 'none',
+          },
+        }) as PublicKeyCredential | null
+        if (!created) throw new Error('setup_failed')
+        localStorage.setItem(storageKey, toBase64Url(new Uint8Array(created.rawId)))
+      } else {
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge,
+            allowCredentials: [{ type: 'public-key', id: fromBase64Url(storedCredentialId) }],
+            userVerification: 'required',
+            timeout: 60000,
+            rpId: window.location.hostname,
+          },
+        }) as PublicKeyCredential | null
+        if (!assertion) throw new Error('verify_cancelled')
+      }
+
+      return true
+    } catch {
+      setBiometricError('Biometric check failed or was cancelled. Please try again.')
+      return false
+    } finally {
+      setBiometricBusy(false)
+    }
+  }
+
+  const handleWithdrawSubmit = async (e: React.FormEvent) =&gt; {
     e.preventDefault()
     const amount = parseFloat(withdrawAmount)
     if (!amount || amount &lt; 1000) { alert('Minimum withdrawal is ₦1,000'); return }
     if (wallet &amp;&amp; amount &gt; wallet.availableBalance) { alert('Insufficient balance'); return }
     if (!accountNumber || !accountName) { alert('Please fill all fields'); return }
+    const biometricOk = await authenticateWithBiometric()
+    if (!biometricOk) return
     setPendingWithdrawal({ amount, accountNumber, accountName, bankCode: selectedBank.code })
     setPinError(''); setPinValue(''); setShowPinEntry(true)
   }
@@ -16090,6 +16333,11 @@ export default function WalletPage() {
             &lt;/div&gt;
 
             &lt;form onSubmit={handleWithdrawSubmit} className="space-y-4"&gt;
+              {biometricAvailable &amp;&amp; (
+                &lt;div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5"&gt;
+                  &lt;p className="text-xs font-bold text-emerald-700"&gt;Biometric security is enabled on this device for withdrawals.&lt;/p&gt;
+                &lt;/div&gt;
+              )}
               {/* Amount */}
               &lt;div&gt;
                 &lt;label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2"&gt;Amount (NGN)&lt;/label&gt;
@@ -16181,15 +16429,20 @@ export default function WalletPage() {
                 &lt;/div&gt;
               )}
 
+              {biometricError &amp;&amp; (
+                &lt;p className="text-red-500 text-sm font-bold flex items-center gap-1.5"&gt;
+                  &lt;AlertCircle className="w-4 h-4 flex-shrink-0" /&gt; {biometricError}
+                &lt;/p&gt;
+              )}
               &lt;div className="flex gap-3 pt-1"&gt;
                 &lt;button type="button" onClick={() =&gt; setShowWithdrawModal(false)}
                   className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all"&gt;
                   Cancel
                 &lt;/button&gt;
-                &lt;button type="submit" disabled={withdrawing}
+                &lt;button type="submit" disabled={withdrawing || biometricBusy}
                   className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50 shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}&gt;
-                  {withdrawing ? &lt;Loader2 className="w-4 h-4 animate-spin mx-auto" /&gt; : 'Enter PIN →'}
+                  {(withdrawing || biometricBusy) ? &lt;Loader2 className="w-4 h-4 animate-spin mx-auto" /&gt; : (biometricAvailable ? 'Verify Biometrics + PIN →' : 'Enter PIN →')}
                 &lt;/button&gt;
               &lt;/div&gt;
             &lt;/form&gt;
@@ -16423,6 +16676,7 @@ export default function WalletPage() {
 }
 </pre></div>
 <div class='file-block'><div class='file-header'>app/about/page.tsx</div><pre>import Link from 'next/link'
+import type { Metadata } from 'next'
 import {
   ShoppingBag,
   Users,
@@ -16434,22 +16688,29 @@ import {
   Zap
 } from 'lucide-react'
 
+export const metadata: Metadata = {
+  title: 'About',
+  description:
+    'Learn about BATAMART, the campus marketplace for student-to-student buying and selling.',
+  alternates: { canonical: '/about' },
+}
+
 export default function AboutPage() {
   const features = [
     {
       icon: Shield,
-      title: 'Secure Transactions',
-      description: 'Your money is held safely in escrow until delivery is confirmed'
+      title: 'Protected Checkout Flow',
+      description: 'Payments are processed securely, with seller settlement tied to order completion rules in-app'
     },
     {
       icon: Users,
-      title: 'Student Community',
-      description: 'Buy and sell exclusively within the CAMPUS student community'
+      title: 'Campus Community',
+      description: 'Built for student-to-student commerce with profiles, reviews, and order history'
     },
     {
       icon: Zap,
       title: 'Fast Delivery',
-      description: 'Get your items delivered to your hostel within hours'
+      description: 'Delivery is available through the BATAMART rider workflow where supported'
     },
     {
       icon: Package,
@@ -16459,16 +16720,16 @@ export default function AboutPage() {
   ]
 
   const stats = [
-    { number: '2,000+', label: 'Active Students' },
-    { number: '5,000+', label: 'Products Listed' },
-    { number: '10,000+', label: 'Successful Deliveries' },
-    { number: '98%', label: 'Satisfaction Rate' }
+    { number: '24/7', label: 'Marketplace Access' },
+    { number: '72h', label: 'Dispute Window After Delivery' },
+    { number: '₦800', label: 'Per-Order Delivery Fee Rule' },
+    { number: '10%', label: 'Platform Commission on Completed Sales' }
   ]
 
   const values = [
     {
       title: 'Trust &amp; Safety',
-      description: 'We verify every student seller and use escrow payments to ensure secure transactions.'
+      description: 'We combine order tracking, dispute handling, and account-level controls to improve marketplace safety.'
     },
     {
       title: 'Community First',
@@ -16485,7 +16746,7 @@ export default function AboutPage() {
   ]
 
   return (
-    &lt;div className="min-h-screen bg-gray-50"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000]"&gt;
       {/* Hero Section */}
       &lt;section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4"&gt;
         &lt;div className="max-w-4xl mx-auto text-center"&gt;
@@ -16497,8 +16758,8 @@ export default function AboutPage() {
             Your Campus Marketplace, Reimagined
           &lt;/h1&gt;
           &lt;p className="text-xl text-white/90 max-w-2xl mx-auto"&gt;
-            BATAMART is the trusted peer-to-peer marketplace connecting CAMPUS students for safe,
-            convenient buying and selling right on campus.
+            BATAMART is a campus-focused peer-to-peer marketplace for simpler,
+            more reliable buying and selling.
           &lt;/p&gt;
         &lt;/div&gt;
       &lt;/section&gt;
@@ -16523,8 +16784,7 @@ export default function AboutPage() {
             &lt;p className="text-lg leading-relaxed"&gt;
               We created BATAMART to solve these problems. A platform exclusively for CAMPUS students,
               where you can buy textbooks from a classmate, sell your old phone to someone in the
-              next hostel, or order food delivered right to your door — all with the confidence
-              that comes from our secure escrow system and verified student community.
+              next hostel, and manage orders in one place with transparent status updates and support tools.
             &lt;/p&gt;
 
             &lt;p className="text-lg leading-relaxed"&gt;
@@ -16656,8 +16916,8 @@ export default function AboutPage() {
             Join the BATAMART Community Today
           &lt;/h2&gt;
           &lt;p className="text-xl mb-8 text-white/90"&gt;
-            Thousands of CAMPUS students are already buying and selling on BATAMART.
-            Start your journey today!
+            BATAMART is built for practical, everyday campus commerce.
+            Start your journey today.
           &lt;/p&gt;
           &lt;div className="flex flex-col sm:flex-row gap-4 justify-center"&gt;
             &lt;Link
@@ -16677,7 +16937,23 @@ export default function AboutPage() {
       &lt;/section&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
+<div class='file-block'><div class='file-header'>app/contact/layout.tsx</div><pre>import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Contact Support',
+  description:
+    'Contact BATAMART support for payment issues, disputes, seller help, and general campus marketplace assistance.',
+  alternates: { canonical: '/contact' },
+}
+
+export default function ContactLayout({ children }: { children: React.ReactNode }) {
+  return children
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/contact/page.tsx</div><pre>// app/contact/page.tsx
 'use client'
 
@@ -16705,25 +16981,42 @@ const faqs = [
   },
   {
     question: 'Is my payment secure?',
-    answer: 'Yes! All payments are held in escrow until you confirm delivery. Your money is safe and only released to the seller after you receive your item.'
+    answer: 'Yes. Payments are processed through secure providers, and BATAMART applies settlement and dispute rules before seller payouts are finalized.'
   },
   {
     question: 'How long does delivery take?',
-    answer: 'Most deliveries are completed within a few hours. You can track your order in real-time through the app.'
+    answer: 'Delivery time varies by rider availability, seller readiness, and distance. You can monitor order status updates inside your account.'
   },
   {
     question: 'What if I have an issue with my order?',
-    answer: 'You can open a dispute within 72 hours of delivery. Our team will review and help resolve the issue fairly.'
+    answer: 'Dispute flow: order must be delivered/completed, you must open within 72 hours, and you must attach at least one evidence image. Support then reviews both parties.'
+  },
+  {
+    question: 'How exactly does referral earning work?',
+    answer: 'You share your referral link, your friend signs up, and when eligible delivery orders complete you earn referral rewards to your wallet (currently displayed in-app as ₦120 per eligible referral delivery).'
   },
   {
     question: 'How do I become a seller?',
-    answer: 'Any verified student can sell on BATAMART. Just toggle to seller mode in your account and start listing products!'
+    answer: 'From your account, use the Become Seller flow to enable seller access, then start listing products.'
   },
   {
     question: 'Can I become a rider?',
-    answer: 'Yes! Riders earn ₦560 per delivery. Visit the "Become a Rider" page to sign up and start earning.'
+    answer: 'Rider onboarding is currently managed internally by BATAMART admins. Contact support if you want to express interest.'
   },
 ]
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) =&gt; ({
+    '@type': 'Question',
+    name: f.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: f.answer,
+    },
+  })),
+}
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -16796,7 +17089,11 @@ export default function ContactPage() {
   }
 
   return (
-    &lt;div className="min-h-screen bg-gray-50"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000]"&gt;
+      &lt;script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      /&gt;
 
       {/* Hero */}
       &lt;section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4"&gt;
@@ -17017,7 +17314,7 @@ export default function ContactPage() {
             {[
               { href: '/marketplace', emoji: '🛍️', title: 'Browse Marketplace', desc: 'Explore products from students' },
               { href: '/sell', emoji: '💰', title: 'Start Selling', desc: 'List your products for free' },
-              { href: '/rider-signup', emoji: '🚴', title: 'Become a Rider', desc: 'Earn ₦560 per delivery' },
+              { href: '/contact', emoji: '🚴', title: 'Rider Interest', desc: 'Contact support for rider opportunities' },
             ].map(l =&gt; (
               &lt;Link key={l.href} href={l.href}
                 className="bg-gray-50 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-all text-center group"&gt;
@@ -17051,6 +17348,7 @@ export default function ContactPage() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/disputes/[id]/page.tsx</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/myprofile/page.tsx</div><pre>'use client'
@@ -17148,10 +17446,10 @@ const PROFILE_CSS = `
     transform: translateY(-1px);
   }
 
-  .dark .profile-page { background: #121212 !important; }
-  .dark .profile-page .bg-white { background-color: #121212 !important; }
-  .dark .profile-page .bg-gray-50 { background-color: #1f2937 !important; }
-  .dark .profile-page .bg-gray-100 { background-color: #243244 !important; }
+  .dark .profile-page { background: #000000 !important; }
+  .dark .profile-page .bg-white { background-color: #0f1115 !important; }
+  .dark .profile-page .bg-gray-50 { background-color: #151922 !important; }
+  .dark .profile-page .bg-gray-100 { background-color: #1a1f2a !important; }
   .dark .profile-page .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.2) !important; }
   .dark .profile-page .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.18) !important; }
   .dark .profile-page .bg-violet-50 { background-color: rgba(139, 92, 246, 0.2) !important; }
@@ -17159,7 +17457,7 @@ const PROFILE_CSS = `
   .dark .profile-page .bg-amber-50 { background-color: rgba(245, 158, 11, 0.18) !important; }
   .dark .profile-page .border-gray-50,
   .dark .profile-page .border-gray-100,
-  .dark .profile-page .border-gray-200 { border-color: #273449 !important; }
+  .dark .profile-page .border-gray-200 { border-color: #272b33 !important; }
   .dark .profile-page .text-gray-900 { color: #f8fafc !important; }
   .dark .profile-page .text-gray-800 { color: #e2e8f0 !important; }
   .dark .profile-page .text-gray-700 { color: #cbd5e1 !important; }
@@ -17175,29 +17473,29 @@ const PROFILE_CSS = `
   .dark .profile-page .text-blue-600 { color: #93c5fd !important; }
   .dark .profile-page .text-amber-500 { color: #fcd34d !important; }
   .dark .profile-page .nav-item:hover {
-    background: #1E1E1E;
+    background: #161a22;
     color: #a5b4fc;
   }
   .dark .profile-page .section-card:hover { box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45); }
   .dark .profile-page .input-field {
-    background: #111827 !important;
-    border-color: #374151 !important;
+    background: #12161d !important;
+    border-color: #2f3642 !important;
     color: #f8fafc !important;
   }
   .dark .profile-page .input-field::placeholder { color: #64748b; }
   .dark .profile-page .input-field:focus {
     border-color: #818cf8 !important;
-    background: #121212 !important;
+    background: #0f1115 !important;
     box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
   }
   .dark .profile-page .shimmer {
-    background: linear-gradient(90deg, #1f2937 25%, #263244 50%, #1f2937 75%);
+    background: linear-gradient(90deg, #151922 25%, #1d2330 50%, #151922 75%);
     background-size: 1200px 100%;
   }
   .dark .profile-page .tag-chip {
-    background: #1f2937 !important;
+    background: #151922 !important;
     color: #cbd5e1 !important;
-    border-color: #334155 !important;
+    border-color: #272b33 !important;
   }
   .dark .profile-page .tag-chip:hover {
     background: #6366f1 !important;
@@ -17298,7 +17596,7 @@ export default function MyProfilePage() {
   const handleLogout = () =&gt; { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
 
   if (loading || !user) return (
-    &lt;div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#121212]"&gt;
+    &lt;div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#000000]"&gt;
       &lt;div className="text-center"&gt;
         &lt;div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4"&gt;
           &lt;Loader2 className="w-8 h-8 text-indigo-600 animate-spin" /&gt;
@@ -17324,7 +17622,7 @@ export default function MyProfilePage() {
   const activeTheme = mounted ? theme : 'light'
 
   return (
-    &lt;div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#121212]"&gt;
+    &lt;div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#000000]"&gt;
 
       {/* ── iOS Install Modal ── */}
       {showIOSInstallModal &amp;&amp; (
@@ -17385,7 +17683,7 @@ export default function MyProfilePage() {
       {isMobileMenuOpen &amp;&amp; (
         &lt;&gt;
           &lt;div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() =&gt; setIsMobileMenuOpen(false)} /&gt;
-          &lt;div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#1E1E1E] z-50 lg:hidden shadow-2xl`}&gt;
+          &lt;div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#0f1115] z-50 lg:hidden shadow-2xl`}&gt;
             &lt;div className="flex flex-col h-full"&gt;
               {/* Menu header */}
               &lt;div className="header-gradient px-5 py-6"&gt;
@@ -17868,7 +18166,15 @@ function SearchHistory() {
 
 </pre></div>
 <div class='file-block'><div class='file-header'>app/privacy/page.tsx</div><pre>import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Shield, Eye, Lock, Database, UserCheck, Bell } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description:
+    'BATAMART privacy policy: how we collect, use, share, protect, and retain marketplace data.',
+  alternates: { canonical: '/privacy' },
+}
 
 export default function PrivacyPage() {
   const lastUpdated = "January 2026"
@@ -17880,7 +18186,7 @@ export default function PrivacyPage() {
       content: [
         {
           subtitle: "Account Information",
-          text: "When you create a BATAMART account, we collect your name, email phone number, and location address like your hostel information for verification purposes."
+          text: "When you create a BATAMART account, we collect details such as your name, email, phone number, and profile information you provide."
         },
         {
           subtitle: "Transaction Data",
@@ -17902,7 +18208,7 @@ export default function PrivacyPage() {
         },
         {
           subtitle: "Safety &amp; Security",
-          text: "Your data helps us verify student identity, prevent fraud, resolve disputes, and maintain a safe trading environment."
+          text: "Your data helps us prevent fraud, support dispute handling, secure accounts, and maintain a safer trading environment."
         },
         {
           subtitle: "Communication",
@@ -17979,7 +18285,7 @@ export default function PrivacyPage() {
   ]
 
   return (
-    &lt;div className="min-h-screen bg-gray-50"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000]"&gt;
       {/* Hero Section */}
       &lt;section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4"&gt;
         &lt;div className="max-w-4xl mx-auto text-center"&gt;
@@ -18063,7 +18369,7 @@ export default function PrivacyPage() {
               &lt;/li&gt;
               &lt;li className="flex items-start gap-2"&gt;
                 &lt;span className="text-green-500 mt-1"&gt;✓&lt;/span&gt;
-                &lt;span&gt;&lt;strong&gt;Deleted accounts:&lt;/strong&gt; Most data is deleted within 30 days of account deletion&lt;/span&gt;
+                &lt;span&gt;&lt;strong&gt;Deleted accounts:&lt;/strong&gt; We aim to delete or anonymise most data within a reasonable processing window after approved deletion requests&lt;/span&gt;
               &lt;/li&gt;
               &lt;li className="flex items-start gap-2"&gt;
                 &lt;span className="text-green-500 mt-1"&gt;✓&lt;/span&gt;
@@ -18071,7 +18377,7 @@ export default function PrivacyPage() {
               &lt;/li&gt;
               &lt;li className="flex items-start gap-2"&gt;
                 &lt;span className="text-green-500 mt-1"&gt;✓&lt;/span&gt;
-                &lt;span&gt;&lt;strong&gt;Dispute records:&lt;/strong&gt; Retained for 2 years after dispute resolution&lt;/span&gt;
+                &lt;span&gt;&lt;strong&gt;Dispute records:&lt;/strong&gt; Retained as needed for support, fraud prevention, and legal compliance&lt;/span&gt;
               &lt;/li&gt;
             &lt;/ul&gt;
           &lt;/div&gt;
@@ -18180,9 +18486,19 @@ export default function PrivacyPage() {
       &lt;/section&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+
+</pre></div>
 <div class='file-block'><div class='file-header'>app/terms/page.tsx</div><pre>import Link from 'next/link'
+import type { Metadata } from 'next'
 import { FileText, AlertCircle, CheckCircle, XCircle, Scale, ShieldCheck } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description:
+    'Read BATAMART terms covering orders, delivery, disputes, referrals, user responsibilities, and platform policies.',
+  alternates: { canonical: '/terms' },
+}
 
 export default function TermsPage() {
   const lastUpdated = "January 2026"
@@ -18196,7 +18512,7 @@ export default function TermsPage() {
     {
       icon: ShieldCheck,
       title: "Eligibility",
-      content: "BATAMART is exclusively for verified students of University. You must be at least 18 years old to use this platform. You are responsible for providing accurate student verification information."
+      content: "BATAMART is designed for campus commerce users. You must be at least 18 years old to use this platform and provide accurate account and profile information."
     }
   ]
 
@@ -18248,18 +18564,18 @@ export default function TermsPage() {
       title: "Payment &amp; Escrow",
       points: [
         "All payments are processed through secure payment gateways",
-        "Funds are held in escrow until delivery confirmation",
-        "Sellers receive payment after successful delivery",
+        "Seller settlement follows BATAMART order completion and dispute rules",
+        "Sellers do not receive immediate payout at checkout",
         "Refunds are processed according to our dispute resolution policy",
-        "BATAMART charges a 10% commission on completed sales"
+        "BATAMART charges a 5% commission on completed sales"
       ]
     },
     {
       title: "Delivery &amp; Shipping",
       points: [
-        "Delivery is facilitated by verified BATAMART riders",
+        "Delivery may be facilitated through BATAMART rider flows where available",
         "Standard delivery fee is ₦800 per order",
-        "Most deliveries completed within 2-6 hours",
+        "Delivery timing depends on rider availability, distance, and seller readiness",
         "Sellers must package items securely",
         "Buyers must be available to receive deliveries"
       ]
@@ -18276,8 +18592,23 @@ export default function TermsPage() {
     }
   ]
 
+  const disputeFlow = [
+    "Buyer can open a dispute only after order is DELIVERED or COMPLETED.",
+    "Dispute must be opened within 72 hours of delivery/completion timestamp.",
+    "At least one evidence image is required when submitting a dispute.",
+    "When dispute opens, order status is marked DISPUTED and support reviews both sides.",
+    "If no dispute is raised in the 72-hour window, seller escrow can be released by the platform flow."
+  ]
+
+  const referralFlow = [
+    "Each user gets a personal referral code/link from their BATAMART account.",
+    "Referral reward is tied to completed eligible delivery orders from referred users.",
+    "Current reward logic pays from delivery economics (shown in-app as ₦120 per eligible referral delivery).",
+    "Rewards are credited to wallet balance and appear in referral/wallet history."
+  ]
+
   return (
-    &lt;div className="min-h-screen bg-gray-50"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000]"&gt;
       {/* Hero Section */}
       &lt;section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4"&gt;
         &lt;div className="max-w-4xl mx-auto text-center"&gt;
@@ -18295,6 +18626,40 @@ export default function TermsPage() {
           &lt;p className="text-sm text-white/75 mt-6"&gt;
             Last Updated: {lastUpdated}
           &lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      {/* Dispute Flow */}
+      &lt;section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white"&gt;
+        &lt;div className="max-w-4xl mx-auto"&gt;
+          &lt;div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm"&gt;
+            &lt;h2 className="text-2xl font-bold text-gray-900 mb-4"&gt;Dispute Flow (How It Works)&lt;/h2&gt;
+            &lt;ul className="space-y-2"&gt;
+              {disputeFlow.map((item, idx) =&gt; (
+                &lt;li key={idx} className="flex items-start gap-2 text-gray-700"&gt;
+                  &lt;span className="text-BATAMART-primary font-bold mt-1"&gt;•&lt;/span&gt;
+                  &lt;span&gt;{item}&lt;/span&gt;
+                &lt;/li&gt;
+              ))}
+            &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      {/* Referral Flow */}
+      &lt;section className="py-12 px-4 bg-white"&gt;
+        &lt;div className="max-w-4xl mx-auto"&gt;
+          &lt;div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-8"&gt;
+            &lt;h2 className="text-2xl font-bold text-gray-900 mb-4"&gt;Referral Flow (How It Works)&lt;/h2&gt;
+            &lt;ul className="space-y-2"&gt;
+              {referralFlow.map((item, idx) =&gt; (
+                &lt;li key={idx} className="flex items-start gap-2 text-gray-700"&gt;
+                  &lt;span className="text-BATAMART-primary font-bold mt-1"&gt;•&lt;/span&gt;
+                  &lt;span&gt;{item}&lt;/span&gt;
+                &lt;/li&gt;
+              ))}
+            &lt;/ul&gt;
+          &lt;/div&gt;
         &lt;/div&gt;
       &lt;/section&gt;
 
@@ -18444,7 +18809,7 @@ export default function TermsPage() {
                 &lt;/li&gt;
               &lt;/ul&gt;
               &lt;p className="font-semibold"&gt;
-                Suspended accounts may lose access to funds in escrow and pending balances.
+                Suspended accounts may have temporary limits while reviews are ongoing, including payout restrictions where applicable.
               &lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
@@ -18546,6 +18911,7 @@ export default function TermsPage() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/terms/sellers/page.tsx</div><pre>// app/terms/sellers/page.tsx
 import Link from 'next/link'
@@ -18563,7 +18929,7 @@ const sections = [
     content: [
       'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
       'You must be at least 18 years of age or have the consent of a parent or guardian.',
-      'You must complete identity verification, including face ID registration, before your seller account is activated.',
+      'Seller access is enabled through your BATAMART account role and may be restricted if your account violates platform policy.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
     ],
   },
@@ -18602,13 +18968,13 @@ const sections = [
   },
   {
     id: '5',
-    title: 'Withdrawals &amp; Face Verification',
+    title: 'Withdrawals &amp; Security',
     icon: '🔐',
     content: [
-      'All withdrawal requests from your BATAMART wallet require face verification to confirm your identity.',
-      'Your face descriptor is encrypted and stored securely. It is never shared with third parties.',
-      'If face verification repeatedly fails, your withdrawal will be temporarily locked and you must contact support.',
-      'BATAMART is not liable for failed withdrawals caused by poor lighting, device malfunction, or changes in appearance. Contact support if you experience persistent issues.',
+      'All withdrawal requests from your BATAMART wallet require your configured security checks (such as withdrawal PIN and account validation).',
+      'You are responsible for keeping your account credentials and payout details accurate and confidential.',
+      'BATAMART may temporarily hold or review withdrawal requests flagged by our risk and security systems.',
+      'If a withdrawal fails repeatedly, contact support for manual review and resolution.',
     ],
   },
   {
@@ -18669,7 +19035,7 @@ const sections = [
 
 export default function SellerTermsPage() {
   return (
-    &lt;div className="min-h-screen bg-gray-50"&gt;
+    &lt;div className="min-h-screen bg-gray-50 dark:bg-[#000000]"&gt;
 
       {/* Header */}
       &lt;div className="bg-white border-b border-gray-200"&gt;
@@ -18690,9 +19056,9 @@ export default function SellerTermsPage() {
             &lt;/div&gt;
             &lt;div&gt;
               &lt;h1 className="text-3xl font-bold text-gray-900"&gt;Seller Terms &amp; Conditions&lt;/h1&gt;
-              &lt;p className="text-gray-500 mt-1 text-sm"&gt;
-                BATAMART Campus Marketplace &amp;nbsp;·&amp;nbsp; Effective: January 2025 &amp;nbsp;·&amp;nbsp; Version 1.0
-              &lt;/p&gt;
+          &lt;p className="text-gray-500 mt-1 text-sm"&gt;
+                BATAMART Campus Marketplace &amp;nbsp;·&amp;nbsp; Effective: May 2026 &amp;nbsp;·&amp;nbsp; Version 1.1
+          &lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
 
@@ -18762,7 +19128,7 @@ export default function SellerTermsPage() {
         &lt;div className="mt-10 bg-white border border-gray-200 rounded-2xl p-8 text-center"&gt;
           &lt;p className="text-gray-500 text-sm mb-6 max-w-md mx-auto"&gt;
             By clicking{' '}
-            &lt;strong className="text-gray-700"&gt;"Scan Face &amp; Become a Seller"&lt;/strong&gt;{' '}
+            &lt;strong className="text-gray-700"&gt;"Become a Seller"&lt;/strong&gt;{' '}
             on the previous page, you confirm that you have read, understood, and agree to these Seller Terms &amp; Conditions.
           &lt;/p&gt;
           &lt;div className="flex flex-col sm:flex-row gap-3 justify-center"&gt;
@@ -18792,6 +19158,7 @@ export default function SellerTermsPage() {
     &lt;/div&gt;
   )
 }
+
 </pre></div>
 <div class='file-block'><div class='file-header'>components/FilterGroup.tsx</div><pre>'use client'
 
@@ -19927,7 +20294,9 @@ function RiderTopBar({
 }
 
 function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
+  const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [profileOpen, setProfileOpen] = useState(false)
   const [isAvailable, setIsAvailable] = useState&lt;boolean | null&gt;(null)
   const [toggling, setToggling] = useState(false)
@@ -19957,6 +20326,17 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
 
   const isActive = (path: string) =&gt;
     pathname === path || pathname.startsWith(path + '/')
+  const riderTab = searchParams.get('tab') || ''
+
+  const handleTabPress = (href: string, active: boolean) =&gt; (e: React.MouseEvent) =&gt; {
+    e.preventDefault()
+    if (active) {
+      router.refresh()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    router.push(href)
+  }
 
   const leftTabs = [
     {
@@ -20024,11 +20404,14 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
           }}
         &gt;
           {leftTabs.map(({ href, label, match, icon }) =&gt; {
-            const active = isActive(match)
+            const active = label === 'Deliveries'
+              ? pathname === '/rider-dashboard' &amp;&amp; riderTab === 'deliveries'
+              : pathname === '/rider-dashboard' &amp;&amp; riderTab !== 'deliveries'
             return (
               &lt;Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-400' : 'text-gray-500'
                 }`}
@@ -20087,6 +20470,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () =&gt; void }) {
               &lt;Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-400' : 'text-gray-500'
                 }`}
@@ -20191,6 +20575,7 @@ function AppBottomNav({
   onLogout: () =&gt; void
   onToggleMode: () =&gt; void
 }) {
+  const router = useRouter()
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
 
@@ -20227,6 +20612,16 @@ function AppBottomNav({
 
   const isActive = (path: string) =&gt;
     pathname === path || pathname.startsWith(path + '/')
+
+  const handleTabPress = (href: string, active: boolean) =&gt; (e: React.MouseEvent) =&gt; {
+    e.preventDefault()
+    if (active) {
+      router.refresh()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    router.push(href)
+  }
 
   const isSeller = userRole === 'SELLER' || userRole === 'ADMIN'
 
@@ -20301,6 +20696,7 @@ function AppBottomNav({
               &lt;Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-600' : 'text-gray-400'
                 }`}
@@ -20319,6 +20715,7 @@ function AppBottomNav({
           &lt;div className="flex-1 flex items-center justify-center relative"&gt;
             &lt;Link
               href={sellHref}
+              onClick={handleTabPress(sellHref, isActive('/sell') || isActive('/become-seller'))}
               className="relative z-10 flex flex-col items-center justify-center -mt-5"
             &gt;
               &lt;div
@@ -20340,6 +20737,7 @@ function AppBottomNav({
               &lt;Link
                 key={label}
                 href={href}
+                onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
                   active ? 'text-blue-600' : 'text-gray-400'
                 }`}
@@ -21547,10 +21945,14 @@ import { useRouter } from 'next/navigation'
 
 const ROUTES_TO_PREFETCH = [
   '/marketplace',
+  '/search',
   '/orders',
   '/cart',
   '/sell',
-  '/profile',
+  '/wallet',
+  '/referrals',
+  '/myprofile',
+  '/dispute/select-order',
   '/most-bought',
 ]
 
@@ -24029,6 +24431,55 @@ module.exports = {
     },
   ],
 }
+</pre></div>
+<div class='file-block'><div class='file-header'>app/robots.ts</div><pre>import type { MetadataRoute } from 'next'
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/api/', '/admin/'],
+      },
+    ],
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
+  }
+}
+
+</pre></div>
+<div class='file-block'><div class='file-header'>app/sitemap.ts</div><pre>import type { MetadataRoute } from 'next'
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  const now = new Date()
+  const routes = [
+    '/',
+    '/about',
+    '/contact',
+    '/privacy',
+    '/terms',
+    '/terms/sellers',
+    '/signup',
+    '/login',
+    '/marketplace',
+    '/sell',
+    '/wallet',
+    '/referrals',
+  ]
+
+  return routes.map((route) =&gt; ({
+    url: `${siteUrl}${route}`,
+    lastModified: now,
+    changeFrequency: route === '/' || route === '/marketplace' ? 'daily' : 'weekly',
+    priority: route === '/' ? 1 : route === '/marketplace' ? 0.9 : 0.7,
+  }))
+}
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/analytics/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/admin/analytics/route.ts
@@ -39623,54 +40074,86 @@ html.splash-pending body &gt; div &gt; * {
   }
 
   .dark {
-    --primary: #4DABFF;
-    --background: #121212;
-    --surface: #1E1E1E;
-    --text: #E0E0E0;
+    --primary: #60A5FA;
+    --background: #000000;
+    --surface: #0f1115;
+    --text: #e5e7eb;
+    --muted: #98a2b3;
+    --border: #272b33;
+    --surface-elevated: #151922;
   }
 
   /* Global utility remap so existing light-tailwind pages render cleanly in dark mode */
-  .dark .bg-white { background-color: #1E1E1E !important; }
-  .dark .bg-gray-50 { background-color: #1E1E1E !important; }
-  .dark .bg-gray-100 { background-color: #232323 !important; }
-  .dark .bg-gray-200 { background-color: #2C2C2C !important; }
-  .dark .bg-light-surface { background-color: #121212 !important; }
+  .dark .bg-white { background-color: var(--surface) !important; }
+  .dark .bg-black { background-color: var(--surface) !important; }
+  .dark .bg-gray-50 { background-color: var(--surface) !important; }
+  .dark .bg-gray-100 { background-color: var(--surface-elevated) !important; }
+  .dark .bg-gray-200 { background-color: #1d212b !important; }
+  .dark .bg-light-surface { background-color: var(--background) !important; }
+  .dark .bg-\[\#fff\],
+  .dark .bg-\[\#ffffff\] { background-color: var(--surface) !important; }
   .dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.16) !important; }
   .dark .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.18) !important; }
   .dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.16) !important; }
   .dark .bg-violet-50 { background-color: rgba(139, 92, 246, 0.18) !important; }
   .dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.16) !important; }
   .dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.16) !important; }
-  .dark .bg-\[\#f0f2f5\] { background-color: #121212 !important; }
-  .dark .bg-\[\#f7f8fa\] { background-color: #121212 !important; }
-  .dark .bg-\[\#e7ebf2\] { background-color: #161616 !important; }
-  .dark .bg-white\/95 { background-color: rgba(30, 30, 30, 0.95) !important; }
-  .dark .bg-white\/92 { background-color: rgba(30, 30, 30, 0.92) !important; }
-  .dark .bg-white\/90 { background-color: rgba(30, 30, 30, 0.9) !important; }
-  .dark .bg-white\/88 { background-color: rgba(30, 30, 30, 0.88) !important; }
-  .dark .bg-white\/80 { background-color: rgba(30, 30, 30, 0.8) !important; }
-  .dark .bg-white\/70 { background-color: rgba(30, 30, 30, 0.7) !important; }
-  .dark .bg-white\/60 { background-color: rgba(30, 30, 30, 0.6) !important; }
+  .dark .bg-\[\#f0f2f5\],
+  .dark .bg-\[\#f7f8fa\] { background-color: var(--background) !important; }
+  .dark .bg-\[\#000\],
+  .dark .bg-\[\#000000\] { background-color: var(--surface) !important; }
+  .dark .bg-\[\#e7ebf2\] { background-color: #0b0d12 !important; }
+  .dark .bg-white\/95 { background-color: rgba(15, 17, 21, 0.95) !important; }
+  .dark .bg-white\/92 { background-color: rgba(15, 17, 21, 0.92) !important; }
+  .dark .bg-white\/90 { background-color: rgba(15, 17, 21, 0.9) !important; }
+  .dark .bg-white\/88 { background-color: rgba(15, 17, 21, 0.88) !important; }
+  .dark .bg-white\/80 { background-color: rgba(15, 17, 21, 0.8) !important; }
+  .dark .bg-white\/70 { background-color: rgba(15, 17, 21, 0.7) !important; }
+  .dark .bg-white\/60 { background-color: rgba(15, 17, 21, 0.6) !important; }
 
-  .dark .text-gray-900 { color: #E0E0E0 !important; }
-  .dark .text-gray-800 { color: #D7D7D7 !important; }
-  .dark .text-gray-700 { color: #C8C8C8 !important; }
-  .dark .text-gray-600 { color: #AFAFAF !important; }
-  .dark .text-gray-500 { color: #A0A0A0 !important; }
-  .dark .text-gray-400 { color: #909090 !important; }
-  .dark .text-\[\#1e3a5f\] { color: #A0A0A0 !important; }
-  .dark .placeholder\:text-gray-400::placeholder { color: #8E8E8E !important; }
+  .dark .text-gray-900 { color: #e5e7eb !important; }
+  .dark .text-gray-800 { color: #d1d5db !important; }
+  .dark .text-gray-700 { color: #cbd5e1 !important; }
+  .dark .text-gray-600 { color: #9ca3af !important; }
+  .dark .text-gray-500 { color: var(--muted) !important; }
+  .dark .text-gray-400 { color: #7c8aa3 !important; }
+  .dark .text-\[\#1e3a5f\] { color: #9fb7d9 !important; }
+  .dark .placeholder\:text-gray-400::placeholder { color: #72819a !important; }
 
-  .dark .border-gray-50 { border-color: #1f2937 !important; }
-  .dark .border-gray-100 { border-color: #2A2A2A !important; }
-  .dark .border-gray-200 { border-color: #343434 !important; }
-  .dark .border-gray-300 { border-color: #444444 !important; }
-  .dark .border-gray-600 { border-color: #444444 !important; }
-  .dark .border-gray-700 { border-color: #343434 !important; }
-  .dark .border-gray-800 { border-color: #2A2A2A !important; }
+  .dark .border-gray-50,
+  .dark .border-gray-100,
+  .dark .border-gray-200,
+  .dark .border-gray-300,
+  .dark .border-gray-600,
+  .dark .border-gray-700,
+  .dark .border-gray-800 { border-color: var(--border) !important; }
+  .dark .border-white,
+  .dark .border-white\/90,
+  .dark .border-white\/80,
+  .dark .border-white\/70,
+  .dark .border-white\/60,
+  .dark .border-white\/50,
+  .dark .border-white\/40,
+  .dark .border-white\/30,
+  .dark .border-white\/20,
+  .dark .border-white\/10 { border-color: rgba(71, 85, 105, 0.6) !important; }
+  .dark .divide-white &gt; :not([hidden]) ~ :not([hidden]),
+  .dark .divide-white\/80 &gt; :not([hidden]) ~ :not([hidden]),
+  .dark .divide-white\/60 &gt; :not([hidden]) ~ :not([hidden]),
+  .dark .divide-white\/40 &gt; :not([hidden]) ~ :not([hidden]),
+  .dark .divide-white\/20 &gt; :not([hidden]) ~ :not([hidden]),
+  .dark .divide-white\/10 &gt; :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(71, 85, 105, 0.6) !important;
+  }
+  .dark .ring-white,
+  .dark .ring-white\/80,
+  .dark .ring-white\/60,
+  .dark .ring-white\/40,
+  .dark .ring-white\/30,
+  .dark .ring-white\/20 { --tw-ring-color: rgba(100, 116, 139, 0.55) !important; }
 
-  .dark .hover\:bg-gray-50:hover { background-color: #242424 !important; }
-  .dark .hover\:bg-gray-100:hover { background-color: #2A2A2A !important; }
+  .dark .hover\:bg-gray-50:hover { background-color: #141821 !important; }
+  .dark .hover\:bg-gray-100:hover { background-color: #1a1f2a !important; }
   .dark .hover\:bg-blue-50:hover { background-color: rgba(59, 130, 246, 0.22) !important; }
   .dark .hover\:text-gray-900:hover { color: #EAEAEA !important; }
 
@@ -39694,7 +40177,7 @@ html.splash-pending body &gt; div &gt; * {
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
   .dark .from-indigo-50 {
-    --tw-gradient-from: #1E1E1E var(--tw-gradient-from-position) !important;
+    --tw-gradient-from: var(--surface) var(--tw-gradient-from-position) !important;
     --tw-gradient-to: rgb(30 41 59 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
@@ -39743,14 +40226,14 @@ html.splash-pending body &gt; div &gt; * {
     --tw-gradient-to: rgb(59 7 100 / 0) var(--tw-gradient-to-position) !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
-  .dark .to-white { --tw-gradient-to: #1E1E1E var(--tw-gradient-to-position) !important; }
-  .dark .to-indigo-50 { --tw-gradient-to: #1E1E1E var(--tw-gradient-to-position) !important; }
+  .dark .to-white { --tw-gradient-to: var(--surface) var(--tw-gradient-to-position) !important; }
+  .dark .to-indigo-50 { --tw-gradient-to: var(--surface) var(--tw-gradient-to-position) !important; }
   .dark .to-rose-50 { --tw-gradient-to: #3f172a var(--tw-gradient-to-position) !important; }
   .dark .to-blue-50 { --tw-gradient-to: #172554 var(--tw-gradient-to-position) !important; }
   .dark .to-amber-50 { --tw-gradient-to: #451a03 var(--tw-gradient-to-position) !important; }
   .dark .to-green-50 { --tw-gradient-to: #052e16 var(--tw-gradient-to-position) !important; }
   .dark .to-pink-50 { --tw-gradient-to: #3b0824 var(--tw-gradient-to-position) !important; }
-  .dark .via-white { --tw-gradient-stops: var(--tw-gradient-from), #1E1E1E var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
+  .dark .via-white { --tw-gradient-stops: var(--tw-gradient-from), var(--surface) var(--tw-gradient-via-position), var(--tw-gradient-to) !important; }
 
   .dark .shadow-sm,
   .dark .shadow,
@@ -39759,6 +40242,31 @@ html.splash-pending body &gt; div &gt; * {
   .dark .shadow-xl,
   .dark .shadow-2xl {
     box-shadow: 0 10px 30px rgba(2, 6, 23, 0.38) !important;
+  }
+
+  .dark [style*="background: #fff"],
+  .dark [style*="background:#fff"],
+  .dark [style*="background: #ffffff"],
+  .dark [style*="background:#ffffff"] {
+    background: var(--surface) !important;
+  }
+
+  .dark [style*="background:#000"],
+  .dark [style*="background: #000"],
+  .dark [style*="background:#000000"],
+  .dark [style*="background: #000000"] {
+    background: var(--surface) !important;
+  }
+
+  .dark [style*="border: 1px solid #fff"],
+  .dark [style*="border:1px solid #fff"],
+  .dark [style*="border: 1px solid #ffffff"],
+  .dark [style*="border:1px solid #ffffff"],
+  .dark [style*="border-color:#fff"],
+  .dark [style*="border-color: #fff"],
+  .dark [style*="border-color:#ffffff"],
+  .dark [style*="border-color: #ffffff"] {
+    border-color: rgba(71, 85, 105, 0.6) !important;
   }
 
   * {
@@ -39925,7 +40433,7 @@ html.app-mode body {
 }
 
 html.dark.app-mode body {
-  background: #121212 !important;
+  background: #000000 !important;
 }
 
 html.app-mode #page-scroll-container,
@@ -39939,7 +40447,7 @@ html.dark.app-mode #page-scroll-container,
 html.dark.app-mode #ios-scroll-area {
   background:
     radial-gradient(130% 60% at 50% -8%, rgba(99, 102, 241, 0.2), transparent 56%),
-    linear-gradient(180deg, #121212 0%, #161616 100%);
+    linear-gradient(180deg, #000000 0%, #090b10 100%);
 }
 
 html.app-mode .bg-white.rounded-2xl {
@@ -40013,13 +40521,13 @@ html.app-mode .marketplace-shell {
 html.dark.app-mode .marketplace-shell {
   background:
     radial-gradient(140% 80% at 50% -15%, rgba(99, 102, 241, 0.22), transparent 54%),
-    linear-gradient(180deg, #121212 0%, #161616 45%, #121212 100%) !important;
+    linear-gradient(180deg, #000000 0%, #0c0f15 45%, #000000 100%) !important;
 }
 
 .dark .marketplace-shell {
   background:
     radial-gradient(120% 70% at 50% -10%, rgba(99, 102, 241, 0.2), transparent 55%),
-    linear-gradient(180deg, #121212 0%, #161616 50%, #121212 100%) !important;
+    linear-gradient(180deg, #000000 0%, #0c0f15 50%, #000000 100%) !important;
 }
 
 html.app-mode .marketplace-header {
@@ -40417,7 +40925,7 @@ body {
         },
         {
           "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
+          "value": "no-referrer-when-downgrade"
         },
         {
           "key": "Permissions-Policy",
@@ -40426,6 +40934,10 @@ body {
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; frame-src 'self' https://accounts.google.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com; worker-src 'self' blob;"
         }
       ]
     },

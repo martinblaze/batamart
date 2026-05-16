@@ -12,6 +12,12 @@ import {
 import { ReferralCard } from '@/components/ui/ReferralCard'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { useTheme } from '@/components/layout/ThemeProvider'
+import {
+  enableWithdrawalBiometrics,
+  getBiometricPreference,
+  isBiometricSupported,
+  setBiometricPreference,
+} from '@/lib/withdraw-biometrics'
 
 const PROFILE_CSS = `
   @keyframes fadeUp {
@@ -173,6 +179,10 @@ export default function MyProfilePage() {
   const [isApp, setIsApp]           = useState(false)
   const [isIOSBrowser, setIsIOSBrowser] = useState(false)
   const [showIOSInstallModal, setShowIOSInstallModal] = useState(false)
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [biometricBusy, setBiometricBusy] = useState(false)
+  const [biometricMessage, setBiometricMessage] = useState('')
 
   const { isSupported, isSubscribed, isLoading: notifLoading, permission, subscribe, unsubscribe } = usePushSubscription()
 
@@ -191,6 +201,21 @@ export default function MyProfilePage() {
   }, [])
 
   useEffect(() => { fetchProfileData() }, [])
+
+  useEffect(() => {
+    let mountedFlag = true
+    ;(async () => {
+      const available = await isBiometricSupported()
+      if (mountedFlag) setBiometricAvailable(available)
+    })()
+    return () => { mountedFlag = false }
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    const pref = getBiometricPreference(user.id)
+    setBiometricEnabled(pref === 'enabled')
+  }, [user])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsMobileMenuOpen(false) }
@@ -241,6 +266,28 @@ export default function MyProfilePage() {
 
   const handleCancel = () => { setEditedUser(user || {}); setIsEditing(false); setSaveError('') }
   const handleLogout = () => { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
+  const handleBiometricToggle = async () => {
+    if (!user || !biometricAvailable) return
+    setBiometricBusy(true)
+    setBiometricMessage('')
+    try {
+      if (biometricEnabled) {
+        setBiometricPreference(user.id, 'disabled')
+        setBiometricEnabled(false)
+        setBiometricMessage('Biometric withdrawal turned off.')
+      } else {
+        await enableWithdrawalBiometrics(user)
+        setBiometricPreference(user.id, 'enabled')
+        setBiometricEnabled(true)
+        setBiometricMessage('Biometric withdrawal is now on.')
+      }
+    } catch {
+      setBiometricMessage('Could not update biometric setting. Please try again.')
+    } finally {
+      setBiometricBusy(false)
+      setTimeout(() => setBiometricMessage(''), 3000)
+    }
+  }
 
   if (loading || !user) return (
     <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#000000]">
@@ -596,6 +643,40 @@ export default function MyProfilePage() {
                     View <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
+              </div>
+            </div>
+
+            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
+                <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                </div>
+                <h2 className="font-black text-gray-900 text-sm">Withdrawal Biometrics</h2>
+              </div>
+              <div className="p-5">
+                {!biometricAvailable ? (
+                  <p className="text-xs text-gray-500">Biometrics not available on this browser/device.</p>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-black text-sm text-gray-900">{biometricEnabled ? 'Enabled' : 'Disabled'}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Use fingerprint or face unlock for withdrawals.</p>
+                    </div>
+                    <button
+                      onClick={handleBiometricToggle}
+                      disabled={biometricBusy}
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50 ${biometricEnabled ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'text-white'}`}
+                      style={!biometricEnabled ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                    >
+                      {biometricBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : biometricEnabled ? 'Turn Off' : 'Turn On'}
+                    </button>
+                  </div>
+                )}
+                {biometricMessage && (
+                  <p className={`mt-3 text-xs font-bold ${biometricMessage.includes('Could not') ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {biometricMessage}
+                  </p>
+                )}
               </div>
             </div>
 
