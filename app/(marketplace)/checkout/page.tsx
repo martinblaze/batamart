@@ -74,6 +74,7 @@ export default function CheckoutPage() {
           image: product.images[0],
           sellerId: product.sellerId,
           sellerName: product.seller.name,
+          deliveryEstimate: product.deliveryEstimate,
           selectedVariants: product.selectedVariants || {},
         }])
       } else {
@@ -290,6 +291,7 @@ export default function CheckoutPage() {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-black text-gray-900 text-sm sm:text-base line-clamp-2">{item.name}</h3>
                           <p className="text-xs text-gray-400 mt-0.5">by <span className="font-semibold text-gray-600">{item.sellerName}</span></p>
+                          {item.deliveryEstimate && <p className="text-[11px] text-orange-600 font-semibold mt-1">Estimated delivery: {item.deliveryEstimate}</p>}
 
                           {/* ── NEW: Variant chips ── */}
                           {variantEntries.length > 0 && (

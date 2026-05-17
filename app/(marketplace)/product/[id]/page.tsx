@@ -52,6 +52,7 @@ interface Product {
   roomNumber: string
   landmark: string
   createdAt: string
+  deliveryEstimate?: string
   seller: {
     id: string
     name: string
@@ -727,6 +728,7 @@ export default function ProductDetailPage() {
         selectedVariants: selected,
         category: product.category,
         subcategory: product.subcategory,
+        deliveryEstimate: product.deliveryEstimate,
       })
       setCartMsg('Added to cart!')
       setTimeout(() => setCartMsg(''), 2500)
@@ -1211,6 +1213,12 @@ export default function ProductDetailPage() {
                 <Truck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                 <p className="text-xs text-gray-600">Campus delivery available via BataMart riders</p>
               </div>
+              {product.deliveryEstimate && (
+                <div className="flex items-center gap-2.5">
+                  <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                  <p className="text-xs text-gray-600">Estimated delivery: {product.deliveryEstimate}</p>
+                </div>
+              )}
               <div className="flex items-center gap-2.5">
                 <MessageCircle className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                 <p className="text-xs text-gray-600">Contact the seller to arrange pickup or delivery details</p>

@@ -147,6 +147,9 @@ export default function CartPage() {
                                 <BadgeCheck className="w-3 h-3 text-blue-500" />
                                 <Link href={`/seller/${item.sellerId}`} className="text-indigo-600 font-bold hover:underline">{item.sellerName}</Link>
                               </p>
+                              {item.deliveryEstimate && (
+                                <p className="text-[11px] text-orange-600 font-semibold mt-1">Delivery: {item.deliveryEstimate}</p>
+                              )}
 
                               {/* ── Variant Chips ── */}
                               {variantEntries.length > 0 && (

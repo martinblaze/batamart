@@ -16,6 +16,7 @@ type Product = {
   isNew?: boolean
   isDeal?: boolean
   seller?: { name?: string; trustLevel?: string }
+  deliveryEstimate?: string
 }
 
 type FilterDef = {
@@ -287,6 +288,7 @@ function SearchPage() {
                       <p className="truncate text-[10px] text-gray-400 dark:text-[#94a3b8]">{p.seller?.name || 'Seller'}</p>
                       {p.seller?.trustLevel ? <span className="rounded-full bg-gray-100 dark:bg-[#1a1f2a] px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-[#cbd5e1]">{p.seller.trustLevel}</span> : null}
                     </div>
+                    {p.deliveryEstimate ? <p className="mt-1 text-[10px] font-semibold text-orange-600">Delivery: {p.deliveryEstimate}</p> : null}
                   </div>
                 </button>
               ))}

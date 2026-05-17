@@ -154,6 +154,7 @@ model Product {
   deletedAt    DateTime?
   isDeleted    Boolean         @default(false)
   productDeliveryAgreement Boolean @default(false)
+  deliveryEstimate String?
   moderationStatus ProductModerationStatus @default(APPROVED)
   estimatedWeightKg Float?
   dimensionsCm Json?

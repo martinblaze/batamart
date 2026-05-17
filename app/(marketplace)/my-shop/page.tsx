@@ -78,6 +78,7 @@ interface Product {
   id: string; name: string; price: number; quantity: number
   images: string[]; category: string; subcategory?: string
   description: string; isActive: boolean
+  deliveryEstimate?: string
   viewCount: number; createdAt: string
   _count: { orders: number }
 }
@@ -410,6 +411,7 @@ export default function MyShopPage() {
                         {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                       </p>
                       <h3 className="font-black text-gray-900 text-base line-clamp-1 mb-0.5">{product.name}</h3>
+                      {product.deliveryEstimate && <p className="text-[11px] font-semibold text-orange-600 mb-1">Delivery: {product.deliveryEstimate}</p>}
                       {/* ── Variant chips ── */}
                       {(() => {
                         const { variants } = decodeProductData(product.description || '')
@@ -476,6 +478,7 @@ export default function MyShopPage() {
                               {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                             </p>
                             <h3 className="font-black text-gray-900 text-base leading-tight mt-0.5 line-clamp-1">{product.name}</h3>
+                            {product.deliveryEstimate && <p className="text-[11px] font-semibold text-orange-600 mt-1">Delivery: {product.deliveryEstimate}</p>}
                             {/* ── Variant chips ── */}
                             {(() => {
                               const { variants } = decodeProductData(product.description || '')

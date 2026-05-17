@@ -46,3 +46,5 @@ CREATE INDEX "OversizedDeclineLog_createdAt_idx" ON "public"."OversizedDeclineLo
 
 ALTER TABLE "public"."SellerStrike"
   ADD CONSTRAINT "SellerStrike_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."Product"
+  ADD COLUMN IF NOT EXISTS "deliveryEstimate" TEXT;

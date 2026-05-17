@@ -390,6 +390,7 @@ export default function SellPage() {
   })
   const [deliveryAgreementChecked, setDeliveryAgreementChecked] = useState(false)
   const [estimatedWeightKg, setEstimatedWeightKg] = useState('')
+  const [deliveryEstimate, setDeliveryEstimate] = useState('')
   const [dimensionL, setDimensionL] = useState('')
   const [dimensionW, setDimensionW] = useState('')
   const [dimensionH, setDimensionH] = useState('')
@@ -875,6 +876,7 @@ export default function SellPage() {
           dimensionsCm: (dimensionL && dimensionW && dimensionH)
             ? { length: Number(dimensionL), width: Number(dimensionW), height: Number(dimensionH) }
             : undefined,
+          deliveryEstimate: deliveryEstimate.trim() || undefined,
         }),
       })
       const data = await response.json()
@@ -1440,6 +1442,7 @@ export default function SellPage() {
             <input type="number" min="0" value={dimensionL} onChange={(e) => setDimensionL(e.target.value)} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
             <input type="number" min="0" value={dimensionW} onChange={(e) => setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
             <input type="number" min="0" value={dimensionH} onChange={(e) => setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(e.target.value)} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
           </div>
           <label className="flex items-start gap-3 text-sm text-red-600">
             <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />

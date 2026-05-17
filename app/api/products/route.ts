@@ -237,6 +237,7 @@ export async function POST(request: NextRequest) {
       productDeliveryAgreement,
       estimatedWeightKg,
       dimensionsCm,
+      deliveryEstimate,
     } = body
 
     if (!name || !price || !category || !quantity) {
@@ -311,6 +312,7 @@ export async function POST(request: NextRequest) {
         productDeliveryAgreement: true,
         ...(typeof estimatedWeightKg === 'number' && estimatedWeightKg > 0 ? { estimatedWeightKg } : {}),
         ...(dimensionsCm && typeof dimensionsCm === 'object' ? { dimensionsCm } : {}),
+        ...(deliveryEstimate ? { deliveryEstimate: String(deliveryEstimate).trim().substring(0, 80) } : {}),
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],

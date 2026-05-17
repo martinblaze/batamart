@@ -144,6 +144,7 @@ export async function PUT(
     if (body.landmark !== undefined) updateData.landmark = body.landmark
     if (body.isActive !== undefined) updateData.isActive = body.isActive
     if (body.quantity !== undefined) updateData.quantity = parseInt(body.quantity)
+    if (body.deliveryEstimate !== undefined) updateData.deliveryEstimate = body.deliveryEstimate ? String(body.deliveryEstimate).trim().substring(0, 80) : null
 
     const updatedProduct = await prisma.product.update({
       where: { id: params.id },

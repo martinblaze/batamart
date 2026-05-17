@@ -652,7 +652,14 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           <p className="text-[10px] text-gray-500 font-semibold mt-0.5">50+ bought in past week</p>
         </div>
 
-        {deliveryTag && (
+        {product.deliveryEstimate && (
+          <div className="mt-1.5">
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+              <Clock className="w-2.5 h-2.5" /> {product.deliveryEstimate}
+            </span>
+          </div>
+        )}
+        {!product.deliveryEstimate && deliveryTag && (
           <div className="mt-1.5">
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
               <Truck className="w-2.5 h-2.5" /> {deliveryTag}
