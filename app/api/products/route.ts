@@ -70,6 +70,9 @@ export async function GET(request: NextRequest) {
     if (category && category !== 'All') {
       where.category = category
     }
+    if (user.isSuspended) {
+      return NextResponse.json({ error: 'Your seller account is suspended and cannot create listings right now.' }, { status: 403 })
+    }
     if (categoryKey) where.categoryKey = categoryKey
     if (subcategoryKey) where.subcategoryKey = subcategoryKey
 
@@ -231,10 +234,16 @@ export async function POST(request: NextRequest) {
       hostelName,
       roomNumber,
       landmark,
+      productDeliveryAgreement,
+      estimatedWeightKg,
+      dimensionsCm,
     } = body
 
     if (!name || !price || !category || !quantity) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    if (productDeliveryAgreement !== true) {
+      return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
 
     if (typeof price !== 'number' || price <= 0) {
@@ -299,6 +308,9 @@ export async function POST(request: NextRequest) {
         ...(categoryKey ? { categoryKey: String(categoryKey) } : {}),
         ...(subcategory ? { subcategory: String(subcategory) } : {}),
         ...(subcategoryKey ? { subcategoryKey: String(subcategoryKey) } : {}),
+        productDeliveryAgreement: true,
+        ...(typeof estimatedWeightKg === 'number' && estimatedWeightKg > 0 ? { estimatedWeightKg } : {}),
+        ...(dimensionsCm && typeof dimensionsCm === 'object' ? { dimensionsCm } : {}),
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],

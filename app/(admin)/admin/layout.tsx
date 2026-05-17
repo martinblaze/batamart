@@ -14,6 +14,7 @@ const adminRoutes = [
   { label: 'Products',  icon: Package,         href: '/admin/products',  color: 'text-green-400' },
   { label: 'Disputes',  icon: AlertTriangle,   href: '/admin/disputes',  color: 'text-orange-400' },
   { label: 'Reports',   icon: FileText,        href: '/admin/reports',   color: 'text-red-400' },
+  { label: 'Oversized', icon: AlertTriangle,   href: '/admin/oversized', color: 'text-amber-400' },
   { label: 'Revenue',   icon: DollarSign,      href: '/admin/revenue',   color: 'text-emerald-400' },
   { label: 'Analytics', icon: BarChart3,       href: '/admin/analytics', color: 'text-cyan-400' },
   { label: 'Support',   icon: MessageSquare,   href: '/admin/support',   color: 'text-pink-400' },

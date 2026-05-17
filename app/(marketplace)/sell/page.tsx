@@ -388,6 +388,11 @@ export default function SellPage() {
     name: '', price: '', quantity: '1',
     hostelName: '', roomNumber: '', landmark: '',
   })
+  const [deliveryAgreementChecked, setDeliveryAgreementChecked] = useState(false)
+  const [estimatedWeightKg, setEstimatedWeightKg] = useState('')
+  const [dimensionL, setDimensionL] = useState('')
+  const [dimensionW, setDimensionW] = useState('')
+  const [dimensionH, setDimensionH] = useState('')
 
   // Category system
   const [categoryKey, setCategoryKey]       = useState('')
@@ -786,6 +791,7 @@ export default function SellPage() {
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length < 1) { setError('Please add at least 1 product image'); return }
+    if (!deliveryAgreementChecked) { setError('Please confirm motorcycle delivery suitability before listing'); return }
     if (!allUploaded) { setError('Please wait for all images to finish uploading'); return }
     for (const attr of categoryAttributes) {
       if (!attr.required) continue
@@ -864,6 +870,11 @@ export default function SellPage() {
           attributes: attributesPayload,
           variants: variantsPayload,
           images:      images.map(img => img.url),
+          productDeliveryAgreement: deliveryAgreementChecked,
+          estimatedWeightKg: estimatedWeightKg ? Number(estimatedWeightKg) : undefined,
+          dimensionsCm: (dimensionL && dimensionW && dimensionH)
+            ? { length: Number(dimensionL), width: Number(dimensionW), height: Number(dimensionH) }
+            : undefined,
         }),
       })
       const data = await response.json()
@@ -1416,6 +1427,26 @@ export default function SellPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <StepHeader
+            num={variantFields.length > 0 ? '9' : '7'}
+            title="Motorcycle Delivery Check"
+            subtitle="Required for rider safety and reliable fulfillment"
+          />
+          <div className="grid sm:grid-cols-3 gap-3 mb-4">
+            <input type="number" min="0" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(e.target.value)} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" value={dimensionL} onChange={(e) => setDimensionL(e.target.value)} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" value={dimensionW} onChange={(e) => setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" value={dimensionH} onChange={(e) => setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+          </div>
+          <label className="flex items-start gap-3 text-sm text-gray-700">
+            <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+            <span>
+              I confirm this product can be safely and reasonably delivered by a motorcycle rider. Oversized items are prohibited on Batamart. Listings reported as undeliverable may be removed and repeated violations can lead to account suspension.
+            </span>
+          </label>
         </div>
 
         {/* ── Error ── */}

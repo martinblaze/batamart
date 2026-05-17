@@ -91,6 +91,7 @@ model User {
   resolvedReports          Report[]            @relation("ResolvedBy")
   reviewsReceived          Review[]            @relation("UserReviewsReceived")
   reviewsGiven             Review[]            @relation("UserReviewsGiven")
+  sellerStrikes            SellerStrike[]
   supportTickets           SupportTicket[]
   transactions             Transaction[]
   referredBy               User?               @relation("UserReferrals", fields: [referredById], references: [id])
@@ -152,6 +153,10 @@ model Product {
   updatedAt    DateTime        @updatedAt
   deletedAt    DateTime?
   isDeleted    Boolean         @default(false)
+  productDeliveryAgreement Boolean @default(false)
+  moderationStatus ProductModerationStatus @default(APPROVED)
+  estimatedWeightKg Float?
+  dimensionsCm Json?
   universityId String?
   subcategory     String?
   subcategoryKey  String?
@@ -365,6 +370,8 @@ model Order {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   orderNote          String?
+  buyerDeliveryAcknowledged Boolean @default(false)
+  oversizedCancellationReason String?
   batchId            String?
   dispute            Dispute?
   batch              DeliveryBatch?  @relation(fields: [batchId], references: [id])
@@ -741,6 +748,44 @@ model ReferralReward {
   @@schema("public")
 }
 
+model SellerStrike {
+  id                String   @id @default(cuid())
+  sellerId          String
+  productId         String?
+  orderId           String?
+  strikeCount       Int
+  reason            String
+  suspensionReason  String?
+  suspensionExpiry  DateTime?
+  createdAt         DateTime @default(now())
+  seller            User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model OversizedDeclineLog {
+  id                String   @id @default(cuid())
+  orderId           String
+  productId         String
+  sellerId          String
+  riderId           String
+  buyerId           String
+  reason            String
+  proofImageUrl     String?
+  refundIssued      Boolean  @default(false)
+  refundAmount      Float?
+  deliveryFeeKept   Float    @default(0)
+  createdAt         DateTime @default(now())
+
+  @@unique([orderId, riderId])
+  @@index([sellerId])
+  @@index([productId])
+  @@index([createdAt])
+  @@schema("public")
+}
+
 enum UserRole {
   BUYER
   SELLER
@@ -880,6 +925,18 @@ enum NotificationType {
   PAYMENT_RECEIVED
   REFERRAL_REWARD
   STOCK_ALERT
+  OVERSIZED_DECLINED
+  OVERSIZED_REFUND_ISSUED
+  PRODUCT_UNDER_REVIEW
+  SELLER_STRIKE_ISSUED
+
+  @@schema("public")
+}
+
+enum ProductModerationStatus {
+  APPROVED
+  UNDER_REVIEW
+  REMOVED
 
   @@schema("public")
 }

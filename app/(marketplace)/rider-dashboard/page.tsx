@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, AlertTriangle, MapPin, Phone, Package,
-  CheckCircle, X, ShoppingBag, ArrowRight, Bike,
+  CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
 
@@ -77,6 +77,7 @@ export default function RiderDashboardPage() {
   const [trackingActive, setTrackingActive] = useState(false)
   const [trackingError, setTrackingError] = useState<string | null>(null)
   const [lastTrackingPing, setLastTrackingPing] = useState<Date | null>(null)
+  const [oversizedProofByOrder, setOversizedProofByOrder] = useState<Record<string, string>>({})
 
   const watchIdRef = useRef<number | null>(null)
   const lastSentAtRef = useRef(0)
@@ -202,6 +203,66 @@ export default function RiderDashboardPage() {
       showToast('Network error updating status.', 'error')
     } finally {
       setActionLoading(prev => ({ ...prev, [`status-${orderId}`]: false }))
+    }
+  }
+
+  const declineOversized = async (orderId: string) => {
+    if (actionLoading[`oversized-${orderId}`]) return
+    const proofImageUrl = oversizedProofByOrder[orderId] || ''
+    setActionLoading(prev => ({ ...prev, [`oversized-${orderId}`]: true }))
+    try {
+      const res = await authFetch('/api/riders/decline-oversized', {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId,
+          reason: 'Item Too Large For Motorcycle Delivery',
+          proofImageUrl: proofImageUrl.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast('Oversized decline submitted. Order cancelled safely.', 'success')
+        await fetchRiderData()
+      } else {
+        showToast(data.error || 'Failed to decline oversized order.', 'error')
+      }
+    } catch {
+      showToast('Network error while declining order.', 'error')
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`oversized-${orderId}`]: false }))
+    }
+  }
+
+  const uploadOversizedProof = async (orderId: string, file: File | null) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error')
+      return
+    }
+    setActionLoading(prev => ({ ...prev, [`proof-${orderId}`]: true }))
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result || ''))
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const res = await authFetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Failed to upload proof photo.', 'error')
+        return
+      }
+      setOversizedProofByOrder((prev) => ({ ...prev, [orderId]: data.url }))
+      showToast('Proof photo uploaded.', 'success')
+    } catch {
+      showToast('Upload failed. Try again.', 'error')
+    } finally {
+      setActionLoading(prev => ({ ...prev, [`proof-${orderId}`]: false }))
     }
   }
 
@@ -638,6 +699,14 @@ export default function RiderDashboardPage() {
                               <p className="text-xs text-gray-400 truncate">
                                 Pickup from: <span className="text-gray-600 font-semibold">{order.seller.name}</span>
                               </p>
+                              {order.orderNote && <p className="text-xs text-indigo-600 truncate">Note: {order.orderNote}</p>}
+                              {(order.product.estimatedWeightKg || order.product.dimensionsCm) && (
+                                <p className="text-[11px] text-gray-500 truncate">
+                                  {order.product.estimatedWeightKg ? `${order.product.estimatedWeightKg}kg` : ''}
+                                  {order.product.estimatedWeightKg && order.product.dimensionsCm ? ' · ' : ''}
+                                  {order.product.dimensionsCm ? `${order.product.dimensionsCm.length || '-'}x${order.product.dimensionsCm.width || '-'}x${order.product.dimensionsCm.height || '-'}cm` : ''}
+                                </p>
+                              )}
                               {order.product.hostelName && (
                                 <p className="text-xs text-gray-400 truncate">{order.product.hostelName}</p>
                               )}
@@ -657,17 +726,46 @@ export default function RiderDashboardPage() {
                           {order.status !== 'DELIVERED' && (
                             <div className="px-3 pb-3">
                               {order.status === 'RIDER_ASSIGNED' && (
-                                <button
-                                  onClick={() => updateStatus(order.id, 'PICKED_UP')}
-                                  disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold
-                                             flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                >
-                                  {actionLoading[`status-${order.id}`]
-                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...</>
-                                    : <><Package className="w-3.5 h-3.5" /> Mark as Picked Up</>
-                                  }
-                                </button>
+                                <div className="space-y-2">
+                                  <label className="w-full py-2.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 flex items-center justify-center gap-1.5 cursor-pointer hover:bg-gray-50">
+                                    {actionLoading[`proof-${order.id}`]
+                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading proof...</>
+                                      : <><Upload className="w-3.5 h-3.5" /> {oversizedProofByOrder[order.id] ? 'Replace Oversized Proof Photo' : 'Upload Oversized Proof Photo (Optional)'}</>
+                                    }
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => uploadOversizedProof(order.id, e.target.files?.[0] || null)}
+                                      disabled={actionLoading[`proof-${order.id}`]}
+                                    />
+                                  </label>
+                                  {oversizedProofByOrder[order.id] && (
+                                    <p className="text-[11px] text-emerald-600 truncate">Proof attached</p>
+                                  )}
+                                  <button
+                                    onClick={() => updateStatus(order.id, 'PICKED_UP')}
+                                    disabled={actionLoading[`status-${order.id}`]}
+                                    className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold
+                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
+                                  >
+                                    {actionLoading[`status-${order.id}`]
+                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...</>
+                                      : <><Package className="w-3.5 h-3.5" /> Mark as Picked Up</>
+                                    }
+                                  </button>
+                                  <button
+                                    onClick={() => declineOversized(order.id)}
+                                    disabled={actionLoading[`oversized-${order.id}`]}
+                                    className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold
+                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
+                                  >
+                                    {actionLoading[`oversized-${order.id}`]
+                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Processing...</>
+                                      : 'Item Too Large For Motorcycle Delivery'
+                                    }
+                                  </button>
+                                </div>
                               )}
                               {order.status === 'PICKED_UP' && (
                                 <button

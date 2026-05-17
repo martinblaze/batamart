@@ -74,6 +74,9 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    if (user.isSuspended) {
+      return NextResponse.json({ error: 'Suspended sellers cannot edit products.' }, { status: 403 })
+    }
 
     const product = await prisma.product.findUnique({
       where: { id: params.id },

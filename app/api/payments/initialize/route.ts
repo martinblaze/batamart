@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
         variantData: z.record(z.string()).optional().nullable(),
         quantity: z.number().int().min(1).max(50),
         orderNote: z.string().max(300).optional(),
+        buyerDeliveryAcknowledged: z.boolean().optional(),
       }).strict()).max(50).optional(),
     }).strict()
     const parsed = schema.safeParse(body)
@@ -133,6 +134,10 @@ export async function POST(request: NextRequest) {
           resolvedPrice = variant.price
           resolvedStock = variant.stock
         }
+        const seller = await prisma.user.findUnique({ where: { id: product.sellerId }, select: { isSuspended: true } })
+        if (seller?.isSuspended || product.moderationStatus === 'UNDER_REVIEW' || product.moderationStatus === 'REMOVED') {
+          return NextResponse.json({ error: `Product unavailable: ${product.name}` }, { status: 400 })
+        }
 
         if (!product.isActive || resolvedStock < safeQuantity) {
           return NextResponse.json({ error: `Product unavailable: ${product.name}` }, { status: 400 })
@@ -151,6 +156,7 @@ export async function POST(request: NextRequest) {
           sellerId:   product.sellerId,
           sellerName: product.seller.name,
           orderNote:  item.orderNote,
+          buyerDeliveryAcknowledged: item.buyerDeliveryAcknowledged === true,
         })
       }
     } else if (productId) {
@@ -291,6 +297,7 @@ export async function createOrders(
     sellerId:   string
     sellerName: string
     orderNote?: string
+    buyerDeliveryAcknowledged?: boolean
   }[],
   user: {
     id:           string
@@ -387,6 +394,7 @@ export async function createOrders(
             isPaid:             true,
             status:             'PENDING' as const,
             orderNote,
+            buyerDeliveryAcknowledged: Boolean(sellerItems.every(i => i.buyerDeliveryAcknowledged === true)),
             items: {
               create: sellerItems.map(item => ({
                 productId: item.productId,

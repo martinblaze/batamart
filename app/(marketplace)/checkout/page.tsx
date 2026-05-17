@@ -32,6 +32,7 @@ export default function CheckoutPage() {
 
   // Per-item EXTRA notes (variant summary is auto-prepended separately)
   const [orderNotes, setOrderNotes] = useState<Record<string, string>>({})
+  const [deliverySuitabilityConfirmed, setDeliverySuitabilityConfirmed] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -105,6 +106,10 @@ export default function CheckoutPage() {
   }
 
   const handlePayment = async () => {
+    if (!deliverySuitabilityConfirmed) {
+      setError('Please confirm rider-delivery suitability before payment.')
+      return
+    }
     if (!user?.hostelName) {
       router.push('/profile/setup')
       return
@@ -122,6 +127,7 @@ export default function CheckoutPage() {
         variantData: item.selectedVariants || null,
         quantity: item.quantity,
         orderNote: buildOrderNote(item),
+        buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
         // We include name/image for display in emails only — NOT for pricing
         _displayName: item.name,
         _displayImage: item.image,
@@ -456,10 +462,21 @@ export default function CheckoutPage() {
                   <p className="text-xs font-bold text-amber-800">Order notes will be sent to seller(s)</p>
                 </div>
               )}
+              <label className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-4">
+                <input
+                  type="checkbox"
+                  checked={deliverySuitabilityConfirmed}
+                  onChange={(e) => setDeliverySuitabilityConfirmed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-BATAMART-primary focus:ring-BATAMART-primary"
+                />
+                <span className="text-xs text-blue-900 font-semibold leading-relaxed">
+                  I confirm these products can be delivered by riders. If a rider declines an oversized item, product payment is refunded to wallet but delivery fee is not refunded.
+                </span>
+              </label>
 
               <button
                 onClick={handlePayment}
-                disabled={loading}
+                disabled={loading || !deliverySuitabilityConfirmed}
                 className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
               >
                 {loading ? (
