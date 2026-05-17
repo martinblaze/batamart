@@ -1441,7 +1441,7 @@ export default function SellPage() {
             <input type="number" min="0" value={dimensionW} onChange={(e) => setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
             <input type="number" min="0" value={dimensionH} onChange={(e) => setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
           </div>
-          <label className="flex items-start gap-3 text-sm text-gray-700">
+          <label className="flex items-start gap-3 text-sm text-red-600">
             <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
             <span>
               I confirm this product can be safely and reasonably delivered by a motorcycle rider. Oversized items are prohibited on Batamart. Listings reported as undeliverable may be removed and repeated violations can lead to account suspension.

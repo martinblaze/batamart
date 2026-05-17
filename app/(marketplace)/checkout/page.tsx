@@ -462,14 +462,14 @@ export default function CheckoutPage() {
                   <p className="text-xs font-bold text-amber-800">Order notes will be sent to seller(s)</p>
                 </div>
               )}
-              <label className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-4">
+              <label className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-3 mb-4">
                 <input
                   type="checkbox"
                   checked={deliverySuitabilityConfirmed}
                   onChange={(e) => setDeliverySuitabilityConfirmed(e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded border-gray-300 text-BATAMART-primary focus:ring-BATAMART-primary"
                 />
-                <span className="text-xs text-blue-900 font-semibold leading-relaxed">
+                <span className="text-xs text-red-600 font-semibold leading-relaxed">
                   I confirm these products can be delivered by riders. If a rider declines an oversized item, product payment is refunded to wallet but delivery fee is not refunded.
                 </span>
               </label>
