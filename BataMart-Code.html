@@ -36722,10 +36722,10 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// ✅ Cache in ALL environments, not just development
+globalForPrisma.prisma = prisma
 
-export default prisma
-</pre></div>
+export default prisma</pre></div>
 <div class='file-block'><div class='file-header'>lib/product-parser.ts</div><pre>import { prisma } from '@/lib/prisma'
 
 type Parsed = Record&lt;string, string&gt;

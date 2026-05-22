@@ -34,12 +34,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!user.universityId) {
-      return NextResponse.json(
-        { error: 'No university associated with your account. Please contact support.' },
-        { status: 403 }
-      )
-    }
+    // It's valid for some users to not have a university set.
+    // Do not block GET browsing for users without a university.
 
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
@@ -61,18 +57,17 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     const where: any = {
-      isActive:     true,
-      quantity:     { gt: 0 },
-      isDeleted:    false,
-      universityId: user.universityId,
+      isActive:  true,
+      quantity:  { gt: 0 },
+      isDeleted: false,
+      // Only filter by university when the user actually has one
+      ...(user.universityId ? { universityId: user.universityId } : {}),
     }
 
     if (category && category !== 'All') {
       where.category = category
     }
-    if (user.isSuspended) {
-      return NextResponse.json({ error: 'Your seller account is suspended and cannot create listings right now.' }, { status: 403 })
-    }
+    // Removed suspended-seller check from GET: suspension should block listing (POST), not browsing (GET).
     if (categoryKey) where.categoryKey = categoryKey
     if (subcategoryKey) where.subcategoryKey = subcategoryKey
 

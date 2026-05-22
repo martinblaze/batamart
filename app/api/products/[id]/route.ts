@@ -24,8 +24,8 @@ export async function GET(
       }
     }
 
-    const product = await prisma.product.findUnique({
-      where: { id: params.id },
+    const product = await prisma.product.findFirst({
+      where: { id: params.id, isDeleted: false, isActive: true },
       include: {
         variants: true,
         attributeValues: true,
@@ -157,11 +157,11 @@ export async function PUT(
       message: 'Product updated successfully',
     })
   } catch (error) {
-  console.error('Fetch product error:', {
-    productId: params.id,
-    message: (error as any)?.message,
-    code: (error as any)?.code,
-  })
-  return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
-}
+    console.error('Update product error:', {
+      productId: params.id,
+      message: (error as any)?.message,
+      code: (error as any)?.code,
+    })
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  }
 }
