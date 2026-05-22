@@ -157,7 +157,11 @@ export async function PUT(
       message: 'Product updated successfully',
     })
   } catch (error) {
-    console.error('Update product error:', error)
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
-  }
+  console.error('Fetch product error:', {
+    productId: params.id,
+    message: (error as any)?.message,
+    code: (error as any)?.code,
+  })
+  return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
+}
 }

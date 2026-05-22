@@ -8,6 +8,7 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// ✅ Cache in ALL environments, not just development
+globalForPrisma.prisma = prisma
 
 export default prisma

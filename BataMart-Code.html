@@ -1032,6 +1032,7 @@ const adminRoutes = [
   { label: 'Products',  icon: Package,         href: '/admin/products',  color: 'text-green-400' },
   { label: 'Disputes',  icon: AlertTriangle,   href: '/admin/disputes',  color: 'text-orange-400' },
   { label: 'Reports',   icon: FileText,        href: '/admin/reports',   color: 'text-red-400' },
+  { label: 'Oversized', icon: AlertTriangle,   href: '/admin/oversized', color: 'text-amber-400' },
   { label: 'Revenue',   icon: DollarSign,      href: '/admin/revenue',   color: 'text-emerald-400' },
   { label: 'Analytics', icon: BarChart3,       href: '/admin/analytics', color: 'text-cyan-400' },
   { label: 'Support',   icon: MessageSquare,   href: '/admin/support',   color: 'text-pink-400' },
@@ -1888,6 +1889,83 @@ export default function DisputesPage() {
   )
 }</pre></div>
 <div class='file-block'><div class='file-header'>app/(admin)/admin/disputes/[id]/page.tsx</div><pre>Could not read file.</pre></div>
+<div class='file-block'><div class='file-header'>app/(admin)/admin/oversized/page.tsx</div><pre>'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+
+export default function AdminOversizedPage() {
+  const [data, setData] = useState&lt;any&gt;(null)
+  const [loading, setLoading] = useState(true)
+
+  const fetchData = async () =&gt; {
+    setLoading(true)
+    const token = localStorage.getItem('adminToken')
+    const res = await fetch('/api/admin/oversized', { headers: { Authorization: `Bearer ${token}` } })
+    const json = await res.json()
+    setData(json)
+    setLoading(false)
+  }
+
+  useEffect(() =&gt; { fetchData() }, [])
+
+  const usersById = useMemo(() =&gt; Object.fromEntries((data?.users || []).map((u: any) =&gt; [u.id, u.name])), [data])
+  const productsById = useMemo(() =&gt; Object.fromEntries((data?.products || []).map((p: any) =&gt; [p.id, p])), [data])
+
+  const moderate = async (productId: string, action: 'APPROVE' | 'REMOVE') =&gt; {
+    const token = localStorage.getItem('adminToken')
+    await fetch('/api/admin/oversized', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, action }),
+    })
+    fetchData()
+  }
+
+  if (loading) return &lt;div className="text-gray-300"&gt;Loading oversized reports...&lt;/div&gt;
+
+  return (
+    &lt;div className="space-y-6"&gt;
+      &lt;h1 className="text-2xl font-bold text-white"&gt;Oversized Product Management&lt;/h1&gt;
+
+      &lt;div className="bg-gray-800 border border-gray-700 rounded-2xl p-5"&gt;
+        &lt;h2 className="text-white font-bold mb-3"&gt;Decline Evidence&lt;/h2&gt;
+        &lt;div className="space-y-3"&gt;
+          {(data?.declines || []).map((d: any) =&gt; (
+            &lt;div key={d.id} className="bg-gray-700/30 rounded-xl p-3 text-sm text-gray-200"&gt;
+              &lt;p&gt;&lt;span className="font-semibold"&gt;Product:&lt;/span&gt; {productsById[d.productId]?.name || d.productId}&lt;/p&gt;
+              &lt;p&gt;&lt;span className="font-semibold"&gt;Seller:&lt;/span&gt; {usersById[d.sellerId] || d.sellerId} | &lt;span className="font-semibold"&gt;Rider:&lt;/span&gt; {usersById[d.riderId] || d.riderId}&lt;/p&gt;
+              &lt;p&gt;&lt;span className="font-semibold"&gt;Reason:&lt;/span&gt; {d.reason}&lt;/p&gt;
+              {d.proofImageUrl &amp;&amp; &lt;a className="text-blue-300 underline" href={d.proofImageUrl} target="_blank"&gt;View Proof Photo&lt;/a&gt;}
+              &lt;div className="mt-2 flex gap-2"&gt;
+                &lt;button onClick={() =&gt; moderate(d.productId, 'APPROVE')} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold"&gt;Approve Listing&lt;/button&gt;
+                &lt;button onClick={() =&gt; moderate(d.productId, 'REMOVE')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold"&gt;Remove Listing&lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div className="bg-gray-800 border border-gray-700 rounded-2xl p-5"&gt;
+        &lt;h2 className="text-white font-bold mb-3"&gt;Seller Strike History&lt;/h2&gt;
+        &lt;div className="space-y-2 text-sm text-gray-200"&gt;
+          {(data?.strikes || []).map((s: any) =&gt; (
+            &lt;p key={s.id}&gt;{usersById[s.sellerId] || s.sellerId} - Strike #{s.strikeCount} - {s.reason}&lt;/p&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div className="bg-gray-800 border border-gray-700 rounded-2xl p-5"&gt;
+        &lt;h2 className="text-white font-bold mb-3"&gt;Suspended Sellers&lt;/h2&gt;
+        &lt;div className="space-y-2 text-sm text-gray-200"&gt;
+          {(data?.suspendedSellers || []).map((u: any) =&gt; (
+            &lt;p key={u.id}&gt;{u.name} - {u.suspensionReason || 'Suspended'} {u.suspendedUntil ? `(until ${new Date(u.suspendedUntil).toLocaleDateString()})` : '(permanent)'}&lt;/p&gt;
+          ))}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  )
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(admin)/admin/products/page.tsx</div><pre>// app/(admin)/admin/products/page.tsx
 'use client'
 
@@ -5956,6 +6034,9 @@ export default function CartPage() {
                                 &lt;BadgeCheck className="w-3 h-3 text-blue-500" /&gt;
                                 &lt;Link href={`/seller/${item.sellerId}`} className="text-indigo-600 font-bold hover:underline"&gt;{item.sellerName}&lt;/Link&gt;
                               &lt;/p&gt;
+                              {item.deliveryEstimate &amp;&amp; (
+                                &lt;p className="text-[11px] text-orange-600 font-semibold mt-1"&gt;Delivery: {item.deliveryEstimate}&lt;/p&gt;
+                              )}
 
                               {/* ── Variant Chips ── */}
                               {variantEntries.length &gt; 0 &amp;&amp; (
@@ -6090,6 +6171,7 @@ export default function CheckoutPage() {
 
   // Per-item EXTRA notes (variant summary is auto-prepended separately)
   const [orderNotes, setOrderNotes] = useState&lt;Record&lt;string, string&gt;&gt;({})
+  const [deliverySuitabilityConfirmed, setDeliverySuitabilityConfirmed] = useState(false)
 
   useEffect(() =&gt; {
     const token = localStorage.getItem('token')
@@ -6131,6 +6213,7 @@ export default function CheckoutPage() {
           image: product.images[0],
           sellerId: product.sellerId,
           sellerName: product.seller.name,
+          deliveryEstimate: product.deliveryEstimate,
           selectedVariants: product.selectedVariants || {},
         }])
       } else {
@@ -6163,6 +6246,10 @@ export default function CheckoutPage() {
   }
 
   const handlePayment = async () =&gt; {
+    if (!deliverySuitabilityConfirmed) {
+      setError('Please confirm rider-delivery suitability before payment.')
+      return
+    }
     if (!user?.hostelName) {
       router.push('/profile/setup')
       return
@@ -6180,6 +6267,7 @@ export default function CheckoutPage() {
         variantData: item.selectedVariants || null,
         quantity: item.quantity,
         orderNote: buildOrderNote(item),
+        buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
         // We include name/image for display in emails only — NOT for pricing
         _displayName: item.name,
         _displayImage: item.image,
@@ -6342,6 +6430,7 @@ export default function CheckoutPage() {
                         &lt;div className="flex-1 min-w-0"&gt;
                           &lt;h3 className="font-black text-gray-900 text-sm sm:text-base line-clamp-2"&gt;{item.name}&lt;/h3&gt;
                           &lt;p className="text-xs text-gray-400 mt-0.5"&gt;by &lt;span className="font-semibold text-gray-600"&gt;{item.sellerName}&lt;/span&gt;&lt;/p&gt;
+                          {item.deliveryEstimate &amp;&amp; &lt;p className="text-[11px] text-orange-600 font-semibold mt-1"&gt;Estimated delivery: {item.deliveryEstimate}&lt;/p&gt;}
 
                           {/* ── NEW: Variant chips ── */}
                           {variantEntries.length &gt; 0 &amp;&amp; (
@@ -6514,10 +6603,21 @@ export default function CheckoutPage() {
                   &lt;p className="text-xs font-bold text-amber-800"&gt;Order notes will be sent to seller(s)&lt;/p&gt;
                 &lt;/div&gt;
               )}
+              &lt;label className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-3 mb-4"&gt;
+                &lt;input
+                  type="checkbox"
+                  checked={deliverySuitabilityConfirmed}
+                  onChange={(e) =&gt; setDeliverySuitabilityConfirmed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-BATAMART-primary focus:ring-BATAMART-primary"
+                /&gt;
+                &lt;span className="text-xs text-red-600 font-semibold leading-relaxed"&gt;
+                  I confirm these products can be delivered by riders. If a rider declines an oversized item, product payment is refunded to wallet but delivery fee is not refunded.
+                &lt;/span&gt;
+              &lt;/label&gt;
 
               &lt;button
                 onClick={handlePayment}
-                disabled={loading}
+                disabled={loading || !deliverySuitabilityConfirmed}
                 className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
               &gt;
                 {loading ? (
@@ -7441,7 +7541,14 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           &lt;p className="text-[10px] text-gray-500 font-semibold mt-0.5"&gt;50+ bought in past week&lt;/p&gt;
         &lt;/div&gt;
 
-        {deliveryTag &amp;&amp; (
+        {product.deliveryEstimate &amp;&amp; (
+          &lt;div className="mt-1.5"&gt;
+            &lt;span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full"&gt;
+              &lt;Clock className="w-2.5 h-2.5" /&gt; {product.deliveryEstimate}
+            &lt;/span&gt;
+          &lt;/div&gt;
+        )}
+        {!product.deliveryEstimate &amp;&amp; deliveryTag &amp;&amp; (
           &lt;div className="mt-1.5"&gt;
             &lt;span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full"&gt;
               &lt;Truck className="w-2.5 h-2.5" /&gt; {deliveryTag}
@@ -10933,6 +11040,7 @@ interface Product {
   id: string; name: string; price: number; quantity: number
   images: string[]; category: string; subcategory?: string
   description: string; isActive: boolean
+  deliveryEstimate?: string
   viewCount: number; createdAt: string
   _count: { orders: number }
 }
@@ -11265,6 +11373,7 @@ export default function MyShopPage() {
                         {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                       &lt;/p&gt;
                       &lt;h3 className="font-black text-gray-900 text-base line-clamp-1 mb-0.5"&gt;{product.name}&lt;/h3&gt;
+                      {product.deliveryEstimate &amp;&amp; &lt;p className="text-[11px] font-semibold text-orange-600 mb-1"&gt;Delivery: {product.deliveryEstimate}&lt;/p&gt;}
                       {/* ── Variant chips ── */}
                       {(() =&gt; {
                         const { variants } = decodeProductData(product.description || '')
@@ -11331,6 +11440,7 @@ export default function MyShopPage() {
                               {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                             &lt;/p&gt;
                             &lt;h3 className="font-black text-gray-900 text-base leading-tight mt-0.5 line-clamp-1"&gt;{product.name}&lt;/h3&gt;
+                            {product.deliveryEstimate &amp;&amp; &lt;p className="text-[11px] font-semibold text-orange-600 mt-1"&gt;Delivery: {product.deliveryEstimate}&lt;/p&gt;}
                             {/* ── Variant chips ── */}
                             {(() =&gt; {
                               const { variants } = decodeProductData(product.description || '')
@@ -11437,7 +11547,8 @@ export default function MyShopPage() {
       &lt;/div&gt;
    &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/notifications/page.tsx</div><pre>'use client'
 
 import { useState, useEffect } from 'react'
@@ -13073,7 +13184,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, AlertTriangle, MapPin, Phone, Package,
-  CheckCircle, X, ShoppingBag, ArrowRight, Bike,
+  CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
 
@@ -13134,6 +13245,7 @@ export default function RiderDashboardPage() {
   const [trackingActive, setTrackingActive] = useState(false)
   const [trackingError, setTrackingError] = useState&lt;string | null&gt;(null)
   const [lastTrackingPing, setLastTrackingPing] = useState&lt;Date | null&gt;(null)
+  const [oversizedProofByOrder, setOversizedProofByOrder] = useState&lt;Record&lt;string, string&gt;&gt;({})
 
   const watchIdRef = useRef&lt;number | null&gt;(null)
   const lastSentAtRef = useRef(0)
@@ -13259,6 +13371,66 @@ export default function RiderDashboardPage() {
       showToast('Network error updating status.', 'error')
     } finally {
       setActionLoading(prev =&gt; ({ ...prev, [`status-${orderId}`]: false }))
+    }
+  }
+
+  const declineOversized = async (orderId: string) =&gt; {
+    if (actionLoading[`oversized-${orderId}`]) return
+    const proofImageUrl = oversizedProofByOrder[orderId] || ''
+    setActionLoading(prev =&gt; ({ ...prev, [`oversized-${orderId}`]: true }))
+    try {
+      const res = await authFetch('/api/riders/decline-oversized', {
+        method: 'POST',
+        body: JSON.stringify({
+          orderId,
+          reason: 'Item Too Large For Motorcycle Delivery',
+          proofImageUrl: proofImageUrl.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        showToast('Oversized decline submitted. Order cancelled safely.', 'success')
+        await fetchRiderData()
+      } else {
+        showToast(data.error || 'Failed to decline oversized order.', 'error')
+      }
+    } catch {
+      showToast('Network error while declining order.', 'error')
+    } finally {
+      setActionLoading(prev =&gt; ({ ...prev, [`oversized-${orderId}`]: false }))
+    }
+  }
+
+  const uploadOversizedProof = async (orderId: string, file: File | null) =&gt; {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file.', 'error')
+      return
+    }
+    setActionLoading(prev =&gt; ({ ...prev, [`proof-${orderId}`]: true }))
+    try {
+      const base64 = await new Promise&lt;string&gt;((resolve, reject) =&gt; {
+        const reader = new FileReader()
+        reader.onload = () =&gt; resolve(String(reader.result || ''))
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const res = await authFetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        showToast(data.error || 'Failed to upload proof photo.', 'error')
+        return
+      }
+      setOversizedProofByOrder((prev) =&gt; ({ ...prev, [orderId]: data.url }))
+      showToast('Proof photo uploaded.', 'success')
+    } catch {
+      showToast('Upload failed. Try again.', 'error')
+    } finally {
+      setActionLoading(prev =&gt; ({ ...prev, [`proof-${orderId}`]: false }))
     }
   }
 
@@ -13695,6 +13867,14 @@ export default function RiderDashboardPage() {
                               &lt;p className="text-xs text-gray-400 truncate"&gt;
                                 Pickup from: &lt;span className="text-gray-600 font-semibold"&gt;{order.seller.name}&lt;/span&gt;
                               &lt;/p&gt;
+                              {order.orderNote &amp;&amp; &lt;p className="text-xs text-indigo-600 truncate"&gt;Note: {order.orderNote}&lt;/p&gt;}
+                              {(order.product.estimatedWeightKg || order.product.dimensionsCm) &amp;&amp; (
+                                &lt;p className="text-[11px] text-gray-500 truncate"&gt;
+                                  {order.product.estimatedWeightKg ? `${order.product.estimatedWeightKg}kg` : ''}
+                                  {order.product.estimatedWeightKg &amp;&amp; order.product.dimensionsCm ? ' · ' : ''}
+                                  {order.product.dimensionsCm ? `${order.product.dimensionsCm.length || '-'}x${order.product.dimensionsCm.width || '-'}x${order.product.dimensionsCm.height || '-'}cm` : ''}
+                                &lt;/p&gt;
+                              )}
                               {order.product.hostelName &amp;&amp; (
                                 &lt;p className="text-xs text-gray-400 truncate"&gt;{order.product.hostelName}&lt;/p&gt;
                               )}
@@ -13714,17 +13894,46 @@ export default function RiderDashboardPage() {
                           {order.status !== 'DELIVERED' &amp;&amp; (
                             &lt;div className="px-3 pb-3"&gt;
                               {order.status === 'RIDER_ASSIGNED' &amp;&amp; (
-                                &lt;button
-                                  onClick={() =&gt; updateStatus(order.id, 'PICKED_UP')}
-                                  disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold
-                                             flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                &gt;
-                                  {actionLoading[`status-${order.id}`]
-                                    ? &lt;&gt;&lt;Loader2 className="w-3.5 h-3.5 animate-spin" /&gt; Updating...&lt;/&gt;
-                                    : &lt;&gt;&lt;Package className="w-3.5 h-3.5" /&gt; Mark as Picked Up&lt;/&gt;
-                                  }
-                                &lt;/button&gt;
+                                &lt;div className="space-y-2"&gt;
+                                  &lt;label className="w-full py-2.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 flex items-center justify-center gap-1.5 cursor-pointer hover:bg-gray-50"&gt;
+                                    {actionLoading[`proof-${order.id}`]
+                                      ? &lt;&gt;&lt;Loader2 className="w-3.5 h-3.5 animate-spin" /&gt; Uploading proof...&lt;/&gt;
+                                      : &lt;&gt;&lt;Upload className="w-3.5 h-3.5" /&gt; {oversizedProofByOrder[order.id] ? 'Replace Oversized Proof Photo' : 'Upload Oversized Proof Photo (Optional)'}&lt;/&gt;
+                                    }
+                                    &lt;input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) =&gt; uploadOversizedProof(order.id, e.target.files?.[0] || null)}
+                                      disabled={actionLoading[`proof-${order.id}`]}
+                                    /&gt;
+                                  &lt;/label&gt;
+                                  {oversizedProofByOrder[order.id] &amp;&amp; (
+                                    &lt;p className="text-[11px] text-emerald-600 truncate"&gt;Proof attached&lt;/p&gt;
+                                  )}
+                                  &lt;button
+                                    onClick={() =&gt; updateStatus(order.id, 'PICKED_UP')}
+                                    disabled={actionLoading[`status-${order.id}`]}
+                                    className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold
+                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
+                                  &gt;
+                                    {actionLoading[`status-${order.id}`]
+                                      ? &lt;&gt;&lt;Loader2 className="w-3.5 h-3.5 animate-spin" /&gt; Updating...&lt;/&gt;
+                                      : &lt;&gt;&lt;Package className="w-3.5 h-3.5" /&gt; Mark as Picked Up&lt;/&gt;
+                                    }
+                                  &lt;/button&gt;
+                                  &lt;button
+                                    onClick={() =&gt; declineOversized(order.id)}
+                                    disabled={actionLoading[`oversized-${order.id}`]}
+                                    className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold
+                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
+                                  &gt;
+                                    {actionLoading[`oversized-${order.id}`]
+                                      ? &lt;&gt;&lt;Loader2 className="w-3.5 h-3.5 animate-spin" /&gt; Processing...&lt;/&gt;
+                                      : 'Item Too Large For Motorcycle Delivery'
+                                    }
+                                  &lt;/button&gt;
+                                &lt;/div&gt;
                               )}
                               {order.status === 'PICKED_UP' &amp;&amp; (
                                 &lt;button
@@ -13912,6 +14121,7 @@ type Product = {
   isNew?: boolean
   isDeal?: boolean
   seller?: { name?: string; trustLevel?: string }
+  deliveryEstimate?: string
 }
 
 type FilterDef = {
@@ -14183,6 +14393,7 @@ function SearchPage() {
                       &lt;p className="truncate text-[10px] text-gray-400 dark:text-[#94a3b8]"&gt;{p.seller?.name || 'Seller'}&lt;/p&gt;
                       {p.seller?.trustLevel ? &lt;span className="rounded-full bg-gray-100 dark:bg-[#1a1f2a] px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-[#cbd5e1]"&gt;{p.seller.trustLevel}&lt;/span&gt; : null}
                     &lt;/div&gt;
+                    {p.deliveryEstimate ? &lt;p className="mt-1 text-[10px] font-semibold text-orange-600"&gt;Delivery: {p.deliveryEstimate}&lt;/p&gt; : null}
                   &lt;/div&gt;
                 &lt;/button&gt;
               ))}
@@ -14606,6 +14817,12 @@ export default function SellPage() {
     name: '', price: '', quantity: '1',
     hostelName: '', roomNumber: '', landmark: '',
   })
+  const [deliveryAgreementChecked, setDeliveryAgreementChecked] = useState(false)
+  const [estimatedWeightKg, setEstimatedWeightKg] = useState('')
+  const [deliveryEstimate, setDeliveryEstimate] = useState('')
+  const [dimensionL, setDimensionL] = useState('')
+  const [dimensionW, setDimensionW] = useState('')
+  const [dimensionH, setDimensionH] = useState('')
 
   // Category system
   const [categoryKey, setCategoryKey]       = useState('')
@@ -15004,6 +15221,7 @@ export default function SellPage() {
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length &lt; 1) { setError('Please add at least 1 product image'); return }
+    if (!deliveryAgreementChecked) { setError('Please confirm motorcycle delivery suitability before listing'); return }
     if (!allUploaded) { setError('Please wait for all images to finish uploading'); return }
     for (const attr of categoryAttributes) {
       if (!attr.required) continue
@@ -15082,6 +15300,12 @@ export default function SellPage() {
           attributes: attributesPayload,
           variants: variantsPayload,
           images:      images.map(img =&gt; img.url),
+          productDeliveryAgreement: deliveryAgreementChecked,
+          estimatedWeightKg: estimatedWeightKg ? Number(estimatedWeightKg) : undefined,
+          dimensionsCm: (dimensionL &amp;&amp; dimensionW &amp;&amp; dimensionH)
+            ? { length: Number(dimensionL), width: Number(dimensionW), height: Number(dimensionH) }
+            : undefined,
+          deliveryEstimate: deliveryEstimate.trim() || undefined,
         }),
       })
       const data = await response.json()
@@ -15636,6 +15860,27 @@ export default function SellPage() {
           &lt;/div&gt;
         &lt;/div&gt;
 
+        &lt;div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6"&gt;
+          &lt;StepHeader
+            num={variantFields.length &gt; 0 ? '9' : '7'}
+            title="Motorcycle Delivery Check"
+            subtitle="Required for rider safety and reliable fulfillment"
+          /&gt;
+          &lt;div className="grid sm:grid-cols-3 gap-3 mb-4"&gt;
+            &lt;input type="number" min="0" step="0.1" value={estimatedWeightKg} onChange={(e) =&gt; setEstimatedWeightKg(e.target.value)} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" value={dimensionL} onChange={(e) =&gt; setDimensionL(e.target.value)} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" value={dimensionW} onChange={(e) =&gt; setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" value={dimensionH} onChange={(e) =&gt; setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
+            &lt;input type="text" value={deliveryEstimate} onChange={(e) =&gt; setDeliveryEstimate(e.target.value)} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
+          &lt;/div&gt;
+          &lt;label className="flex items-start gap-3 text-sm text-red-600"&gt;
+            &lt;input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) =&gt; setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" /&gt;
+            &lt;span&gt;
+              I confirm this product can be safely and reasonably delivered by a motorcycle rider. Oversized items are prohibited on Batamart. Listings reported as undeliverable may be removed and repeated violations can lead to account suspension.
+            &lt;/span&gt;
+          &lt;/label&gt;
+        &lt;/div&gt;
+
         {/* ── Error ── */}
         {error &amp;&amp; (
           &lt;div className="fade-up flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3.5 rounded-2xl text-sm"&gt;
@@ -15687,6 +15932,13 @@ import {
   CheckCircle2, X, ChevronDown, Search, Loader2, Eye,
   EyeOff, Key, RotateCcw, Zap, ChevronRight, Clock,
 } from 'lucide-react'
+import {
+  enableWithdrawalBiometrics,
+  getBiometricPreference,
+  isBiometricSupported,
+  setBiometricPreference,
+  verifyWithdrawalBiometrics,
+} from '@/lib/withdraw-biometrics'
 
 const WALLET_CSS = `
   @keyframes fadeUp {
@@ -15778,18 +16030,6 @@ interface Transaction {
 interface WalletData { availableBalance: number; pendingBalance: number; completedOrders: number; role: string }
 interface User { id: string; name: string; phone: string; email?: string; hasWithdrawalPin: boolean }
 interface Bank { code: string; name: string }
-
-const BIOMETRIC_KEY_PREFIX = 'batamart:withdraw:webauthn:'
-
-const toBase64Url = (bytes: Uint8Array) =&gt;
-  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
-
-const fromBase64Url = (input: string) =&gt; {
-  const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
-  const raw = atob(padded)
-  return Uint8Array.from(raw, c =&gt; c.charCodeAt(0))
-}
 
 const NIGERIAN_BANKS: Bank[] = [
   { code: '999992', name: 'OPay' },{ code: '999991', name: 'PalmPay' },
@@ -15904,6 +16144,8 @@ export default function WalletPage() {
   // PIN required
   const [showPinRequired, setShowPinRequired] = useState(false)
   const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false)
   const [biometricBusy, setBiometricBusy] = useState(false)
   const [biometricError, setBiometricError] = useState('')
 
@@ -15924,14 +16166,18 @@ export default function WalletPage() {
   useEffect(() =&gt; {
     let mounted = true
     ;(async () =&gt; {
-      if (typeof window === 'undefined' || typeof PublicKeyCredential === 'undefined' || !window.isSecureContext) return
-      try {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-        if (mounted) setBiometricAvailable(available)
-      } catch {}
+      const available = await isBiometricSupported()
+      if (mounted) setBiometricAvailable(available)
     })()
     return () =&gt; { mounted = false }
   }, [])
+
+  useEffect(() =&gt; {
+    if (!user) return
+    const pref = getBiometricPreference(user.id)
+    setBiometricEnabled(pref === 'enabled')
+    setShowBiometricPrompt(Boolean(biometricAvailable &amp;&amp; pref === null))
+  }, [user, biometricAvailable])
 
   const fetchWalletData = async () =&gt; {
     try {
@@ -15977,52 +16223,13 @@ export default function WalletPage() {
 
   const authenticateWithBiometric = async () =&gt; {
     if (!user) return false
-    if (!biometricAvailable) return true
+    if (!biometricAvailable) return false
 
     setBiometricBusy(true)
     setBiometricError('')
-    const storageKey = `${BIOMETRIC_KEY_PREFIX}${user.id}`
 
     try {
-      const challenge = crypto.getRandomValues(new Uint8Array(32))
-      const storedCredentialId = localStorage.getItem(storageKey)
-
-      if (!storedCredentialId) {
-        const userHandle = crypto.getRandomValues(new Uint8Array(16))
-        const created = await navigator.credentials.create({
-          publicKey: {
-            challenge,
-            rp: { name: 'BATAMART', id: window.location.hostname },
-            user: {
-              id: userHandle,
-              name: user.email || `${user.id}@batamart.local`,
-              displayName: user.name || 'BATAMART User',
-            },
-            pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-            authenticatorSelection: {
-              authenticatorAttachment: 'platform',
-              residentKey: 'required',
-              userVerification: 'required',
-            },
-            timeout: 60000,
-            attestation: 'none',
-          },
-        }) as PublicKeyCredential | null
-        if (!created) throw new Error('setup_failed')
-        localStorage.setItem(storageKey, toBase64Url(new Uint8Array(created.rawId)))
-      } else {
-        const assertion = await navigator.credentials.get({
-          publicKey: {
-            challenge,
-            allowCredentials: [{ type: 'public-key', id: fromBase64Url(storedCredentialId) }],
-            userVerification: 'required',
-            timeout: 60000,
-            rpId: window.location.hostname,
-          },
-        }) as PublicKeyCredential | null
-        if (!assertion) throw new Error('verify_cancelled')
-      }
-
+      await verifyWithdrawalBiometrics(user.id)
       return true
     } catch {
       setBiometricError('Biometric check failed or was cancelled. Please try again.')
@@ -16038,9 +16245,17 @@ export default function WalletPage() {
     if (!amount || amount &lt; 1000) { alert('Minimum withdrawal is ₦1,000'); return }
     if (wallet &amp;&amp; amount &gt; wallet.availableBalance) { alert('Insufficient balance'); return }
     if (!accountNumber || !accountName) { alert('Please fill all fields'); return }
-    const biometricOk = await authenticateWithBiometric()
-    if (!biometricOk) return
-    setPendingWithdrawal({ amount, accountNumber, accountName, bankCode: selectedBank.code })
+
+    const payload = { amount, accountNumber, accountName, bankCode: selectedBank.code }
+    setPendingWithdrawal(payload)
+
+    if (biometricEnabled &amp;&amp; biometricAvailable) {
+      const biometricOk = await authenticateWithBiometric()
+      if (!biometricOk) return
+      await executeWithdrawal(payload)
+      return
+    }
+
     setPinError(''); setPinValue(''); setShowPinEntry(true)
   }
 
@@ -16062,15 +16277,16 @@ export default function WalletPage() {
     finally { setPinLoading(false) }
   }
 
-  const executeWithdrawal = async () =&gt; {
-    if (!pendingWithdrawal) return
+  const executeWithdrawal = async (payloadOverride?: any) =&gt; {
+    const payload = payloadOverride || pendingWithdrawal
+    if (!payload) return
     setWithdrawing(true)
     try {
       const token = localStorage.getItem('token')
       const r = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(pendingWithdrawal),
+        body: JSON.stringify(payload),
       })
       const d = await r.json()
       if (!r.ok) {
@@ -16078,9 +16294,32 @@ export default function WalletPage() {
         alert(d.error || 'Withdrawal failed'); setPendingWithdrawal(null); return
       }
       setShowWithdrawModal(false); setPendingWithdrawal(null); fetchWalletData()
-      alert(`Withdrawal of ₦${pendingWithdrawal.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
+      alert(`Withdrawal of ₦${payload.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
     } catch { alert('Network error.'); setPendingWithdrawal(null) }
     finally { setWithdrawing(false) }
+  }
+
+  const handleEnableBiometric = async () =&gt; {
+    if (!user) return
+    setBiometricBusy(true)
+    setBiometricError('')
+    try {
+      await enableWithdrawalBiometrics(user)
+      setBiometricPreference(user.id, 'enabled')
+      setBiometricEnabled(true)
+      setShowBiometricPrompt(false)
+    } catch {
+      setBiometricError('Could not enable biometrics. Please try again.')
+    } finally {
+      setBiometricBusy(false)
+    }
+  }
+
+  const handleDeclineBiometric = () =&gt; {
+    if (!user) return
+    setBiometricPreference(user.id, 'disabled')
+    setBiometricEnabled(false)
+    setShowBiometricPrompt(false)
   }
 
   const handleSetPinSubmit = async () =&gt; {
@@ -16314,6 +16553,32 @@ export default function WalletPage() {
       ═══════════════════════════════════════════════════════════ */}
 
       {/* ── Withdraw Modal ── */}
+      {showBiometricPrompt &amp;&amp; (
+        &lt;ModalShell onClose={handleDeclineBiometric}&gt;
+          &lt;div className="p-6 space-y-4"&gt;
+            &lt;div className="text-center"&gt;
+              &lt;div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-emerald-100"&gt;
+                &lt;Shield className="w-7 h-7 text-emerald-600" /&gt;
+              &lt;/div&gt;
+              &lt;h3 className="text-lg font-black text-gray-900"&gt;Use Biometrics for Withdrawal?&lt;/h3&gt;
+              &lt;p className="text-sm text-gray-500 mt-1"&gt;
+                Turn on fingerprint or face unlock for fast withdrawal approval on this device.
+              &lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div className="flex gap-3"&gt;
+              &lt;button type="button" onClick={handleDeclineBiometric}
+                className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700"&gt;
+                Not Interested
+              &lt;/button&gt;
+              &lt;button type="button" onClick={handleEnableBiometric} disabled={biometricBusy}
+                className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black disabled:opacity-50 shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}&gt;
+                {biometricBusy ? &lt;Loader2 className="w-4 h-4 animate-spin mx-auto" /&gt; : 'Turn On'}
+              &lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/ModalShell&gt;
+      )}
       {showWithdrawModal &amp;&amp; (
         &lt;ModalShell onClose={() =&gt; { setShowWithdrawModal(false); setPendingWithdrawal(null); setPinError('') }}&gt;
           &lt;div className="p-6"&gt;
@@ -16324,7 +16589,9 @@ export default function WalletPage() {
               &lt;/div&gt;
               &lt;div&gt;
                 &lt;h2 className="text-lg font-black text-gray-900"&gt;Withdraw Funds&lt;/h2&gt;
-                &lt;p className="text-xs text-gray-400"&gt;PIN verification required 🔐&lt;/p&gt;
+                &lt;p className="text-xs text-gray-400"&gt;
+                  {biometricEnabled ? 'Biometric verification enabled' : 'PIN verification required'}
+                &lt;/p&gt;
               &lt;/div&gt;
               &lt;button onClick={() =&gt; { setShowWithdrawModal(false); setPendingWithdrawal(null) }}
                 className="ml-auto w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors"&gt;
@@ -16333,9 +16600,9 @@ export default function WalletPage() {
             &lt;/div&gt;
 
             &lt;form onSubmit={handleWithdrawSubmit} className="space-y-4"&gt;
-              {biometricAvailable &amp;&amp; (
+              {biometricAvailable &amp;&amp; biometricEnabled &amp;&amp; (
                 &lt;div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5"&gt;
-                  &lt;p className="text-xs font-bold text-emerald-700"&gt;Biometric security is enabled on this device for withdrawals.&lt;/p&gt;
+                  &lt;p className="text-xs font-bold text-emerald-700"&gt;Biometric withdrawal is active on this device. PIN is optional.&lt;/p&gt;
                 &lt;/div&gt;
               )}
               {/* Amount */}
@@ -16442,7 +16709,7 @@ export default function WalletPage() {
                 &lt;button type="submit" disabled={withdrawing || biometricBusy}
                   className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50 shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}&gt;
-                  {(withdrawing || biometricBusy) ? &lt;Loader2 className="w-4 h-4 animate-spin mx-auto" /&gt; : (biometricAvailable ? 'Verify Biometrics + PIN →' : 'Enter PIN →')}
+                  {(withdrawing || biometricBusy) ? &lt;Loader2 className="w-4 h-4 animate-spin mx-auto" /&gt; : (biometricEnabled &amp;&amp; biometricAvailable ? 'Verify Biometrics →' : 'Enter PIN →')}
                 &lt;/button&gt;
               &lt;/div&gt;
             &lt;/form&gt;
@@ -16674,6 +16941,9 @@ export default function WalletPage() {
     &lt;/div&gt;
   )
 }
+
+
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/about/page.tsx</div><pre>import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -17365,6 +17635,12 @@ import {
 import { ReferralCard } from '@/components/ui/ReferralCard'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
 import { useTheme } from '@/components/layout/ThemeProvider'
+import {
+  enableWithdrawalBiometrics,
+  getBiometricPreference,
+  isBiometricSupported,
+  setBiometricPreference,
+} from '@/lib/withdraw-biometrics'
 
 const PROFILE_CSS = `
   @keyframes fadeUp {
@@ -17526,6 +17802,10 @@ export default function MyProfilePage() {
   const [isApp, setIsApp]           = useState(false)
   const [isIOSBrowser, setIsIOSBrowser] = useState(false)
   const [showIOSInstallModal, setShowIOSInstallModal] = useState(false)
+  const [biometricAvailable, setBiometricAvailable] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [biometricBusy, setBiometricBusy] = useState(false)
+  const [biometricMessage, setBiometricMessage] = useState('')
 
   const { isSupported, isSubscribed, isLoading: notifLoading, permission, subscribe, unsubscribe } = usePushSubscription()
 
@@ -17544,6 +17824,21 @@ export default function MyProfilePage() {
   }, [])
 
   useEffect(() =&gt; { fetchProfileData() }, [])
+
+  useEffect(() =&gt; {
+    let mountedFlag = true
+    ;(async () =&gt; {
+      const available = await isBiometricSupported()
+      if (mountedFlag) setBiometricAvailable(available)
+    })()
+    return () =&gt; { mountedFlag = false }
+  }, [])
+
+  useEffect(() =&gt; {
+    if (!user) return
+    const pref = getBiometricPreference(user.id)
+    setBiometricEnabled(pref === 'enabled')
+  }, [user])
 
   useEffect(() =&gt; {
     const h = (e: KeyboardEvent) =&gt; { if (e.key === 'Escape') setIsMobileMenuOpen(false) }
@@ -17594,6 +17889,28 @@ export default function MyProfilePage() {
 
   const handleCancel = () =&gt; { setEditedUser(user || {}); setIsEditing(false); setSaveError('') }
   const handleLogout = () =&gt; { localStorage.clear(); window.dispatchEvent(new Event('auth-change')); router.push('/') }
+  const handleBiometricToggle = async () =&gt; {
+    if (!user || !biometricAvailable) return
+    setBiometricBusy(true)
+    setBiometricMessage('')
+    try {
+      if (biometricEnabled) {
+        setBiometricPreference(user.id, 'disabled')
+        setBiometricEnabled(false)
+        setBiometricMessage('Biometric withdrawal turned off.')
+      } else {
+        await enableWithdrawalBiometrics(user)
+        setBiometricPreference(user.id, 'enabled')
+        setBiometricEnabled(true)
+        setBiometricMessage('Biometric withdrawal is now on.')
+      }
+    } catch {
+      setBiometricMessage('Could not update biometric setting. Please try again.')
+    } finally {
+      setBiometricBusy(false)
+      setTimeout(() =&gt; setBiometricMessage(''), 3000)
+    }
+  }
 
   if (loading || !user) return (
     &lt;div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#000000]"&gt;
@@ -17949,6 +18266,40 @@ export default function MyProfilePage() {
                     View &lt;ChevronRight className="w-3.5 h-3.5" /&gt;
                   &lt;/Link&gt;
                 &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"&gt;
+              &lt;div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2"&gt;
+                &lt;div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center"&gt;
+                  &lt;Shield className="w-3.5 h-3.5 text-emerald-600" /&gt;
+                &lt;/div&gt;
+                &lt;h2 className="font-black text-gray-900 text-sm"&gt;Withdrawal Biometrics&lt;/h2&gt;
+              &lt;/div&gt;
+              &lt;div className="p-5"&gt;
+                {!biometricAvailable ? (
+                  &lt;p className="text-xs text-gray-500"&gt;Biometrics not available on this browser/device.&lt;/p&gt;
+                ) : (
+                  &lt;div className="flex items-center justify-between gap-3"&gt;
+                    &lt;div&gt;
+                      &lt;p className="font-black text-sm text-gray-900"&gt;{biometricEnabled ? 'Enabled' : 'Disabled'}&lt;/p&gt;
+                      &lt;p className="text-xs text-gray-400 mt-0.5"&gt;Use fingerprint or face unlock for withdrawals.&lt;/p&gt;
+                    &lt;/div&gt;
+                    &lt;button
+                      onClick={handleBiometricToggle}
+                      disabled={biometricBusy}
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50 ${biometricEnabled ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'text-white'}`}
+                      style={!biometricEnabled ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                    &gt;
+                      {biometricBusy ? &lt;Loader2 className="w-3.5 h-3.5 animate-spin" /&gt; : biometricEnabled ? 'Turn Off' : 'Turn On'}
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                )}
+                {biometricMessage &amp;&amp; (
+                  &lt;p className={`mt-3 text-xs font-bold ${biometricMessage.includes('Could not') ? 'text-red-500' : 'text-emerald-600'}`}&gt;
+                    {biometricMessage}
+                  &lt;/p&gt;
+                )}
               &lt;/div&gt;
             &lt;/div&gt;
 
@@ -18512,7 +18863,7 @@ export default function TermsPage() {
     {
       icon: ShieldCheck,
       title: "Eligibility",
-      content: "BATAMART is designed for campus commerce users. You must be at least 18 years old to use this platform and provide accurate account and profile information."
+      content: "BATAMART is designed for campus commerce users. You must be at least 16 years old to use this platform and provide accurate account and profile information."
     }
   ]
 
@@ -18928,7 +19279,7 @@ const sections = [
     icon: '🎓',
     content: [
       'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
-      'You must be at least 18 years of age or have the consent of a parent or guardian.',
+      'You must be at least 16 years of age or have the consent of a parent or guardian.',
       'Seller access is enabled through your BATAMART account role and may be restricted if your account violates platform policy.',
       'BATAMART reserves the right to revoke seller status if any eligibility requirement is found to be unmet.',
     ],
@@ -25319,6 +25670,72 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to get user' }, { status: 500 })
   }
 }</pre></div>
+<div class='file-block'><div class='file-header'>app/api/admin/oversized/route.ts</div><pre>import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
+import { prisma } from '@/lib/prisma'
+
+function verifyAdmin(req: NextRequest) {
+  const auth = req.headers.get('authorization')
+  if (!auth?.startsWith('Bearer ')) return null
+  try {
+    const token = auth.slice(7)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    if (decoded.role !== 'ADMIN') return null
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const admin = verifyAdmin(req)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const [declines, strikes, suspendedSellers] = await Promise.all([
+    prisma.oversizedDeclineLog.findMany({
+      include: {  },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    }),
+    prisma.sellerStrike.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    }),
+    prisma.user.findMany({
+      where: { isSuspended: true, role: { in: ['SELLER', 'BUYER'] } },
+      select: { id: true, name: true, suspensionReason: true, suspendedUntil: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 100,
+    }),
+  ])
+
+  const productIds = Array.from(new Set(declines.map((d) =&gt; d.productId)))
+  const userIds = Array.from(new Set([...declines.map((d) =&gt; d.sellerId), ...declines.map((d) =&gt; d.buyerId), ...declines.map((d) =&gt; d.riderId)]))
+  const [products, users] = await Promise.all([
+    prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, name: true, moderationStatus: true, isActive: true } }),
+    prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true } }),
+  ])
+
+  return NextResponse.json({ declines, strikes, suspendedSellers, products, users })
+}
+
+export async function POST(req: NextRequest) {
+  const admin = verifyAdmin(req)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { productId, action } = await req.json()
+  if (!productId || !['APPROVE', 'REMOVE'].includes(action)) {
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+  }
+
+  const product = await prisma.product.update({
+    where: { id: productId },
+    data: action === 'APPROVE'
+      ? { moderationStatus: 'APPROVED', isActive: true }
+      : { moderationStatus: 'REMOVED', isActive: false },
+  })
+  return NextResponse.json({ success: true, product })
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/penalties/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/admin/penalties/route.ts - WITH NOTIFICATIONS
 import { NextRequest, NextResponse } from 'next/server'
@@ -28917,6 +29334,7 @@ export async function POST(request: NextRequest) {
         variantData: z.record(z.string()).optional().nullable(),
         quantity: z.number().int().min(1).max(50),
         orderNote: z.string().max(300).optional(),
+        buyerDeliveryAcknowledged: z.boolean().optional(),
       }).strict()).max(50).optional(),
     }).strict()
     const parsed = schema.safeParse(body)
@@ -28968,6 +29386,10 @@ export async function POST(request: NextRequest) {
           resolvedPrice = variant.price
           resolvedStock = variant.stock
         }
+        const seller = await prisma.user.findUnique({ where: { id: product.sellerId }, select: { isSuspended: true } })
+        if (seller?.isSuspended || product.moderationStatus === 'UNDER_REVIEW' || product.moderationStatus === 'REMOVED') {
+          return NextResponse.json({ error: `Product unavailable: ${product.name}` }, { status: 400 })
+        }
 
         if (!product.isActive || resolvedStock &lt; safeQuantity) {
           return NextResponse.json({ error: `Product unavailable: ${product.name}` }, { status: 400 })
@@ -28986,6 +29408,7 @@ export async function POST(request: NextRequest) {
           sellerId:   product.sellerId,
           sellerName: product.seller.name,
           orderNote:  item.orderNote,
+          buyerDeliveryAcknowledged: item.buyerDeliveryAcknowledged === true,
         })
       }
     } else if (productId) {
@@ -29126,6 +29549,7 @@ export async function createOrders(
     sellerId:   string
     sellerName: string
     orderNote?: string
+    buyerDeliveryAcknowledged?: boolean
   }[],
   user: {
     id:           string
@@ -29222,6 +29646,7 @@ export async function createOrders(
             isPaid:             true,
             status:             'PENDING' as const,
             orderNote,
+            buyerDeliveryAcknowledged: Boolean(sellerItems.every(i =&gt; i.buyerDeliveryAcknowledged === true)),
             items: {
               create: sellerItems.map(item =&gt; ({
                 productId: item.productId,
@@ -30124,6 +30549,9 @@ export async function GET(request: NextRequest) {
     if (category &amp;&amp; category !== 'All') {
       where.category = category
     }
+    if (user.isSuspended) {
+      return NextResponse.json({ error: 'Your seller account is suspended and cannot create listings right now.' }, { status: 403 })
+    }
     if (categoryKey) where.categoryKey = categoryKey
     if (subcategoryKey) where.subcategoryKey = subcategoryKey
 
@@ -30285,10 +30713,17 @@ export async function POST(request: NextRequest) {
       hostelName,
       roomNumber,
       landmark,
+      productDeliveryAgreement,
+      estimatedWeightKg,
+      dimensionsCm,
+      deliveryEstimate,
     } = body
 
     if (!name || !price || !category || !quantity) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    if (productDeliveryAgreement !== true) {
+      return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
 
     if (typeof price !== 'number' || price &lt;= 0) {
@@ -30353,6 +30788,10 @@ export async function POST(request: NextRequest) {
         ...(categoryKey ? { categoryKey: String(categoryKey) } : {}),
         ...(subcategory ? { subcategory: String(subcategory) } : {}),
         ...(subcategoryKey ? { subcategoryKey: String(subcategoryKey) } : {}),
+        productDeliveryAgreement: true,
+        ...(typeof estimatedWeightKg === 'number' &amp;&amp; estimatedWeightKg &gt; 0 ? { estimatedWeightKg } : {}),
+        ...(dimensionsCm &amp;&amp; typeof dimensionsCm === 'object' ? { dimensionsCm } : {}),
+        ...(deliveryEstimate ? { deliveryEstimate: String(deliveryEstimate).trim().substring(0, 80) } : {}),
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
@@ -32100,7 +32539,7 @@ export async function GET(request: NextRequest) {
         orders: {
           include: {
             product: {
-              select: { name: true, images: true, hostelName: true },
+              select: { name: true, images: true, hostelName: true, estimatedWeightKg: true, dimensionsCm: true },
             },
             seller: {
               select: { name: true, phone: true },
@@ -32156,6 +32595,38 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('available-orders error:', error)
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+  }
+}
+</pre></div>
+<div class='file-block'><div class='file-header'>app/api/riders/decline-oversized/route.ts</div><pre>import { NextRequest, NextResponse } from 'next/server'
+import { getUserFromRequest } from '@/lib/auth/auth'
+import { applyOversizedDecline } from '@/lib/oversized-protection'
+
+export const dynamic = 'force-dynamic'
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request)
+    if (!user || user.role !== 'RIDER') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { orderId, reason, proofImageUrl } = await request.json()
+    if (!orderId) return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
+    if (reason !== 'Item Too Large For Motorcycle Delivery') {
+      return NextResponse.json({ error: 'Invalid decline reason' }, { status: 400 })
+    }
+
+    const result = await applyOversizedDecline({ orderId, riderId: user.id, proofImageUrl: proofImageUrl || null })
+    return NextResponse.json({
+      success: true,
+      message: 'Order cancelled and buyer refunded (delivery fee retained).',
+      strikeCount: result.strikeCount,
+    })
+  } catch (error: any) {
+    const msg = error?.message || 'Failed to process oversized decline'
+    const status = ['ORDER_NOT_FOUND', 'NOT_ASSIGNED_RIDER'].includes(msg) ? 404 : ['ORDER_ALREADY_CANCELLED', 'DUPLICATE_DECLINE'].includes(msg) ? 409 : 500
+    return NextResponse.json({ error: msg }, { status })
   }
 }
 </pre></div>
@@ -32444,7 +32915,7 @@ export async function GET(request: NextRequest) {
         orders: {
           include: {
             product: {
-              select: { name: true, images: true, hostelName: true },
+              select: { name: true, images: true, hostelName: true, estimatedWeightKg: true, dimensionsCm: true },
             },
             seller: {
               select: { name: true, phone: true },
@@ -32461,7 +32932,8 @@ export async function GET(request: NextRequest) {
     console.error('my-deliveries error:', error)
     return NextResponse.json({ error: 'Failed to fetch deliveries' }, { status: 500 })
   }
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/riders/register/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/riders/register/route.ts
 import { NextRequest, NextResponse } from 'next/server'
@@ -35100,6 +35572,7 @@ export interface CartItem {
   // NEW: subcategory key for display
   subcategory?: string
   category?: string
+  deliveryEstimate?: string
 }
 
 interface CartState {
@@ -36137,6 +36610,108 @@ export async function notifyWithdrawalProcessed(
   // ✅ PUSH notification
   await pushWithdrawalProcessed(userId, amountFormatted)
 }</pre></div>
+<div class='file-block'><div class='file-header'>lib/oversized-protection.ts</div><pre>import { prisma } from '@/lib/prisma'
+import { createNotification, notifyAccountSuspended } from '@/lib/notification'
+
+const OVERSIZED_REASON = 'Item Too Large For Motorcycle Delivery'
+
+export function getSuspensionWindow(strikeCount: number): { days: number | null; reason: string } {
+  if (strikeCount === 2) return { days: 3, reason: 'Temporary suspension for repeated oversized listings' }
+  if (strikeCount === 3) return { days: 14, reason: 'Extended suspension for repeated oversized listings' }
+  if (strikeCount &gt;= 4) return { days: null, reason: 'Permanent suspension for repeated oversized listings' }
+  return { days: 0, reason: 'Oversized listing warning issued' }
+}
+
+export async function applyOversizedDecline(params: { orderId: string; riderId: string; proofImageUrl?: string | null }) {
+  const now = new Date()
+  const result = await prisma.$transaction(async (tx) =&gt; {
+    const order = await tx.order.findUnique({
+      where: { id: params.orderId },
+      include: { buyer: true, product: true, payment: true },
+    })
+    if (!order) throw new Error('ORDER_NOT_FOUND')
+    if (order.riderId !== params.riderId) throw new Error('NOT_ASSIGNED_RIDER')
+    if (order.status === 'CANCELLED') throw new Error('ORDER_ALREADY_CANCELLED')
+
+    const existingLog = await tx.oversizedDeclineLog.findFirst({ where: { orderId: order.id, riderId: params.riderId } })
+    if (existingLog?.refundIssued) throw new Error('DUPLICATE_DECLINE')
+
+    const refundAmount = Number(order.totalAmount) - Number(order.deliveryFee)
+    const buyerBal = Number(order.buyer.availableBalance ?? 0)
+    await tx.order.update({ where: { id: order.id }, data: { status: 'CANCELLED', oversizedCancellationReason: OVERSIZED_REASON } })
+    await tx.payment.updateMany({
+      where: { orderId: order.id, status: { not: 'REFUNDED' } },
+      data: { status: 'REFUNDED', refundedAt: now, refundAmount, refundReason: 'Oversized item declined by rider' },
+    })
+    await tx.user.update({ where: { id: order.buyerId }, data: { availableBalance: { increment: refundAmount } } })
+    await tx.transaction.create({
+      data: {
+        userId: order.buyerId,
+        type: 'CREDIT',
+        amount: refundAmount,
+        description: `Refund for oversized item (Order #${order.orderNumber})`,
+        reference: `${order.orderNumber}-OVERSIZED-REFUND`,
+        balanceBefore: buyerBal,
+        balanceAfter: buyerBal + refundAmount,
+      },
+    })
+
+    const strikeCount = (await tx.sellerStrike.count({ where: { sellerId: order.sellerId } })) + 1
+    const suspension = getSuspensionWindow(strikeCount)
+    const suspensionExpiry = suspension.days === null ? null : suspension.days &gt; 0 ? new Date(now.getTime() + suspension.days * 86400000) : null
+    await tx.sellerStrike.create({
+      data: {
+        sellerId: order.sellerId,
+        productId: order.productId,
+        orderId: order.id,
+        strikeCount,
+        reason: OVERSIZED_REASON,
+        suspensionReason: suspension.reason,
+        suspensionExpiry,
+      },
+    })
+    if (strikeCount &gt;= 2) {
+      await tx.user.update({
+        where: { id: order.sellerId },
+        data: { isSuspended: true, suspendedUntil: suspension.days === null ? null : suspensionExpiry, suspensionReason: suspension.reason },
+      })
+    }
+    await tx.product.update({ where: { id: order.productId }, data: { isActive: strikeCount === 1 ? false : undefined, moderationStatus: 'UNDER_REVIEW' } })
+    await tx.oversizedDeclineLog.upsert({
+      where: { orderId_riderId: { orderId: order.id, riderId: params.riderId } },
+      update: { reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
+      create: { orderId: order.id, productId: order.productId, sellerId: order.sellerId, riderId: params.riderId, buyerId: order.buyerId, reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
+    })
+
+    return { order, strikeCount, suspension, suspensionExpiry, refundAmount }
+  })
+
+  await Promise.allSettled([
+    createNotification({ userId: result.order.buyerId, type: 'OVERSIZED_REFUND_ISSUED', title: 'Order Refunded to Wallet', message: `Order #${result.order.orderNumber} was cancelled as oversized. Product payment has been refunded to your wallet.`, orderId: result.order.id, productId: result.order.productId }),
+    createNotification({ userId: result.order.sellerId, type: 'SELLER_STRIKE_ISSUED', title: 'Oversized Listing Reported', message: `Order #${result.order.orderNumber} was cancelled by rider as oversized. Listing moved under review.`, orderId: result.order.id, productId: result.order.productId, metadata: { strikeCount: result.strikeCount } }),
+    createNotification({ userId: result.order.riderId!, type: 'OVERSIZED_DECLINED', title: 'Oversized Decline Recorded', message: `Order #${result.order.orderNumber} has been cancelled safely.`, orderId: result.order.id, productId: result.order.productId }),
+  ])
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } })
+  await Promise.allSettled(
+    admins.map((a) =&gt;
+      createNotification({
+        userId: a.id,
+        type: 'PRODUCT_UNDER_REVIEW',
+        title: 'Oversized Product Under Review',
+        message: `Order #${result.order.orderNumber} was declined as oversized. Product requires moderation.`,
+        orderId: result.order.id,
+        productId: result.order.productId,
+      })
+    )
+  )
+
+  if (result.strikeCount &gt;= 2) {
+    await notifyAccountSuspended(result.order.sellerId, result.suspension.days === null ? null : result.suspensionExpiry, result.suspension.reason)
+  }
+
+  return result
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/prisma.ts</div><pre>import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
@@ -37017,6 +37592,110 @@ export function buildProductSearchText(product: {
     ...variantValues,
   ].join(' ').toLowerCase()
 }</pre></div>
+<div class='file-block'><div class='file-header'>lib/withdraw-biometrics.ts</div><pre>'use client'
+
+export type BiometricPreference = 'enabled' | 'disabled'
+
+const PREF_KEY_PREFIX = 'batamart:withdraw:biometric-pref:'
+const CRED_KEY_PREFIX = 'batamart:withdraw:webauthn:'
+
+const toBase64Url = (bytes: Uint8Array) =&gt;
+  btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+
+const fromBase64Url = (input: string) =&gt; {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  const raw = atob(padded)
+  return Uint8Array.from(raw, c =&gt; c.charCodeAt(0))
+}
+
+export const getBiometricPreference = (userId: string): BiometricPreference | null =&gt; {
+  if (typeof window === 'undefined') return null
+  const value = localStorage.getItem(`${PREF_KEY_PREFIX}${userId}`)
+  return value === 'enabled' || value === 'disabled' ? value : null
+}
+
+export const setBiometricPreference = (userId: string, pref: BiometricPreference) =&gt; {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(`${PREF_KEY_PREFIX}${userId}`, pref)
+}
+
+export const isBiometricSupported = async () =&gt; {
+  if (typeof window === 'undefined' || typeof PublicKeyCredential === 'undefined' || !window.isSecureContext) return false
+  try {
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+  } catch {
+    return false
+  }
+}
+
+type BiometricUser = { id: string; name?: string; email?: string }
+
+export const enableWithdrawalBiometrics = async (user: BiometricUser) =&gt; {
+  const challenge = crypto.getRandomValues(new Uint8Array(32))
+  const storageKey = `${CRED_KEY_PREFIX}${user.id}`
+  const storedCredentialId = localStorage.getItem(storageKey)
+
+  if (!storedCredentialId) {
+    const userHandle = crypto.getRandomValues(new Uint8Array(16))
+    const created = await navigator.credentials.create({
+      publicKey: {
+        challenge,
+        rp: { name: 'BATAMART', id: window.location.hostname },
+        user: {
+          id: userHandle,
+          name: user.email || `${user.id}@batamart.local`,
+          displayName: user.name || 'BATAMART User',
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        authenticatorSelection: {
+          authenticatorAttachment: 'platform',
+          residentKey: 'required',
+          userVerification: 'required',
+        },
+        timeout: 60000,
+        attestation: 'none',
+      },
+    }) as PublicKeyCredential | null
+
+    if (!created) throw new Error('setup_failed')
+    localStorage.setItem(storageKey, toBase64Url(new Uint8Array(created.rawId)))
+  } else {
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [{ type: 'public-key', id: fromBase64Url(storedCredentialId) }],
+        userVerification: 'required',
+        timeout: 60000,
+        rpId: window.location.hostname,
+      },
+    }) as PublicKeyCredential | null
+
+    if (!assertion) throw new Error('verify_failed')
+  }
+
+  setBiometricPreference(user.id, 'enabled')
+}
+
+export const verifyWithdrawalBiometrics = async (userId: string) =&gt; {
+  const storedCredentialId = localStorage.getItem(`${CRED_KEY_PREFIX}${userId}`)
+  if (!storedCredentialId) throw new Error('not_enrolled')
+
+  const challenge = crypto.getRandomValues(new Uint8Array(32))
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      challenge,
+      allowCredentials: [{ type: 'public-key', id: fromBase64Url(storedCredentialId) }],
+      userVerification: 'required',
+      timeout: 60000,
+      rpId: window.location.hostname,
+    },
+  }) as PublicKeyCredential | null
+
+  if (!assertion) throw new Error('verify_failed')
+  return true
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/auth/adminLogout.ts</div><pre>// lib/auth/adminLogout.ts
 // Call this function whenever you want to log out of admin
 // e.g: import { adminLogout } from '@/lib/auth/adminLogout'
@@ -39080,6 +39759,27 @@ main()
     await prisma.$disconnect()
   })
 </pre></div>
+<div class='file-block'><div class='file-header'>scripts/oversized-protection.test.ts</div><pre>import assert from 'node:assert/strict'
+import { getSuspensionWindow } from '@/lib/oversized-protection'
+
+function run() {
+  const first = getSuspensionWindow(1)
+  assert.equal(first.days, 0)
+
+  const second = getSuspensionWindow(2)
+  assert.equal(second.days, 3)
+
+  const third = getSuspensionWindow(3)
+  assert.equal(third.days, 14)
+
+  const fourth = getSuspensionWindow(4)
+  assert.equal(fourth.days, null)
+
+  console.log('oversized-protection tests passed')
+}
+
+run()
+</pre></div>
 <div class='file-block'><div class='file-header'>prisma/schema.prisma</div><pre>generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["multiSchema"]
@@ -39173,6 +39873,7 @@ model User {
   resolvedReports          Report[]            @relation("ResolvedBy")
   reviewsReceived          Review[]            @relation("UserReviewsReceived")
   reviewsGiven             Review[]            @relation("UserReviewsGiven")
+  sellerStrikes            SellerStrike[]
   supportTickets           SupportTicket[]
   transactions             Transaction[]
   referredBy               User?               @relation("UserReferrals", fields: [referredById], references: [id])
@@ -39234,6 +39935,11 @@ model Product {
   updatedAt    DateTime        @updatedAt
   deletedAt    DateTime?
   isDeleted    Boolean         @default(false)
+  productDeliveryAgreement Boolean @default(false)
+  deliveryEstimate String?
+  moderationStatus ProductModerationStatus @default(APPROVED)
+  estimatedWeightKg Float?
+  dimensionsCm Json?
   universityId String?
   subcategory     String?
   subcategoryKey  String?
@@ -39447,6 +40153,8 @@ model Order {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   orderNote          String?
+  buyerDeliveryAcknowledged Boolean @default(false)
+  oversizedCancellationReason String?
   batchId            String?
   dispute            Dispute?
   batch              DeliveryBatch?  @relation(fields: [batchId], references: [id])
@@ -39823,6 +40531,44 @@ model ReferralReward {
   @@schema("public")
 }
 
+model SellerStrike {
+  id                String   @id @default(cuid())
+  sellerId          String
+  productId         String?
+  orderId           String?
+  strikeCount       Int
+  reason            String
+  suspensionReason  String?
+  suspensionExpiry  DateTime?
+  createdAt         DateTime @default(now())
+  seller            User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@index([sellerId])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model OversizedDeclineLog {
+  id                String   @id @default(cuid())
+  orderId           String
+  productId         String
+  sellerId          String
+  riderId           String
+  buyerId           String
+  reason            String
+  proofImageUrl     String?
+  refundIssued      Boolean  @default(false)
+  refundAmount      Float?
+  deliveryFeeKept   Float    @default(0)
+  createdAt         DateTime @default(now())
+
+  @@unique([orderId, riderId])
+  @@index([sellerId])
+  @@index([productId])
+  @@index([createdAt])
+  @@schema("public")
+}
+
 enum UserRole {
   BUYER
   SELLER
@@ -39962,6 +40708,18 @@ enum NotificationType {
   PAYMENT_RECEIVED
   REFERRAL_REWARD
   STOCK_ALERT
+  OVERSIZED_DECLINED
+  OVERSIZED_REFUND_ISSUED
+  PRODUCT_UNDER_REVIEW
+  SELLER_STRIKE_ISSUED
+
+  @@schema("public")
+}
+
+enum ProductModerationStatus {
+  APPROVED
+  UNDER_REVIEW
+  REMOVED
 
   @@schema("public")
 }
@@ -40824,7 +41582,8 @@ body {
     "build": "prisma generate &amp;&amp; next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate:referrals": "tsx scripts/migrate-referral-codes.ts"
+    "migrate:referrals": "tsx scripts/migrate-referral-codes.ts",
+    "test:oversized": "tsx scripts/oversized-protection.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
