@@ -5,6 +5,22 @@ import { getUserFromRequest } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 
+const NOTIFICATION_CACHE_TTL_MS = 20 * 1000
+const notificationCache = new Map<string, {
+  timestamp: number
+  payload: { notifications: unknown[]; unreadCount: number }
+}>()
+
+function cacheKey(userId: string, unreadOnly: boolean, limit: number) {
+  return `${userId}:${unreadOnly ? 'unread' : 'all'}:${limit}`
+}
+
+function clearUserNotificationCache(userId: string) {
+  for (const key of notificationCache.keys()) {
+    if (key.startsWith(`${userId}:`)) notificationCache.delete(key)
+  }
+}
+
 // GET - Fetch user's notifications
 export async function GET(request: NextRequest) {
   try {
@@ -16,27 +32,36 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
     const limit = parseInt(searchParams.get('limit') || '50')
+    const key = cacheKey(user.id, unreadOnly, limit)
+    const cached = notificationCache.get(key)
+    if (cached && Date.now() - cached.timestamp < NOTIFICATION_CACHE_TTL_MS) {
+      return NextResponse.json(cached.payload)
+    }
 
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: user.id,
-        ...(unreadOnly && { isRead: false })
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit
-    })
+    const [notifications, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId: user.id,
+          ...(unreadOnly && { isRead: false })
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }),
+      prisma.notification.count({
+        where: {
+          userId: user.id,
+          isRead: false
+        }
+      })
+    ])
 
-    const unreadCount = await prisma.notification.count({
-      where: {
-        userId: user.id,
-        isRead: false
-      }
-    })
-
-    return NextResponse.json({
+    const payload = {
       notifications,
       unreadCount
-    })
+    }
+    notificationCache.set(key, { timestamp: Date.now(), payload })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Fetch notifications error:', error)
     return NextResponse.json(
@@ -68,6 +93,7 @@ export async function PATCH(request: NextRequest) {
           readAt: new Date()
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -87,6 +113,7 @@ export async function PATCH(request: NextRequest) {
           readAt: new Date()
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -123,6 +150,7 @@ export async function DELETE(request: NextRequest) {
       await prisma.notification.deleteMany({
         where: { userId: user.id }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -137,6 +165,7 @@ export async function DELETE(request: NextRequest) {
           userId: user.id // Security check
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,

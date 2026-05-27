@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  url       = env("POOLED_DATABASE_URL")
   directUrl = env("DIRECT_URL")
   schemas   = ["public"]
 }
@@ -197,6 +197,8 @@ model Product {
   @@index([isHot])
   @@index([conditionType])
   @@index([nameKey, conditionType, hasChangedParts, variantKey])
+  @@index([universityId, isActive, isDeleted, quantity])
+  @@index([isHot, universityId])
   @@schema("public")
 }
 
@@ -394,6 +396,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([orderedAt])
+  @@index([buyerId, status])
   @@index([sellerId, status])
   @@index([riderId, status])
   @@schema("public")
@@ -650,6 +653,7 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@index([type])
+  @@index([userId, isRead, createdAt])
   @@schema("public")
 }
 

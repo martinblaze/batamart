@@ -19,6 +19,7 @@ import {
 import { isSplashPending } from '@/components/SplashScreen'
 
 import { decodeProductData, getCategoryList } from '@/lib/variants'
+import { getClientCache, setClientCache } from '@/lib/client-cache'
 
 // ─────────────────────────────────────────────
 // Pull-to-refresh constants
@@ -451,6 +452,7 @@ const TRENDING_SEARCHES  = ['iPhone', 'Sneakers', 'Laptop', 'Jollof Rice', 'Text
 const RECENT_SEARCHES_KEY  = 'BATAMART-recent-searches'
 const RECENTLY_VIEWED_KEY  = 'BATAMART-recently-viewed'
 const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
+const FEED_CACHE_TTL_MS = 90 * 1000
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
@@ -573,7 +575,6 @@ function StarRating({ rating }: { rating: number }) {
 function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
   product: any; onClick: () => void; delay?: number; showSignal?: boolean
 }) {
-  const tags         = parseTags(product.description)
   // Use real discount from market price check (stored in DB), not a fake computed value
   const discount     = (product.isDeal && product.discountPercent) ? product.discountPercent : 0
   const stockLeft    = getStockLevel(product.id)
@@ -635,14 +636,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
         </p>
         <h3 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
 
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {tags.slice(0, 3).map((tag: string) => (
-              <span key={tag} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-500 text-[9px] font-bold rounded-full">{tag}</span>
-            ))}
-          </div>
-        )}
-
         <div className="mt-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-BATAMART-primary font-black text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
@@ -652,14 +645,7 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           <p className="text-[10px] text-gray-500 font-semibold mt-0.5">50+ bought in past week</p>
         </div>
 
-        {product.deliveryEstimate && (
-          <div className="mt-1.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-              <Clock className="w-2.5 h-2.5" /> {product.deliveryEstimate}
-            </span>
-          </div>
-        )}
-        {!product.deliveryEstimate && deliveryTag && (
+        {deliveryTag && (
           <div className="mt-1.5">
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
               <Truck className="w-2.5 h-2.5" /> {deliveryTag}
@@ -1838,6 +1824,7 @@ export default function MarketplacePage() {
   const [mounted,           setMounted]           = useState(false)
   const [dropdownPos,       setDropdownPos]       = useState({ top: 0, left: 0, width: 0 })
   const [universityShortName, setUniversityShortName] = useState<string>('')
+  const [universityId, setUniversityId] = useState<string>('')
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<any[]>([])
   const [renderSeed,          setRenderSeed]          = useState(() => Date.now())
   const [maxPriceFilter,      setMaxPriceFilter]      = useState<number | null>(null)
@@ -1890,14 +1877,20 @@ export default function MarketplacePage() {
       setRecentSearches(normalizeSearchHistory(rawSearches))
     } catch {}
 
-    fetchFeed()
     fetchPeopleLikeYouBought()
     const token = localStorage.getItem('token')
     if (token) {
       fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
         .then(r => r.json())
-        .then(d => { if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName) })
-        .catch(() => {})
+        .then(d => {
+          const userUniversityId = d.user?.universityId || ''
+          if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName)
+          if (userUniversityId) setUniversityId(userUniversityId)
+          return fetchFeed(userUniversityId)
+        })
+        .catch(() => fetchFeed())
+    } else {
+      fetchFeed()
     }
   }, [])
 
@@ -1936,8 +1929,10 @@ export default function MarketplacePage() {
 
   // ── Category change ──
   useEffect(() => {
+    if (!mounted) return
+    if (selectedCategory === 'All' && !universityId) return
     if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
-  }, [selectedCategory])
+  }, [selectedCategory, mounted, universityId])
 
   // ─────────────────────────────────────────────
   // Pull-to-Refresh — iOS-safe implementation
@@ -2119,11 +2114,24 @@ export default function MarketplacePage() {
     return { categories, keywords }
   }
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (universityIdOverride?: string, page = 1) => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
+      const feedUniversityId = universityIdOverride || universityId || 'unknown'
+      const feedCacheKey = `feed:${feedUniversityId}:${page}`
+      const cached = getClientCache<any>(feedCacheKey)
+      if (cached) {
+        const products = cached.value?.products || []
+        setAllProducts(products)
+        setRenderSeed(Date.now())
+        const cats = Array.from(new Set(
+          products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
+        )) as string[]
+        setInterestCategories(cats.slice(0, 4))
+        setLoading(false)
+      }
       const { categories, keywords } = buildFeedSignals()
       const params = new URLSearchParams()
       if (categories.length) {
@@ -2135,10 +2143,12 @@ export default function MarketplacePage() {
         params.set('keywordSignals', JSON.stringify(keywords))
       }
       params.set('limit', '100')
+      if (feedUniversityId !== 'unknown') params.set('universityId', feedUniversityId)
       const res  = await fetch(`/api/products/feed?${params}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (res.ok) {
         const products = data.products || []
+        setClientCache(feedCacheKey, { products }, FEED_CACHE_TTL_MS)
         setAllProducts(products)
         setRenderSeed(Date.now())
         const cats = Array.from(new Set(
@@ -2284,14 +2294,7 @@ export default function MarketplacePage() {
     return allProducts
       .filter(p => p.isHot)
       .sort((a, b) => {
-        const priority = { BOTH: 3, DEAL: 2, VIEWS: 1 }
-        const aPri = priority[a.hotReason as keyof typeof priority] || 0
-        const bPri = priority[b.hotReason as keyof typeof priority] || 0
-        if (bPri !== aPri) return bPri - aPri
-        if (a.hotReason !== 'VIEWS' && b.hotReason !== 'VIEWS') {
-          return (b.discountPercent || 0) - (a.discountPercent || 0)
-        }
-        return (b.viewCount || 0) - (a.viewCount || 0)
+        return (b.discountPercent || 0) - (a.discountPercent || 0) || (b.viewCount || 0) - (a.viewCount || 0)
       })
   }, [allProducts])
   const trendingProducts = hotDeals.slice(0, 12)
@@ -2333,7 +2336,7 @@ export default function MarketplacePage() {
     if (!q) return recentSearches.slice(0, 6).map(s => ({ type: 'recent', label: s }))
     const productMatches = allProducts
       .filter(p => {
-        const tags = parseTags(p.description)
+        const tags = parseTags(p.description || '')
         return p.name.toLowerCase().includes(q) || tags.some((t: string) => t.toLowerCase().includes(q))
       })
       .slice(0, 5)

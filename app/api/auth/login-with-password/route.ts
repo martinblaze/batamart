@@ -7,7 +7,7 @@ import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, incrementRateLimit, getIpKey } from '@/lib/security/rate-limit'
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
-const LOGIN_MAX_FAILURES = 10
+const LOGIN_MAX_REQUESTS = 10
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
     const ip = getIpKey(
       request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip')
     )
-    const rateLimitKey = `login-fail:${ip}`
+    const rateLimitKey = `login:${ip}`
 
-    // Check if this IP has too many FAILED attempts
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
       rateLimitKey,
-      LOGIN_MAX_FAILURES,
-      LOGIN_WINDOW_MS
+      LOGIN_MAX_REQUESTS,
+      LOGIN_WINDOW_MS,
+      { requireDistributedInProduction: true }
     )
     if (!allowed) {
       return NextResponse.json(
@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
         { status: 429, headers: { 'Retry-After': String(retryAfterSecs) } }
       )
     }
+    await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
 
     const body = await request.json()
     const { email, password } = body
@@ -44,8 +45,6 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
-      // Count as a failure to prevent email enumeration abuse
-      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }
 
@@ -59,8 +58,6 @@ export async function POST(request: NextRequest) {
 
     const isValidPassword = await comparePassword(password, user.password)
     if (!isValidPassword) {
-      // Only increment counter on actual wrong password
-      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
     }
 

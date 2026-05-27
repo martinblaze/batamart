@@ -3,10 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
-import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
-const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+const RATE_LIMIT_MAX = 3
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         }
       )
     }
+    await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
     const { email, isLogin } = body

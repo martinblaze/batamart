@@ -1,9 +1,9 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
-import { updateHotStatus } from '@/lib/marketPrice/engine'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 import {
   computeFeedScore,
   decayWeight,
@@ -13,37 +13,7 @@ import {
 } from '@/lib/feed-ranking'
 import { keywordMatchScore, normalizeText } from '@/lib/search-utils'
 
-const HOT_BACKFILL_COOLDOWN_MS = 10 * 60 * 1000
-const HOT_BACKFILL_BATCH = 120
-const hotBackfillStateByUniversity = new Map<string, number>()
-
 type ActivitySignal = { value: string; timestamp?: number }
-
-function scheduleBackground(task: () => void) {
-  if (typeof setImmediate === 'function') {
-    setImmediate(task)
-    return
-  }
-  setTimeout(task, 0)
-}
-
-async function backfillExistingHotStatuses(universityId: string): Promise<void> {
-  const candidates = await prisma.product.findMany({
-    where: {
-      universityId,
-      isActive: true,
-      isDeleted: false,
-      quantity: { gt: 0 },
-    },
-    select: { id: true },
-    orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
-    take: HOT_BACKFILL_BATCH,
-  })
-
-  for (const product of candidates) {
-    await updateHotStatus(product.id).catch(() => {})
-  }
-}
 
 function parseList(searchParams: URLSearchParams, primaryKey: string, fallbackKey: string): string[] {
   const raw = searchParams.get(primaryKey) || searchParams.get(fallbackKey) || ''
@@ -116,18 +86,24 @@ function applyDiversity<T extends { sellerId: string; categoryKey?: string | nul
 
 export async function GET(request: NextRequest) {
   try {
+    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const rate = await checkRateLimitDistributed(
+      `products:feed:${ip}`,
+      60,
+      60 * 1000,
+      { requireDistributedInProduction: true },
+    )
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many feed requests. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rate.retryAfterSecs) } },
+      )
+    }
+    await incrementRateLimit(`products:feed:${ip}`, 60 * 1000)
+
     const user = await getUserFromRequest(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!user.universityId) return NextResponse.json({ error: 'No university on account' }, { status: 403 })
-
-    const lastBackfillAt = hotBackfillStateByUniversity.get(user.universityId) || 0
-    const nowTs = Date.now()
-    if (nowTs - lastBackfillAt > HOT_BACKFILL_COOLDOWN_MS) {
-      hotBackfillStateByUniversity.set(user.universityId, nowTs)
-      scheduleBackground(() => {
-        backfillExistingHotStatuses(user.universityId as string).catch(() => {})
-      })
-    }
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(50, Math.min(100, Number(searchParams.get('limit') || 100)))
@@ -151,7 +127,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        description: true,
         price: true,
         basePrice: true,
         category: true,
@@ -163,7 +138,6 @@ export async function GET(request: NextRequest) {
         viewCount: true,
         createdAt: true,
         isHot: true,
-        hotReason: true,
         isDeal: true,
         discountPercent: true,
         marketPrice: true,
@@ -210,7 +184,7 @@ export async function GET(request: NextRequest) {
       const tier = sellerTierScore(product.seller?.trustLevel)
       const categoryToken = normalizeText(product.categoryKey || product.category || '')
       const haystack = normalizeText(
-        [product.name, product.category, product.subcategory || '', product.description || ''].join(' '),
+        [product.name, product.category, product.subcategory || ''].join(' '),
       )
 
       let categoryMatch = 0
@@ -256,7 +230,6 @@ export async function GET(request: NextRequest) {
         isPersonalised: !usedFallback && score >= 0.45,
         isNew: (now - new Date(product.createdAt).getTime()) / 86400000 <= 7,
         isHot: product.isHot ?? false,
-        hotReason: product.hotReason ?? null,
         isDeal: product.isDeal ?? false,
         discountPercent: product.discountPercent ?? null,
         marketPrice: product.marketPrice ?? null,
@@ -312,4 +285,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to load feed' }, { status: 500 })
   }
 }
-

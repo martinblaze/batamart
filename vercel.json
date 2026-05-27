@@ -35,7 +35,115 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/products/feed",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=120, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/products",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/products/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/universities",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/api/category-attributes",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=3600"
+        }
+      ]
+    },
+    {
+      "source": "/api/auth/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/payments/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/orders",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/orders/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/wallet",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/wallet/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/admin",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/admin/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -60,6 +168,12 @@
           "value": "public, max-age=86400"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/hot-status",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

@@ -6,9 +6,29 @@ import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+
+const SIGNUP_WINDOW_MS = 60 * 60 * 1000
+const SIGNUP_MAX_REQUESTS = 5
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const rateLimitKey = `signup:${ip}`
+    const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
+      rateLimitKey,
+      SIGNUP_MAX_REQUESTS,
+      SIGNUP_WINDOW_MS,
+      { requireDistributedInProduction: true },
+    )
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many signup attempts. Please wait ${Math.ceil(retryAfterSecs / 60)} minute(s) and try again.` },
+        { status: 429, headers: { 'Retry-After': String(retryAfterSecs) } },
+      )
+    }
+    await incrementRateLimit(rateLimitKey, SIGNUP_WINDOW_MS)
+
     const body = await request.json()
     const {
       email,
