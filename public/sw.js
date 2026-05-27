@@ -4,7 +4,7 @@
 // Handles: Push Notifications, Notification Clicks, Offline Cache
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'batamart-v1'
+const CACHE_NAME = 'batamart-v2'
 
 // Pages to cache for offline use
 const OFFLINE_URLS = [
@@ -45,22 +45,38 @@ self.addEventListener('activate', (event) => {
 
 // ─── Fetch: serve cached pages when offline ───────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests for same-origin navigation
+  const url = new URL(event.request.url)
   if (
     event.request.method !== 'GET' ||
-    event.request.url.includes('/api/') ||
-    !event.request.url.startsWith(self.location.origin)
+    url.origin !== self.location.origin ||
+    url.pathname.startsWith('/api/')
   ) return
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful page responses
+    caches.open(CACHE_NAME)
+      .then(async (cache) => {
+        const accept = event.request.headers.get('accept') || ''
+        const cacheablePage =
+          event.request.mode === 'navigate' ||
+          url.pathname.startsWith('/_next/static/') ||
+          accept.includes('text/html') ||
+          accept.includes('text/x-component')
+
+        if (!cacheablePage) return fetch(event.request)
+        if (event.request.cache === 'reload') {
+          const response = await fetch(event.request)
+          if (response && response.status === 200 && response.type === 'basic') {
+            await cache.put(event.request, response.clone())
+          }
+          return response
+        }
+
+        const cached = await cache.match(event.request)
+        if (cached) return cached
+
+        const response = await fetch(event.request)
         if (response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone)
-          })
+          await cache.put(event.request, response.clone())
         }
         return response
       })
@@ -74,6 +90,25 @@ self.addEventListener('fetch', (event) => {
 })
 
 // ─── Push: receive and show notification ─────────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CLEAR_RUNTIME_CACHE') {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then((cache) =>
+        cache.keys().then((requests) =>
+          Promise.all(
+            requests
+              .filter((request) => {
+                const url = new URL(request.url)
+                return !url.pathname.startsWith('/_next/static/')
+              })
+              .map((request) => cache.delete(request))
+          )
+        )
+      )
+    )
+  }
+})
+
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received')
 

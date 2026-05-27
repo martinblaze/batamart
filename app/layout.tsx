@@ -14,6 +14,8 @@ import InstallPrompt from '@/components/InstallPrompt'
 import IosInstallPrompt from '@/components/IosInstallPrompt'
 import { IOSAppShell } from '@/components/layout/IOSAppShell'
 import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
+import { AppNavigationCache } from '@/components/layout/AppNavigationCache'
+import { GlobalPullToRefresh } from '@/components/layout/GlobalPullToRefresh'
 
 const inter = Inter({ subsets: ['latin'] })
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
@@ -257,6 +259,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <RoutePrefetcher />
+          <AppNavigationCache />
+          <GlobalPullToRefresh />
           <PWARegister />
           <SplashScreen />
           <InstallPrompt />
