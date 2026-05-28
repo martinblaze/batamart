@@ -27,11 +27,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const universityId = searchParams.get('universityId') || 'all'
     const search       = searchParams.get('search') || ''
+    const flagged      = searchParams.get('flagged') === 'true'
     const page         = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
     const limit        = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50')))
     const skip         = (page - 1) * limit
 
     const where: any = { isDeleted: false }
+
+    if (flagged) {
+      where.isFlagged = true
+    }
 
     if (universityId !== 'all') {
       where.universityId = universityId
@@ -55,6 +60,9 @@ export async function GET(req: NextRequest) {
               name: true,
               university: { select: { shortName: true } },
             },
+          },
+          _count: {
+            select: { productReports: true },
           },
         },
         orderBy: { createdAt: 'desc' },

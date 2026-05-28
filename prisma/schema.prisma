@@ -82,6 +82,7 @@ model User {
   issuedPenalties          Penalty[]           @relation("IssuedBy")
   penaltiesReceived        Penalty[]           @relation("UserPenalties")
   products                 Product[]
+  productReports           ProductReport[]
   productReviewsGiven      ProductReview[]     @relation("ProductReviewsGiven")
   pushSubscriptions        PushSubscription[]
   referralRewardsGenerated ReferralReward[]    @relation("ReferredUserRewards")
@@ -132,55 +133,58 @@ model DeliveryBatch {
 }
 
 model Product {
-  id           String          @id @default(cuid())
-  name         String
-  description  String
-  price        Float
-  basePrice    Float?
-  images       String[]
-  category     String
-  categoryKey  String?
-  quantity     Int             @default(1)
-  hostelName   String
-  roomNumber   String
-  landmark     String
-  sellerId     String
-  isActive     Boolean         @default(true)
-  viewCount    Int             @default(0)
-  avgRating    Float           @default(0)
-  totalReviews Int             @default(0)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  deletedAt    DateTime?
-  isDeleted    Boolean         @default(false)
-  productDeliveryAgreement Boolean @default(false)
-  deliveryEstimate String?
-  moderationStatus ProductModerationStatus @default(APPROVED)
-  estimatedWeightKg Float?
-  dimensionsCm Json?
-  universityId String?
-  subcategory     String?
-  subcategoryKey  String?
-  variantsEnabled Boolean       @default(false)
-  marketPrice     Float?          // Last confirmed campus sale price for this product type
-  discountPercent Int?            // % cheaper than last confirmed sale price; null = not a deal
-  isDeal          Boolean         @default(false)
-  nameKey         String?         // normalised product name for market price matching
-  variantKey      String?         // price-sensitive variant fingerprint (model/storage/ram/etc)
-  conditionType   String?         // "NEW" | "USED" | "REFURBISHED"
-  hasChangedParts Boolean         @default(false)
-  isHot           Boolean         @default(false)
-  hotReason       String?         // "VIEWS" | "DEAL" | "BOTH"
-  hotScore        Int             @default(0)
-  cartItems       CartItem[]
-  variants        ProductVariant[]
-  attributeValues ProductAttributeValue[]
-  orderItems      OrderItem[]
-  orders       Order[]
-  seller       User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  university   University?     @relation(fields: [universityId], references: [id])
-  reviews      ProductReview[]
-  reports      Report[]
+  id                       String                  @id @default(cuid())
+  name                     String
+  description              String
+  price                    Float
+  basePrice                Float?
+  images                   String[]
+  category                 String
+  categoryKey              String?
+  quantity                 Int                     @default(1)
+  hostelName               String
+  roomNumber               String
+  landmark                 String
+  sellerId                 String
+  isActive                 Boolean                 @default(true)
+  viewCount                Int                     @default(0)
+  avgRating                Float                   @default(0)
+  totalReviews             Int                     @default(0)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  deletedAt                DateTime?
+  isDeleted                Boolean                 @default(false)
+  productDeliveryAgreement Boolean                 @default(false)
+  deliveryEstimate         String?
+  moderationStatus         ProductModerationStatus @default(APPROVED)
+  estimatedWeightKg        Float?
+  dimensionsCm             Json?
+  universityId             String?
+  subcategory              String?
+  subcategoryKey           String?
+  variantsEnabled          Boolean                 @default(false)
+  marketPrice              Float? // Last confirmed campus sale price for this product type
+  discountPercent          Int? // % cheaper than last confirmed sale price; null = not a deal
+  isDeal                   Boolean                 @default(false)
+  nameKey                  String? // normalised product name for market price matching
+  variantKey               String? // price-sensitive variant fingerprint (model/storage/ram/etc)
+  conditionType            String? // "NEW" | "USED" | "REFURBISHED"
+  hasChangedParts          Boolean                 @default(false)
+  isHot                    Boolean                 @default(false)
+  hotReason                String? // "VIEWS" | "DEAL" | "BOTH"
+  hotScore                 Int                     @default(0)
+  isFlagged                Boolean                 @default(false)
+  flagReason               String?
+  cartItems                CartItem[]
+  variants                 ProductVariant[]
+  attributeValues          ProductAttributeValue[]
+  orderItems               OrderItem[]
+  orders                   Order[]
+  seller                   User                    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  university               University?             @relation(fields: [universityId], references: [id])
+  reviews                  ProductReview[]
+  reports                  Report[]
+  productReports           ProductReport[]
 
   @@index([sellerId])
   @@index([category])
@@ -195,10 +199,26 @@ model Product {
   @@index([nameKey])
   @@index([variantKey])
   @@index([isHot])
+  @@index([isFlagged])
   @@index([conditionType])
   @@index([nameKey, conditionType, hasChangedParts, variantKey])
   @@index([universityId, isActive, isDeleted, quantity])
   @@index([isHot, universityId])
+  @@schema("public")
+}
+
+model ProductReport {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  reason    String?
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
   @@schema("public")
 }
 
@@ -217,9 +237,9 @@ model CategoryAttribute {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([categoryKey, subcategoryKey, key])
   @@index([categoryKey])
   @@index([subcategoryKey])
-  @@unique([categoryKey, subcategoryKey, key])
   @@schema("public")
 }
 
@@ -310,15 +330,15 @@ model UserSessionEvent {
 }
 
 model ProductVariant {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   combination Json
   price       Float
-  stock       Int      @default(0)
+  stock       Int         @default(0)
   sku         String?
   imageUrl    String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
   orderItems  OrderItem[]
 
   @@index([productId])
@@ -346,48 +366,48 @@ model MarketPrice {
 }
 
 model Order {
-  id                 String          @id @default(cuid())
-  orderNumber        String          @unique
-  buyerId            String
-  sellerId           String
-  productId          String
-  riderId            String?
-  productPrice       Float
-  deliveryFee        Float
-  totalAmount        Float
-  platformCommission Float           @default(0)
-  quantity           Int             @default(1)
-  deliveryHostel     String
-  deliveryRoom       String
-  deliveryLandmark   String
-  deliveryPhone      String
-  status             OrderStatus     @default(PENDING)
-  orderedAt          DateTime        @default(now())
-  riderAssignedAt    DateTime?
-  pickedUpAt         DateTime?
-  deliveredAt        DateTime?
-  completedAt        DateTime?
-  isPaid             Boolean         @default(false)
-  isDisputed         Boolean         @default(false)
-  disputeReason      String?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  orderNote          String?
-  buyerDeliveryAcknowledged Boolean @default(false)
+  id                          String          @id @default(cuid())
+  orderNumber                 String          @unique
+  buyerId                     String
+  sellerId                    String
+  productId                   String
+  riderId                     String?
+  productPrice                Float
+  deliveryFee                 Float
+  totalAmount                 Float
+  platformCommission          Float           @default(0)
+  quantity                    Int             @default(1)
+  deliveryHostel              String
+  deliveryRoom                String
+  deliveryLandmark            String
+  deliveryPhone               String
+  status                      OrderStatus     @default(PENDING)
+  orderedAt                   DateTime        @default(now())
+  riderAssignedAt             DateTime?
+  pickedUpAt                  DateTime?
+  deliveredAt                 DateTime?
+  completedAt                 DateTime?
+  isPaid                      Boolean         @default(false)
+  isDisputed                  Boolean         @default(false)
+  disputeReason               String?
+  createdAt                   DateTime        @default(now())
+  updatedAt                   DateTime        @updatedAt
+  orderNote                   String?
+  buyerDeliveryAcknowledged   Boolean         @default(false)
   oversizedCancellationReason String?
-  batchId            String?
-  dispute            Dispute?
-  batch              DeliveryBatch?  @relation(fields: [batchId], references: [id])
-  buyer              User            @relation("BuyerOrders", fields: [buyerId], references: [id])
-  product            Product         @relation(fields: [productId], references: [id])
-  rider              User?           @relation("RiderDeliveries", fields: [riderId], references: [id])
-  seller             User            @relation("SellerOrders", fields: [sellerId], references: [id])
-  payment            Payment?
-  productReviews     ProductReview[]
-  referralReward     ReferralReward?
-  reports            Report[]
-  reviews            Review[]
-  items              OrderItem[]
+  batchId                     String?
+  dispute                     Dispute?
+  batch                       DeliveryBatch?  @relation(fields: [batchId], references: [id])
+  buyer                       User            @relation("BuyerOrders", fields: [buyerId], references: [id])
+  product                     Product         @relation(fields: [productId], references: [id])
+  rider                       User?           @relation("RiderDeliveries", fields: [riderId], references: [id])
+  seller                      User            @relation("SellerOrders", fields: [sellerId], references: [id])
+  payment                     Payment?
+  productReviews              ProductReview[]
+  referralReward              ReferralReward?
+  reports                     Report[]
+  reviews                     Review[]
+  items                       OrderItem[]
 
   @@index([buyerId])
   @@index([sellerId])
@@ -754,16 +774,16 @@ model ReferralReward {
 }
 
 model SellerStrike {
-  id                String   @id @default(cuid())
-  sellerId          String
-  productId         String?
-  orderId           String?
-  strikeCount       Int
-  reason            String
-  suspensionReason  String?
-  suspensionExpiry  DateTime?
-  createdAt         DateTime @default(now())
-  seller            User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  sellerId         String
+  productId        String?
+  orderId          String?
+  strikeCount      Int
+  reason           String
+  suspensionReason String?
+  suspensionExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  seller           User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
   @@index([sellerId])
   @@index([createdAt])
@@ -771,18 +791,18 @@ model SellerStrike {
 }
 
 model OversizedDeclineLog {
-  id                String   @id @default(cuid())
-  orderId           String
-  productId         String
-  sellerId          String
-  riderId           String
-  buyerId           String
-  reason            String
-  proofImageUrl     String?
-  refundIssued      Boolean  @default(false)
-  refundAmount      Float?
-  deliveryFeeKept   Float    @default(0)
-  createdAt         DateTime @default(now())
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String
+  sellerId        String
+  riderId         String
+  buyerId         String
+  reason          String
+  proofImageUrl   String?
+  refundIssued    Boolean  @default(false)
+  refundAmount    Float?
+  deliveryFeeKept Float    @default(0)
+  createdAt       DateTime @default(now())
 
   @@unique([orderId, riderId])
   @@index([sellerId])

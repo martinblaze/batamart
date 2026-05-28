@@ -28,6 +28,44 @@ function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {
   return false
 }
 
+function signCloudinaryParams(params: Record<string, string | number>, apiSecret: string) {
+  const signatureBase = Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&')
+
+  return crypto.createHash('sha1').update(`${signatureBase}${apiSecret}`).digest('hex')
+}
+
+async function destroyCloudinaryImage({
+  cloudName,
+  apiKey,
+  apiSecret,
+  publicId,
+}: {
+  cloudName: string
+  apiKey: string
+  apiSecret: string
+  publicId: string
+}) {
+  try {
+    const timestamp = Math.round(Date.now() / 1000)
+    const signature = signCloudinaryParams({ public_id: publicId, timestamp }, apiSecret)
+    const formData = new FormData()
+    formData.append('public_id', publicId)
+    formData.append('api_key', apiKey)
+    formData.append('timestamp', timestamp.toString())
+    formData.append('signature', signature)
+
+    await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+      method: 'POST',
+      body: formData,
+    })
+  } catch (error) {
+    console.warn('Cloudinary rejected image cleanup failed:', error)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const jsonErr = enforceJsonRequest(request)
@@ -98,8 +136,8 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Math.round(Date.now() / 1000)
     const folder = `BATAMART-products/${user.id}`
-    const signatureString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`
-    const signature = crypto.createHash('sha1').update(signatureString).digest('hex')
+    const moderation = 'aws_rek'
+    const signature = signCloudinaryParams({ folder, moderation, timestamp }, apiSecret)
 
     const formData = new FormData()
     formData.append('file', image)
@@ -107,15 +145,57 @@ export async function POST(request: NextRequest) {
     formData.append('timestamp', timestamp.toString())
     formData.append('signature', signature)
     formData.append('folder', folder)
+    formData.append('moderation', moderation)
 
     const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: 'POST',
       body: formData,
     })
-    const data = await response.json()
+    let data = await response.json()
+    let uploadOk = response.ok
 
-    if (!response.ok || typeof data?.secure_url !== 'string') {
+    if (!response.ok) {
+      const cloudinaryMessage = String(data?.error?.message || data?.error || '').toLowerCase()
+      if (cloudinaryMessage.includes('moderation') || cloudinaryMessage.includes('aws_rek')) {
+        console.warn('Cloudinary moderation unavailable; retrying upload without moderation')
+        const fallbackTimestamp = Math.round(Date.now() / 1000)
+        const fallbackSignature = signCloudinaryParams({ folder, timestamp: fallbackTimestamp }, apiSecret)
+        const fallbackFormData = new FormData()
+        fallbackFormData.append('file', image)
+        fallbackFormData.append('api_key', apiKey)
+        fallbackFormData.append('timestamp', fallbackTimestamp.toString())
+        fallbackFormData.append('signature', fallbackSignature)
+        fallbackFormData.append('folder', folder)
+
+        const fallbackResponse = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: fallbackFormData,
+        })
+        data = await fallbackResponse.json()
+        if (!fallbackResponse.ok || typeof data?.secure_url !== 'string') {
+          return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+        }
+        uploadOk = true
+      }
+    }
+
+    if (!uploadOk || typeof data?.secure_url !== 'string') {
       return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+    }
+
+    if (data.moderation?.[0]?.status === 'rejected') {
+      if (typeof data.public_id === 'string') {
+        await destroyCloudinaryImage({
+          cloudName,
+          apiKey,
+          apiSecret,
+          publicId: data.public_id,
+        })
+      }
+      return NextResponse.json(
+        { error: 'Image rejected: inappropriate content detected.' },
+        { status: 422 }
+      )
     }
 
     if (!/^https:\/\/res\.cloudinary\.com\//.test(data.secure_url)) {

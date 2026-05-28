@@ -16,6 +16,7 @@ import { IOSAppShell } from '@/components/layout/IOSAppShell'
 import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 import { AppNavigationCache } from '@/components/layout/AppNavigationCache'
 import { GlobalPullToRefresh } from '@/components/layout/GlobalPullToRefresh'
+import { ToastContainer } from '@/components/ui/Toast'
 
 const inter = Inter({ subsets: ['latin'] })
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
@@ -271,6 +272,7 @@ export default function RootLayout({
           <IOSAppShell>
             {children}
           </IOSAppShell>
+          <ToastContainer />
         </ThemeProvider>
       </body>
     </html>

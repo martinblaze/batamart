@@ -5,10 +5,79 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
+import { moderateListing } from '@/lib/moderation/moderateListing'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
 const AUTO_PROMOTE_THRESHOLD = 10
+const PROHIBITED_LISTING_MESSAGE = 'Your listing was rejected. It contains prohibited content.'
+
+const BANNED_KEYWORD_PATTERNS: Array<{ term: string; pattern: RegExp }> = [
+  // Illegal drugs and controlled substances. Keep common campus OTC medicines out of this list.
+  { term: 'cocaine', pattern: /\bcocaine\b/i },
+  { term: 'crack cocaine', pattern: /\bcrack\s+cocaine\b/i },
+  { term: 'heroin', pattern: /\bheroin\b/i },
+  { term: 'weed', pattern: /\bweed\b/i },
+  { term: 'marijuana', pattern: /\bmarijuana\b/i },
+  { term: 'cannabis', pattern: /\bcannabis\b/i },
+  { term: 'meth', pattern: /\bmeth(?:amphetamine)?\b/i },
+  { term: 'crystal meth', pattern: /\bcrystal\s+meth\b/i },
+  { term: 'mdma', pattern: /\bmdma\b/i },
+  { term: 'molly', pattern: /\bmolly\b/i },
+  { term: 'ecstasy', pattern: /\becstasy\b/i },
+  { term: 'tramadol', pattern: /\btramadol\b/i },
+  { term: 'codeine', pattern: /\bcodeine\b/i },
+  { term: 'fentanyl', pattern: /\bfentanyl\b/i },
+  { term: 'ketamine', pattern: /\bketamine\b/i },
+  { term: 'lsd', pattern: /\blsd\b/i },
+  { term: 'xanax', pattern: /\bxanax\b/i },
+  { term: 'oxycontin', pattern: /\boxycontin\b/i },
+  { term: 'percocet', pattern: /\bpercocet\b/i },
+  { term: 'rohypnol', pattern: /\brohypnol\b/i },
+  { term: 'kush', pattern: /\bkush\b/i },
+  { term: 'skunk', pattern: /\bskunk\b/i },
+  { term: 'colorado', pattern: /\bcolorado\b/i },
+  { term: 'loud', pattern: /\bloud\b/i },
+  { term: 'lean', pattern: /\blean\b/i },
+  { term: 'purple drank', pattern: /\bpurple\s+drank\b/i },
+  { term: 'narcotic', pattern: /\bnarcotic(?:s)?\b/i },
+  { term: 'drug plug', pattern: /\b(?:drug\s+plug|plug\s+for\s+(?:weed|coke|cocaine|loud|kush|tramadol|codeine))\b/i },
+  // Explicit sexual content and services.
+  { term: 'nude', pattern: /\bnude(?:s)?\b/i },
+  { term: 'naked', pattern: /\bnaked\b/i },
+  { term: 'nsfw', pattern: /\bnsfw\b/i },
+  { term: 'xxx', pattern: /\bxxx\b/i },
+  { term: 'porn', pattern: /\bporn(?:ography)?\b/i },
+  { term: 'escort', pattern: /\bescort(?:s|ing)?\b/i },
+  { term: 'prostitut', pattern: /\bprostitut\w*\b/i },
+  { term: 'onlyfans', pattern: /\bonly\s*fans\b/i },
+  { term: 'sex tape', pattern: /\bsex\s+tape\b/i },
+  { term: 'hookup service', pattern: /\bhook\s*up\s+service\b/i },
+  // Weapons and explosives. "knife" is intentionally excluded to avoid cooking-knife false positives.
+  { term: 'gun', pattern: /\bguns?\b/i },
+  { term: 'pistol', pattern: /\bpistol(?:s)?\b/i },
+  { term: 'rifle', pattern: /\brifle(?:s)?\b/i },
+  { term: 'firearm', pattern: /\bfirearm(?:s)?\b/i },
+  { term: 'ammo', pattern: /\bammo\b/i },
+  { term: 'ammunition', pattern: /\bammunition\b/i },
+  { term: 'bullets', pattern: /\bbullets?\b/i },
+  { term: 'explosive', pattern: /\bexplosive(?:s)?\b/i },
+  { term: 'bomb', pattern: /\bbombs?\b/i },
+  { term: 'grenade', pattern: /\bgrenade(?:s)?\b/i },
+  // Trafficking, fraud, and clearly illegal goods.
+  { term: 'trafficking', pattern: /\btraffick\w*\b/i },
+  { term: 'smuggl', pattern: /\bsmuggl\w*\b/i },
+  { term: 'fake id', pattern: /\bfake\s+id\b/i },
+  { term: 'counterfeit', pattern: /\bcounterfeit\b/i },
+  { term: 'forged document', pattern: /\bforg(?:ed|ery)\s+(?:document|certificate|id|passport)\b/i },
+  { term: 'stolen card', pattern: /\bstolen\s+(?:card|atm|credit\s+card|debit\s+card)\b/i },
+  { term: 'hacked account', pattern: /\bhacked\s+(?:account|wallet|bank)\b/i },
+]
+
+function findBannedKeyword(name: unknown, description: unknown) {
+  const combined = `${String(name || '')} ${String(description || '')}`
+  return BANNED_KEYWORD_PATTERNS.find(({ pattern }) => pattern.test(combined))?.term || null
+}
 
 function normalizeLearnedKey(input: string) {
   return input
@@ -238,6 +307,28 @@ export async function POST(request: NextRequest) {
     if (!name || !price || !category || !quantity) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
+
+    const matchedBannedTerm = findBannedKeyword(name, description)
+    if (matchedBannedTerm) {
+      console.warn('Prohibited listing keyword rejected', {
+        userId: user.id,
+        matchedTerm: matchedBannedTerm,
+      })
+      return NextResponse.json({ error: PROHIBITED_LISTING_MESSAGE }, { status: 422 })
+    }
+
+    const textModeration = await moderateListing(String(name || ''), String(description || ''))
+    if (!textModeration.allowed) {
+      console.warn('AI listing moderation rejected', {
+        userId: user.id,
+        reason: textModeration.reason,
+      })
+      return NextResponse.json(
+        { error: textModeration.reason || PROHIBITED_LISTING_MESSAGE },
+        { status: 422 }
+      )
+    }
+
     if (productDeliveryAgreement !== true) {
       return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }

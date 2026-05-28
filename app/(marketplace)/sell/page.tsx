@@ -201,6 +201,9 @@ function ConfirmListingModal({
               <p className="text-xs text-red-600 leading-relaxed">
                 The product <strong>must be physically with you right now.</strong> Listing items you plan to source after sale is <strong>strictly prohibited</strong> and will result in account suspension.
               </p>
+              <p className="text-xs text-red-600 leading-relaxed mt-2">
+                Illegal, explicit, counterfeit, weapon, trafficking, or controlled-drug listings are not allowed. Uploading bad products can lead to immediate removal and indefinite account suspension.
+              </p>
             </div>
           </div>
           <label className="flex items-start gap-2.5 cursor-pointer">
@@ -940,6 +943,16 @@ export default function SellPage() {
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4">
+
+        <div className="fade-up bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-start gap-3">
+          <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-black text-red-700">Prohibited listings are removed</p>
+            <p className="text-xs text-red-600 leading-relaxed mt-1">
+              Do not upload illegal drugs, explicit content, weapons, counterfeit goods, trafficking content, or anything illegal. Violations can result in indefinite account suspension.
+            </p>
+          </div>
+        </div>
 
         {/* Price preview banner */}
         {formData.price && parseFloat(formData.price) > 0 && (

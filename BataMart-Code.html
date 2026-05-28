@@ -14,6 +14,8 @@ import InstallPrompt from '@/components/InstallPrompt'
 import IosInstallPrompt from '@/components/IosInstallPrompt'
 import { IOSAppShell } from '@/components/layout/IOSAppShell'
 import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
+import { AppNavigationCache } from '@/components/layout/AppNavigationCache'
+import { GlobalPullToRefresh } from '@/components/layout/GlobalPullToRefresh'
 
 const inter = Inter({ subsets: ['latin'] })
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
@@ -257,6 +259,8 @@ export default function RootLayout({
       &lt;body className={inter.className}&gt;
         &lt;ThemeProvider&gt;
           &lt;RoutePrefetcher /&gt;
+          &lt;AppNavigationCache /&gt;
+          &lt;GlobalPullToRefresh /&gt;
           &lt;PWARegister /&gt;
           &lt;SplashScreen /&gt;
           &lt;InstallPrompt /&gt;
@@ -1023,7 +1027,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Package, AlertTriangle,
-  FileText, DollarSign, BarChart3, LogOut, Menu, X, MessageSquare, Navigation,
+  FileText, DollarSign, BarChart3, LogOut, Menu, X, MessageSquare, Navigation, Database,
 } from 'lucide-react'
 
 const adminRoutes = [
@@ -1035,6 +1039,7 @@ const adminRoutes = [
   { label: 'Oversized', icon: AlertTriangle,   href: '/admin/oversized', color: 'text-amber-400' },
   { label: 'Revenue',   icon: DollarSign,      href: '/admin/revenue',   color: 'text-emerald-400' },
   { label: 'Analytics', icon: BarChart3,       href: '/admin/analytics', color: 'text-cyan-400' },
+  { label: 'Usage',     icon: Database,        href: '/admin/usage',     color: 'text-indigo-400' },
   { label: 'Support',   icon: MessageSquare,   href: '/admin/support',   color: 'text-pink-400' },
   { label: 'Rider GPS', icon: Navigation,      href: '/admin/rider-tracking', color: 'text-sky-400' },
 ]
@@ -3103,6 +3108,220 @@ export default function AdminSupportPage() {
     &lt;/div&gt;
   )
 }</pre></div>
+<div class='file-block'><div class='file-header'>app/(admin)/admin/usage/page.tsx</div><pre>'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import {
+  AlertTriangle,
+  Bell,
+  Database,
+  HardDrive,
+  Package,
+  RefreshCw,
+  ShoppingBag,
+  Users,
+} from 'lucide-react'
+
+interface UsageData {
+  dbSize: string | null
+  notificationCount: number
+  productCount: number
+  userCount: number
+  orderCount: number
+}
+
+function numberFmt(value: number) {
+  return value.toLocaleString()
+}
+
+function parseSizeToMb(size: string | null) {
+  if (!size) return null
+  const match = size.trim().match(/^([\d.]+)\s*(bytes|kB|MB|GB|TB)$/i)
+  if (!match) return null
+  const value = Number(match[1])
+  const unit = match[2].toLowerCase()
+  if (!Number.isFinite(value)) return null
+  if (unit === 'bytes') return value / 1024 / 1024
+  if (unit === 'kb') return value / 1024
+  if (unit === 'mb') return value
+  if (unit === 'gb') return value * 1024
+  if (unit === 'tb') return value * 1024 * 1024
+  return null
+}
+
+function UsageCard({
+  label,
+  value,
+  sub,
+  icon,
+  accent,
+}: {
+  label: string
+  value: string
+  sub: string
+  icon: React.ReactNode
+  accent: string
+}) {
+  return (
+    &lt;div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-gray-600 transition-colors"&gt;
+      &lt;div className="flex items-start justify-between mb-4"&gt;
+        &lt;div className={`p-3 rounded-xl ${accent}`}&gt;
+          {icon}
+        &lt;/div&gt;
+        &lt;span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full"&gt;Live&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;h3 className="text-gray-400 text-sm font-medium mb-1"&gt;{label}&lt;/h3&gt;
+      &lt;p className="text-3xl font-bold text-white mb-2 font-mono"&gt;{value}&lt;/p&gt;
+      &lt;p className="text-sm text-gray-500"&gt;{sub}&lt;/p&gt;
+    &lt;/div&gt;
+  )
+}
+
+export default function AdminUsagePage() {
+  const [usage, setUsage] = useState&lt;UsageData | null&gt;(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState&lt;Date | null&gt;(null)
+
+  const fetchUsage = async () =&gt; {
+    setLoading(true)
+    setError('')
+    try {
+      const token = localStorage.getItem('adminToken')
+      const res = await fetch('/api/admin/usage', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data?.error || 'Failed to load usage data')
+        setUsage(null)
+        return
+      }
+      setUsage(data)
+      setLastUpdated(new Date())
+    } catch {
+      setError('Failed to load usage data')
+      setUsage(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() =&gt; {
+    fetchUsage()
+  }, [])
+
+  const dbSizeMb = useMemo(() =&gt; parseSizeToMb(usage?.dbSize ?? null), [usage?.dbSize])
+  const dbSizeSub = dbSizeMb === null
+    ? 'Supabase database size estimate'
+    : `${Math.max(0, Math.round((500 - dbSizeMb) * 10) / 10).toLocaleString()} MB before the 500 MB free-tier storage mark`
+
+  return (
+    &lt;div className="space-y-6 pb-10"&gt;
+      &lt;div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"&gt;
+        &lt;div&gt;
+          &lt;h1 className="text-2xl font-bold text-white"&gt;Usage&lt;/h1&gt;
+          &lt;p className="text-sm text-gray-400 mt-0.5"&gt;
+            Database size and table counts for free-tier monitoring
+          &lt;/p&gt;
+        &lt;/div&gt;
+        &lt;button
+          onClick={fetchUsage}
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm font-semibold text-gray-300 hover:text-white hover:border-gray-600 disabled:opacity-60 transition-colors"
+        &gt;
+          &lt;RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /&gt;
+          Refresh
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      {error &amp;&amp; (
+        &lt;div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl p-4"&gt;
+          &lt;AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" /&gt;
+          &lt;div&gt;
+            &lt;p className="text-sm font-bold text-red-200"&gt;Usage data unavailable&lt;/p&gt;
+            &lt;p className="text-sm text-red-300/80 mt-1"&gt;{error}&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
+
+      {loading &amp;&amp; !usage ? (
+        &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"&gt;
+          {Array.from({ length: 5 }).map((_, i) =&gt; (
+            &lt;div key={i} className="bg-gray-800 border border-gray-700 rounded-2xl p-6 animate-pulse"&gt;
+              &lt;div className="h-12 w-12 rounded-xl bg-gray-700 mb-4" /&gt;
+              &lt;div className="h-4 w-24 bg-gray-700 rounded mb-2" /&gt;
+              &lt;div className="h-8 w-20 bg-gray-700 rounded" /&gt;
+            &lt;/div&gt;
+          ))}
+        &lt;/div&gt;
+      ) : usage ? (
+        &lt;&gt;
+          &lt;div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"&gt;
+            &lt;UsageCard
+              label="Database Size"
+              value={usage.dbSize || 'Unknown'}
+              sub={dbSizeSub}
+              icon={&lt;HardDrive className="w-6 h-6 text-indigo-300" /&gt;}
+              accent="bg-indigo-500/10"
+            /&gt;
+            &lt;UsageCard
+              label="Users"
+              value={numberFmt(usage.userCount)}
+              sub="Total accounts in the database"
+              icon={&lt;Users className="w-6 h-6 text-blue-300" /&gt;}
+              accent="bg-blue-500/10"
+            /&gt;
+            &lt;UsageCard
+              label="Products"
+              value={numberFmt(usage.productCount)}
+              sub="Total product records"
+              icon={&lt;Package className="w-6 h-6 text-green-300" /&gt;}
+              accent="bg-green-500/10"
+            /&gt;
+            &lt;UsageCard
+              label="Orders"
+              value={numberFmt(usage.orderCount)}
+              sub="Total order records"
+              icon={&lt;ShoppingBag className="w-6 h-6 text-purple-300" /&gt;}
+              accent="bg-purple-500/10"
+            /&gt;
+            &lt;UsageCard
+              label="Notifications"
+              value={numberFmt(usage.notificationCount)}
+              sub="Rows that can grow quickly over time"
+              icon={&lt;Bell className="w-6 h-6 text-amber-300" /&gt;}
+              accent="bg-amber-500/10"
+            /&gt;
+          &lt;/div&gt;
+
+          &lt;div className="bg-gray-800 border border-gray-700 rounded-2xl p-6"&gt;
+            &lt;div className="flex items-center gap-3 mb-4"&gt;
+              &lt;Database className="w-5 h-5 text-indigo-400" /&gt;
+              &lt;h2 className="text-lg font-bold text-white"&gt;Free-Tier Watchlist&lt;/h2&gt;
+            &lt;/div&gt;
+            &lt;div className="space-y-3 text-sm"&gt;
+              &lt;div className="flex items-center justify-between gap-4 py-3 border-b border-gray-700/60"&gt;
+                &lt;span className="text-gray-400"&gt;Supabase storage&lt;/span&gt;
+                &lt;span className="font-mono text-white"&gt;{usage.dbSize || 'Unknown'}&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div className="flex items-center justify-between gap-4 py-3 border-b border-gray-700/60"&gt;
+                &lt;span className="text-gray-400"&gt;Most likely table to prune first&lt;/span&gt;
+                &lt;span className="font-mono text-white"&gt;Notifications&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div className="flex items-center justify-between gap-4 py-3"&gt;
+                &lt;span className="text-gray-400"&gt;Last refreshed&lt;/span&gt;
+                &lt;span className="font-mono text-white"&gt;{lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}&lt;/span&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/&gt;
+      ) : null}
+    &lt;/div&gt;
+  )
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(admin)/admin/users/page.tsx</div><pre>// app/(admin)/admin/users/page.tsx
 'use client'
 
@@ -6908,6 +7127,7 @@ import {
 import { isSplashPending } from '@/components/SplashScreen'
 
 import { decodeProductData, getCategoryList } from '@/lib/variants'
+import { getClientCache, setClientCache } from '@/lib/client-cache'
 
 // ─────────────────────────────────────────────
 // Pull-to-refresh constants
@@ -7340,6 +7560,7 @@ const TRENDING_SEARCHES  = ['iPhone', 'Sneakers', 'Laptop', 'Jollof Rice', 'Text
 const RECENT_SEARCHES_KEY  = 'BATAMART-recent-searches'
 const RECENTLY_VIEWED_KEY  = 'BATAMART-recently-viewed'
 const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
+const FEED_CACHE_TTL_MS = 90 * 1000
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
@@ -7462,7 +7683,6 @@ function StarRating({ rating }: { rating: number }) {
 function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
   product: any; onClick: () =&gt; void; delay?: number; showSignal?: boolean
 }) {
-  const tags         = parseTags(product.description)
   // Use real discount from market price check (stored in DB), not a fake computed value
   const discount     = (product.isDeal &amp;&amp; product.discountPercent) ? product.discountPercent : 0
   const stockLeft    = getStockLevel(product.id)
@@ -7524,14 +7744,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
         &lt;/p&gt;
         &lt;h3 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm leading-snug flex-1"&gt;{product.name}&lt;/h3&gt;
 
-        {tags.length &gt; 0 &amp;&amp; (
-          &lt;div className="flex flex-wrap gap-1 mt-1"&gt;
-            {tags.slice(0, 3).map((tag: string) =&gt; (
-              &lt;span key={tag} className="px-1.5 py-0.5 bg-indigo-50 text-indigo-500 text-[9px] font-bold rounded-full"&gt;{tag}&lt;/span&gt;
-            ))}
-          &lt;/div&gt;
-        )}
-
         &lt;div className="mt-2"&gt;
           &lt;div className="flex items-baseline gap-1.5 flex-wrap"&gt;
             &lt;span className="text-BATAMART-primary font-black text-sm sm:text-base tracking-tight"&gt;{fmt(product.price)}&lt;/span&gt;
@@ -7541,14 +7753,7 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           &lt;p className="text-[10px] text-gray-500 font-semibold mt-0.5"&gt;50+ bought in past week&lt;/p&gt;
         &lt;/div&gt;
 
-        {product.deliveryEstimate &amp;&amp; (
-          &lt;div className="mt-1.5"&gt;
-            &lt;span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full"&gt;
-              &lt;Clock className="w-2.5 h-2.5" /&gt; {product.deliveryEstimate}
-            &lt;/span&gt;
-          &lt;/div&gt;
-        )}
-        {!product.deliveryEstimate &amp;&amp; deliveryTag &amp;&amp; (
+        {deliveryTag &amp;&amp; (
           &lt;div className="mt-1.5"&gt;
             &lt;span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full"&gt;
               &lt;Truck className="w-2.5 h-2.5" /&gt; {deliveryTag}
@@ -8727,6 +8932,7 @@ export default function MarketplacePage() {
   const [mounted,           setMounted]           = useState(false)
   const [dropdownPos,       setDropdownPos]       = useState({ top: 0, left: 0, width: 0 })
   const [universityShortName, setUniversityShortName] = useState&lt;string&gt;('')
+  const [universityId, setUniversityId] = useState&lt;string&gt;('')
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState&lt;any[]&gt;([])
   const [renderSeed,          setRenderSeed]          = useState(() =&gt; Date.now())
   const [maxPriceFilter,      setMaxPriceFilter]      = useState&lt;number | null&gt;(null)
@@ -8779,14 +8985,20 @@ export default function MarketplacePage() {
       setRecentSearches(normalizeSearchHistory(rawSearches))
     } catch {}
 
-    fetchFeed()
     fetchPeopleLikeYouBought()
     const token = localStorage.getItem('token')
     if (token) {
       fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
         .then(r =&gt; r.json())
-        .then(d =&gt; { if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName) })
-        .catch(() =&gt; {})
+        .then(d =&gt; {
+          const userUniversityId = d.user?.universityId || ''
+          if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName)
+          if (userUniversityId) setUniversityId(userUniversityId)
+          return fetchFeed(userUniversityId)
+        })
+        .catch(() =&gt; fetchFeed())
+    } else {
+      fetchFeed()
     }
   }, [])
 
@@ -8825,8 +9037,10 @@ export default function MarketplacePage() {
 
   // ── Category change ──
   useEffect(() =&gt; {
+    if (!mounted) return
+    if (selectedCategory === 'All' &amp;&amp; !universityId) return
     if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
-  }, [selectedCategory])
+  }, [selectedCategory, mounted, universityId])
 
   // ─────────────────────────────────────────────
   // Pull-to-Refresh — iOS-safe implementation
@@ -9008,11 +9222,24 @@ export default function MarketplacePage() {
     return { categories, keywords }
   }
 
-  const fetchFeed = async () =&gt; {
+  const fetchFeed = async (universityIdOverride?: string, page = 1) =&gt; {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
+      const feedUniversityId = universityIdOverride || universityId || 'unknown'
+      const feedCacheKey = `feed:${feedUniversityId}:${page}`
+      const cached = getClientCache&lt;any&gt;(feedCacheKey)
+      if (cached) {
+        const products = cached.value?.products || []
+        setAllProducts(products)
+        setRenderSeed(Date.now())
+        const cats = Array.from(new Set(
+          products.filter((p: any) =&gt; p.isPersonalised).map((p: any) =&gt; p.category)
+        )) as string[]
+        setInterestCategories(cats.slice(0, 4))
+        setLoading(false)
+      }
       const { categories, keywords } = buildFeedSignals()
       const params = new URLSearchParams()
       if (categories.length) {
@@ -9024,10 +9251,12 @@ export default function MarketplacePage() {
         params.set('keywordSignals', JSON.stringify(keywords))
       }
       params.set('limit', '100')
+      if (feedUniversityId !== 'unknown') params.set('universityId', feedUniversityId)
       const res  = await fetch(`/api/products/feed?${params}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (res.ok) {
         const products = data.products || []
+        setClientCache(feedCacheKey, { products }, FEED_CACHE_TTL_MS)
         setAllProducts(products)
         setRenderSeed(Date.now())
         const cats = Array.from(new Set(
@@ -9173,14 +9402,7 @@ export default function MarketplacePage() {
     return allProducts
       .filter(p =&gt; p.isHot)
       .sort((a, b) =&gt; {
-        const priority = { BOTH: 3, DEAL: 2, VIEWS: 1 }
-        const aPri = priority[a.hotReason as keyof typeof priority] || 0
-        const bPri = priority[b.hotReason as keyof typeof priority] || 0
-        if (bPri !== aPri) return bPri - aPri
-        if (a.hotReason !== 'VIEWS' &amp;&amp; b.hotReason !== 'VIEWS') {
-          return (b.discountPercent || 0) - (a.discountPercent || 0)
-        }
-        return (b.viewCount || 0) - (a.viewCount || 0)
+        return (b.discountPercent || 0) - (a.discountPercent || 0) || (b.viewCount || 0) - (a.viewCount || 0)
       })
   }, [allProducts])
   const trendingProducts = hotDeals.slice(0, 12)
@@ -9222,7 +9444,7 @@ export default function MarketplacePage() {
     if (!q) return recentSearches.slice(0, 6).map(s =&gt; ({ type: 'recent', label: s }))
     const productMatches = allProducts
       .filter(p =&gt; {
-        const tags = parseTags(p.description)
+        const tags = parseTags(p.description || '')
         return p.name.toLowerCase().includes(q) || tags.some((t: string) =&gt; t.toLowerCase().includes(q))
       })
       .slice(0, 5)
@@ -20261,6 +20483,183 @@ export default function GoogleAuthButton({
   )
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>components/layout/AppNavigationCache.tsx</div><pre>'use client'
+
+import { useEffect } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+
+const CACHE_PREFIX = 'batamart:session-fetch:'
+const SCROLL_PREFIX = 'batamart:scroll:'
+
+function isReloadNavigation() {
+  const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+  return nav?.type === 'reload'
+}
+
+function clearSessionFetchCache() {
+  try {
+    for (let i = sessionStorage.length - 1; i &gt;= 0; i -= 1) {
+      const key = sessionStorage.key(i)
+      if (key?.startsWith(CACHE_PREFIX)) sessionStorage.removeItem(key)
+    }
+  } catch {}
+}
+
+function simpleHash(input: string) {
+  let hash = 0
+  for (let i = 0; i &lt; input.length; i += 1) {
+    hash = ((hash &lt;&lt; 5) - hash + input.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
+function headersToObject(headers: Headers) {
+  const out: Record&lt;string, string&gt; = {}
+  headers.forEach((value, key) =&gt; {
+    const lower = key.toLowerCase()
+    if (['content-type', 'cache-control', 'etag', 'last-modified'].includes(lower)) out[key] = value
+  })
+  return out
+}
+
+function shouldCacheRequest(input: RequestInfo | URL, init?: RequestInit) {
+  const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase()
+  if (method !== 'GET') return false
+  if (init?.cache === 'no-store' || init?.cache === 'reload' || init?.cache === 'no-cache') return false
+
+  let url: URL
+  try {
+    url = new URL(input instanceof Request ? input.url : String(input), window.location.origin)
+  } catch {
+    return false
+  }
+
+  if (url.origin !== window.location.origin) return false
+  if (!url.pathname.startsWith('/api/')) return false
+  if (url.pathname.includes('/live-location')) return false
+  if (url.pathname.includes('/payments/')) return false
+  if (url.pathname.includes('/upload')) return false
+  return true
+}
+
+function authPart(init?: RequestInit) {
+  try {
+    const headers = new Headers(init?.headers || {})
+    return headers.get('authorization') || ''
+  } catch {
+    return ''
+  }
+}
+
+function installFetchCache() {
+  if (typeof window === 'undefined') return () =&gt; {}
+  const w = window as typeof window &amp; {
+    __batamartFetchCacheInstalled?: boolean
+    __batamartOriginalFetch?: typeof fetch
+  }
+  if (w.__batamartFetchCacheInstalled) return () =&gt; {}
+
+  const originalFetch = window.fetch.bind(window)
+  w.__batamartOriginalFetch = originalFetch
+  w.__batamartFetchCacheInstalled = true
+
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit) =&gt; {
+    if (!shouldCacheRequest(input, init)) return originalFetch(input, init)
+
+    const url = new URL(input instanceof Request ? input.url : String(input), window.location.origin)
+    const key = `${CACHE_PREFIX}${simpleHash(`${url.href}|${authPart(init)}`)}`
+
+    try {
+      const cached = sessionStorage.getItem(key)
+      if (cached) {
+        const record = JSON.parse(cached) as {
+          body: string
+          status: number
+          statusText: string
+          headers: Record&lt;string, string&gt;
+        }
+        return new Response(record.body, {
+          status: record.status,
+          statusText: record.statusText,
+          headers: record.headers,
+        })
+      }
+    } catch {}
+
+    const response = await originalFetch(input, init)
+    if (response.ok) {
+      try {
+        const clone = response.clone()
+        const body = await clone.text()
+        sessionStorage.setItem(key, JSON.stringify({
+          body,
+          status: response.status,
+          statusText: response.statusText,
+          headers: headersToObject(response.headers),
+        }))
+      } catch {}
+    }
+    return response
+  }
+
+  return () =&gt; {
+    if (w.__batamartOriginalFetch) window.fetch = w.__batamartOriginalFetch
+    w.__batamartFetchCacheInstalled = false
+  }
+}
+
+export function AppNavigationCache() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const routeKey = `${pathname || '/'}?${searchParams.toString()}`
+
+  useEffect(() =&gt; {
+    if (isReloadNavigation()) clearSessionFetchCache()
+    const cleanup = installFetchCache()
+
+    const clearHandler = () =&gt; clearSessionFetchCache()
+    window.addEventListener('batamart:clear-session-cache', clearHandler)
+    return () =&gt; {
+      window.removeEventListener('batamart:clear-session-cache', clearHandler)
+      cleanup()
+    }
+  }, [])
+
+  useEffect(() =&gt; {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+    const key = `${SCROLL_PREFIX}${routeKey}`
+    const container = document.getElementById('ios-scroll-area') || window
+
+    window.requestAnimationFrame(() =&gt; {
+      try {
+        const saved = Number(sessionStorage.getItem(key) || 0)
+        if (!Number.isFinite(saved) || saved &lt;= 0) return
+        if (container === window) window.scrollTo({ top: saved, behavior: 'instant' as ScrollBehavior })
+        else (container as HTMLElement).scrollTop = saved
+      } catch {}
+    })
+
+    const save = () =&gt; {
+      try {
+        const top = container === window ? window.scrollY : (container as HTMLElement).scrollTop
+        sessionStorage.setItem(key, String(top))
+      } catch {}
+    }
+
+    const target = container === window ? window : (container as HTMLElement)
+    target.addEventListener('scroll', save, { passive: true })
+    window.addEventListener('pagehide', save)
+
+    return () =&gt; {
+      save()
+      target.removeEventListener('scroll', save)
+      window.removeEventListener('pagehide', save)
+    }
+  }, [routeKey])
+
+  return null
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>components/layout/AppScrollFix.tsx</div><pre>'use client'
 
 import { useEffect, useState, Suspense } from 'react'
@@ -20297,6 +20696,116 @@ export function AppScrollFix({ children }: { children: React.ReactNode }) {
     &lt;/Suspense&gt;
   )
 }</pre></div>
+<div class='file-block'><div class='file-header'>components/layout/GlobalPullToRefresh.tsx</div><pre>'use client'
+
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { RefreshCw } from 'lucide-react'
+
+const PULL_THRESHOLD = 80
+const PULL_MAX = 110
+const PULL_DEAD_ZONE = 8
+const PULL_RESIST = 0.4
+
+function isMarketplace(pathname: string | null) {
+  return pathname === '/marketplace'
+}
+
+export function GlobalPullToRefresh() {
+  const pathname = usePathname()
+  const [pullDistance, setPullDistance] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+
+  useEffect(() =&gt; {
+    if (isMarketplace(pathname)) return
+
+    let startY = 0
+    let deltaY = 0
+    let active = false
+    let locked = false
+
+    const getScrollTop = () =&gt; {
+      const iosArea = document.getElementById('ios-scroll-area')
+      return iosArea ? iosArea.scrollTop : window.scrollY
+    }
+
+    const onTouchStart = (event: TouchEvent) =&gt; {
+      startY = event.touches[0]?.clientY || 0
+      deltaY = 0
+      active = false
+      locked = false
+    }
+
+    const onTouchMove = (event: TouchEvent) =&gt; {
+      if (getScrollTop() &gt; 0) {
+        startY = 0
+        active = false
+        return
+      }
+
+      const currentY = event.touches[0]?.clientY || 0
+      const delta = currentY - startY
+      if (delta &lt;= 0 || delta &lt; PULL_DEAD_ZONE) return
+
+      if (!locked) {
+        locked = true
+        active = true
+      }
+
+      deltaY = delta
+      setPullDistance(Math.min(delta * PULL_RESIST, PULL_MAX))
+    }
+
+    const onTouchEnd = () =&gt; {
+      if (!active) return
+      const triggered = deltaY * PULL_RESIST &gt;= PULL_THRESHOLD
+
+      active = false
+      locked = false
+      startY = 0
+
+      if (triggered) {
+        setRefreshing(true)
+        setPullDistance(PULL_THRESHOLD)
+        window.dispatchEvent(new Event('batamart:clear-session-cache'))
+        if (navigator.serviceWorker?.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_RUNTIME_CACHE' })
+        }
+        window.setTimeout(() =&gt; window.location.reload(), 120)
+        return
+      }
+
+      setPullDistance(0)
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchmove', onTouchMove, { passive: true })
+    document.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () =&gt; {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [pathname])
+
+  if (isMarketplace(pathname) || pullDistance &lt;= 0) return null
+
+  return (
+    &lt;div
+      className="fixed left-1/2 top-3 z-[9999] -translate-x-1/2 pointer-events-none"
+      style={{ transform: `translate(-50%, ${Math.max(0, pullDistance - 48)}px)` }}
+    &gt;
+      &lt;div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700"&gt;
+        &lt;RefreshCw
+          className={`h-5 w-5 text-BATAMART-primary ${refreshing ? 'animate-spin' : ''}`}
+          style={{ transform: refreshing ? undefined : `rotate(${pullDistance * 2}deg)` }}
+        /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  )
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>components/layout/IOSAppShell.tsx</div><pre>'use client'
 
 import { useEffect, useState, Suspense } from 'react'
@@ -26808,6 +27317,51 @@ export async function GET(req: NextRequest) {
 }
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/support/[id]/route.ts</div><pre>Could not read file.</pre></div>
+<div class='file-block'><div class='file-header'>app/api/admin/usage/route.ts</div><pre>import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
+
+async function verifyAdmin(req: NextRequest) {
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) return null
+  try {
+    const token = authHeader.substring(7)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    if (decoded.role !== 'ADMIN') return null
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const admin = await verifyAdmin(req)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const [dbSizeRows, notificationCount, productCount, userCount, orderCount] = await Promise.all([
+      prisma.$queryRaw&lt;Array&lt;{ size: string }&gt;&gt;`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`,
+      prisma.notification.count(),
+      prisma.product.count(),
+      prisma.user.count(),
+      prisma.order.count(),
+    ])
+
+    return NextResponse.json({
+      dbSize: dbSizeRows[0]?.size ?? null,
+      notificationCount,
+      productCount,
+      userCount,
+      orderCount,
+    })
+  } catch (error) {
+    console.error('Usage endpoint error:', error)
+    return NextResponse.json({ error: 'Failed to fetch usage' }, { status: 500 })
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/users/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/admin/users/route.ts
 import { NextRequest, NextResponse } from 'next/server'
@@ -27077,7 +27631,7 @@ import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, incrementRateLimit, getIpKey } from '@/lib/security/rate-limit'
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
-const LOGIN_MAX_FAILURES = 10
+const LOGIN_MAX_REQUESTS = 10
 
 export async function POST(request: NextRequest) {
   try {
@@ -27089,13 +27643,13 @@ export async function POST(request: NextRequest) {
     const ip = getIpKey(
       request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip')
     )
-    const rateLimitKey = `login-fail:${ip}`
+    const rateLimitKey = `login:${ip}`
 
-    // Check if this IP has too many FAILED attempts
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
       rateLimitKey,
-      LOGIN_MAX_FAILURES,
-      LOGIN_WINDOW_MS
+      LOGIN_MAX_REQUESTS,
+      LOGIN_WINDOW_MS,
+      { requireDistributedInProduction: true }
     )
     if (!allowed) {
       return NextResponse.json(
@@ -27103,6 +27657,7 @@ export async function POST(request: NextRequest) {
         { status: 429, headers: { 'Retry-After': String(retryAfterSecs) } }
       )
     }
+    await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
 
     const body = await request.json()
     const { email, password } = body
@@ -27114,8 +27669,6 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
-      // Count as a failure to prevent email enumeration abuse
-      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
     }
 
@@ -27129,8 +27682,6 @@ export async function POST(request: NextRequest) {
 
     const isValidPassword = await comparePassword(password, user.password)
     if (!isValidPassword) {
-      // Only increment counter on actual wrong password
-      await incrementRateLimit(rateLimitKey, LOGIN_WINDOW_MS)
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
     }
 
@@ -27173,7 +27724,8 @@ export async function POST(request: NextRequest) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/auth/me/route.ts</div><pre>// app/api/auth/me/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth/auth'
@@ -27427,10 +27979,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
-import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
-const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+const RATE_LIMIT_MAX = 3
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
@@ -27455,6 +28007,7 @@ export async function POST(request: NextRequest) {
         }
       )
     }
+    await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
     const { email, isLogin } = body
@@ -27515,9 +28068,29 @@ import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+
+const SIGNUP_WINDOW_MS = 60 * 60 * 1000
+const SIGNUP_MAX_REQUESTS = 5
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const rateLimitKey = `signup:${ip}`
+    const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
+      rateLimitKey,
+      SIGNUP_MAX_REQUESTS,
+      SIGNUP_WINDOW_MS,
+      { requireDistributedInProduction: true },
+    )
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `Too many signup attempts. Please wait ${Math.ceil(retryAfterSecs / 60)} minute(s) and try again.` },
+        { status: 429, headers: { 'Retry-After': String(retryAfterSecs) } },
+      )
+    }
+    await incrementRateLimit(rateLimitKey, SIGNUP_WINDOW_MS)
+
     const body = await request.json()
     const {
       email,
@@ -28081,6 +28654,25 @@ export async function GET(request: NextRequest) {
   }
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>app/api/cron/hot-status/route.ts</div><pre>import { NextRequest, NextResponse } from 'next/server'
+import { backfillHotStatusesForActiveUniversities } from '@/lib/hot-status-backfill'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(req: NextRequest) {
+  if (req.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const result = await backfillHotStatusesForActiveUniversities()
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('Hot status cron error:', error)
+    return NextResponse.json({ error: 'Failed to backfill hot statuses' }, { status: 500 })
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/disputes/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/disputes/route.ts - WITH NOTIFICATIONS
 import { NextRequest, NextResponse } from 'next/server'
@@ -28278,6 +28870,22 @@ import { getUserFromRequest } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 
+const NOTIFICATION_CACHE_TTL_MS = 20 * 1000
+const notificationCache = new Map&lt;string, {
+  timestamp: number
+  payload: { notifications: unknown[]; unreadCount: number }
+}&gt;()
+
+function cacheKey(userId: string, unreadOnly: boolean, limit: number) {
+  return `${userId}:${unreadOnly ? 'unread' : 'all'}:${limit}`
+}
+
+function clearUserNotificationCache(userId: string) {
+  for (const key of notificationCache.keys()) {
+    if (key.startsWith(`${userId}:`)) notificationCache.delete(key)
+  }
+}
+
 // GET - Fetch user's notifications
 export async function GET(request: NextRequest) {
   try {
@@ -28289,27 +28897,36 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
     const limit = parseInt(searchParams.get('limit') || '50')
+    const key = cacheKey(user.id, unreadOnly, limit)
+    const cached = notificationCache.get(key)
+    if (cached &amp;&amp; Date.now() - cached.timestamp &lt; NOTIFICATION_CACHE_TTL_MS) {
+      return NextResponse.json(cached.payload)
+    }
 
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: user.id,
-        ...(unreadOnly &amp;&amp; { isRead: false })
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit
-    })
+    const [notifications, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId: user.id,
+          ...(unreadOnly &amp;&amp; { isRead: false })
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      }),
+      prisma.notification.count({
+        where: {
+          userId: user.id,
+          isRead: false
+        }
+      })
+    ])
 
-    const unreadCount = await prisma.notification.count({
-      where: {
-        userId: user.id,
-        isRead: false
-      }
-    })
-
-    return NextResponse.json({
+    const payload = {
       notifications,
       unreadCount
-    })
+    }
+    notificationCache.set(key, { timestamp: Date.now(), payload })
+
+    return NextResponse.json(payload)
   } catch (error) {
     console.error('Fetch notifications error:', error)
     return NextResponse.json(
@@ -28341,6 +28958,7 @@ export async function PATCH(request: NextRequest) {
           readAt: new Date()
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -28360,6 +28978,7 @@ export async function PATCH(request: NextRequest) {
           readAt: new Date()
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -28396,6 +29015,7 @@ export async function DELETE(request: NextRequest) {
       await prisma.notification.deleteMany({
         where: { userId: user.id }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -28410,6 +29030,7 @@ export async function DELETE(request: NextRequest) {
           userId: user.id // Security check
         }
       })
+      clearUserNotificationCache(user.id)
 
       return NextResponse.json({
         success: true,
@@ -28428,7 +29049,8 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/orders/route.ts</div><pre>// app/api/orders/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -30478,7 +31100,7 @@ export async function GET(request: NextRequest) {
 }
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/products/route.ts</div><pre>// app/api/products/route.ts
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -30927,12 +31549,12 @@ export async function POST(request: NextRequest) {
   }
 }
 </pre></div>
-<div class='file-block'><div class='file-header'>app/api/products/feed/route.ts</div><pre>export const dynamic = 'force-dynamic'
+<div class='file-block'><div class='file-header'>app/api/products/feed/route.ts</div><pre>export const revalidate = 60
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
-import { updateHotStatus } from '@/lib/marketPrice/engine'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 import {
   computeFeedScore,
   decayWeight,
@@ -30942,37 +31564,7 @@ import {
 } from '@/lib/feed-ranking'
 import { keywordMatchScore, normalizeText } from '@/lib/search-utils'
 
-const HOT_BACKFILL_COOLDOWN_MS = 10 * 60 * 1000
-const HOT_BACKFILL_BATCH = 120
-const hotBackfillStateByUniversity = new Map&lt;string, number&gt;()
-
 type ActivitySignal = { value: string; timestamp?: number }
-
-function scheduleBackground(task: () =&gt; void) {
-  if (typeof setImmediate === 'function') {
-    setImmediate(task)
-    return
-  }
-  setTimeout(task, 0)
-}
-
-async function backfillExistingHotStatuses(universityId: string): Promise&lt;void&gt; {
-  const candidates = await prisma.product.findMany({
-    where: {
-      universityId,
-      isActive: true,
-      isDeleted: false,
-      quantity: { gt: 0 },
-    },
-    select: { id: true },
-    orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
-    take: HOT_BACKFILL_BATCH,
-  })
-
-  for (const product of candidates) {
-    await updateHotStatus(product.id).catch(() =&gt; {})
-  }
-}
 
 function parseList(searchParams: URLSearchParams, primaryKey: string, fallbackKey: string): string[] {
   const raw = searchParams.get(primaryKey) || searchParams.get(fallbackKey) || ''
@@ -31045,18 +31637,24 @@ function applyDiversity&lt;T extends { sellerId: string; categoryKey?: string | 
 
 export async function GET(request: NextRequest) {
   try {
+    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const rate = await checkRateLimitDistributed(
+      `products:feed:${ip}`,
+      60,
+      60 * 1000,
+      { requireDistributedInProduction: true },
+    )
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: 'Too many feed requests. Please wait.' },
+        { status: 429, headers: { 'Retry-After': String(rate.retryAfterSecs) } },
+      )
+    }
+    await incrementRateLimit(`products:feed:${ip}`, 60 * 1000)
+
     const user = await getUserFromRequest(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (!user.universityId) return NextResponse.json({ error: 'No university on account' }, { status: 403 })
-
-    const lastBackfillAt = hotBackfillStateByUniversity.get(user.universityId) || 0
-    const nowTs = Date.now()
-    if (nowTs - lastBackfillAt &gt; HOT_BACKFILL_COOLDOWN_MS) {
-      hotBackfillStateByUniversity.set(user.universityId, nowTs)
-      scheduleBackground(() =&gt; {
-        backfillExistingHotStatuses(user.universityId as string).catch(() =&gt; {})
-      })
-    }
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(50, Math.min(100, Number(searchParams.get('limit') || 100)))
@@ -31080,7 +31678,6 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        description: true,
         price: true,
         basePrice: true,
         category: true,
@@ -31092,7 +31689,6 @@ export async function GET(request: NextRequest) {
         viewCount: true,
         createdAt: true,
         isHot: true,
-        hotReason: true,
         isDeal: true,
         discountPercent: true,
         marketPrice: true,
@@ -31139,7 +31735,7 @@ export async function GET(request: NextRequest) {
       const tier = sellerTierScore(product.seller?.trustLevel)
       const categoryToken = normalizeText(product.categoryKey || product.category || '')
       const haystack = normalizeText(
-        [product.name, product.category, product.subcategory || '', product.description || ''].join(' '),
+        [product.name, product.category, product.subcategory || ''].join(' '),
       )
 
       let categoryMatch = 0
@@ -31185,7 +31781,6 @@ export async function GET(request: NextRequest) {
         isPersonalised: !usedFallback &amp;&amp; score &gt;= 0.45,
         isNew: (now - new Date(product.createdAt).getTime()) / 86400000 &lt;= 7,
         isHot: product.isHot ?? false,
-        hotReason: product.hotReason ?? null,
         isDeal: product.isDeal ?? false,
         discountPercent: product.discountPercent ?? null,
         marketPrice: product.marketPrice ?? null,
@@ -31241,7 +31836,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to load feed' }, { status: 500 })
   }
 }
-
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/products/my-products/route.ts</div><pre>// app/api/products/my-products/route.ts
 
@@ -36040,6 +36634,55 @@ export function computeFeedScore(context: {
 }
 
 </pre></div>
+<div class='file-block'><div class='file-header'>lib/hot-status-backfill.ts</div><pre>import { prisma } from '@/lib/prisma'
+import { updateHotStatus } from '@/lib/marketPrice/engine'
+
+const HOT_BACKFILL_BATCH = 120
+
+export async function backfillExistingHotStatuses(universityId: string): Promise&lt;number&gt; {
+  const candidates = await prisma.product.findMany({
+    where: {
+      universityId,
+      isActive: true,
+      isDeleted: false,
+      quantity: { gt: 0 },
+    },
+    select: { id: true },
+    orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
+    take: HOT_BACKFILL_BATCH,
+  })
+
+  let updated = 0
+  for (const product of candidates) {
+    try {
+      await updateHotStatus(product.id)
+      updated += 1
+    } catch {}
+  }
+
+  return updated
+}
+
+export async function backfillHotStatusesForActiveUniversities(): Promise&lt;{
+  updated: number
+  universityIds: string[]
+}&gt; {
+  const universities = await prisma.university.findMany({
+    where: { isActive: true },
+    select: { id: true },
+  })
+
+  let updated = 0
+  for (const university of universities) {
+    updated += await backfillExistingHotStatuses(university.id)
+  }
+
+  return {
+    updated,
+    universityIds: universities.map((university) =&gt; university.id),
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/notification.ts</div><pre>// lib/notification.ts
 import { prisma } from '@/lib/prisma'
 import { NotificationType } from '@prisma/client'
@@ -36710,17 +37353,26 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
 <div class='file-block'><div class='file-header'>lib/prisma.ts</div><pre>import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
+const pooledDatabaseUrl = process.env.POOLED_DATABASE_URL || process.env.DATABASE_URL
 
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    ...(pooledDatabaseUrl
+      ? {
+          datasources: {
+            db: { url: pooledDatabaseUrl },
+          },
+        }
+      : {}),
   })
 
 // ✅ Cache in ALL environments, not just development
 globalForPrisma.prisma = prisma
 
-export default prisma</pre></div>
+export default prisma
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/product-parser.ts</div><pre>import { prisma } from '@/lib/prisma'
 
 type Parsed = Record&lt;string, string&gt;
@@ -39782,7 +40434,7 @@ run()
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  url       = env("POOLED_DATABASE_URL")
   directUrl = env("DIRECT_URL")
   schemas   = ["public"]
 }
@@ -39974,6 +40626,8 @@ model Product {
   @@index([isHot])
   @@index([conditionType])
   @@index([nameKey, conditionType, hasChangedParts, variantKey])
+  @@index([universityId, isActive, isDeleted, quantity])
+  @@index([isHot, universityId])
   @@schema("public")
 }
 
@@ -40171,6 +40825,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([orderedAt])
+  @@index([buyerId, status])
   @@index([sellerId, status])
   @@index([riderId, status])
   @@schema("public")
@@ -40427,6 +41082,7 @@ model Notification {
   @@index([isRead])
   @@index([createdAt])
   @@index([type])
+  @@index([userId, isRead, createdAt])
   @@schema("public")
 }
 
@@ -41696,7 +42352,115 @@ body {
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/products/feed",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=120, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/products",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/products/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/api/universities",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=3600, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/api/category-attributes",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=3600"
+        }
+      ]
+    },
+    {
+      "source": "/api/auth/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/payments/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/orders",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/orders/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/wallet",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/wallet/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/admin",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/admin/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -41722,8 +42486,15 @@ body {
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/hot-status",
+      "schedule": "*/15 * * * *"
+    }
   ]
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>public/manifest.json</div><pre>{
   "name": "BATAMART",
   "short_name": "BataMart",

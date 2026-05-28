@@ -10,10 +10,11 @@ import {
   MessageCircle, ThumbsUp, Camera, Tag, ArrowRight, Flame,
   BadgeCheck, Info, RefreshCw, ChevronDown, ChevronUp,
   StarHalf, Users, TrendingUp, Sparkles, Loader2,
-  CheckCircle2,
+  CheckCircle2, Flag, X,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/cart-store'
 import { decodeProductData } from '@/lib/variants'
+import { useToast } from '@/components/ui/Toast'
 
 // ─────────────────────────────────────────────────────────
 // Types
@@ -357,6 +358,11 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
   const [cartMsg, setCartMsg] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
+  const [reportError, setReportError] = useState('')
   const [activeTab, setActiveTab] = useState<'desc' | 'reviews'>('desc')
   const [descExpanded, setDescExpanded] = useState(false)
 
@@ -399,6 +405,7 @@ export default function ProductDetailPage() {
   const [sessionId, setSessionId] = useState('')
 
   const { addItem, items } = useCartStore()
+  const toast = useToast()
   const mainRef = useRef<HTMLDivElement>(null)
   const buyBoxRef = useRef<HTMLDivElement>(null)
   const relatedScrollRef = useRef<HTMLDivElement>(null)
@@ -759,6 +766,41 @@ export default function ProductDetailPage() {
     router.push('/checkout')
   }
 
+  const handleReportListing = async () => {
+    if (!product || reporting || reported) return
+    setReporting(true)
+    setReportError('')
+    try {
+      const token = localStorage.getItem('token') || ''
+      const response = await fetch(`/api/products/${product.id}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason: reportReason }),
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (response.ok) {
+        setReported(true)
+        setShowReportModal(false)
+        setReportReason('')
+        toast.success('Thank you, this listing has been reported.')
+        return
+      }
+
+      if (response.status === 409) {
+        setReported(true)
+      }
+      setReportError(data.error || 'Failed to report listing')
+    } catch {
+      setReportError('Network error. Please try again.')
+    } finally {
+      setReporting(false)
+    }
+  }
+
   const navigateRelated = (id: string) => router.push(`/product/${id}`)
   const navigateRelatedTracked = (id: string) => {
     trackSessionEvent('click', { productId: id, meta: { from: 'product-related' } })
@@ -799,6 +841,55 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-[#f7f8fa]" ref={mainRef}>
       <style>{PAGE_CSS}</style>
+
+      {showReportModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            aria-label="Close report dialog"
+            onClick={() => setShowReportModal(false)}
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-base font-black text-gray-900">Report listing</h2>
+                <p className="text-xs text-gray-500 mt-1">Tell the moderation team what looks wrong.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReportModal(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value.slice(0, 500))}
+              className="w-full min-h-28 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
+              placeholder="Optional reason"
+              maxLength={500}
+            />
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-xs text-gray-400">{reportReason.length}/500</p>
+              {reportError && <p className="text-xs font-semibold text-red-600 text-right">{reportError}</p>}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleReportListing}
+              disabled={reporting}
+              className="mt-4 w-full rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 text-sm font-bold flex items-center justify-center gap-2"
+            >
+              {reporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+              Submit Report
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Sticky bottom bar (mobile only) ──────────────── */}
       {!isApp && <div
@@ -1206,6 +1297,16 @@ export default function ProductDetailPage() {
                 {cartMsg}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => setShowReportModal(true)}
+              disabled={reported}
+              className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-red-600 disabled:text-emerald-600 disabled:cursor-default"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              {reported ? 'Listing reported' : 'Report listing'}
+            </button>
 
             {/* Delivery info */}
             <div className="bg-white rounded-2xl p-3 space-y-2 ring-1 ring-gray-100">
