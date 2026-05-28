@@ -15,9 +15,17 @@ function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {
     return data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff
   }
   if (mimeType === 'image/png') {
-    return data.length >= 8 &&
-      data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4e && data[3] === 0x47 &&
-      data[4] === 0x0d && data[5] === 0x0a && data[6] === 0x1a && data[7] === 0x0a
+    return (
+      data.length >= 8 &&
+      data[0] === 0x89 &&
+      data[1] === 0x50 &&
+      data[2] === 0x4e &&
+      data[3] === 0x47 &&
+      data[4] === 0x0d &&
+      data[5] === 0x0a &&
+      data[6] === 0x1a &&
+      data[7] === 0x0a
+    )
   }
   if (mimeType === 'image/webp') {
     if (data.length < 12) return false
@@ -28,7 +36,10 @@ function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {
   return false
 }
 
-function signCloudinaryParams(params: Record<string, string | number>, apiSecret: string) {
+function signCloudinaryParams(
+  params: Record<string, string | number>,
+  apiSecret: string
+): string {
   const signatureBase = Object.entries(params)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
@@ -47,12 +58,14 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromRequest(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const ip = getIpKey(
+      request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip')
+    )
     const limit = await checkRateLimitDistributed(
       `upload:${user.id}:${ip}`,
       20,
       15 * 60 * 1000,
-      { requireDistributedInProduction: true },
+      { requireDistributedInProduction: true }
     )
     if (!limit.allowed) {
       return NextResponse.json(
@@ -107,6 +120,8 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Math.round(Date.now() / 1000)
     const folder = `BATAMART-products/${user.id}`
+
+    // ── Cloudinary signed upload (no moderation add-on required) ──
     const signature = signCloudinaryParams({ folder, timestamp }, apiSecret)
 
     const formData = new FormData()
@@ -115,14 +130,17 @@ export async function POST(request: NextRequest) {
     formData.append('timestamp', timestamp.toString())
     formData.append('signature', signature)
     formData.append('folder', folder)
+    // NOTE: 'moderation: aws_rek' intentionally excluded until the
+    // AWS Rekognition add-on is enabled in the Cloudinary dashboard.
 
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      { method: 'POST', body: formData }
+    )
     const data = await response.json()
 
     if (!response.ok || typeof data?.secure_url !== 'string') {
+      console.error('Cloudinary upload failed:', data)
       return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
     }
 
