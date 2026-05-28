@@ -37,3 +37,4 @@ next-env.d.ts
 # Only ignore local database files
 /prisma/*.db
 /prisma/*.db-journal   
+.vercel

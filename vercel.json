@@ -171,9 +171,9 @@
     }
   ],
   "crons": [
-    {
-      "path": "/api/cron/hot-status",
-      "schedule": "*/15 * * * *"
-    }
-  ]
+  {
+    "path": "/api/some-job",
+    "schedule": "0 0 * * *"
+  }
+]
 }
