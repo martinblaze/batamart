@@ -401,8 +401,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
 
+    const MAX_PRICE = 10_000_000 // ₦10,000,000 limit
+
     if (typeof price !== 'number' || price <= 0) {
       return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
+    }
+
+    if (price > MAX_PRICE) {
+      return NextResponse.json(
+        { error: `Price exceeds maximum limit of ₦${MAX_PRICE.toLocaleString()}` },
+        { status: 400 }
+      )
     }
 
     if (typeof quantity !== 'number' || quantity < 1) {
@@ -418,8 +427,19 @@ export async function POST(request: NextRequest) {
             sku: v?.sku ? String(v.sku) : null,
             imageUrl: v?.imageUrl ? String(v.imageUrl) : null,
           }))
-          .filter((v: any) => v.combination && Number.isFinite(v.price) && v.price > 0 && Number.isFinite(v.stock) && v.stock >= 0)
+          .filter((v: any) => v.combination && Number.isFinite(v.price) && v.price > 0 && v.price <= MAX_PRICE && Number.isFinite(v.stock) && v.stock >= 0)
       : []
+
+    // Validate that no variants exceed price limit
+    if (Array.isArray(variants) && variants.length > 0) {
+      const variantsExceedingLimit = variants.filter((v: any) => Number(v?.price) > MAX_PRICE)
+      if (variantsExceedingLimit.length > 0) {
+        return NextResponse.json(
+          { error: `Some variants exceed maximum price limit of ₦${MAX_PRICE.toLocaleString()}` },
+          { status: 400 }
+        )
+      }
+    }
 
     const hasStructuredVariants = normalizedVariants.length > 0
     const normalizedAttributes = Array.isArray(attributes)

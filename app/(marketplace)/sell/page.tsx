@@ -790,8 +790,10 @@ export default function SellPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const MAX_PRICE = 10_000_000
     if (!formData.name.trim()) { setError('Product name is required'); return }
     if (!formData.price || parseFloat(formData.price) <= 0) { setError('Enter a valid price'); return }
+    if (parseFloat(formData.price) > MAX_PRICE) { setError(`Price cannot exceed ₦${MAX_PRICE.toLocaleString()}`); return }
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length < 1) { setError('Please add at least 1 product image'); return }
@@ -817,6 +819,7 @@ export default function SellPage() {
         const rowPrice = Number(row?.price || formData.price)
         const rowStock = Number(row?.stock || formData.quantity || 0)
         if (!Number.isFinite(rowPrice) || rowPrice <= 0) { setError('Each variant must have a valid price'); return }
+        if (rowPrice > MAX_PRICE) { setError(`Variant price cannot exceed ₦${MAX_PRICE.toLocaleString()}`); return }
         if (!Number.isFinite(rowStock) || rowStock < 0) { setError('Each variant must have valid stock'); return }
       }
     }
@@ -1004,15 +1007,13 @@ export default function SellPage() {
                   type="number"
                   value={formData.price}
                   onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  required min="0" step="0.01"
+                  required min="0" max="10000000" step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="50000"
                 />
-                {hasStructuredVariants && (
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    Variant row prices are used at checkout. This is only fallback/base.
-                  </p>
-                )}
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Maximum ₦10,000,000{hasStructuredVariants && ' (variant rows use their own prices)'}
+                </p>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Qty in Stock *</label>
