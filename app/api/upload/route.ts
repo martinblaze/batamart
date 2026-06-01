@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { moderateImage } from '@/lib/moderation/moderateImage'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_SIZE_MB = 5
@@ -108,6 +109,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'File content does not match declared image type.' },
         { status: 400 }
+      )
+    }
+
+    // ── Image Content Moderation (FREE: Google Cloud Vision API) ──
+    console.log('🔍 Checking image content for inappropriate material...')
+    const imageModeration = await moderateImage(image)
+    if (!imageModeration.allowed) {
+      console.warn('🚫 Image rejected by content moderation:', {
+        userId: user.id,
+        reason: imageModeration.reason,
+      })
+      return NextResponse.json(
+        {
+          error:
+            imageModeration.reason ||
+            'Your image was rejected. It contains inappropriate content (nudity, weapons, violence, etc.). Please upload a different image.',
+        },
+        { status: 422 }
       )
     }
 
