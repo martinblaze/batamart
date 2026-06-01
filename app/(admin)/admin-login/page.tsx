@@ -28,13 +28,15 @@ export default function AdminLoginPage() {
 
       if (response.ok) {
         // Save token as secure cookie (works with middleware) instead of localStorage
-        document.cookie = `adminToken=${data.token}; path=/; max-age=86400; SameSite=Strict`
+        document.cookie = `adminToken=${data.token}; path=/; max-age=86400; SameSite=Lax`
 
         // Also keep in localStorage as fallback for API calls
         localStorage.setItem('adminToken', data.token)
 
         // Full page reload so cookie is set before middleware checks it
-        window.location.href = '/admin'
+        setTimeout(() => {
+          window.location.href = '/admin'
+        }, 100)
       } else {
         setError(data.error || 'Invalid credentials')
       }

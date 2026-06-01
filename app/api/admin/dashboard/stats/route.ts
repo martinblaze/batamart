@@ -20,8 +20,12 @@ async function verifyAdmin(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
   if (!admin) {
+    console.error('Admin verification failed for request to /api/admin/dashboard/stats')
+    console.error('Authorization header:', req.headers.get('authorization')?.slice(0, 20) + '...')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  console.log(`Admin dashboard access: ${admin.userId}`)
 
   try {
     const { searchParams } = new URL(req.url)

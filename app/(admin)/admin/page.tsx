@@ -64,7 +64,25 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async (universityId: string) => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('adminToken')
+      // Get token from localStorage with fallback to cookie parsing
+      let token = localStorage.getItem('adminToken')
+      
+      if (!token) {
+        // Try to get from cookie as fallback
+        const cookies = document.cookie.split(';')
+        const adminCookie = cookies.find(c => c.trim().startsWith('adminToken='))
+        if (adminCookie) {
+          token = adminCookie.split('=')[1]
+          localStorage.setItem('adminToken', token)
+        }
+      }
+
+      if (!token) {
+        console.error('No admin token found. Redirecting to login...')
+        window.location.href = '/admin-login'
+        return
+      }
+
       const qs = universityId !== 'all' ? `?universityId=${universityId}` : ''
 
       const [statsRes, activityRes] = await Promise.all([
@@ -80,7 +98,13 @@ export default function AdminDashboardPage() {
         const data = await statsRes.json()
         setStats(data.stats)
         if (data.universities?.length) setUniversities(data.universities)
+      } else if (statsRes.status === 401 || statsRes.status === 403) {
+        console.error('Token validation failed. Redirecting to login...')
+        localStorage.removeItem('adminToken')
+        window.location.href = '/admin-login'
+        return
       }
+
       if (activityRes.ok) {
         const data = await activityRes.json()
         setRecentActivity(data.activity || [])
