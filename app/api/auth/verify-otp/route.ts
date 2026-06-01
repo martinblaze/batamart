@@ -13,7 +13,7 @@ import jwt from 'jsonwebtoken'
 // counter survives across cold starts.
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
-const RATE_LIMIT_MAX       = 10
+const RATE_LIMIT_MAX       = 15
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 
 function checkRateLimit(key: string): { allowed: boolean; retryAfterSecs: number } {

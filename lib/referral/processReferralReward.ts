@@ -67,15 +67,24 @@ export async function processReferralReward(
 
   const buyer = await tx.user.findUnique({
     where: { id: buyerId },
-    select: { referredById: true },
+    select: { referredById: true, email: true },
   })
   if (!buyer?.referredById) return
 
+  // Safety check: buyer cannot be their own referrer
+  if (buyer.referredById === buyerId) {
+    console.warn(`[FRAUD] Buyer ${buyerId} (${buyer.email}) has referredById pointing to themselves!`)
+    return
+  }
+
   const referrer = await tx.user.findUnique({
     where: { id: buyer.referredById },
-    select: { id: true, availableBalance: true },
+    select: { id: true, availableBalance: true, email: true },
   })
   if (!referrer) return
+
+  // Log referral reward processing for audit trail
+  console.log(`[REFERRAL] Processing reward: Buyer ${buyer.email} → Referrer ${referrer.email}`)
 
   const rewardsInWindow = await tx.referralReward.aggregate({
     where: {

@@ -153,6 +153,9 @@ export async function POST(request: NextRequest) {
           })
         }
 
+        // Log referral reward processing with buyer info for audit trail
+        console.log(`[CONFIRM-DELIVERY] Order ${order.orderNumber} - Buyer ID: ${order.buyerId}`)
+        
         await processReferralReward(tx, {
           orderId,
           orderNumber: order.orderNumber,
