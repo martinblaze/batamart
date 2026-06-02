@@ -792,6 +792,7 @@ export default function SellPage() {
     e.preventDefault()
     if (!formData.name.trim()) { setError('Product name is required'); return }
     if (!formData.price || parseFloat(formData.price) <= 0) { setError('Enter a valid price'); return }
+    if (parseFloat(formData.price) > 10000000) { setError('Price cannot exceed ₦10,000,000'); return }
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length < 1) { setError('Please add at least 1 product image'); return }
@@ -991,6 +992,7 @@ export default function SellPage() {
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 required
+                maxLength={200}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder='e.g. "iPhone 13 Pro Max 256GB"'
               />
@@ -1004,7 +1006,7 @@ export default function SellPage() {
                   type="number"
                   value={formData.price}
                   onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  required min="0" step="0.01"
+                  required min="0" max="10000000" step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="50000"
                 />
@@ -1349,38 +1351,20 @@ export default function SellPage() {
             title="Product Tags"
             subtitle="Auto-generated · helps buyers find your product"
           />
-          <div
-            className="min-h-[56px] w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl focus-within:border-indigo-400 focus-within:bg-white transition-all cursor-text flex flex-wrap gap-2 items-center mb-3"
-            onClick={() => tagInputRef.current?.focus()}
-          >
-            {tags.map((tag, i) => (
-              <span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
-                {tag}
-                <button type="button" onClick={e => { e.stopPropagation(); removeTag(i) }} className="hover:text-red-500 transition-colors ml-0.5">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-            <div className="flex items-center gap-2 flex-1 min-w-[140px]">
-              <input
-                ref={tagInputRef}
-                type="text"
-                value={tagInput}
-                onChange={e => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                placeholder={tags.length === 0 ? 'e.g. New, 128GB, Black, XL…' : 'Add more…'}
-                className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400"
-              />
-              {tagInput.trim() && (
-                <button type="button" onClick={() => addTag(tagInput)}
-                  className="flex items-center gap-1 px-3 py-1 text-white text-xs font-black rounded-full flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)' }}>
-                  <Plus className="w-3 h-3" /> Add
-                </button>
-              )}
-            </div>
+          <div className="p-3 bg-gray-50 border-2 border-gray-100 rounded-xl">
+            {tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2 items-center">
+                {tags.map((tag, i) => (
+                  <span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic">Tags will be auto-generated from your category, subcategory, and variants</p>
+            )}
           </div>
-          {tags.length > 0 && <p className="text-xs text-gray-400">{tags.length} tag{tags.length !== 1 ? 's' : ''} added</p>}
+          {tags.length > 0 && <p className="text-xs text-gray-400 mt-2">{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated</p>}
         </div>
 
         {/* ── STEP 7: Location ── */}
@@ -1398,6 +1382,7 @@ export default function SellPage() {
                 value={formData.hostelName}
                 onChange={e => setFormData({ ...formData, hostelName: e.target.value })}
                 required
+                maxLength={100}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Python Hall, Aroma Lodge, Block C"
               />
@@ -1409,6 +1394,7 @@ export default function SellPage() {
                 value={formData.roomNumber}
                 onChange={e => setFormData({ ...formData, roomNumber: e.target.value })}
                 required
+                maxLength={50}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Room 12, Block A"
               />

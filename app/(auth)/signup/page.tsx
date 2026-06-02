@@ -131,8 +131,19 @@ function SignupForm() {
     return ''
   }
 
+  const validateEmailDomain = (emailAddr: string) => {
+    const domain = emailAddr.split('@')[1]?.toLowerCase() || ''
+    const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'protonmail.com']
+    if (!allowedDomains.includes(domain)) {
+      return 'Please use a legitimate email (@gmail, @outlook, @yahoo, @hotmail, @protonmail)'
+    }
+    return ''
+  }
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
+    const emailDomainError = validateEmailDomain(email)
+    if (emailDomainError) { setError(emailDomainError); return }
     const phoneError = validatePhone(phone)
     if (phoneError) { setError(phoneError); return }
     setLoading(true)

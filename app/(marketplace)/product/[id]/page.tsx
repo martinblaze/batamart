@@ -843,50 +843,80 @@ export default function ProductDetailPage() {
       <style>{PAGE_CSS}</style>
 
       {showReportModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            aria-label="Close report dialog"
-            onClick={() => setShowReportModal(false)}
-          />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <h2 className="text-base font-black text-gray-900">Report listing</h2>
-                <p className="text-xs text-gray-500 mt-1">Tell the moderation team what looks wrong.</p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:bg-black/40 p-0 sm:p-4">
+          <div className="w-full sm:w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto space-y-4 p-4 animate-in slide-in-from-bottom-5 duration-300">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-gray-900">Report this listing</h3>
               <button
-                type="button"
-                onClick={() => setShowReportModal(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500"
-                aria-label="Close"
+                onClick={() => {
+                  setShowReportModal(false)
+                  setReportReason('')
+                  setReportError('')
+                }}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             </div>
 
-            <textarea
-              value={reportReason}
-              onChange={(e) => setReportReason(e.target.value.slice(0, 500))}
-              className="w-full min-h-28 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
-              placeholder="Optional reason"
-              maxLength={500}
-            />
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-xs text-gray-400">{reportReason.length}/500</p>
-              {reportError && <p className="text-xs font-semibold text-red-600 text-right">{reportError}</p>}
+            {reportError && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                <p className="text-xs text-red-700 font-medium">{reportError}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold text-gray-700">
+                Why are you reporting this listing? *
+              </label>
+              <div className="space-y-2">
+                {[
+                  { id: 'FAKE_PRODUCT', label: '🚫 Fake or counterfeit product' },
+                  { id: 'WRONG_DESCRIPTION', label: '📝 Wrong description or misleading' },
+                  { id: 'POOR_QUALITY', label: '⚠️ Poor quality than described' },
+                  { id: 'INAPPROPRIATE_CONTENT', label: '🔞 Inappropriate or offensive content' },
+                  { id: 'OTHER', label: '❓ Other reason' },
+                ].map(reason => (
+                  <button
+                    key={reason.id}
+                    type="button"
+                    onClick={() => {
+                      setReportReason(reason.id)
+                      setReportError('')
+                    }}
+                    className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                      reportReason === reason.id
+                        ? 'border-red-500 bg-red-50 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-gray-900">{reason.label}</p>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleReportListing}
-              disabled={reporting}
-              className="mt-4 w-full rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 text-sm font-bold flex items-center justify-center gap-2"
-            >
-              {reporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
-              Submit Report
-            </button>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowReportModal(false)
+                  setReportReason('')
+                  setReportError('')
+                }}
+                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportListing}
+                disabled={!reportReason || reporting}
+                className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {reporting && <RefreshCw className="w-4 h-4 animate-spin" />}
+                {reporting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1151,6 +1181,23 @@ export default function ProductDetailPage() {
                   if (!vals || vals.length === 0) return null
                   const isSingleLocked = vals.length === 1
                   const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                  
+                  // Auto-select single variants
+                  if (isSingleLocked && !selected[key]) {
+                    setSelected(prev => ({ ...prev, [key]: vals[0] }))
+                  }
+                  
+                  // For single variants, show as plain text
+                  if (isSingleLocked) {
+                    return (
+                      <div key={key} className="flex items-center gap-2 text-sm">
+                        <span className="text-gray-600 font-medium">{label}:</span>
+                        <span className="text-gray-900 font-semibold">{vals[0]}</span>
+                      </div>
+                    )
+                  }
+                  
+                  // For multiple variants, show interactive buttons
                   return (
                     <div key={key} className="rounded-xl border border-gray-200 p-3 bg-gray-50/40">
                       <p className="text-xs font-black text-gray-700 mb-2 flex items-center justify-between">
@@ -1169,7 +1216,6 @@ export default function ProductDetailPage() {
                             key={v}
                             type="button"
                             onClick={() => {
-                              if (isSingleLocked || !available) return
                               setSelected(prev => ({ ...prev, [key]: prev[key] === v ? prev[key] : v }))
                               setVariantError('')
                             }}
@@ -1180,11 +1226,11 @@ export default function ProductDetailPage() {
                                 ? 'border-gray-300 bg-white text-gray-800 hover:border-indigo-400 hover:shadow-sm'
                                 : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-70'
                             }`}
-                            disabled={isSingleLocked || !available}
+                            disabled={!available}
                           >
                             <span className="block truncate">{v}</span>
                             <span className={`block text-[10px] mt-0.5 ${chosen ? 'text-indigo-100' : available ? 'text-emerald-600' : 'text-gray-400'}`}>
-                              {isSingleLocked ? 'Auto-selected' : available ? 'Available' : 'Unavailable'}
+                              {available ? 'Available' : 'Unavailable'}
                             </span>
                           </button>
                             )

@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {
   Search, Star, Shield, ShoppingBag, Sparkles, Flame,
   AlertCircle, Clock, TrendingUp, X, ChevronRight,
-  Package, Zap, Award, ArrowRight, Tag, Eye, Heart,
+  Package, Zap, Award, ArrowRight, Tag, Eye, Heart, Flag,
   RefreshCw, CheckCircle, Users, Truck, ChevronLeft,
   BadgeCheck, Timer, Percent, MapPin, Bell, Menu,
   ChevronDown, Grid3X3, List, Sliders, Loader2, Copy,
@@ -621,11 +621,11 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           </div>
         )}
         <div className="quick-actions absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors">
-            <Heart className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" />
-          </button>
           <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-sm transition-colors">
             <Eye className="w-3.5 h-3.5 text-gray-500" />
+          </button>
+          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors">
+            <Flag className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" />
           </button>
         </div>
       </div>
@@ -1933,6 +1933,17 @@ export default function MarketplacePage() {
     if (selectedCategory === 'All' && !universityId) return
     if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
   }, [selectedCategory, mounted, universityId])
+
+  // ── Filter recently viewed to remove suspended/deleted products ──
+  useEffect(() => {
+    if (allProducts.length === 0 || recentlyViewed.length === 0) return
+    const productIds = new Set(allProducts.map(p => p.id))
+    const filtered = recentlyViewed.filter(p => productIds.has(p.id))
+    if (filtered.length !== recentlyViewed.length) {
+      setRecentlyViewed(filtered)
+      try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered)) } catch {}
+    }
+  }, [allProducts])
 
   // ─────────────────────────────────────────────
   // Pull-to-Refresh — iOS-safe implementation
