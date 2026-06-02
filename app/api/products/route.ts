@@ -144,9 +144,105 @@ const BANNED_KEYWORD_PATTERNS: Array<{ term: string; pattern: RegExp }> = [
   { term: 'bet slip sale', pattern: /\bfixed\s+(?:match|matches|game|games|bet|bets)\b/i },
 ]
 
-function findBannedKeyword(name: unknown, description: unknown) {
-  const combined = `${String(name || '')} ${String(description || '')}`
-  return BANNED_KEYWORD_PATTERNS.find(({ pattern }) => pattern.test(combined))?.term || null
+const NORMALIZED_BANNED_TERMS = [
+  'cocaine',
+  'crackcocaine',
+  'heroin',
+  'marijuana',
+  'cannabis',
+  'weed',
+  'methamphetamine',
+  'crystalmeth',
+  'mdma',
+  'ecstasy',
+  'tramadol',
+  'codeine',
+  'fentanyl',
+  'ketamine',
+  'xanax',
+  'oxycontin',
+  'percocet',
+  'rohypnol',
+  'rivotril',
+  'valium',
+  'diazepam',
+  'morphine',
+  'oxycodone',
+  'hydrocodone',
+  'ganja',
+  'gbana',
+  'skushi',
+  'monkeytail',
+  'kush',
+  'skunk',
+  'colorado',
+  'purpledrank',
+  'narcotic',
+]
+
+const NORMALIZED_BANNED_PATTERNS: Array<{ term: string; pattern: RegExp }> = [
+  // Catches evasions like "ko-kayn", "co kayn", "co-kayne", "c0caine".
+  { term: 'cocaine', pattern: /(?:c|k)(?:o|0)(?:c|k)(?:a|@)?(?:i|1|y)?(?:n|m)e?/ },
+  { term: 'cocaine', pattern: /(?:c|k)(?:o|0)(?:k)(?:a|@)(?:y|i|1)(?:n|m)e?/ },
+  { term: 'crack cocaine', pattern: /cr(?:a|@)ck(?:c|k)(?:o|0)(?:c|k)/ },
+  { term: 'marijuana', pattern: /m(?:a|@)riju(?:a|@)n(?:a|@)/ },
+  { term: 'cannabis', pattern: /c(?:a|@)nn(?:a|@)bis/ },
+  { term: 'meth', pattern: /cryst(?:a|@)lmeth|meth(?:a|@)mphet(?:a|@)mine/ },
+  { term: 'tramadol', pattern: /tr(?:a|@)m(?:a|@)dol/ },
+  { term: 'codeine', pattern: /c(?:o|0)de(?:i|1)ne/ },
+  { term: 'fentanyl', pattern: /fent(?:a|@)nyl/ },
+]
+
+function normalizeModerationText(value: unknown) {
+  return String(value || '')
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[áàâäãå]/g, 'a')
+    .replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i')
+    .replace(/[óòôöõ]/g, 'o')
+    .replace(/[úùûü]/g, 'u')
+    .replace(/[$]/g, 's')
+    .replace(/[!|]/g, 'i')
+    .replace(/[@]/g, 'a')
+    .replace(/[3]/g, 'e')
+    .replace(/[5]/g, 's')
+    .replace(/[7]/g, 't')
+}
+
+function collectModerationParts(...values: unknown[]): string[] {
+  const parts: string[] = []
+  const visit = (value: unknown) => {
+    if (value === undefined || value === null) return
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      parts.push(String(value))
+      return
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit)
+      return
+    }
+    if (typeof value === 'object') {
+      Object.values(value as Record<string, unknown>).forEach(visit)
+    }
+  }
+  values.forEach(visit)
+  return parts
+}
+
+function findBannedKeyword(...values: unknown[]) {
+  const combined = collectModerationParts(...values).join(' ')
+  const rawMatch = BANNED_KEYWORD_PATTERNS.find(({ pattern }) => pattern.test(combined))?.term
+  if (rawMatch) return rawMatch
+
+  const normalized = normalizeModerationText(combined)
+  const compact = normalized.replace(/[^a-z0-9]/g, '')
+  const collapsed = compact.replace(/(.)\1{2,}/g, '$1')
+
+  const normalizedTerm = NORMALIZED_BANNED_TERMS.find((term) => compact.includes(term) || collapsed.includes(term))
+  if (normalizedTerm) return normalizedTerm
+
+  return NORMALIZED_BANNED_PATTERNS.find(({ pattern }) => pattern.test(compact) || pattern.test(collapsed))?.term || null
 }
 
 function normalizeLearnedKey(input: string) {
@@ -378,7 +474,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const matchedBannedTerm = findBannedKeyword(name, description)
+    const matchedBannedTerm = findBannedKeyword(
+      name,
+      description,
+      category,
+      subcategory,
+      categoryKey,
+      subcategoryKey,
+      attributes,
+      variants,
+      deliveryEstimate
+    )
     if (matchedBannedTerm) {
       console.warn('Prohibited listing keyword rejected', {
         userId: user.id,
