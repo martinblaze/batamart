@@ -339,8 +339,9 @@ function VariantRow({
         <input
           type="text"
           value={customInput}
-          onChange={e => setCustomInput(e.target.value)}
+          onChange={e => setCustomInput(limitText(e.target.value, SELL_LIMITS.variantValue))}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCustomAdd() } }}
+          maxLength={SELL_LIMITS.variantValue}
           placeholder={`Add custom ${field.label.toLowerCase()}...`}
           className="flex-1 text-xs px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
         />
@@ -372,6 +373,46 @@ interface CategoryAttributeDef {
 }
 
 // ── Main Sell Page ────────────────────────────────────────────────────────────
+const MAX_PRICE = 10000000
+const MAX_STOCK = 100
+const SELL_LIMITS = {
+  productName: 120,
+  location: 100,
+  roomNumber: 50,
+  landmark: 120,
+  variantValue: 30,
+  attributeText: 80,
+  attributeNumber: 1000000,
+  deliveryEstimate: 60,
+  weightKg: 100,
+  dimensionCm: 500,
+}
+
+function limitText(value: string, max: number) {
+  return String(value || '').slice(0, max)
+}
+
+function limitIntegerInput(value: string, max: number, min = 0) {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (!digits) return ''
+  const n = Math.max(min, Math.min(max, Number(digits)))
+  return String(n)
+}
+
+function limitDecimalInput(value: string, max: number) {
+  const cleaned = String(value || '')
+    .replace(/[^\d.]/g, '')
+    .replace(/(\..*)\./g, '$1')
+  if (!cleaned) return ''
+  if (cleaned === '.') return '0.'
+  const [whole, decimals = ''] = cleaned.split('.')
+  const normalized = `${whole || '0'}${cleaned.includes('.') ? `.${decimals.slice(0, 2)}` : ''}`
+  const n = Number(normalized)
+  if (!Number.isFinite(n)) return ''
+  if (n > max) return String(max)
+  return normalized
+}
+
 export default function SellPage() {
   const router = useRouter()
   const tagInputRef = useRef<HTMLInputElement>(null)
@@ -432,13 +473,47 @@ export default function SellPage() {
       const raw = localStorage.getItem(SELL_DRAFT_KEY)
       if (raw) {
         const draft = JSON.parse(raw)
-        if (draft?.formData) setFormData(draft.formData)
+        if (draft?.formData) {
+          setFormData({
+            name: limitText(draft.formData.name || '', SELL_LIMITS.productName),
+            price: limitDecimalInput(draft.formData.price || '', MAX_PRICE),
+            quantity: limitIntegerInput(draft.formData.quantity || '1', MAX_STOCK, 1) || '1',
+            hostelName: limitText(draft.formData.hostelName || '', SELL_LIMITS.location),
+            roomNumber: limitText(draft.formData.roomNumber || '', SELL_LIMITS.roomNumber),
+            landmark: limitText(draft.formData.landmark || '', SELL_LIMITS.landmark),
+          })
+        }
         if (draft?.categoryKey) setCategoryKey(draft.categoryKey)
         if (draft?.subcategoryKey) setSubcategoryKey(draft.subcategoryKey)
-        if (draft?.variantValues) setVariantValues(draft.variantValues)
-        if (draft?.variantPricing) setVariantPricing(draft.variantPricing)
+        if (draft?.variantValues) {
+          const nextVariants: Record<string, string[]> = {}
+          for (const [key, values] of Object.entries(draft.variantValues as Record<string, unknown>)) {
+            nextVariants[key] = Array.isArray(values)
+              ? values.map(v => limitText(String(v).trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12)
+              : []
+          }
+          setVariantValues(nextVariants)
+        }
+        if (draft?.variantPricing) {
+          const nextPricing: Record<string, { price: string; stock: string }> = {}
+          for (const [key, row] of Object.entries(draft.variantPricing as Record<string, any>)) {
+            nextPricing[key] = {
+              price: limitDecimalInput(row?.price || '', MAX_PRICE),
+              stock: limitIntegerInput(row?.stock || '', MAX_STOCK, 0),
+            }
+          }
+          setVariantPricing(nextPricing)
+        }
         if (typeof draft?.variantsEnabledToggle === 'boolean') setVariantsEnabledToggle(draft.variantsEnabledToggle)
-        if (draft?.attributeValues) setAttributeValues(draft.attributeValues)
+        if (draft?.attributeValues) {
+          const nextAttributes: Record<string, any> = {}
+          for (const [key, value] of Object.entries(draft.attributeValues as Record<string, any>)) {
+            if (typeof value === 'string') nextAttributes[key] = limitText(value, SELL_LIMITS.attributeText)
+            else if (Array.isArray(value)) nextAttributes[key] = value.map(v => limitText(String(v), SELL_LIMITS.attributeText)).filter(Boolean).slice(0, 12)
+            else nextAttributes[key] = value
+          }
+          setAttributeValues(nextAttributes)
+        }
         if (draft?.manuallyTouchedAttributes) setManuallyTouchedAttributes(draft.manuallyTouchedAttributes)
         if (Array.isArray(draft?.tags)) setTags(draft.tags)
         if (Array.isArray(draft?.images)) setImages(draft.images)
@@ -729,11 +804,15 @@ export default function SellPage() {
   }
 
   const setVariantField = (key: string, vals: string[]) => {
-    setVariantValues(prev => ({ ...prev, [key]: vals }))
+    setVariantValues(prev => ({ ...prev, [key]: vals.map(v => limitText(v.trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12) }))
   }
 
   const setAttributeValue = (key: string, value: any, markTouched = true) => {
-    setAttributeValues((prev) => ({ ...prev, [key]: value }))
+    const attr = categoryAttributes.find(a => a.key === key)
+    let nextValue = value
+    if (attr?.type === 'number') nextValue = limitDecimalInput(String(value ?? ''), SELL_LIMITS.attributeNumber)
+    else if (typeof value === 'string') nextValue = limitText(value, SELL_LIMITS.attributeText)
+    setAttributeValues((prev) => ({ ...prev, [key]: nextValue }))
     if (markTouched) {
       setManuallyTouchedAttributes((prev) => ({ ...prev, [key]: true }))
     }
@@ -754,10 +833,43 @@ export default function SellPage() {
   }
 
   const addCustomSelectAttribute = (key: string) => {
-    const raw = (attributeCustomInput[key] || '').trim()
+    const raw = limitText(attributeCustomInput[key] || '', SELL_LIMITS.attributeText).trim()
     if (!raw) return
     setAttributeValue(key, raw)
     setAttributeCustomInput((prev) => ({ ...prev, [key]: '' }))
+  }
+
+  const updateVariantPrice = (key: string, row: { price: string; stock: string }, value: string) => {
+    setVariantPricing(prev => ({ ...prev, [key]: { ...row, price: limitDecimalInput(value, MAX_PRICE) } }))
+  }
+
+  const updateVariantStock = (key: string, row: { price: string; stock: string }, value: string) => {
+    setVariantPricing(prev => ({ ...prev, [key]: { ...row, stock: limitIntegerInput(value, MAX_STOCK, 0) } }))
+  }
+
+  const clearSellForm = () => {
+    setFormData({ name: '', price: '', quantity: '1', hostelName: '', roomNumber: '', landmark: '' })
+    setDeliveryAgreementChecked(false)
+    setEstimatedWeightKg('')
+    setDeliveryEstimate('')
+    setDimensionL('')
+    setDimensionW('')
+    setDimensionH('')
+    setCategoryKey('')
+    setSubcategoryKey('')
+    setVariantValues({})
+    setVariantPricing({})
+    setVariantsEnabledToggle(false)
+    setCategoryAttributes([])
+    setAttributeValues({})
+    setAttributeCustomInput({})
+    setManuallyTouchedAttributes({})
+    setImages([])
+    setTags([])
+    setTagInput('')
+    setError('')
+    setShowConfirmModal(false)
+    localStorage.removeItem(SELL_DRAFT_KEY)
   }
 
   const variantKeysForMatrix = Object.keys(variantValues).filter(k => (variantValues[k] || []).length > 0)
@@ -791,8 +903,11 @@ export default function SellPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name.trim()) { setError('Product name is required'); return }
+    if (formData.name.trim().length > SELL_LIMITS.productName) { setError(`Product name must be ${SELL_LIMITS.productName} characters or less`); return }
     if (!formData.price || parseFloat(formData.price) <= 0) { setError('Enter a valid price'); return }
-    if (parseFloat(formData.price) > 10000000) { setError('Price cannot exceed ₦10,000,000'); return }
+    if (parseFloat(formData.price) > MAX_PRICE) { setError('Price cannot exceed ₦10,000,000'); return }
+    const stock = Number(formData.quantity)
+    if (!Number.isInteger(stock) || stock < 1 || stock > MAX_STOCK) { setError(`Stock must be between 1 and ${MAX_STOCK}`); return }
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length < 1) { setError('Please add at least 1 product image'); return }
@@ -818,8 +933,13 @@ export default function SellPage() {
         const rowPrice = Number(row?.price || formData.price)
         const rowStock = Number(row?.stock || formData.quantity || 0)
         if (!Number.isFinite(rowPrice) || rowPrice <= 0) { setError('Each variant must have a valid price'); return }
-        if (!Number.isFinite(rowStock) || rowStock < 0) { setError('Each variant must have valid stock'); return }
+        if (!Number.isInteger(rowStock) || rowStock < 0 || rowStock > MAX_STOCK) { setError(`Each variant stock must be between 0 and ${MAX_STOCK}`); return }
       }
+      const totalVariantStock = variantCombinations.reduce((sum, combo) => {
+        const row = variantPricing[comboKey(combo)]
+        return sum + Number(row?.stock || formData.quantity || 0)
+      }, 0)
+      if (totalVariantStock > MAX_STOCK) { setError(`Total variant stock cannot exceed ${MAX_STOCK}`); return }
     }
     setError(''); setShowConfirmModal(true)
   }
@@ -944,6 +1064,16 @@ export default function SellPage() {
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={clearSellForm}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-red-100 bg-white px-3 py-2 text-xs font-black text-red-500 shadow-sm hover:bg-red-50 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Clear
+          </button>
+        </div>
 
         <div className="fade-up bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-start gap-3">
           <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -990,9 +1120,9 @@ export default function SellPage() {
               <input
                 type="text"
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => setFormData({ ...formData, name: limitText(e.target.value, SELL_LIMITS.productName) })}
                 required
-                maxLength={200}
+                maxLength={SELL_LIMITS.productName}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder='e.g. "iPhone 13 Pro Max 256GB"'
               />
@@ -1005,8 +1135,8 @@ export default function SellPage() {
                 <input
                   type="number"
                   value={formData.price}
-                  onChange={e => setFormData({ ...formData, price: e.target.value })}
-                  required min="0" max="10000000" step="0.01"
+                  onChange={e => setFormData({ ...formData, price: limitDecimalInput(e.target.value, MAX_PRICE) })}
+                  required min="0" max={MAX_PRICE} inputMode="decimal" step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="50000"
                 />
@@ -1021,8 +1151,8 @@ export default function SellPage() {
                 <input
                   type="number"
                   value={formData.quantity}
-                  onChange={e => setFormData({ ...formData, quantity: e.target.value })}
-                  required min="1"
+                  onChange={e => setFormData({ ...formData, quantity: limitIntegerInput(e.target.value, MAX_STOCK, 1) })}
+                  required min="1" max={MAX_STOCK} inputMode="numeric"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="1"
                 />
@@ -1114,7 +1244,7 @@ export default function SellPage() {
                           <input
                             type="text"
                             value={attributeCustomInput[attr.key] ?? ''}
-                            onChange={(e) => setAttributeCustomInput((prev) => ({ ...prev, [attr.key]: e.target.value }))}
+                            onChange={(e) => setAttributeCustomInput((prev) => ({ ...prev, [attr.key]: limitText(e.target.value, SELL_LIMITS.attributeText) }))}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
@@ -1123,6 +1253,7 @@ export default function SellPage() {
                             }}
                             className="flex-1 px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                             placeholder={`Add custom ${attr.label.toLowerCase()}...`}
+                            maxLength={SELL_LIMITS.attributeText}
                           />
                           <button
                             type="button"
@@ -1159,6 +1290,9 @@ export default function SellPage() {
                         type="number"
                         value={value ?? ''}
                         onChange={(e) => setAttributeValue(attr.key, e.target.value)}
+                        min="0"
+                        max={SELL_LIMITS.attributeNumber}
+                        inputMode="decimal"
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
@@ -1179,6 +1313,7 @@ export default function SellPage() {
                         type="text"
                         value={value ?? ''}
                         onChange={(e) => setAttributeValue(attr.key, e.target.value)}
+                        maxLength={SELL_LIMITS.attributeText}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
@@ -1254,9 +1389,11 @@ export default function SellPage() {
                               <input
                                 type="number"
                                 min="0"
+                                max={MAX_PRICE}
+                                inputMode="decimal"
                                 step="0.01"
                                 value={row.price}
-                                onChange={e => setVariantPricing(prev => ({ ...prev, [key]: { ...row, price: e.target.value } }))}
+                                onChange={e => updateVariantPrice(key, row, e.target.value)}
                                 className="w-24 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
                               />
                             </td>
@@ -1264,9 +1401,11 @@ export default function SellPage() {
                               <input
                                 type="number"
                                 min="0"
+                                max={MAX_STOCK}
+                                inputMode="numeric"
                                 step="1"
                                 value={row.stock}
-                                onChange={e => setVariantPricing(prev => ({ ...prev, [key]: { ...row, stock: e.target.value } }))}
+                                onChange={e => updateVariantStock(key, row, e.target.value)}
                                 className="w-20 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
                               />
                             </td>
@@ -1380,9 +1519,9 @@ export default function SellPage() {
               <input
                 type="text"
                 value={formData.hostelName}
-                onChange={e => setFormData({ ...formData, hostelName: e.target.value })}
+                onChange={e => setFormData({ ...formData, hostelName: limitText(e.target.value, SELL_LIMITS.location) })}
                 required
-                maxLength={100}
+                maxLength={SELL_LIMITS.location}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Python Hall, Aroma Lodge, Block C"
               />
@@ -1392,9 +1531,9 @@ export default function SellPage() {
               <input
                 type="text"
                 value={formData.roomNumber}
-                onChange={e => setFormData({ ...formData, roomNumber: e.target.value })}
+                onChange={e => setFormData({ ...formData, roomNumber: limitText(e.target.value, SELL_LIMITS.roomNumber) })}
                 required
-                maxLength={50}
+                maxLength={SELL_LIMITS.roomNumber}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Room 12, Block A"
               />
@@ -1406,7 +1545,7 @@ export default function SellPage() {
               {deliveryAreas.length > 0 ? (
                 <select
                   value={formData.landmark}
-                  onChange={e => setFormData({ ...formData, landmark: e.target.value })}
+                  onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium appearance-none"
                 >
@@ -1417,8 +1556,9 @@ export default function SellPage() {
                 <input
                   type="text"
                   value={formData.landmark}
-                  onChange={e => setFormData({ ...formData, landmark: e.target.value })}
+                  onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
+                  maxLength={SELL_LIMITS.landmark}
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="e.g., Near the water dispenser"
                 />
@@ -1437,11 +1577,11 @@ export default function SellPage() {
             subtitle="Required for rider safety and reliable fulfillment"
           />
           <div className="grid sm:grid-cols-3 gap-3 mb-4">
-            <input type="number" min="0" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(e.target.value)} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" value={dimensionL} onChange={(e) => setDimensionL(e.target.value)} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" value={dimensionW} onChange={(e) => setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" value={dimensionH} onChange={(e) => setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
-            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(e.target.value)} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(limitText(e.target.value, SELL_LIMITS.deliveryEstimate))} maxLength={SELL_LIMITS.deliveryEstimate} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
           </div>
           <label className="flex items-start gap-3 text-sm text-red-600">
             <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />

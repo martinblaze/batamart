@@ -9,6 +9,8 @@ import { moderateListing } from '@/lib/moderation/moderateListing'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
+const MAX_LISTING_PRICE = 10000000
+const MAX_LISTING_STOCK = 100
 const AUTO_PROMOTE_THRESHOLD = 10
 const PROHIBITED_LISTING_MESSAGE = 'Your listing was rejected. It contains prohibited content.'
 
@@ -401,11 +403,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
 
-    if (typeof price !== 'number' || price <= 0) {
+    if (typeof price !== 'number' || price <= 0 || price > MAX_LISTING_PRICE) {
       return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
     }
 
-    if (typeof quantity !== 'number' || quantity < 1) {
+    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_LISTING_STOCK) {
       return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 })
     }
 
@@ -418,8 +420,19 @@ export async function POST(request: NextRequest) {
             sku: v?.sku ? String(v.sku) : null,
             imageUrl: v?.imageUrl ? String(v.imageUrl) : null,
           }))
-          .filter((v: any) => v.combination && Number.isFinite(v.price) && v.price > 0 && Number.isFinite(v.stock) && v.stock >= 0)
+          .filter((v: any) => (
+            v.combination &&
+            Number.isFinite(v.price) &&
+            v.price > 0 &&
+            v.price <= MAX_LISTING_PRICE &&
+            Number.isInteger(v.stock) &&
+            v.stock >= 0 &&
+            v.stock <= MAX_LISTING_STOCK
+          ))
       : []
+    if (Array.isArray(variants) && variants.length > 0 && normalizedVariants.length !== variants.length) {
+      return NextResponse.json({ error: `Each variant needs a valid price and stock up to ${MAX_LISTING_STOCK}` }, { status: 400 })
+    }
 
     const hasStructuredVariants = normalizedVariants.length > 0
     const normalizedAttributes = Array.isArray(attributes)
@@ -452,6 +465,9 @@ export async function POST(request: NextRequest) {
     const totalVariantStock = hasStructuredVariants
       ? normalizedVariants.reduce((sum: number, v: any) => sum + v.stock, 0)
       : Number(quantity)
+    if (!Number.isInteger(totalVariantStock) || totalVariantStock < 1 || totalVariantStock > MAX_LISTING_STOCK) {
+      return NextResponse.json({ error: `Stock cannot exceed ${MAX_LISTING_STOCK}` }, { status: 400 })
+    }
 
     const product = await prisma.product.create({
       data: {
