@@ -1007,10 +1007,10 @@ export default function ProductDetailPage() {
       <div className="max-w-5xl mx-auto px-3 sm:px-4 pb-24 sm:pb-8 space-y-4">
 
         {/* ── Main product section ───────────────────────── */}
-        <div className="grid sm:grid-cols-2 gap-4 fade-up">
+        <div className="grid sm:grid-cols-2 gap-1 sm:gap-2 fade-up items-start">
 
-          {/* LEFT — Images */}
-          <div className="space-y-2">
+          {/* LEFT — Images (Sticky) */}
+          <div className="sticky top-16 space-y-2 max-h-[calc(100vh-80px)] overflow-y-auto no-scrollbar">
             <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm" style={{ border: '1px solid #f0f0f0' }}>
               <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden">
                 {product.images?.[activeImg] ? (
