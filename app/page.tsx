@@ -216,6 +216,19 @@ function MagneticCard({ children, className = '', href }: {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const syncAuthState = () => setIsLoggedIn(Boolean(localStorage.getItem('token')))
+    syncAuthState()
+    window.addEventListener('storage', syncAuthState)
+    window.addEventListener('auth-change', syncAuthState)
+    return () => {
+      window.removeEventListener('storage', syncAuthState)
+      window.removeEventListener('auth-change', syncAuthState)
+    }
+  }, [])
+
   const categories = [
     { name: 'Fashion & Clothing', icon: '👔', count: '3.1K items', accent: '#2563eb', light: '#eff6ff' },
     { name: 'Food Services',      icon: '🍔', count: '1.2K items', accent: '#0284c7', light: '#f0f9ff' },
@@ -442,14 +455,14 @@ export default function HomePage() {
             <Reveal delay={240}>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-14">
                 <Link
-                  href="/signup"
-                  className="cta-btn w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
+                  href={isLoggedIn ? '/marketplace' : '/signup'}
+                  className={`cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)] ${isLoggedIn ? 'text-transparent' : 'text-white'}`}
                 >
                   Join BATAMART — It&apos;s Free
                 </Link>
                 <Link
                   href="/marketplace"
-                  className="cta-btn w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm"
+                  className={`${isLoggedIn ? 'hidden' : 'cta-btn'} w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm`}
                 >
                   Explore Marketplace →
                 </Link>
