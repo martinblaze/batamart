@@ -454,18 +454,29 @@ export default function HomePage() {
             {/* CTAs */}
             <Reveal delay={240}>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-14">
-                <Link
-                  href={isLoggedIn ? '/marketplace' : '/signup'}
-                  className={`cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)] ${isLoggedIn ? 'text-transparent' : 'text-white'}`}
-                >
-                  Join BATAMART — It&apos;s Free
-                </Link>
-                <Link
-                  href="/marketplace"
-                  className={`${isLoggedIn ? 'hidden' : 'cta-btn'} w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm`}
-                >
-                  Explore Marketplace →
-                </Link>
+                {isLoggedIn ? (
+                  <Link
+                    href="/marketplace"
+                    className="cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
+                  >
+                    View Marketplace →
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/signup"
+                      className="cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
+                    >
+                      Join BATAMART — It&apos;s Free
+                    </Link>
+                    <Link
+                      href="/marketplace"
+                      className="cta-btn w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm"
+                    >
+                      Explore Marketplace →
+                    </Link>
+                  </>
+                )}
               </div>
             </Reveal>
 
@@ -666,19 +677,30 @@ export default function HomePage() {
 
             <Reveal delay={130}>
               <div className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
-                <Link
-                  href="/signup"
-                  className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
-                >
-                  Create Free Account
-                </Link>
+                {isLoggedIn ? (
+                  <Link
+                    href="/marketplace"
+                    className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
+                  >
+                    View Marketplace →
+                  </Link>
+                ) : (
+                  <Link
+                    href="/signup"
+                    className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
+                  >
+                    Create Free Account
+                  </Link>
+                )}
               </div>
-              <p className="text-gray-400 text-sm">
-                Already have an account?{' '}
-                <Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
-                  Sign in →
-                </Link>
-              </p>
+              {!isLoggedIn && (
+                <p className="text-gray-400 text-sm">
+                  Already have an account?{' '}
+                  <Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors font-medium">
+                    Sign in →
+                  </Link>
+                </p>
+              )}
             </Reveal>
           </div>
         </section>
