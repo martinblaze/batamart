@@ -99,6 +99,11 @@ function SignupForm() {
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
 
+  // ── Signup closure state ─────────────────────────────────────────────────────
+  const [signupsOpen, setSignupsOpen]           = useState(true)
+  const [countdown, setCountdown]               = useState('')
+  const [signupReopensDate, setSignupReopensDate] = useState('')
+
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref.trim().toUpperCase())
@@ -116,6 +121,35 @@ function SignupForm() {
       .then(data => setUniversities(data.universities ?? []))
       .catch(() => {})
       .finally(() => setUniLoading(false))
+  }, [])
+
+  // ── Check if signups are open and update countdown ───────────────────────────
+  useEffect(() => {
+    const checkSignupStatus = () => {
+      const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+      const now = Date.now()
+      
+      if (now >= SIGNUP_REOPENS_AT) {
+        setSignupsOpen(true)
+        setCountdown('')
+        return
+      }
+
+      setSignupsOpen(false)
+      setSignupReopensDate('2026-06-22')
+      
+      const msRemaining = SIGNUP_REOPENS_AT - now
+      const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+      const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+      const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+      
+      setCountdown(`${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`)
+    }
+
+    checkSignupStatus()
+    const interval = setInterval(checkSignupStatus, 1000)
+    return () => clearInterval(interval)
   }, [])
 
   const validatePassword = (pwd: string) => {
@@ -155,6 +189,16 @@ function SignupForm() {
         body:    JSON.stringify({ email }),
       })
       const data = await response.json()
+      
+      // ── Handle signup closure ────────────────────────────────────────────────────
+      if (response.status === 503 && data.countdown) {
+        setSignupsOpen(false)
+        setCountdown(data.countdown)
+        setSignupReopensDate(data.reopensAt || '2026-06-22')
+        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
+        return
+      }
+      
       if (response.ok) { setStep(2) }
       else { setError(data.error || 'Failed to send OTP') }
     } catch {
@@ -242,6 +286,16 @@ function SignupForm() {
         }),
       })
       const data = await response.json()
+      
+      // ── Handle signup closure ────────────────────────────────────────────────────
+      if (response.status === 503 && data.countdown) {
+        setSignupsOpen(false)
+        setCountdown(data.countdown)
+        setSignupReopensDate(data.reopensAt || '2026-06-22')
+        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
+        return
+      }
+      
       if (response.ok) {
         localStorage.setItem('token',    data.token)
         localStorage.setItem('userName', data.user.name)
@@ -264,6 +318,18 @@ function SignupForm() {
   if (step === 0) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
+        {!signupsOpen && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+            <p className="text-2xl mb-2">🔒</p>
+            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
+            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
+              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
+              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}>
@@ -287,12 +353,18 @@ function SignupForm() {
               {universities.map(uni => (
                 <button
                   key={uni.id}
-                  onClick={() => setSelectedUniversity(uni)}
+                  onClick={() => {
+                    if (!signupsOpen) {
+                      setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
+                      return
+                    }
+                    setSelectedUniversity(uni)
+                  }}
                   className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
                     selectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  }`}
+                  } ${!signupsOpen ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>

@@ -11,8 +11,44 @@ import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/s
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
 
+// ── Signups closed until June 22, 2026 ──────────────────────────────────────
+const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+
+function checkSignupsOpen() {
+  const now = Date.now()
+  if (now >= SIGNUP_REOPENS_AT) {
+    return { isOpen: true }
+  }
+  
+  const msRemaining = SIGNUP_REOPENS_AT - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+  
+  return {
+    isOpen: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: '2026-06-22'
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // ── Block new signups until June 22 ────────────────────────────────────
+    const signupStatus = checkSignupsOpen()
+    if (!signupStatus.isOpen) {
+      return NextResponse.json(
+        {
+          error: 'Signups are temporarily closed for maintenance',
+          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+          countdown: signupStatus.countdown,
+          reopensAt: signupStatus.reopensAt,
+        },
+        { status: 503 }
+      )
+    }
+
     const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
     const rateLimitKey = `signup:${ip}`
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(

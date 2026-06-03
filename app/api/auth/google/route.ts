@@ -8,6 +8,28 @@ import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
+// ── Signups closed until June 22, 2026 ──────────────────────────────────────
+const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+
+function checkSignupsOpen() {
+  const now = Date.now()
+  if (now >= SIGNUP_REOPENS_AT) {
+    return { isOpen: true }
+  }
+  
+  const msRemaining = SIGNUP_REOPENS_AT - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+  
+  return {
+    isOpen: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: '2026-06-22'
+  }
+}
+
 function googleAudience() {
   return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 }
@@ -42,6 +64,20 @@ export async function POST(request: NextRequest) {
     if (!user) {
       if (mode !== 'signup') {
         return NextResponse.json({ error: 'No account found. Use Sign up with Google first.' }, { status: 404 })
+      }
+
+      // ── Block new signups until June 22 ────────────────────────────────────
+      const signupStatus = checkSignupsOpen()
+      if (!signupStatus.isOpen) {
+        return NextResponse.json(
+          {
+            error: 'Signups are temporarily closed for maintenance',
+            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+            countdown: signupStatus.countdown,
+            reopensAt: signupStatus.reopensAt,
+          },
+          { status: 503 }
+        )
       }
 
       const signupToken = issueGoogleSignupToken({
