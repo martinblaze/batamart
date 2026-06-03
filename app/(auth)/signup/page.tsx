@@ -415,6 +415,18 @@ function SignupForm() {
   if (step === 1) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
+        {!signupsOpen && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+            <p className="text-2xl mb-2">🔒</p>
+            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
+            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
+              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
+              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={1} />
           <h2 className="text-xl font-black text-gray-900 mb-1">Create account</h2>
@@ -565,6 +577,18 @@ function SignupForm() {
   if (step === 2) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
+        {!signupsOpen && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+            <p className="text-2xl mb-2">🔒</p>
+            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
+            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
+              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
+              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={2} />
           <h2 className="text-xl font-black text-gray-900 mb-1">Verify your email</h2>
@@ -617,6 +641,18 @@ function SignupForm() {
 
     return (
       <PageShell selectedUniversity={selectedUniversity}>
+        {!signupsOpen && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+            <p className="text-2xl mb-2">🔒</p>
+            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
+            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
+              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
+              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+            </div>
+          </div>
+        )}
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={3} />
 
@@ -728,6 +764,18 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     <PageShell selectedUniversity={selectedUniversity}>
+      {!signupsOpen && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
+          <p className="text-2xl mb-2">🔒</p>
+          <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
+          <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+          <div className="bg-white rounded-xl px-4 py-3 inline-block">
+            <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
+            <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
+            <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+          </div>
+        </div>
+      )}
       <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
         <StepDots current={4} />
         <h2 className="text-xl font-black text-gray-900 mb-1">Set your password</h2>
