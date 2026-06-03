@@ -184,22 +184,22 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
               </div>
 
               {seller.products.length > 0 ? (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-gray-100">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-px bg-gray-100 p-2 sm:p-0">
                   {seller.products.map((product: Product) => (
                     <Link key={product.id} href={`/product/${product.id}`}
-                      className="group bg-white p-4 hover:bg-indigo-50/30 transition-colors">
+                      className="group bg-white p-2 sm:p-4 hover:bg-indigo-50/30 transition-colors rounded-lg sm:rounded-none">
                       {product.images?.[0] && (
-                        <div className="w-full aspect-square rounded-xl overflow-hidden mb-3 bg-gray-50">
+                        <div className="w-full aspect-square rounded-lg sm:rounded-xl overflow-hidden mb-2 sm:mb-3 bg-gray-50">
                           <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         </div>
                       )}
-                      <h3 className="text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                      <h3 className="text-xs sm:text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' · ')}</p>
-                      <div className="flex items-center justify-between mt-2.5">
-                        <span className="text-sm font-black text-indigo-600">{fmt(product.price)}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                      <p className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' · ')}</p>
+                      <div className="flex items-center justify-between mt-1.5 sm:mt-2.5">
+                        <span className="text-xs sm:text-sm font-black text-indigo-600">{fmt(product.price)}</span>
+                        <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-black ${
                           product.quantity > 10 ? 'bg-emerald-50 text-emerald-700'
                           : product.quantity > 0 ? 'bg-amber-50 text-amber-700'
                           : 'bg-red-50 text-red-600'
