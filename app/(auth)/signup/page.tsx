@@ -128,6 +128,14 @@ function SignupForm() {
     const checkSignupStatus = () => {
       const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
       const now = Date.now()
+      const msRemaining = SIGNUP_REOPENS_AT - now
+      
+      console.log('🔒 Signup Status Check:', {
+        now: new Date(now).toISOString(),
+        reopensAt: new Date(SIGNUP_REOPENS_AT).toISOString(),
+        msRemaining,
+        signupsOpen: now >= SIGNUP_REOPENS_AT,
+      })
       
       if (now >= SIGNUP_REOPENS_AT) {
         setSignupsOpen(true)
@@ -138,13 +146,14 @@ function SignupForm() {
       setSignupsOpen(false)
       setSignupReopensDate('2026-06-22')
       
-      const msRemaining = SIGNUP_REOPENS_AT - now
       const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
       const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
       const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
       
-      setCountdown(`${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`)
+      const countdownStr = `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`
+      setCountdown(countdownStr)
+      console.log('⏱️ Countdown updated:', countdownStr)
     }
 
     checkSignupStatus()
