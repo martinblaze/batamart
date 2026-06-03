@@ -129,10 +129,6 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         orderNote: buildOrderNote(item),
         buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
-        // We include name/image for display in emails only — NOT for pricing
-        _displayName: item.name,
-        _displayImage: item.image,
-        sellerId: item.sellerId,
       }))
 
       // ── FIX #4: We do NOT send deliveryFee from the client.
@@ -194,10 +190,6 @@ export default function CheckoutPage() {
   const deliveryFee   = serverDeliveryFee ?? fallbackDeliveryFee
   const subtotal      = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalAmount   = subtotal + deliveryFee
-  const platformFee   = subtotal * 0.05
-  const riderAmount   = 560
-  const referralCut   = 240
-  const sellerAmount  = subtotal * 0.95
   const hasNotes = cartItems.some(item => {
     const variantNote = formatVariantSelection(item.selectedVariants || {})
     const extra = orderNotes[item.productId]?.trim() || ''
@@ -491,24 +483,6 @@ export default function CheckoutPage() {
               <p className="text-[11px] text-center text-gray-400 mt-3 leading-relaxed">
                 By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack.
               </p>
-
-              {/* ── Payment Breakdown ── */}
-              <div className="mt-5 pt-4 border-t border-gray-50">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Payment Breakdown</p>
-                <div className="space-y-2">
-                  {[
-                    { label: 'Seller receives',   value: formatPrice(sellerAmount), color: 'text-emerald-600' },
-                    { label: 'Rider receives',    value: formatPrice(riderAmount),  color: 'text-blue-600'   },
-                    { label: 'Platform fee (5%)', value: formatPrice(platformFee),  color: 'text-gray-500'   },
-                    { label: 'Referral reward',   value: formatPrice(referralCut),  color: 'text-pink-500'   },
-                  ].map(({ label, value, color }) => (
-                    <div key={label} className="flex justify-between text-xs">
-                      <span className="text-gray-400 font-medium">{label}</span>
-                      <span className={`font-black ${color}`}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               <div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-center gap-4">
                 {[

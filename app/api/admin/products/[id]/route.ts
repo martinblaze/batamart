@@ -28,12 +28,21 @@ export async function DELETE(
   }
 
   try {
-    await prisma.product.delete({
-      where: { id: params.id }
+    await prisma.product.update({
+      where: { id: params.id },
+      data: {
+        isDeleted: true,
+        isActive: false,
+        deletedAt: new Date(),
+      },
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2025') {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+    console.error('Admin product delete error:', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }

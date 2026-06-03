@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   X, Plus, AlertCircle, Camera, Upload, CheckCircle2,
   Sparkles, Tag, MapPin, Package, ChevronRight, Zap,
-  Shield, Info, ArrowLeft, Loader2, Image as ImageIcon,
+  Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2,
 } from 'lucide-react'
 import {
   CATEGORY_TREE, getCategoryList, getSubcategoryList,
@@ -418,6 +418,7 @@ export default function SellPage() {
   const tagInputRef = useRef<HTMLInputElement>(null)
   const skipNextCategoryResetRef = useRef(true)
   const skipNextSubcategoryResetRef = useRef(true)
+  const autoTagsRef = useRef<string[]>([])
   const SELL_DRAFT_KEY = 'BATAMART_SELL_DRAFT_V1'
 
   // Auth state
@@ -652,11 +653,13 @@ export default function SellPage() {
     const subLabel = subcategoryKey ? CATEGORY_TREE[categoryKey]?.subcategories[subcategoryKey]?.label : ''
     const variantTags = Object.values(variantValues).flat()
     const nameParts = formData.name.trim().split(/\s+/).filter(w => w.length > 2)
-    const generated = [...new Set([...nameParts, catLabel, subLabel, ...variantTags].filter(Boolean))]
+    const generated = Array.from(new Set([...nameParts, catLabel, subLabel, ...variantTags].filter(Boolean)))
+    const previousAutoTags = autoTagsRef.current
     setTags(prev => {
-      const manual = prev.filter(t => !generated.includes(t))
-      return [...generated, ...manual].slice(0, 30)
+      const manual = prev.filter(t => !previousAutoTags.includes(t))
+      return Array.from(new Set([...generated, ...manual])).slice(0, 30)
     })
+    autoTagsRef.current = generated
   }, [formData.name, categoryKey, subcategoryKey, variantValues])
 
   // AI-lite parse auto-fill from product title (without overriding manual inputs)
@@ -848,7 +851,7 @@ export default function SellPage() {
   }
 
   const clearSellForm = () => {
-    setFormData({ name: '', price: '', quantity: '1', hostelName: '', roomNumber: '', landmark: '' })
+    setFormData(prev => ({ name: '', price: '', quantity: '1', hostelName: prev.hostelName, roomNumber: prev.roomNumber, landmark: prev.landmark }))
     setDeliveryAgreementChecked(false)
     setEstimatedWeightKg('')
     setDeliveryEstimate('')
@@ -866,6 +869,7 @@ export default function SellPage() {
     setManuallyTouchedAttributes({})
     setImages([])
     setTags([])
+    autoTagsRef.current = []
     setTagInput('')
     setError('')
     setShowConfirmModal(false)
@@ -1064,17 +1068,6 @@ export default function SellPage() {
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4">
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={clearSellForm}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-red-100 bg-white px-3 py-2 text-xs font-black text-red-500 shadow-sm hover:bg-red-50 transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-            Clear
-          </button>
-        </div>
-
         <div className="fade-up bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-start gap-3">
           <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
@@ -1113,7 +1106,17 @@ export default function SellPage() {
 
         {/* ── STEP 1: Basic Info ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
-          <StepHeader num="1" title="Product Details" subtitle="Name, price and quantity" />
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={clearSellForm}
+              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear all fields
+            </button>
+            <StepHeader num="1" title="Product Details" subtitle="Name, price and quantity" />
+          </div>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Product Name *</label>

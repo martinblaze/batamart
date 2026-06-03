@@ -64,6 +64,9 @@ export default function ProductsPage() {
       if (response.ok) {
         alert('Product deleted successfully')
         fetchProducts()
+      } else {
+        const data = await response.json().catch(() => null)
+        alert(data?.error || 'Failed to delete product')
       }
     } catch (error) {
       alert('Failed to delete product')

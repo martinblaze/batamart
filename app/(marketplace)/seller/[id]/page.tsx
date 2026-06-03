@@ -74,7 +74,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
         <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
         <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full bg-violet-500/10 blur-xl" />
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-16">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-10 sm:pb-16">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-white/40 mb-6">
             <Link href="/marketplace" className="hover:text-white/70 transition font-medium">Marketplace</Link>
@@ -146,8 +146,8 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
       </div>
 
       {/* ── Stats cards (overlap the header) ── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:-mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { label: 'Avg Rating', value: `${(Math.round((seller.avgRating || 0) * 100) / 100).toFixed(2)}/5`, sub: 'out of 5 stars', icon: <Star className="w-5 h-5 text-amber-500" />, bg: 'bg-amber-50' },
             { label: 'Reviews', value: String(seller.totalReviews || 0), sub: 'from buyers', icon: <BadgeCheck className="w-5 h-5 text-blue-500" />, bg: 'bg-blue-50' },

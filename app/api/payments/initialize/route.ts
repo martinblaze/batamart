@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       sellerId:   string
       sellerName: string
       orderNote?: string
+      buyerDeliveryAcknowledged?: boolean
     }
 
     let items: CartItem[] = []
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
           include: { seller: true, variants: true },
         })
         if (!product) {
-          return NextResponse.json({ error: `Product not found: ${item.name}` }, { status: 404 })
+          return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 404 })
         }
         let resolvedPrice = product.price
         let resolvedStock = product.quantity

@@ -456,13 +456,6 @@ const FEED_CACHE_TTL_MS = 90 * 1000
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
-const ACTIVITY_SIGNALS = [
-  { icon: '🔥', text: (n: number) => `${n} viewing now` },
-  { icon: '🛒', text: (n: number) => `${n} sold today`  },
-  { icon: '⚡', text: () => 'Selling fast'               },
-  { icon: '👀', text: () => 'Recently added'             },
-]
-
 const CATEGORY_SPOTLIGHTS = [
   { title: 'Level up your Tech',  categories: ['Phones','Laptops','Earbuds','Power Banks'],   icon: '📱', bg: 'from-violet-50 to-indigo-50', accent: '#6366f1', catFilter: 'Electronics' },
   { title: 'Campus Fashion',      categories: ['Sneakers','Bags','Watches','Accessories'],     icon: '👔', bg: 'from-pink-50 to-rose-50',    accent: '#ec4899', catFilter: 'Fashion' },
@@ -478,24 +471,6 @@ const SESSION_ID_KEY = 'BATAMART_SESSION_ID'
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-function getSignal(productId: string, index: number) {
-  const hash = productId.charCodeAt(0) + productId.charCodeAt(productId.length - 1)
-  const signalIndex = (hash + index) % ACTIVITY_SIGNALS.length
-  const signal = ACTIVITY_SIGNALS[signalIndex]
-  const count = 5 + ((hash * 7 + index * 3) % 28)
-  return { icon: signal.icon, text: signal.text(count) }
-}
-
-function getStockLevel(productId: string) {
-  const hash = productId.charCodeAt(0) + productId.charCodeAt(1)
-  return [null, null, null, 3, 5, 7, null, null][hash % 8]
-}
-
-function getDeliveryTag(productId: string) {
-  const hash = productId.charCodeAt(0)
-  return ['Campus Pickup', 'Fast Delivery', 'Free Delivery', null, null][hash % 5]
-}
-
 // ── UPGRADED: handles both legacy pipe-tags AND new VARIANTS_V2 format ────────
 function parseTags(description: string): string[] {
   const { tags, variants } = decodeProductData(description)
@@ -572,14 +547,13 @@ function StarRating({ rating }: { rating: number }) {
 // ─────────────────────────────────────────────
 // Product Card
 // ─────────────────────────────────────────────
-function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
-  product: any; onClick: () => void; delay?: number; showSignal?: boolean
+function ProductCard({ product, onClick, delay = 0 }: {
+  product: any; onClick: () => void; delay?: number
 }) {
   // Use real discount from market price check (stored in DB), not a fake computed value
   const discount     = (product.isDeal && product.discountPercent) ? product.discountPercent : 0
-  const stockLeft    = getStockLevel(product.id)
-  const deliveryTag  = getDeliveryTag(product.id)
-  const signal       = showSignal ? getSignal(product.id, delay) : null
+  const stockLeft    = Number.isFinite(Number(product.quantity)) && product.quantity > 0 && product.quantity <= 7 ? Number(product.quantity) : null
+  const deliveryTag  = product.deliveryEstimate || null
   // Show the actual market price as the "original" crossed-out price when it's a deal
   const originalPrice = (product.isDeal && product.marketPrice && product.marketPrice > product.price)
     ? Math.round(product.marketPrice)
@@ -642,7 +616,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
             {originalPrice && <span className="text-gray-400 font-medium text-[11px] line-through">{fmt(originalPrice)}</span>}
           </div>
           <StarRating rating={product.seller?.avgRating || 0} />
-          <p className="text-[10px] text-gray-500 font-semibold mt-0.5">50+ bought in past week</p>
         </div>
 
         {deliveryTag && (
@@ -658,12 +631,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500">
               <Timer className="w-2.5 h-2.5" /> Only {stockLeft} left
             </span>
-          </div>
-        )}
-
-        {signal && (
-          <div className="mt-1.5 flex items-center gap-1">
-            <span className="text-[10px] viewer-anim font-semibold text-gray-500">{signal.icon} {signal.text}</span>
           </div>
         )}
 
