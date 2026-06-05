@@ -156,7 +156,8 @@ model Product {
   isDeleted                Boolean                 @default(false)
   productDeliveryAgreement Boolean                 @default(false)
   deliveryEstimate         String?
-  moderationStatus         ProductModerationStatus @default(APPROVED)
+  moderationStatus         ProductModerationStatus @default(PENDING)
+  rejectionReason          String?
   estimatedWeightKg        Float?
   dimensionsCm             Json?
   universityId             String?
@@ -194,6 +195,7 @@ model Product {
   @@index([variantsEnabled])
   @@index([isActive])
   @@index([isDeleted])
+  @@index([moderationStatus])
   @@index([createdAt])
   @@index([universityId])
   @@index([nameKey])
@@ -204,6 +206,7 @@ model Product {
   @@index([nameKey, conditionType, hasChangedParts, variantKey])
   @@index([universityId, isActive, isDeleted, quantity])
   @@index([isHot, universityId])
+  @@index([moderationStatus, createdAt])
   @@schema("public")
 }
 
@@ -959,8 +962,10 @@ enum NotificationType {
 }
 
 enum ProductModerationStatus {
-  APPROVED
+  PENDING
   UNDER_REVIEW
+  APPROVED
+  REJECTED
   REMOVED
 
   @@schema("public")

@@ -497,6 +497,19 @@ function MagneticCard({ children, className = '', href }: {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() =&gt; {
+    const syncAuthState = () =&gt; setIsLoggedIn(Boolean(localStorage.getItem('token')))
+    syncAuthState()
+    window.addEventListener('storage', syncAuthState)
+    window.addEventListener('auth-change', syncAuthState)
+    return () =&gt; {
+      window.removeEventListener('storage', syncAuthState)
+      window.removeEventListener('auth-change', syncAuthState)
+    }
+  }, [])
+
   const categories = [
     { name: 'Fashion &amp; Clothing', icon: '👔', count: '3.1K items', accent: '#2563eb', light: '#eff6ff' },
     { name: 'Food Services',      icon: '🍔', count: '1.2K items', accent: '#0284c7', light: '#f0f9ff' },
@@ -722,18 +735,29 @@ export default function HomePage() {
             {/* CTAs */}
             &lt;Reveal delay={240}&gt;
               &lt;div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-14"&gt;
-                &lt;Link
-                  href="/signup"
-                  className="cta-btn w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
-                &gt;
-                  Join BATAMART — It&amp;apos;s Free
-                &lt;/Link&gt;
-                &lt;Link
-                  href="/marketplace"
-                  className="cta-btn w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm"
-                &gt;
-                  Explore Marketplace →
-                &lt;/Link&gt;
+                {isLoggedIn ? (
+                  &lt;Link
+                    href="/marketplace"
+                    className="cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
+                  &gt;
+                    View Marketplace →
+                  &lt;/Link&gt;
+                ) : (
+                  &lt;&gt;
+                    &lt;Link
+                      href="/signup"
+                      className="cta-btn relative w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(37,99,235,0.35)] hover:shadow-[0_0_44px_rgba(37,99,235,0.5)]"
+                    &gt;
+                      Join BATAMART — It&amp;apos;s Free
+                    &lt;/Link&gt;
+                    &lt;Link
+                      href="/marketplace"
+                      className="cta-btn w-full sm:w-auto bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 px-9 py-3.5 rounded-xl font-semibold text-sm tracking-wide shadow-sm"
+                    &gt;
+                      Explore Marketplace →
+                    &lt;/Link&gt;
+                  &lt;/&gt;
+                )}
               &lt;/div&gt;
             &lt;/Reveal&gt;
 
@@ -934,19 +958,30 @@ export default function HomePage() {
 
             &lt;Reveal delay={130}&gt;
               &lt;div className="flex flex-col sm:flex-row gap-3 justify-center mb-5"&gt;
-                &lt;Link
-                  href="/signup"
-                  className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
-                &gt;
-                  Create Free Account
-                &lt;/Link&gt;
+                {isLoggedIn ? (
+                  &lt;Link
+                    href="/marketplace"
+                    className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
+                  &gt;
+                    View Marketplace →
+                  &lt;/Link&gt;
+                ) : (
+                  &lt;Link
+                    href="/signup"
+                    className="cta-btn inline-block bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-xl font-semibold text-base tracking-wide shadow-[0_0_36px_rgba(37,99,235,0.3)] hover:shadow-[0_0_56px_rgba(37,99,235,0.5)]"
+                  &gt;
+                    Create Free Account
+                  &lt;/Link&gt;
+                )}
               &lt;/div&gt;
-              &lt;p className="text-gray-400 text-sm"&gt;
-                Already have an account?{' '}
-                &lt;Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors font-medium"&gt;
-                  Sign in →
-                &lt;/Link&gt;
-              &lt;/p&gt;
+              {!isLoggedIn &amp;&amp; (
+                &lt;p className="text-gray-400 text-sm"&gt;
+                  Already have an account?{' '}
+                  &lt;Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors font-medium"&gt;
+                    Sign in →
+                  &lt;/Link&gt;
+                &lt;/p&gt;
+              )}
             &lt;/Reveal&gt;
           &lt;/div&gt;
         &lt;/section&gt;
@@ -1250,7 +1285,25 @@ export default function AdminDashboardPage() {
   const fetchDashboardData = async (universityId: string) =&gt; {
     setLoading(true)
     try {
-      const token = localStorage.getItem('adminToken')
+      // Get token from localStorage with fallback to cookie parsing
+      let token = localStorage.getItem('adminToken')
+      
+      if (!token) {
+        // Try to get from cookie as fallback
+        const cookies = document.cookie.split(';')
+        const adminCookie = cookies.find(c =&gt; c.trim().startsWith('adminToken='))
+        if (adminCookie) {
+          token = adminCookie.split('=')[1]
+          localStorage.setItem('adminToken', token)
+        }
+      }
+
+      if (!token) {
+        console.error('No admin token found. Redirecting to login...')
+        window.location.href = '/admin-login'
+        return
+      }
+
       const qs = universityId !== 'all' ? `?universityId=${universityId}` : ''
 
       const [statsRes, activityRes] = await Promise.all([
@@ -1266,7 +1319,13 @@ export default function AdminDashboardPage() {
         const data = await statsRes.json()
         setStats(data.stats)
         if (data.universities?.length) setUniversities(data.universities)
+      } else if (statsRes.status === 401 || statsRes.status === 403) {
+        console.error('Token validation failed. Redirecting to login...')
+        localStorage.removeItem('adminToken')
+        window.location.href = '/admin-login'
+        return
       }
+
       if (activityRes.ok) {
         const data = await activityRes.json()
         setRecentActivity(data.activity || [])
@@ -1977,7 +2036,7 @@ export default function AdminOversizedPage() {
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Trash2, Flag, PackageCheck, ShieldAlert } from 'lucide-react'
+import { Search, Trash2, Flag, PackageCheck, ShieldAlert, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 interface Product {
   id: string
@@ -1989,10 +2048,14 @@ interface Product {
   quantity: number
   isFlagged: boolean
   flagReason?: string | null
+  moderationStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectionReason?: string | null
   _count?: { productReports: number }
   seller: {
     id: string
     name: string
+    email?: string
+    phone?: string
   }
   createdAt: string
 }
@@ -2001,17 +2064,21 @@ export default function ProductsPage() {
   const [products, setProducts] = useState&lt;Product[]&gt;([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState&lt;'all' | 'flagged'&gt;('all')
+  const [moderationStatus, setModerationStatus] = useState&lt;'PENDING' | 'APPROVED' | 'REJECTED' | 'all'&gt;('PENDING')
+  const [processingId, setProcessingId] = useState&lt;string | null&gt;(null)
+  const [rejectionReason, setRejectionReason] = useState&lt;{ [key: string]: string }&gt;({})
+  const [showReasonInput, setShowReasonInput] = useState&lt;{ [key: string]: boolean }&gt;({})
 
   useEffect(() =&gt; {
     fetchProducts()
-  }, [viewMode])
+  }, [moderationStatus])
 
   const fetchProducts = async () =&gt; {
     try {
       setLoading(true)
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/products${viewMode === 'flagged' ? '?flagged=true' : ''}`, {
+      const statusParam = moderationStatus === 'all' ? 'all' : moderationStatus
+      const response = await fetch(`/api/admin/products?status=${statusParam}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -2023,6 +2090,77 @@ export default function ProductsPage() {
       console.error('Failed to fetch products:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleApproveProduct = async (productId: string) =&gt; {
+    try {
+      setProcessingId(productId)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          action: 'approve',
+        }),
+      })
+
+      if (response.ok) {
+        alert('Product approved successfully!')
+        fetchProducts()
+      } else {
+        const data = await response.json().catch(() =&gt; null)
+        alert(data?.error || 'Failed to approve product')
+      }
+    } catch (error) {
+      alert('Failed to approve product')
+      console.error('Error:', error)
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleRejectProduct = async (productId: string) =&gt; {
+    const reason = rejectionReason[productId]?.trim()
+    if (!reason) {
+      alert('Please provide a rejection reason')
+      return
+    }
+
+    try {
+      setProcessingId(productId)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          action: 'reject',
+          rejectionReason: reason,
+        }),
+      })
+
+      if (response.ok) {
+        alert('Product rejected successfully!')
+        setRejectionReason({ ...rejectionReason, [productId]: '' })
+        setShowReasonInput({ ...showReasonInput, [productId]: false })
+        fetchProducts()
+      } else {
+        const data = await response.json().catch(() =&gt; null)
+        alert(data?.error || 'Failed to reject product')
+      }
+    } catch (error) {
+      alert('Failed to reject product')
+      console.error('Error:', error)
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -2039,30 +2177,36 @@ export default function ProductsPage() {
       if (response.ok) {
         alert('Product deleted successfully')
         fetchProducts()
+      } else {
+        const data = await response.json().catch(() =&gt; null)
+        alert(data?.error || 'Failed to delete product')
       }
     } catch (error) {
       alert('Failed to delete product')
     }
   }
 
-  const handleToggleActive = async (productId: string, currentStatus: boolean) =&gt; {
-    try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`/api/admin/products/${productId}/toggle`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      })
+  const getStatusColor = (status: string) =&gt; {
+    switch (status) {
+      case 'PENDING':
+        return 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
+      case 'APPROVED':
+        return 'bg-green-500/10 text-green-400 border-green-500/30'
+      case 'REJECTED':
+        return 'bg-red-500/10 text-red-400 border-red-500/30'
+      default:
+        return 'bg-gray-500/10 text-gray-400 border-gray-500/30'
+    }
+  }
 
-      if (response.ok) {
-        alert(`Product ${!currentStatus ? 'activated' : 'deactivated'} successfully`)
-        fetchProducts()
-      }
-    } catch (error) {
-      alert('Failed to update product')
+  const getStatusIcon = (status: string) =&gt; {
+    switch (status) {
+      case 'APPROVED':
+        return &lt;CheckCircle className="w-4 h-4" /&gt;
+      case 'REJECTED':
+        return &lt;XCircle className="w-4 h-4" /&gt;
+      default:
+        return &lt;PackageCheck className="w-4 h-4" /&gt;
     }
   }
 
@@ -2075,25 +2219,18 @@ export default function ProductsPage() {
   return (
     &lt;div className="space-y-6"&gt;
       &lt;div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"&gt;
-        &lt;div className="flex rounded-xl border border-gray-700 bg-gray-800 p-1 w-full sm:w-auto"&gt;
-          &lt;button
-            onClick={() =&gt; setViewMode('all')}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none ${
-              viewMode === 'all' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          &gt;
-            &lt;PackageCheck className="w-4 h-4" /&gt;
-            All
-          &lt;/button&gt;
-          &lt;button
-            onClick={() =&gt; setViewMode('flagged')}
-            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors flex-1 sm:flex-none ${
-              viewMode === 'flagged' ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          &gt;
-            &lt;Flag className="w-4 h-4" /&gt;
-            Flagged
-          &lt;/button&gt;
+        &lt;div className="flex rounded-xl border border-gray-700 bg-gray-800 p-1 w-full sm:w-auto overflow-x-auto"&gt;
+          {(['PENDING', 'APPROVED', 'REJECTED', 'all'] as const).map((status) =&gt; (
+            &lt;button
+              key={status}
+              onClick={() =&gt; setModerationStatus(status)}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors whitespace-nowrap ${
+                moderationStatus === status ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+              }`}
+            &gt;
+              {status === 'all' ? 'All Products' : status}
+            &lt;/button&gt;
+          ))}
         &lt;/div&gt;
 
         &lt;div className="relative max-w-md w-full"&gt;
@@ -2115,7 +2252,7 @@ export default function ProductsPage() {
           &lt;/div&gt;
         ) : filteredProducts.length === 0 ? (
           &lt;div className="col-span-full text-center py-12 text-gray-400"&gt;
-            {viewMode === 'flagged' ? 'No flagged products found' : 'No products found'}
+            No {moderationStatus !== 'all' ? moderationStatus.toLowerCase() : ''} products found
           &lt;/div&gt;
         ) : (
           filteredProducts.map((product) =&gt; (
@@ -2126,54 +2263,115 @@ export default function ProductsPage() {
                   alt={product.name}
                   className="w-full h-full object-cover"
                 /&gt;
-                {!product.isActive &amp;&amp; (
-                  &lt;div className="absolute inset-0 bg-black/60 flex items-center justify-center"&gt;
-                    &lt;span className="px-4 py-2 bg-red-500 text-white rounded-full text-sm font-bold"&gt;
-                      Inactive
-                    &lt;/span&gt;
-                  &lt;/div&gt;
-                )}
+                &lt;div className={`absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${getStatusColor(product.moderationStatus)}`}&gt;
+                  {getStatusIcon(product.moderationStatus)}
+                  {product.moderationStatus}
+                &lt;/div&gt;
               &lt;/div&gt;
               &lt;div className="p-4"&gt;
                 &lt;h3 className="text-white font-bold mb-1 line-clamp-2"&gt;{product.name}&lt;/h3&gt;
                 &lt;p className="text-gray-400 text-sm mb-2"&gt;{product.category}&lt;/p&gt;
+
+                {product.moderationStatus === 'REJECTED' &amp;&amp; product.rejectionReason &amp;&amp; (
+                  &lt;div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3"&gt;
+                    &lt;p className="text-xs font-bold text-red-300 mb-1"&gt;Rejection Reason:&lt;/p&gt;
+                    &lt;p className="text-xs text-red-100/80 line-clamp-2"&gt;{product.rejectionReason}&lt;/p&gt;
+                  &lt;/div&gt;
+                )}
+
                 {product.isFlagged &amp;&amp; (
                   &lt;div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3"&gt;
                     &lt;p className="flex items-center gap-2 text-xs font-bold text-amber-300 mb-1"&gt;
                       &lt;ShieldAlert className="w-3.5 h-3.5" /&gt;
                       Flagged by {product._count?.productReports || 1} user{(product._count?.productReports || 1) === 1 ? '' : 's'}
                     &lt;/p&gt;
-                    &lt;p className="text-xs text-amber-100/80 line-clamp-3"&gt;
+                    &lt;p className="text-xs text-amber-100/80 line-clamp-2"&gt;
                       {product.flagReason || 'No reason provided.'}
                     &lt;/p&gt;
                   &lt;/div&gt;
                 )}
-                &lt;div className="flex items-center justify-between mb-4"&gt;
-                  &lt;span className="text-xl font-bold text-red-400"&gt;
+
+                &lt;div className="flex items-center justify-between mb-3"&gt;
+                  &lt;span className="text-lg font-bold text-red-400"&gt;
                     ₦{product.price.toLocaleString()}
                   &lt;/span&gt;
-                  &lt;span className="text-sm text-gray-400"&gt;Stock: {product.quantity}&lt;/span&gt;
+                  &lt;span className="text-xs text-gray-400"&gt;Stock: {product.quantity}&lt;/span&gt;
                 &lt;/div&gt;
-                &lt;p className="text-sm text-gray-400 mb-4"&gt;By: {product.seller.name}&lt;/p&gt;
-                &lt;div className="flex gap-2"&gt;
-                  &lt;button
-                    onClick={() =&gt; handleToggleActive(product.id, product.isActive)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      product.isActive
-                        ? 'bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
-                        : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-                    }`}
-                  &gt;
-                    {product.isActive ? 'Deactivate' : 'Activate'}
-                  &lt;/button&gt;
-                  &lt;button
-                    onClick={() =&gt; handleDeleteProduct(product.id)}
-                    className="px-3 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
-                    aria-label={`Delete ${product.name}`}
-                  &gt;
-                    &lt;Trash2 className="w-4 h-4" /&gt;
-                  &lt;/button&gt;
-                &lt;/div&gt;
+
+                &lt;p className="text-xs text-gray-400 mb-3"&gt;
+                  &lt;strong&gt;Seller:&lt;/strong&gt; {product.seller.name}
+                  {product.seller.email &amp;&amp; &lt;&gt; ({product.seller.email})&lt;/&gt;}
+                &lt;/p&gt;
+
+                {product.moderationStatus === 'PENDING' &amp;&amp; (
+                  &lt;div className="space-y-2"&gt;
+                    &lt;div className="flex gap-2"&gt;
+                      &lt;button
+                        onClick={() =&gt; handleApproveProduct(product.id)}
+                        disabled={processingId === product.id}
+                        className="flex-1 px-3 py-2 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                      &gt;
+                        {processingId === product.id ? (
+                          &lt;&gt;
+                            &lt;Loader2 className="w-4 h-4 animate-spin" /&gt;
+                            Approving...
+                          &lt;/&gt;
+                        ) : (
+                          &lt;&gt;
+                            &lt;CheckCircle className="w-4 h-4" /&gt;
+                            Approve
+                          &lt;/&gt;
+                        )}
+                      &lt;/button&gt;
+                      &lt;button
+                        onClick={() =&gt; setShowReasonInput({ ...showReasonInput, [product.id]: !showReasonInput[product.id] })}
+                        className="flex-1 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1"
+                      &gt;
+                        &lt;XCircle className="w-4 h-4" /&gt;
+                        Reject
+                      &lt;/button&gt;
+                    &lt;/div&gt;
+
+                    {showReasonInput[product.id] &amp;&amp; (
+                      &lt;div className="space-y-2"&gt;
+                        &lt;textarea
+                          value={rejectionReason[product.id] || ''}
+                          onChange={(e) =&gt; setRejectionReason({ ...rejectionReason, [product.id]: e.target.value })}
+                          placeholder="Enter rejection reason..."
+                          maxLength={500}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-xs focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                          rows={3}
+                        /&gt;
+                        &lt;button
+                          onClick={() =&gt; handleRejectProduct(product.id)}
+                          disabled={processingId === product.id}
+                          className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                        &gt;
+                          {processingId === product.id ? (
+                            &lt;&gt;
+                              &lt;Loader2 className="w-4 h-4 animate-spin" /&gt;
+                              Rejecting...
+                            &lt;/&gt;
+                          ) : (
+                            'Confirm Rejection'
+                          )}
+                        &lt;/button&gt;
+                      &lt;/div&gt;
+                    )}
+                  &lt;/div&gt;
+                )}
+
+                {product.moderationStatus !== 'PENDING' &amp;&amp; (
+                  &lt;div className="flex gap-2"&gt;
+                    &lt;button
+                      onClick={() =&gt; handleDeleteProduct(product.id)}
+                      className="flex-1 px-3 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors text-sm font-semibold"
+                    &gt;
+                      &lt;Trash2 className="w-4 h-4 inline mr-1" /&gt;
+                      Delete
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                )}
               &lt;/div&gt;
             &lt;/div&gt;
           ))
@@ -3999,13 +4197,15 @@ export default function AdminLoginPage() {
 
       if (response.ok) {
         // Save token as secure cookie (works with middleware) instead of localStorage
-        document.cookie = `adminToken=${data.token}; path=/; max-age=86400; SameSite=Strict`
+        document.cookie = `adminToken=${data.token}; path=/; max-age=86400; SameSite=Lax`
 
         // Also keep in localStorage as fallback for API calls
         localStorage.setItem('adminToken', data.token)
 
         // Full page reload so cookie is set before middleware checks it
-        window.location.href = '/admin'
+        setTimeout(() =&gt; {
+          window.location.href = '/admin'
+        }, 100)
       } else {
         setError(data.error || 'Invalid credentials')
       }
@@ -5117,6 +5317,11 @@ function SignupForm() {
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
 
+  // ── Signup closure state ─────────────────────────────────────────────────────
+  const [signupsOpen, setSignupsOpen]           = useState(true)
+  const [countdown, setCountdown]               = useState('')
+  const [signupReopensDate, setSignupReopensDate] = useState('')
+
   useEffect(() =&gt; {
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref.trim().toUpperCase())
@@ -5136,6 +5341,44 @@ function SignupForm() {
       .finally(() =&gt; setUniLoading(false))
   }, [])
 
+  // ── Check if signups are open and update countdown ───────────────────────────
+  useEffect(() =&gt; {
+    const checkSignupStatus = () =&gt; {
+      const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+      const now = Date.now()
+      const msRemaining = SIGNUP_REOPENS_AT - now
+      
+      console.log('🔒 Signup Status Check:', {
+        now: new Date(now).toISOString(),
+        reopensAt: new Date(SIGNUP_REOPENS_AT).toISOString(),
+        msRemaining,
+        signupsOpen: now &gt;= SIGNUP_REOPENS_AT,
+      })
+      
+      if (now &gt;= SIGNUP_REOPENS_AT) {
+        setSignupsOpen(true)
+        setCountdown('')
+        return
+      }
+
+      setSignupsOpen(false)
+      setSignupReopensDate('2026-06-22')
+      
+      const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+      const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+      const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+      
+      const countdownStr = `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`
+      setCountdown(countdownStr)
+      console.log('⏱️ Countdown updated:', countdownStr)
+    }
+
+    checkSignupStatus()
+    const interval = setInterval(checkSignupStatus, 1000)
+    return () =&gt; clearInterval(interval)
+  }, [])
+
   const validatePassword = (pwd: string) =&gt; {
     if (pwd.length &lt; 8) return 'Password must be at least 8 characters'
     if (!/\d/.test(pwd)) return 'Password must contain at least one number'
@@ -5149,8 +5392,19 @@ function SignupForm() {
     return ''
   }
 
+  const validateEmailDomain = (emailAddr: string) =&gt; {
+    const domain = emailAddr.split('@')[1]?.toLowerCase() || ''
+    const allowedDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com', 'protonmail.com']
+    if (!allowedDomains.includes(domain)) {
+      return 'Please use a legitimate email (@gmail, @outlook, @yahoo, @hotmail, @protonmail)'
+    }
+    return ''
+  }
+
   const handleSendOTP = async (e: React.FormEvent) =&gt; {
     e.preventDefault()
+    const emailDomainError = validateEmailDomain(email)
+    if (emailDomainError) { setError(emailDomainError); return }
     const phoneError = validatePhone(phone)
     if (phoneError) { setError(phoneError); return }
     setLoading(true)
@@ -5162,6 +5416,16 @@ function SignupForm() {
         body:    JSON.stringify({ email }),
       })
       const data = await response.json()
+      
+      // ── Handle signup closure ────────────────────────────────────────────────────
+      if (response.status === 503 &amp;&amp; data.countdown) {
+        setSignupsOpen(false)
+        setCountdown(data.countdown)
+        setSignupReopensDate(data.reopensAt || '2026-06-22')
+        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
+        return
+      }
+      
       if (response.ok) { setStep(2) }
       else { setError(data.error || 'Failed to send OTP') }
     } catch {
@@ -5249,6 +5513,16 @@ function SignupForm() {
         }),
       })
       const data = await response.json()
+      
+      // ── Handle signup closure ────────────────────────────────────────────────────
+      if (response.status === 503 &amp;&amp; data.countdown) {
+        setSignupsOpen(false)
+        setCountdown(data.countdown)
+        setSignupReopensDate(data.reopensAt || '2026-06-22')
+        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
+        return
+      }
+      
       if (response.ok) {
         localStorage.setItem('token',    data.token)
         localStorage.setItem('userName', data.user.name)
@@ -5271,6 +5545,18 @@ function SignupForm() {
   if (step === 0) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
+        {!signupsOpen &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
+            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
+            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+            &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
+              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
+              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
         &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;div className="text-center mb-6"&gt;
             &lt;div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}&gt;
@@ -5294,12 +5580,18 @@ function SignupForm() {
               {universities.map(uni =&gt; (
                 &lt;button
                   key={uni.id}
-                  onClick={() =&gt; setSelectedUniversity(uni)}
+                  onClick={() =&gt; {
+                    if (!signupsOpen) {
+                      setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
+                      return
+                    }
+                    setSelectedUniversity(uni)
+                  }}
                   className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
                     selectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  }`}
+                  } ${!signupsOpen ? 'opacity-60 cursor-not-allowed' : ''}`}
                 &gt;
                   &lt;div className="flex items-center justify-between"&gt;
                     &lt;div&gt;
@@ -5350,6 +5642,18 @@ function SignupForm() {
   if (step === 1) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
+        {!signupsOpen &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
+            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
+            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+            &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
+              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
+              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
         &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={1} /&gt;
           &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Create account&lt;/h2&gt;
@@ -5500,6 +5804,18 @@ function SignupForm() {
   if (step === 2) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
+        {!signupsOpen &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
+            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
+            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+            &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
+              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
+              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
         &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={2} /&gt;
           &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Verify your email&lt;/h2&gt;
@@ -5552,6 +5868,18 @@ function SignupForm() {
 
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
+        {!signupsOpen &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
+            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
+            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+            &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
+              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
+              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        )}
         &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={3} /&gt;
 
@@ -5663,6 +5991,18 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     &lt;PageShell selectedUniversity={selectedUniversity}&gt;
+      {!signupsOpen &amp;&amp; (
+        &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
+          &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
+          &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
+          &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+          &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
+            &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
+            &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
+            &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
       &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
         &lt;StepDots current={4} /&gt;
         &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Set your password&lt;/h2&gt;
@@ -5733,7 +6073,7 @@ function SignupForm() {
     &lt;/PageShell&gt;
   )
 }
-
+// nothing really
 export default function SignupPage() {
   return (
     &lt;Suspense fallback={
@@ -6528,10 +6868,6 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         orderNote: buildOrderNote(item),
         buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
-        // We include name/image for display in emails only — NOT for pricing
-        _displayName: item.name,
-        _displayImage: item.image,
-        sellerId: item.sellerId,
       }))
 
       // ── FIX #4: We do NOT send deliveryFee from the client.
@@ -6593,10 +6929,6 @@ export default function CheckoutPage() {
   const deliveryFee   = serverDeliveryFee ?? fallbackDeliveryFee
   const subtotal      = cartItems.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0)
   const totalAmount   = subtotal + deliveryFee
-  const platformFee   = subtotal * 0.05
-  const riderAmount   = 560
-  const referralCut   = 240
-  const sellerAmount  = subtotal * 0.95
   const hasNotes = cartItems.some(item =&gt; {
     const variantNote = formatVariantSelection(item.selectedVariants || {})
     const extra = orderNotes[item.productId]?.trim() || ''
@@ -6891,24 +7223,6 @@ export default function CheckoutPage() {
                 By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack.
               &lt;/p&gt;
 
-              {/* ── Payment Breakdown ── */}
-              &lt;div className="mt-5 pt-4 border-t border-gray-50"&gt;
-                &lt;p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3"&gt;Payment Breakdown&lt;/p&gt;
-                &lt;div className="space-y-2"&gt;
-                  {[
-                    { label: 'Seller receives',   value: formatPrice(sellerAmount), color: 'text-emerald-600' },
-                    { label: 'Rider receives',    value: formatPrice(riderAmount),  color: 'text-blue-600'   },
-                    { label: 'Platform fee (5%)', value: formatPrice(platformFee),  color: 'text-gray-500'   },
-                    { label: 'Referral reward',   value: formatPrice(referralCut),  color: 'text-pink-500'   },
-                  ].map(({ label, value, color }) =&gt; (
-                    &lt;div key={label} className="flex justify-between text-xs"&gt;
-                      &lt;span className="text-gray-400 font-medium"&gt;{label}&lt;/span&gt;
-                      &lt;span className={`font-black ${color}`}&gt;{value}&lt;/span&gt;
-                    &lt;/div&gt;
-                  ))}
-                &lt;/div&gt;
-              &lt;/div&gt;
-
               &lt;div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-center gap-4"&gt;
                 {[
                   { icon: &lt;Lock className="w-3.5 h-3.5 text-gray-400" /&gt;, label: 'SSL Secured' },
@@ -7156,7 +7470,7 @@ import Link from 'next/link'
 import {
   Search, Star, Shield, ShoppingBag, Sparkles, Flame,
   AlertCircle, Clock, TrendingUp, X, ChevronRight,
-  Package, Zap, Award, ArrowRight, Tag, Eye, Heart,
+  Package, Zap, Award, ArrowRight, Tag, Eye, Heart, Flag,
   RefreshCw, CheckCircle, Users, Truck, ChevronLeft,
   BadgeCheck, Timer, Percent, MapPin, Bell, Menu,
   ChevronDown, Grid3X3, List, Sliders, Loader2, Copy,
@@ -7605,13 +7919,6 @@ const FEED_CACHE_TTL_MS = 90 * 1000
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
-const ACTIVITY_SIGNALS = [
-  { icon: '🔥', text: (n: number) =&gt; `${n} viewing now` },
-  { icon: '🛒', text: (n: number) =&gt; `${n} sold today`  },
-  { icon: '⚡', text: () =&gt; 'Selling fast'               },
-  { icon: '👀', text: () =&gt; 'Recently added'             },
-]
-
 const CATEGORY_SPOTLIGHTS = [
   { title: 'Level up your Tech',  categories: ['Phones','Laptops','Earbuds','Power Banks'],   icon: '📱', bg: 'from-violet-50 to-indigo-50', accent: '#6366f1', catFilter: 'Electronics' },
   { title: 'Campus Fashion',      categories: ['Sneakers','Bags','Watches','Accessories'],     icon: '👔', bg: 'from-pink-50 to-rose-50',    accent: '#ec4899', catFilter: 'Fashion' },
@@ -7627,24 +7934,6 @@ const SESSION_ID_KEY = 'BATAMART_SESSION_ID'
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-function getSignal(productId: string, index: number) {
-  const hash = productId.charCodeAt(0) + productId.charCodeAt(productId.length - 1)
-  const signalIndex = (hash + index) % ACTIVITY_SIGNALS.length
-  const signal = ACTIVITY_SIGNALS[signalIndex]
-  const count = 5 + ((hash * 7 + index * 3) % 28)
-  return { icon: signal.icon, text: signal.text(count) }
-}
-
-function getStockLevel(productId: string) {
-  const hash = productId.charCodeAt(0) + productId.charCodeAt(1)
-  return [null, null, null, 3, 5, 7, null, null][hash % 8]
-}
-
-function getDeliveryTag(productId: string) {
-  const hash = productId.charCodeAt(0)
-  return ['Campus Pickup', 'Fast Delivery', 'Free Delivery', null, null][hash % 5]
-}
-
 // ── UPGRADED: handles both legacy pipe-tags AND new VARIANTS_V2 format ────────
 function parseTags(description: string): string[] {
   const { tags, variants } = decodeProductData(description)
@@ -7721,14 +8010,13 @@ function StarRating({ rating }: { rating: number }) {
 // ─────────────────────────────────────────────
 // Product Card
 // ─────────────────────────────────────────────
-function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
-  product: any; onClick: () =&gt; void; delay?: number; showSignal?: boolean
+function ProductCard({ product, onClick, delay = 0 }: {
+  product: any; onClick: () =&gt; void; delay?: number
 }) {
   // Use real discount from market price check (stored in DB), not a fake computed value
   const discount     = (product.isDeal &amp;&amp; product.discountPercent) ? product.discountPercent : 0
-  const stockLeft    = getStockLevel(product.id)
-  const deliveryTag  = getDeliveryTag(product.id)
-  const signal       = showSignal ? getSignal(product.id, delay) : null
+  const stockLeft    = Number.isFinite(Number(product.quantity)) &amp;&amp; product.quantity &gt; 0 &amp;&amp; product.quantity &lt;= 7 ? Number(product.quantity) : null
+  const deliveryTag  = product.deliveryEstimate || null
   // Show the actual market price as the "original" crossed-out price when it's a deal
   const originalPrice = (product.isDeal &amp;&amp; product.marketPrice &amp;&amp; product.marketPrice &gt; product.price)
     ? Math.round(product.marketPrice)
@@ -7770,11 +8058,11 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
           &lt;/div&gt;
         )}
         &lt;div className="quick-actions absolute bottom-2 left-2 flex gap-1.5"&gt;
-          &lt;button onClick={e =&gt; e.stopPropagation()} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors"&gt;
-            &lt;Heart className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" /&gt;
-          &lt;/button&gt;
           &lt;button onClick={e =&gt; { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-sm transition-colors"&gt;
             &lt;Eye className="w-3.5 h-3.5 text-gray-500" /&gt;
+          &lt;/button&gt;
+          &lt;button onClick={e =&gt; { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors"&gt;
+            &lt;Flag className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" /&gt;
           &lt;/button&gt;
         &lt;/div&gt;
       &lt;/div&gt;
@@ -7791,7 +8079,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
             {originalPrice &amp;&amp; &lt;span className="text-gray-400 font-medium text-[11px] line-through"&gt;{fmt(originalPrice)}&lt;/span&gt;}
           &lt;/div&gt;
           &lt;StarRating rating={product.seller?.avgRating || 0} /&gt;
-          &lt;p className="text-[10px] text-gray-500 font-semibold mt-0.5"&gt;50+ bought in past week&lt;/p&gt;
         &lt;/div&gt;
 
         {deliveryTag &amp;&amp; (
@@ -7807,12 +8094,6 @@ function ProductCard({ product, onClick, delay = 0, showSignal = true }: {
             &lt;span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500"&gt;
               &lt;Timer className="w-2.5 h-2.5" /&gt; Only {stockLeft} left
             &lt;/span&gt;
-          &lt;/div&gt;
-        )}
-
-        {signal &amp;&amp; (
-          &lt;div className="mt-1.5 flex items-center gap-1"&gt;
-            &lt;span className="text-[10px] viewer-anim font-semibold text-gray-500"&gt;{signal.icon} {signal.text}&lt;/span&gt;
           &lt;/div&gt;
         )}
 
@@ -9082,6 +9363,17 @@ export default function MarketplacePage() {
     if (selectedCategory === 'All' &amp;&amp; !universityId) return
     if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
   }, [selectedCategory, mounted, universityId])
+
+  // ── Filter recently viewed to remove suspended/deleted products ──
+  useEffect(() =&gt; {
+    if (allProducts.length === 0 || recentlyViewed.length === 0) return
+    const productIds = new Set(allProducts.map(p =&gt; p.id))
+    const filtered = recentlyViewed.filter(p =&gt; productIds.has(p.id))
+    if (filtered.length !== recentlyViewed.length) {
+      setRecentlyViewed(filtered)
+      try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(filtered)) } catch {}
+    }
+  }, [allProducts])
 
   // ─────────────────────────────────────────────
   // Pull-to-Refresh — iOS-safe implementation
@@ -11302,7 +11594,8 @@ const SHOP_CSS = `
 interface Product {
   id: string; name: string; price: number; quantity: number
   images: string[]; category: string; subcategory?: string
-  description: string; isActive: boolean
+  description: string; isActive: boolean; moderationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectionReason?: string | null
   deliveryEstimate?: string
   viewCount: number; createdAt: string
   _count: { orders: number }
@@ -11352,6 +11645,25 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: {
 
 const fmt = (price: number) =&gt;
   new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(price)
+
+const getModerationStatusBadge = (status?: string, rejectionReason?: string | null) =&gt; {
+  if (!status || status === 'APPROVED') return null
+  
+  const config = {
+    PENDING: { bg: 'bg-yellow-50', text: 'text-yellow-700', label: 'Under Review', icon: &lt;Timer className="w-3 h-3" /&gt; },
+    REJECTED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejected', icon: &lt;XCircle className="w-3 h-3" /&gt; },
+  }[status] || { bg: 'bg-gray-50', text: 'text-gray-700', label: status, icon: null }
+  
+  return (
+    &lt;div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${config.bg} ${config.text} ring-1 ring-current ring-opacity-20`}&gt;
+      {config.icon}
+      {config.label}
+      {status === 'REJECTED' &amp;&amp; rejectionReason &amp;&amp; (
+        &lt;span className="ml-0.5 text-[8px] opacity-70 truncate max-w-xs" title={rejectionReason}&gt;({rejectionReason})&lt;/span&gt;
+      )}
+    &lt;/div&gt;
+  )
+}
 
 export default function MyShopPage() {
   const router = useRouter()
@@ -11636,6 +11948,11 @@ export default function MyShopPage() {
                         {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                       &lt;/p&gt;
                       &lt;h3 className="font-black text-gray-900 text-base line-clamp-1 mb-0.5"&gt;{product.name}&lt;/h3&gt;
+                      {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) &amp;&amp; (
+                        &lt;div className="mb-2"&gt;
+                          {getModerationStatusBadge(product.moderationStatus, product.rejectionReason)}
+                        &lt;/div&gt;
+                      )}
                       {product.deliveryEstimate &amp;&amp; &lt;p className="text-[11px] font-semibold text-orange-600 mb-1"&gt;Delivery: {product.deliveryEstimate}&lt;/p&gt;}
                       {/* ── Variant chips ── */}
                       {(() =&gt; {
@@ -11703,6 +12020,11 @@ export default function MyShopPage() {
                               {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                             &lt;/p&gt;
                             &lt;h3 className="font-black text-gray-900 text-base leading-tight mt-0.5 line-clamp-1"&gt;{product.name}&lt;/h3&gt;
+                            {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) &amp;&amp; (
+                              &lt;div className="mt-1.5 mb-1"&gt;
+                                {getModerationStatusBadge(product.moderationStatus, product.rejectionReason)}
+                              &lt;/div&gt;
+                            )}
                             {product.deliveryEstimate &amp;&amp; &lt;p className="text-[11px] font-semibold text-orange-600 mt-1"&gt;Delivery: {product.deliveryEstimate}&lt;/p&gt;}
                             {/* ── Variant chips ── */}
                             {(() =&gt; {
@@ -14698,7 +15020,7 @@ import Link from 'next/link'
 import {
   X, Plus, AlertCircle, Camera, Upload, CheckCircle2,
   Sparkles, Tag, MapPin, Package, ChevronRight, Zap,
-  Shield, Info, ArrowLeft, Loader2, Image as ImageIcon,
+  Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2,
 } from 'lucide-react'
 import {
   CATEGORY_TREE, getCategoryList, getSubcategoryList,
@@ -15031,8 +15353,9 @@ function VariantRow({
         &lt;input
           type="text"
           value={customInput}
-          onChange={e =&gt; setCustomInput(e.target.value)}
+          onChange={e =&gt; setCustomInput(limitText(e.target.value, SELL_LIMITS.variantValue))}
           onKeyDown={e =&gt; { if (e.key === 'Enter') { e.preventDefault(); handleCustomAdd() } }}
+          maxLength={SELL_LIMITS.variantValue}
           placeholder={`Add custom ${field.label.toLowerCase()}...`}
           className="flex-1 text-xs px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
         /&gt;
@@ -15064,11 +15387,52 @@ interface CategoryAttributeDef {
 }
 
 // ── Main Sell Page ────────────────────────────────────────────────────────────
+const MAX_PRICE = 10000000
+const MAX_STOCK = 100
+const SELL_LIMITS = {
+  productName: 120,
+  location: 100,
+  roomNumber: 50,
+  landmark: 120,
+  variantValue: 30,
+  attributeText: 80,
+  attributeNumber: 1000000,
+  deliveryEstimate: 60,
+  weightKg: 100,
+  dimensionCm: 500,
+}
+
+function limitText(value: string, max: number) {
+  return String(value || '').slice(0, max)
+}
+
+function limitIntegerInput(value: string, max: number, min = 0) {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (!digits) return ''
+  const n = Math.max(min, Math.min(max, Number(digits)))
+  return String(n)
+}
+
+function limitDecimalInput(value: string, max: number) {
+  const cleaned = String(value || '')
+    .replace(/[^\d.]/g, '')
+    .replace(/(\..*)\./g, '$1')
+  if (!cleaned) return ''
+  if (cleaned === '.') return '0.'
+  const [whole, decimals = ''] = cleaned.split('.')
+  const normalized = `${whole || '0'}${cleaned.includes('.') ? `.${decimals.slice(0, 2)}` : ''}`
+  const n = Number(normalized)
+  if (!Number.isFinite(n)) return ''
+  if (n &gt; max) return String(max)
+  return normalized
+}
+
 export default function SellPage() {
   const router = useRouter()
   const tagInputRef = useRef&lt;HTMLInputElement&gt;(null)
   const skipNextCategoryResetRef = useRef(true)
   const skipNextSubcategoryResetRef = useRef(true)
+  const autoTagsRef = useRef&lt;string[]&gt;([])
   const SELL_DRAFT_KEY = 'BATAMART_SELL_DRAFT_V1'
 
   // Auth state
@@ -15124,13 +15488,47 @@ export default function SellPage() {
       const raw = localStorage.getItem(SELL_DRAFT_KEY)
       if (raw) {
         const draft = JSON.parse(raw)
-        if (draft?.formData) setFormData(draft.formData)
+        if (draft?.formData) {
+          setFormData({
+            name: limitText(draft.formData.name || '', SELL_LIMITS.productName),
+            price: limitDecimalInput(draft.formData.price || '', MAX_PRICE),
+            quantity: limitIntegerInput(draft.formData.quantity || '1', MAX_STOCK, 1) || '1',
+            hostelName: limitText(draft.formData.hostelName || '', SELL_LIMITS.location),
+            roomNumber: limitText(draft.formData.roomNumber || '', SELL_LIMITS.roomNumber),
+            landmark: limitText(draft.formData.landmark || '', SELL_LIMITS.landmark),
+          })
+        }
         if (draft?.categoryKey) setCategoryKey(draft.categoryKey)
         if (draft?.subcategoryKey) setSubcategoryKey(draft.subcategoryKey)
-        if (draft?.variantValues) setVariantValues(draft.variantValues)
-        if (draft?.variantPricing) setVariantPricing(draft.variantPricing)
+        if (draft?.variantValues) {
+          const nextVariants: Record&lt;string, string[]&gt; = {}
+          for (const [key, values] of Object.entries(draft.variantValues as Record&lt;string, unknown&gt;)) {
+            nextVariants[key] = Array.isArray(values)
+              ? values.map(v =&gt; limitText(String(v).trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12)
+              : []
+          }
+          setVariantValues(nextVariants)
+        }
+        if (draft?.variantPricing) {
+          const nextPricing: Record&lt;string, { price: string; stock: string }&gt; = {}
+          for (const [key, row] of Object.entries(draft.variantPricing as Record&lt;string, any&gt;)) {
+            nextPricing[key] = {
+              price: limitDecimalInput(row?.price || '', MAX_PRICE),
+              stock: limitIntegerInput(row?.stock || '', MAX_STOCK, 0),
+            }
+          }
+          setVariantPricing(nextPricing)
+        }
         if (typeof draft?.variantsEnabledToggle === 'boolean') setVariantsEnabledToggle(draft.variantsEnabledToggle)
-        if (draft?.attributeValues) setAttributeValues(draft.attributeValues)
+        if (draft?.attributeValues) {
+          const nextAttributes: Record&lt;string, any&gt; = {}
+          for (const [key, value] of Object.entries(draft.attributeValues as Record&lt;string, any&gt;)) {
+            if (typeof value === 'string') nextAttributes[key] = limitText(value, SELL_LIMITS.attributeText)
+            else if (Array.isArray(value)) nextAttributes[key] = value.map(v =&gt; limitText(String(v), SELL_LIMITS.attributeText)).filter(Boolean).slice(0, 12)
+            else nextAttributes[key] = value
+          }
+          setAttributeValues(nextAttributes)
+        }
         if (draft?.manuallyTouchedAttributes) setManuallyTouchedAttributes(draft.manuallyTouchedAttributes)
         if (Array.isArray(draft?.tags)) setTags(draft.tags)
         if (Array.isArray(draft?.images)) setImages(draft.images)
@@ -15269,11 +15667,13 @@ export default function SellPage() {
     const subLabel = subcategoryKey ? CATEGORY_TREE[categoryKey]?.subcategories[subcategoryKey]?.label : ''
     const variantTags = Object.values(variantValues).flat()
     const nameParts = formData.name.trim().split(/\s+/).filter(w =&gt; w.length &gt; 2)
-    const generated = [...new Set([...nameParts, catLabel, subLabel, ...variantTags].filter(Boolean))]
+    const generated = Array.from(new Set([...nameParts, catLabel, subLabel, ...variantTags].filter(Boolean)))
+    const previousAutoTags = autoTagsRef.current
     setTags(prev =&gt; {
-      const manual = prev.filter(t =&gt; !generated.includes(t))
-      return [...generated, ...manual].slice(0, 30)
+      const manual = prev.filter(t =&gt; !previousAutoTags.includes(t))
+      return Array.from(new Set([...generated, ...manual])).slice(0, 30)
     })
+    autoTagsRef.current = generated
   }, [formData.name, categoryKey, subcategoryKey, variantValues])
 
   // AI-lite parse auto-fill from product title (without overriding manual inputs)
@@ -15421,11 +15821,15 @@ export default function SellPage() {
   }
 
   const setVariantField = (key: string, vals: string[]) =&gt; {
-    setVariantValues(prev =&gt; ({ ...prev, [key]: vals }))
+    setVariantValues(prev =&gt; ({ ...prev, [key]: vals.map(v =&gt; limitText(v.trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12) }))
   }
 
   const setAttributeValue = (key: string, value: any, markTouched = true) =&gt; {
-    setAttributeValues((prev) =&gt; ({ ...prev, [key]: value }))
+    const attr = categoryAttributes.find(a =&gt; a.key === key)
+    let nextValue = value
+    if (attr?.type === 'number') nextValue = limitDecimalInput(String(value ?? ''), SELL_LIMITS.attributeNumber)
+    else if (typeof value === 'string') nextValue = limitText(value, SELL_LIMITS.attributeText)
+    setAttributeValues((prev) =&gt; ({ ...prev, [key]: nextValue }))
     if (markTouched) {
       setManuallyTouchedAttributes((prev) =&gt; ({ ...prev, [key]: true }))
     }
@@ -15446,10 +15850,44 @@ export default function SellPage() {
   }
 
   const addCustomSelectAttribute = (key: string) =&gt; {
-    const raw = (attributeCustomInput[key] || '').trim()
+    const raw = limitText(attributeCustomInput[key] || '', SELL_LIMITS.attributeText).trim()
     if (!raw) return
     setAttributeValue(key, raw)
     setAttributeCustomInput((prev) =&gt; ({ ...prev, [key]: '' }))
+  }
+
+  const updateVariantPrice = (key: string, row: { price: string; stock: string }, value: string) =&gt; {
+    setVariantPricing(prev =&gt; ({ ...prev, [key]: { ...row, price: limitDecimalInput(value, MAX_PRICE) } }))
+  }
+
+  const updateVariantStock = (key: string, row: { price: string; stock: string }, value: string) =&gt; {
+    setVariantPricing(prev =&gt; ({ ...prev, [key]: { ...row, stock: limitIntegerInput(value, MAX_STOCK, 0) } }))
+  }
+
+  const clearSellForm = () =&gt; {
+    setFormData(prev =&gt; ({ name: '', price: '', quantity: '1', hostelName: prev.hostelName, roomNumber: prev.roomNumber, landmark: prev.landmark }))
+    setDeliveryAgreementChecked(false)
+    setEstimatedWeightKg('')
+    setDeliveryEstimate('')
+    setDimensionL('')
+    setDimensionW('')
+    setDimensionH('')
+    setCategoryKey('')
+    setSubcategoryKey('')
+    setVariantValues({})
+    setVariantPricing({})
+    setVariantsEnabledToggle(false)
+    setCategoryAttributes([])
+    setAttributeValues({})
+    setAttributeCustomInput({})
+    setManuallyTouchedAttributes({})
+    setImages([])
+    setTags([])
+    autoTagsRef.current = []
+    setTagInput('')
+    setError('')
+    setShowConfirmModal(false)
+    localStorage.removeItem(SELL_DRAFT_KEY)
   }
 
   const variantKeysForMatrix = Object.keys(variantValues).filter(k =&gt; (variantValues[k] || []).length &gt; 0)
@@ -15483,7 +15921,11 @@ export default function SellPage() {
   const handleSubmit = (e: React.FormEvent) =&gt; {
     e.preventDefault()
     if (!formData.name.trim()) { setError('Product name is required'); return }
+    if (formData.name.trim().length &gt; SELL_LIMITS.productName) { setError(`Product name must be ${SELL_LIMITS.productName} characters or less`); return }
     if (!formData.price || parseFloat(formData.price) &lt;= 0) { setError('Enter a valid price'); return }
+    if (parseFloat(formData.price) &gt; MAX_PRICE) { setError('Price cannot exceed ₦10,000,000'); return }
+    const stock = Number(formData.quantity)
+    if (!Number.isInteger(stock) || stock &lt; 1 || stock &gt; MAX_STOCK) { setError(`Stock must be between 1 and ${MAX_STOCK}`); return }
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length &lt; 1) { setError('Please add at least 1 product image'); return }
@@ -15509,8 +15951,13 @@ export default function SellPage() {
         const rowPrice = Number(row?.price || formData.price)
         const rowStock = Number(row?.stock || formData.quantity || 0)
         if (!Number.isFinite(rowPrice) || rowPrice &lt;= 0) { setError('Each variant must have a valid price'); return }
-        if (!Number.isFinite(rowStock) || rowStock &lt; 0) { setError('Each variant must have valid stock'); return }
+        if (!Number.isInteger(rowStock) || rowStock &lt; 0 || rowStock &gt; MAX_STOCK) { setError(`Each variant stock must be between 0 and ${MAX_STOCK}`); return }
       }
+      const totalVariantStock = variantCombinations.reduce((sum, combo) =&gt; {
+        const row = variantPricing[comboKey(combo)]
+        return sum + Number(row?.stock || formData.quantity || 0)
+      }, 0)
+      if (totalVariantStock &gt; MAX_STOCK) { setError(`Total variant stock cannot exceed ${MAX_STOCK}`); return }
     }
     setError(''); setShowConfirmModal(true)
   }
@@ -15635,7 +16082,6 @@ export default function SellPage() {
       &lt;/header&gt;
 
       &lt;form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4"&gt;
-
         &lt;div className="fade-up bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-start gap-3"&gt;
           &lt;Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" /&gt;
           &lt;div&gt;
@@ -15674,15 +16120,26 @@ export default function SellPage() {
 
         {/* ── STEP 1: Basic Info ── */}
         &lt;div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6"&gt;
-          &lt;StepHeader num="1" title="Product Details" subtitle="Name, price and quantity" /&gt;
+          &lt;div className="mb-4"&gt;
+            &lt;button
+              type="button"
+              onClick={clearSellForm}
+              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+            &gt;
+              &lt;Trash2 className="w-3.5 h-3.5" /&gt;
+              Clear all fields
+            &lt;/button&gt;
+            &lt;StepHeader num="1" title="Product Details" subtitle="Name, price and quantity" /&gt;
+          &lt;/div&gt;
           &lt;div className="space-y-4"&gt;
             &lt;div&gt;
               &lt;label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"&gt;Product Name *&lt;/label&gt;
               &lt;input
                 type="text"
                 value={formData.name}
-                onChange={e =&gt; setFormData({ ...formData, name: e.target.value })}
+                onChange={e =&gt; setFormData({ ...formData, name: limitText(e.target.value, SELL_LIMITS.productName) })}
                 required
+                maxLength={SELL_LIMITS.productName}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder='e.g. "iPhone 13 Pro Max 256GB"'
               /&gt;
@@ -15695,8 +16152,8 @@ export default function SellPage() {
                 &lt;input
                   type="number"
                   value={formData.price}
-                  onChange={e =&gt; setFormData({ ...formData, price: e.target.value })}
-                  required min="0" step="0.01"
+                  onChange={e =&gt; setFormData({ ...formData, price: limitDecimalInput(e.target.value, MAX_PRICE) })}
+                  required min="0" max={MAX_PRICE} inputMode="decimal" step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="50000"
                 /&gt;
@@ -15711,8 +16168,8 @@ export default function SellPage() {
                 &lt;input
                   type="number"
                   value={formData.quantity}
-                  onChange={e =&gt; setFormData({ ...formData, quantity: e.target.value })}
-                  required min="1"
+                  onChange={e =&gt; setFormData({ ...formData, quantity: limitIntegerInput(e.target.value, MAX_STOCK, 1) })}
+                  required min="1" max={MAX_STOCK} inputMode="numeric"
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="1"
                 /&gt;
@@ -15804,7 +16261,7 @@ export default function SellPage() {
                           &lt;input
                             type="text"
                             value={attributeCustomInput[attr.key] ?? ''}
-                            onChange={(e) =&gt; setAttributeCustomInput((prev) =&gt; ({ ...prev, [attr.key]: e.target.value }))}
+                            onChange={(e) =&gt; setAttributeCustomInput((prev) =&gt; ({ ...prev, [attr.key]: limitText(e.target.value, SELL_LIMITS.attributeText) }))}
                             onKeyDown={(e) =&gt; {
                               if (e.key === 'Enter') {
                                 e.preventDefault()
@@ -15813,6 +16270,7 @@ export default function SellPage() {
                             }}
                             className="flex-1 px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                             placeholder={`Add custom ${attr.label.toLowerCase()}...`}
+                            maxLength={SELL_LIMITS.attributeText}
                           /&gt;
                           &lt;button
                             type="button"
@@ -15849,6 +16307,9 @@ export default function SellPage() {
                         type="number"
                         value={value ?? ''}
                         onChange={(e) =&gt; setAttributeValue(attr.key, e.target.value)}
+                        min="0"
+                        max={SELL_LIMITS.attributeNumber}
+                        inputMode="decimal"
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       /&gt;
@@ -15869,6 +16330,7 @@ export default function SellPage() {
                         type="text"
                         value={value ?? ''}
                         onChange={(e) =&gt; setAttributeValue(attr.key, e.target.value)}
+                        maxLength={SELL_LIMITS.attributeText}
                         className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       /&gt;
@@ -15944,9 +16406,11 @@ export default function SellPage() {
                               &lt;input
                                 type="number"
                                 min="0"
+                                max={MAX_PRICE}
+                                inputMode="decimal"
                                 step="0.01"
                                 value={row.price}
-                                onChange={e =&gt; setVariantPricing(prev =&gt; ({ ...prev, [key]: { ...row, price: e.target.value } }))}
+                                onChange={e =&gt; updateVariantPrice(key, row, e.target.value)}
                                 className="w-24 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
                               /&gt;
                             &lt;/td&gt;
@@ -15954,9 +16418,11 @@ export default function SellPage() {
                               &lt;input
                                 type="number"
                                 min="0"
+                                max={MAX_STOCK}
+                                inputMode="numeric"
                                 step="1"
                                 value={row.stock}
-                                onChange={e =&gt; setVariantPricing(prev =&gt; ({ ...prev, [key]: { ...row, stock: e.target.value } }))}
+                                onChange={e =&gt; updateVariantStock(key, row, e.target.value)}
                                 className="w-20 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
                               /&gt;
                             &lt;/td&gt;
@@ -16041,38 +16507,20 @@ export default function SellPage() {
             title="Product Tags"
             subtitle="Auto-generated · helps buyers find your product"
           /&gt;
-          &lt;div
-            className="min-h-[56px] w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-100 rounded-xl focus-within:border-indigo-400 focus-within:bg-white transition-all cursor-text flex flex-wrap gap-2 items-center mb-3"
-            onClick={() =&gt; tagInputRef.current?.focus()}
-          &gt;
-            {tags.map((tag, i) =&gt; (
-              &lt;span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full"&gt;
-                {tag}
-                &lt;button type="button" onClick={e =&gt; { e.stopPropagation(); removeTag(i) }} className="hover:text-red-500 transition-colors ml-0.5"&gt;
-                  &lt;X className="w-3 h-3" /&gt;
-                &lt;/button&gt;
-              &lt;/span&gt;
-            ))}
-            &lt;div className="flex items-center gap-2 flex-1 min-w-[140px]"&gt;
-              &lt;input
-                ref={tagInputRef}
-                type="text"
-                value={tagInput}
-                onChange={e =&gt; setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                placeholder={tags.length === 0 ? 'e.g. New, 128GB, Black, XL…' : 'Add more…'}
-                className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400"
-              /&gt;
-              {tagInput.trim() &amp;&amp; (
-                &lt;button type="button" onClick={() =&gt; addTag(tagInput)}
-                  className="flex items-center gap-1 px-3 py-1 text-white text-xs font-black rounded-full flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)' }}&gt;
-                  &lt;Plus className="w-3 h-3" /&gt; Add
-                &lt;/button&gt;
-              )}
-            &lt;/div&gt;
+          &lt;div className="p-3 bg-gray-50 border-2 border-gray-100 rounded-xl"&gt;
+            {tags.length &gt; 0 ? (
+              &lt;div className="flex flex-wrap gap-2 items-center"&gt;
+                {tags.map((tag, i) =&gt; (
+                  &lt;span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full"&gt;
+                    {tag}
+                  &lt;/span&gt;
+                ))}
+              &lt;/div&gt;
+            ) : (
+              &lt;p className="text-xs text-gray-400 italic"&gt;Tags will be auto-generated from your category, subcategory, and variants&lt;/p&gt;
+            )}
           &lt;/div&gt;
-          {tags.length &gt; 0 &amp;&amp; &lt;p className="text-xs text-gray-400"&gt;{tags.length} tag{tags.length !== 1 ? 's' : ''} added&lt;/p&gt;}
+          {tags.length &gt; 0 &amp;&amp; &lt;p className="text-xs text-gray-400 mt-2"&gt;{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated&lt;/p&gt;}
         &lt;/div&gt;
 
         {/* ── STEP 7: Location ── */}
@@ -16088,8 +16536,9 @@ export default function SellPage() {
               &lt;input
                 type="text"
                 value={formData.hostelName}
-                onChange={e =&gt; setFormData({ ...formData, hostelName: e.target.value })}
+                onChange={e =&gt; setFormData({ ...formData, hostelName: limitText(e.target.value, SELL_LIMITS.location) })}
                 required
+                maxLength={SELL_LIMITS.location}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Python Hall, Aroma Lodge, Block C"
               /&gt;
@@ -16099,8 +16548,9 @@ export default function SellPage() {
               &lt;input
                 type="text"
                 value={formData.roomNumber}
-                onChange={e =&gt; setFormData({ ...formData, roomNumber: e.target.value })}
+                onChange={e =&gt; setFormData({ ...formData, roomNumber: limitText(e.target.value, SELL_LIMITS.roomNumber) })}
                 required
+                maxLength={SELL_LIMITS.roomNumber}
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Room 12, Block A"
               /&gt;
@@ -16112,7 +16562,7 @@ export default function SellPage() {
               {deliveryAreas.length &gt; 0 ? (
                 &lt;select
                   value={formData.landmark}
-                  onChange={e =&gt; setFormData({ ...formData, landmark: e.target.value })}
+                  onChange={e =&gt; setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium appearance-none"
                 &gt;
@@ -16123,8 +16573,9 @@ export default function SellPage() {
                 &lt;input
                   type="text"
                   value={formData.landmark}
-                  onChange={e =&gt; setFormData({ ...formData, landmark: e.target.value })}
+                  onChange={e =&gt; setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
+                  maxLength={SELL_LIMITS.landmark}
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="e.g., Near the water dispenser"
                 /&gt;
@@ -16143,11 +16594,11 @@ export default function SellPage() {
             subtitle="Required for rider safety and reliable fulfillment"
           /&gt;
           &lt;div className="grid sm:grid-cols-3 gap-3 mb-4"&gt;
-            &lt;input type="number" min="0" step="0.1" value={estimatedWeightKg} onChange={(e) =&gt; setEstimatedWeightKg(e.target.value)} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
-            &lt;input type="number" min="0" value={dimensionL} onChange={(e) =&gt; setDimensionL(e.target.value)} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
-            &lt;input type="number" min="0" value={dimensionW} onChange={(e) =&gt; setDimensionW(e.target.value)} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
-            &lt;input type="number" min="0" value={dimensionH} onChange={(e) =&gt; setDimensionH(e.target.value)} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
-            &lt;input type="text" value={deliveryEstimate} onChange={(e) =&gt; setDeliveryEstimate(e.target.value)} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
+            &lt;input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) =&gt; setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) =&gt; setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) =&gt; setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" /&gt;
+            &lt;input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) =&gt; setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
+            &lt;input type="text" value={deliveryEstimate} onChange={(e) =&gt; setDeliveryEstimate(limitText(e.target.value, SELL_LIMITS.deliveryEstimate))} maxLength={SELL_LIMITS.deliveryEstimate} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" /&gt;
           &lt;/div&gt;
           &lt;label className="flex items-start gap-3 text-sm text-red-600"&gt;
             &lt;input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) =&gt; setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" /&gt;
@@ -25732,6 +26183,105 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
   }
 }</pre></div>
+<div class='file-block'><div class='file-header'>app/api/admin/dashboard/activity/route.ts</div><pre>export const dynamic = 'force-dynamic'
+// app/api/admin/dashboard/activity/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
+
+async function verifyAdmin(req: NextRequest) {
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) return null
+  try {
+    const token = authHeader.substring(7)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    if (decoded.role !== 'ADMIN') return null
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const admin = await verifyAdmin(req)
+  if (!admin) {
+    console.error('Admin verification failed for request to /api/admin/dashboard/activity')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    // Fetch recent marketplace activity
+    const [recentOrders, recentDisputes, recentReports] = await Promise.all([
+      prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          buyer: { select: { name: true, email: true } },
+          seller: { select: { name: true } },
+        },
+      }),
+      prisma.dispute.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          buyer: { select: { name: true } },
+          seller: { select: { name: true } },
+          reason: true,
+        },
+      }),
+      prisma.report.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          createdAt: true,
+          reportedBy: { select: { name: true } },
+          reason: true,
+        },
+      }),
+    ])
+
+    // Combine and sort by date
+    const activity = [
+      ...recentOrders.map(o =&gt; ({
+        type: 'order',
+        title: `Order #${o.id.slice(0, 8)}`,
+        description: `${o.buyer.name} → ${o.seller.name} (₦${o.totalAmount})`,
+        status: o.status,
+        timestamp: o.createdAt,
+      })),
+      ...recentDisputes.map(d =&gt; ({
+        type: 'dispute',
+        title: `Dispute #${d.id.slice(0, 8)}`,
+        description: `${d.reason} - ${d.buyer.name} vs ${d.seller.name}`,
+        status: d.status,
+        timestamp: d.createdAt,
+      })),
+      ...recentReports.map(r =&gt; ({
+        type: 'report',
+        title: `Report #${r.id.slice(0, 8)}`,
+        description: `${r.type}: ${r.reason}`,
+        status: r.status,
+        timestamp: r.createdAt,
+      })),
+    ].sort((a, b) =&gt; b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10)
+
+    return NextResponse.json({ activity })
+  } catch (error) {
+    console.error('Dashboard activity error:', error)
+    return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 })
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/dashboard/stats/route.ts</div><pre>export const dynamic = 'force-dynamic'
 // app/api/admin/dashboard/stats/route.ts
 import { NextRequest, NextResponse } from 'next/server'
@@ -25754,8 +26304,12 @@ async function verifyAdmin(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
   if (!admin) {
+    console.error('Admin verification failed for request to /api/admin/dashboard/stats')
+    console.error('Authorization header:', req.headers.get('authorization')?.slice(0, 20) + '...')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  console.log(`Admin dashboard access: ${admin.userId}`)
 
   try {
     const { searchParams } = new URL(req.url)
@@ -25875,6 +26429,368 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 } 
+</pre></div>
+<div class='file-block'><div class='file-header'>app/api/admin/diagnostics/referral-check/route.ts</div><pre>// app/api/admin/diagnostics/referral-check/route.ts
+// Purpose: Check referral rewards for a specific user and identify anomalies
+// Protected: Admin only
+
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyAdminToken } from '@/lib/auth-client'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
+  try {
+    // Verify admin access
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const admin = await verifyAdminToken(token)
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Get query parameter: ?email=user@example.com
+    const email = request.nextUrl.searchParams.get('email')
+    if (!email) {
+      return NextResponse.json({ error: 'Email parameter required' }, { status: 400 })
+    }
+
+    // Find the user
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        availableBalance: true,
+        referredById: true,
+        referrerOf: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+        referralReward: {
+          select: {
+            id: true,
+            amount: true,
+            createdAt: true,
+            orderId: true,
+            order: {
+              select: {
+                orderNumber: true,
+                buyerId: true,
+                buyer: {
+                  select: {
+                    email: true,
+                    referredById: true,
+                  },
+                },
+                status: true,
+                completedAt: true,
+              },
+            },
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Validation checks
+    const anomalies: string[] = []
+    const warnings: string[] = []
+
+    // Check 1: Self-referral
+    if (user.referredById === user.id) {
+      anomalies.push('Self-referral detected - user refers themselves')
+    }
+
+    // Check 2: Orphaned rewards (user has rewards but no referredById)
+    if (user.referralReward.length &gt; 0 &amp;&amp; !user.referredById) {
+      anomalies.push(
+        `User has ${user.referralReward.length} referral rewards but no referrer (referredById is null)`
+      )
+    }
+
+    // Check 3: Rewards for non-completed orders
+    const nonCompletedRewards = user.referralReward.filter(r =&gt; r.order.status !== 'COMPLETED')
+    if (nonCompletedRewards.length &gt; 0) {
+      anomalies.push(
+        `${nonCompletedRewards.length} rewards for non-completed orders (status: ${nonCompletedRewards.map(r =&gt; r.order.status).join(', ')})`
+      )
+    }
+
+    // Check 4: Rewards without buyer referral relationship
+    for (const reward of user.referralReward) {
+      if (reward.order.buyer.referredById !== user.id) {
+        anomalies.push(
+          `Reward on order ${reward.order.orderNumber}: Buyer (${reward.order.buyer.email}) referredById doesn't match this user. Buyer referred by: ${reward.order.buyer.referredById || 'nobody'}`
+        )
+      }
+    }
+
+    // Check 5: Daily cap violations
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayRewards = user.referralReward.filter(
+      r =&gt; new Date(r.createdAt) &gt;= today
+    )
+    const todayTotal = todayRewards.reduce((sum, r) =&gt; sum + r.amount, 0)
+    if (todayTotal &gt; 1200) {
+      warnings.push(`Daily cap exceeded: ${todayTotal}₦ / 1200₦ (${todayRewards.length} rewards today)`)
+    }
+
+    // Calculate totals
+    const totalRewards = user.referralReward.reduce((sum, r) =&gt; sum + r.amount, 0)
+    const rewardsByMonth = user.referralReward.reduce((acc, r) =&gt; {
+      const month = new Date(r.createdAt).toISOString().slice(0, 7)
+      acc[month] = (acc[month] || 0) + r.amount
+      return acc
+    }, {} as Record&lt;string, number&gt;)
+
+    return NextResponse.json({
+      user: {
+        email: user.email,
+        userId: user.id,
+        availableBalance: user.availableBalance,
+        referredById: user.referredById,
+        referredByCount: user.referrerOf.length,
+      },
+      referralRewards: {
+        totalAmount: totalRewards,
+        rewardCount: user.referralReward.length,
+        byMonth: rewardsByMonth,
+        recentRewards: user.referralReward.slice(0, 10).map(r =&gt; ({
+          orderId: r.orderId,
+          orderNumber: r.order.orderNumber,
+          amount: r.amount,
+          buyerEmail: r.order.buyer.email,
+          completedAt: r.order.completedAt,
+          createdAt: r.createdAt,
+        })),
+      },
+      validation: {
+        hasAnomalies: anomalies.length &gt; 0,
+        hasWarnings: warnings.length &gt; 0,
+        anomalies,
+        warnings,
+      },
+    })
+  } catch (error) {
+    console.error('[REFERRAL-CHECK] Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+</pre></div>
+<div class='file-block'><div class='file-header'>app/api/admin/diagnostics/referral-cleanup/route.ts</div><pre>// app/api/admin/diagnostics/referral-cleanup/route.ts
+// Purpose: Remove anomalous referral rewards and reverse their balance impacts
+// Protected: Admin only
+// WARNING: This performs destructive operations - logs all changes for audit trail
+
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyAdminToken } from '@/lib/auth-client'
+
+export const dynamic = 'force-dynamic'
+
+interface CleanupResult {
+  removedRewards: {
+    id: string
+    amount: number
+    userId: string
+    userEmail: string
+    orderId: string
+    orderNumber: string
+    reason: string
+  }[]
+  reversedBalances: {
+    userId: string
+    userEmail: string
+    amountReversed: number
+    newBalance: number
+  }[]
+  deletedTransactions: number
+  totalAmountRemoved: number
+  summary: string
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verify admin access
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const admin = await verifyAdminToken(token)
+    if (!admin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Get query params for selective cleanup
+    const dryRun = request.nextUrl.searchParams.get('dryRun') === 'true'
+    const cleanupType = request.nextUrl.searchParams.get('type') || 'all' // 'all', 'orphaned', 'self-referral', 'non-completed'
+
+    console.log(`[REFERRAL-CLEANUP] Starting ${dryRun ? 'DRY RUN' : 'ACTUAL'} cleanup (type: ${cleanupType})`)
+
+    const result: CleanupResult = {
+      removedRewards: [],
+      reversedBalances: {},
+      deletedTransactions: 0,
+      totalAmountRemoved: 0,
+      summary: '',
+    }
+
+    // Find all anomalous rewards
+    const allRewards = await prisma.referralReward.findMany({
+      include: {
+        order: {
+          select: {
+            buyerId: true,
+            orderNumber: true,
+            status: true,
+            buyer: {
+              select: {
+                id: true,
+                email: true,
+                referredById: true,
+              },
+            },
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            availableBalance: true,
+          },
+        },
+      },
+    })
+
+    // Categorize anomalies
+    const anomaliesToRemove = allRewards.filter(reward =&gt; {
+      const isOrphaned = !reward.order.buyer.referredById
+      const isSelfReferral = reward.order.buyer.referredById === reward.userId
+      const isNonCompleted = reward.order.status !== 'COMPLETED'
+      const isMismatch = reward.order.buyer.referredById !== reward.userId
+
+      if (cleanupType === 'orphaned') return isOrphaned
+      if (cleanupType === 'self-referral') return isSelfReferral
+      if (cleanupType === 'non-completed') return isNonCompleted
+      if (cleanupType === 'all') return isOrphaned || isSelfReferral || isNonCompleted || isMismatch
+
+      return false
+    })
+
+    console.log(`[REFERRAL-CLEANUP] Found ${anomaliesToRemove.length} anomalous rewards to process`)
+
+    // Process each anomaly
+    const balanceAdjustments = new Map&lt;string, { email: string; totalAmount: number }&gt;()
+
+    for (const reward of anomaliesToRemove) {
+      let reason = 'Unknown'
+      const isOrphaned = !reward.order.buyer.referredById
+      const isSelfReferral = reward.order.buyer.referredById === reward.userId
+      const isNonCompleted = reward.order.status !== 'COMPLETED'
+      const isMismatch = reward.order.buyer.referredById !== reward.userId
+
+      if (isOrphaned) reason = 'Orphaned (buyer has no referrer)'
+      else if (isSelfReferral) reason = 'Self-referral fraud'
+      else if (isNonCompleted) reason = `Non-completed order (status: ${reward.order.status})`
+      else if (isMismatch) reason = 'Referral mismatch (buyer not referred by reward recipient)'
+
+      result.removedRewards.push({
+        id: reward.id,
+        amount: reward.amount,
+        userId: reward.userId,
+        userEmail: reward.user.email,
+        orderId: reward.orderId,
+        orderNumber: reward.order.orderNumber,
+        reason,
+      })
+
+      result.totalAmountRemoved += reward.amount
+
+      // Track balance adjustments
+      if (!balanceAdjustments.has(reward.userId)) {
+        balanceAdjustments.set(reward.userId, {
+          email: reward.user.email,
+          totalAmount: 0,
+        })
+      }
+      const adjustment = balanceAdjustments.get(reward.userId)!
+      adjustment.totalAmount += reward.amount
+
+      console.log(`[REFERRAL-CLEANUP] Flagged reward ₦${reward.amount} to user ${reward.user.email}: ${reason}`)
+    }
+
+    // If not dry run, actually remove the rewards
+    if (!dryRun &amp;&amp; anomaliesToRemove.length &gt; 0) {
+      const rewardIds = anomaliesToRemove.map(r =&gt; r.id)
+
+      // Start transaction to remove rewards and adjust balances
+      await prisma.$transaction(async tx =&gt; {
+        // Remove the reward records
+        await tx.referralReward.deleteMany({
+          where: { id: { in: rewardIds } },
+        })
+
+        // Also remove related transactions
+        const removedOrders = anomaliesToRemove.map(r =&gt; r.orderId)
+        const deletedTx = await tx.transaction.deleteMany({
+          where: {
+            reference: {
+              in: removedOrders.map(id =&gt; `${id}-REFERRAL`),
+            },
+          },
+        })
+        result.deletedTransactions = deletedTx.count
+
+        // Adjust user balances
+        for (const [userId, adjustment] of balanceAdjustments.entries()) {
+          const user = await tx.user.findUnique({ where: { id: userId } })
+          if (user) {
+            const newBalance = Math.max(0, Number(user.availableBalance) - adjustment.totalAmount)
+            await tx.user.update({
+              where: { id: userId },
+              data: { availableBalance: newBalance },
+            })
+
+            result.reversedBalances[userId] = {
+              userId,
+              userEmail: adjustment.email,
+              amountReversed: adjustment.totalAmount,
+              newBalance,
+            }
+
+            console.log(
+              `[REFERRAL-CLEANUP] Reversed ₦${adjustment.totalAmount} from ${adjustment.email}. New balance: ₦${newBalance}`
+            )
+          }
+        }
+      })
+
+      result.summary = `✅ Cleanup complete. Removed ${anomaliesToRemove.length} anomalous rewards (total ₦${result.totalAmountRemoved}). Affected ${Object.keys(result.reversedBalances).length} users.`
+    } else if (dryRun) {
+      result.summary = `📊 DRY RUN: Would remove ${anomaliesToRemove.length} rewards (total ₦${result.totalAmountRemoved}) and affect ${balanceAdjustments.size} users.`
+    } else {
+      result.summary = 'No anomalies found. Database is clean.'
+    }
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('[REFERRAL-CLEANUP] Error:', error)
+    return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 })
+  }
+}
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/disputes/route.ts</div><pre>// app/api/admin/disputes/route.ts
 import { NextRequest, NextResponse } from 'next/server'
@@ -26539,11 +27455,17 @@ export async function GET(req: NextRequest) {
     const universityId = searchParams.get('universityId') || 'all'
     const search       = searchParams.get('search') || ''
     const flagged      = searchParams.get('flagged') === 'true'
+    const status       = searchParams.get('status') || 'PENDING' // Default to PENDING products for review
     const page         = Math.max(1, parseInt(searchParams.get('page') ?? '1'))
     const limit        = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50')))
     const skip         = (page - 1) * limit
 
     const where: any = { isDeleted: false }
+
+    // Filter by moderation status
+    if (status &amp;&amp; status !== 'all') {
+      where.moderationStatus = status
+    }
 
     if (flagged) {
       where.isFlagged = true
@@ -26569,6 +27491,8 @@ export async function GET(req: NextRequest) {
             select: {
               id:   true,
               name: true,
+              phone: true,
+              email: true,
               university: { select: { shortName: true } },
             },
           },
@@ -26586,6 +27510,96 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Admin products error:', error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const admin = await verifyAdmin(req)
+  if (!admin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const body = await req.json()
+    const { productId, action, rejectionReason } = body
+
+    if (!productId || !action) {
+      return NextResponse.json({ error: 'Missing productId or action' }, { status: 400 })
+    }
+
+    if (!['approve', 'reject'].includes(action)) {
+      return NextResponse.json({ error: 'Invalid action. Use "approve" or "reject"' }, { status: 400 })
+    }
+
+    if (action === 'reject' &amp;&amp; !rejectionReason?.trim()) {
+      return NextResponse.json({ error: 'Rejection reason is required' }, { status: 400 })
+    }
+
+    // Fetch the product first
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { seller: { select: { id: true, email: true, phone: true, name: true } } },
+    })
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    if (product.moderationStatus !== 'PENDING') {
+      return NextResponse.json(
+        { error: `Product is already ${product.moderationStatus.toLowerCase()}` },
+        { status: 400 }
+      )
+    }
+
+    // Update product based on action
+    const updateData: any = {
+      moderationStatus: action === 'approve' ? 'APPROVED' : 'REJECTED',
+    }
+
+    if (action === 'approve') {
+      updateData.isActive = true
+    } else if (action === 'reject') {
+      updateData.rejectionReason = rejectionReason?.trim()
+      updateData.isActive = false
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: updateData,
+      include: { seller: true },
+    })
+
+    // Create notification for seller
+    if (updatedProduct.seller) {
+      const notificationMessage =
+        action === 'approve'
+          ? `Your product "${updatedProduct.name}" has been approved and is now live in the marketplace!`
+          : `Your product "${updatedProduct.name}" was rejected. Reason: ${rejectionReason}`
+
+      await prisma.notification.create({
+        data: {
+          userId: updatedProduct.seller.id,
+          title: action === 'approve' ? 'Product Approved ✓' : 'Product Rejected',
+          message: notificationMessage,
+          type: action === 'approve' ? 'PRODUCT_APPROVED' : 'PRODUCT_REJECTED',
+          link: `/marketplace/product/${productId}`,
+          isRead: false,
+        },
+      }).catch(() =&gt; {
+        // Notification creation failed, but product update succeeded
+        console.warn('Failed to create notification for product approval/rejection')
+      })
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Product ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
+      product: updatedProduct,
+    })
+  } catch (error) {
+    console.error('Admin product update error:', error)
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
 </pre></div>
@@ -27595,6 +28609,28 @@ import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
+// ── Signups closed until June 22, 2026 ──────────────────────────────────────
+const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+
+function checkSignupsOpen() {
+  const now = Date.now()
+  if (now &gt;= SIGNUP_REOPENS_AT) {
+    return { isOpen: true }
+  }
+  
+  const msRemaining = SIGNUP_REOPENS_AT - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+  
+  return {
+    isOpen: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: '2026-06-22'
+  }
+}
+
 function googleAudience() {
   return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 }
@@ -27629,6 +28665,20 @@ export async function POST(request: NextRequest) {
     if (!user) {
       if (mode !== 'signup') {
         return NextResponse.json({ error: 'No account found. Use Sign up with Google first.' }, { status: 404 })
+      }
+
+      // ── Block new signups until June 22 ────────────────────────────────────
+      const signupStatus = checkSignupsOpen()
+      if (!signupStatus.isOpen) {
+        return NextResponse.json(
+          {
+            error: 'Signups are temporarily closed for maintenance',
+            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+            countdown: signupStatus.countdown,
+            reopensAt: signupStatus.reopensAt,
+          },
+          { status: 503 }
+        )
       }
 
       const signupToken = issueGoogleSignupToken({
@@ -28044,8 +29094,30 @@ import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
-const RATE_LIMIT_MAX = 3
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+
+// ── Signups closed until June 22, 2026 ──────────────────────────────────────
+const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+
+function checkSignupsOpen() {
+  const now = Date.now()
+  if (now &gt;= SIGNUP_REOPENS_AT) {
+    return { isOpen: true }
+  }
+  
+  const msRemaining = SIGNUP_REOPENS_AT - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+  
+  return {
+    isOpen: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: '2026-06-22'
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28080,6 +29152,22 @@ export async function POST(request: NextRequest) {
         { error: 'Email is required' },
         { status: 400 }
       )
+    }
+
+    // ── Block new signups until June 22 ────────────────────────────────────
+    if (!isLogin) {
+      const signupStatus = checkSignupsOpen()
+      if (!signupStatus.isOpen) {
+        return NextResponse.json(
+          {
+            error: 'Signups are temporarily closed for maintenance',
+            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+            countdown: signupStatus.countdown,
+            reopensAt: signupStatus.reopensAt,
+          },
+          { status: 503 }
+        )
+      }
     }
 
     if (isLogin) {
@@ -28136,8 +29224,44 @@ import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/s
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
 
+// ── Signups closed until June 22, 2026 ──────────────────────────────────────
+const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
+
+function checkSignupsOpen() {
+  const now = Date.now()
+  if (now &gt;= SIGNUP_REOPENS_AT) {
+    return { isOpen: true }
+  }
+  
+  const msRemaining = SIGNUP_REOPENS_AT - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+  
+  return {
+    isOpen: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: '2026-06-22'
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // ── Block new signups until June 22 ────────────────────────────────────
+    const signupStatus = checkSignupsOpen()
+    if (!signupStatus.isOpen) {
+      return NextResponse.json(
+        {
+          error: 'Signups are temporarily closed for maintenance',
+          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+          countdown: signupStatus.countdown,
+          reopensAt: signupStatus.reopensAt,
+        },
+        { status: 503 }
+      )
+    }
+
     const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
     const rateLimitKey = `signup:${ip}`
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
@@ -28228,6 +29352,15 @@ export async function POST(request: NextRequest) {
 
     if (!university || !university.isActive) {
       return NextResponse.json({ error: 'Selected university is not available' }, { status: 400 })
+    }
+
+    // ── Validate referral code (required) ───────────────────────────────────
+    const REQUIRED_REFERRAL_CODE = 'BATAMART-P70LZ6'
+    if (!referralCode || referralCode.trim().toUpperCase() !== REQUIRED_REFERRAL_CODE) {
+      return NextResponse.json(
+        { error: `Invalid referral code. Please use the correct code to sign up. Visit https://batamart.com/signup?ref=${REQUIRED_REFERRAL_CODE}` },
+        { status: 400 }
+      )
     }
 
     // ── Duplicate account check ────────────────────────────────────────────
@@ -28519,7 +29652,7 @@ import jwt from 'jsonwebtoken'
 // counter survives across cold starts.
 const rateLimitMap = new Map&lt;string, { count: number; resetAt: number }&gt;()
 
-const RATE_LIMIT_MAX       = 10
+const RATE_LIMIT_MAX       = 15
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 
 function checkRateLimit(key: string): { allowed: boolean; retryAfterSecs: number } {
@@ -29444,6 +30577,9 @@ export async function POST(request: NextRequest) {
           })
         }
 
+        // Log referral reward processing with buyer info for audit trail
+        console.log(`[CONFIRM-DELIVERY] Order ${order.orderNumber} - Buyer ID: ${order.buyerId}`)
+        
         await processReferralReward(tx, {
           orderId,
           orderNumber: order.orderNumber,
@@ -30039,6 +31175,7 @@ export async function POST(request: NextRequest) {
       sellerId:   string
       sellerName: string
       orderNote?: string
+      buyerDeliveryAcknowledged?: boolean
     }
 
     let items: CartItem[] = []
@@ -30058,7 +31195,7 @@ export async function POST(request: NextRequest) {
           include: { seller: true, variants: true },
         })
         if (!product) {
-          return NextResponse.json({ error: `Product not found: ${item.name}` }, { status: 404 })
+          return NextResponse.json({ error: `Product not found: ${item.productId}` }, { status: 404 })
         }
         let resolvedPrice = product.price
         let resolvedStock = product.quantity
@@ -31169,10 +32306,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
-import { moderateListing } from '@/lib/moderation/moderateListing'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
+const MAX_LISTING_PRICE = 10000000
+const MAX_LISTING_STOCK = 100
 const AUTO_PROMOTE_THRESHOLD = 10
 const PROHIBITED_LISTING_MESSAGE = 'Your listing was rejected. It contains prohibited content.'
 
@@ -31306,9 +32444,105 @@ const BANNED_KEYWORD_PATTERNS: Array&lt;{ term: string; pattern: RegExp }&gt; = 
   { term: 'bet slip sale', pattern: /\bfixed\s+(?:match|matches|game|games|bet|bets)\b/i },
 ]
 
-function findBannedKeyword(name: unknown, description: unknown) {
-  const combined = `${String(name || '')} ${String(description || '')}`
-  return BANNED_KEYWORD_PATTERNS.find(({ pattern }) =&gt; pattern.test(combined))?.term || null
+const NORMALIZED_BANNED_TERMS = [
+  'cocaine',
+  'crackcocaine',
+  'heroin',
+  'marijuana',
+  'cannabis',
+  'weed',
+  'methamphetamine',
+  'crystalmeth',
+  'mdma',
+  'ecstasy',
+  'tramadol',
+  'codeine',
+  'fentanyl',
+  'ketamine',
+  'xanax',
+  'oxycontin',
+  'percocet',
+  'rohypnol',
+  'rivotril',
+  'valium',
+  'diazepam',
+  'morphine',
+  'oxycodone',
+  'hydrocodone',
+  'ganja',
+  'gbana',
+  'skushi',
+  'monkeytail',
+  'kush',
+  'skunk',
+  'colorado',
+  'purpledrank',
+  'narcotic',
+]
+
+const NORMALIZED_BANNED_PATTERNS: Array&lt;{ term: string; pattern: RegExp }&gt; = [
+  // Catches evasions like "ko-kayn", "co kayn", "co-kayne", "c0caine".
+  { term: 'cocaine', pattern: /(?:c|k)(?:o|0)(?:c|k)(?:a|@)?(?:i|1|y)?(?:n|m)e?/ },
+  { term: 'cocaine', pattern: /(?:c|k)(?:o|0)(?:k)(?:a|@)(?:y|i|1)(?:n|m)e?/ },
+  { term: 'crack cocaine', pattern: /cr(?:a|@)ck(?:c|k)(?:o|0)(?:c|k)/ },
+  { term: 'marijuana', pattern: /m(?:a|@)riju(?:a|@)n(?:a|@)/ },
+  { term: 'cannabis', pattern: /c(?:a|@)nn(?:a|@)bis/ },
+  { term: 'meth', pattern: /cryst(?:a|@)lmeth|meth(?:a|@)mphet(?:a|@)mine/ },
+  { term: 'tramadol', pattern: /tr(?:a|@)m(?:a|@)dol/ },
+  { term: 'codeine', pattern: /c(?:o|0)de(?:i|1)ne/ },
+  { term: 'fentanyl', pattern: /fent(?:a|@)nyl/ },
+]
+
+function normalizeModerationText(value: unknown) {
+  return String(value || '')
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[áàâäãå]/g, 'a')
+    .replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i')
+    .replace(/[óòôöõ]/g, 'o')
+    .replace(/[úùûü]/g, 'u')
+    .replace(/[$]/g, 's')
+    .replace(/[!|]/g, 'i')
+    .replace(/[@]/g, 'a')
+    .replace(/[3]/g, 'e')
+    .replace(/[5]/g, 's')
+    .replace(/[7]/g, 't')
+}
+
+function collectModerationParts(...values: unknown[]): string[] {
+  const parts: string[] = []
+  const visit = (value: unknown) =&gt; {
+    if (value === undefined || value === null) return
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      parts.push(String(value))
+      return
+    }
+    if (Array.isArray(value)) {
+      value.forEach(visit)
+      return
+    }
+    if (typeof value === 'object') {
+      Object.values(value as Record&lt;string, unknown&gt;).forEach(visit)
+    }
+  }
+  values.forEach(visit)
+  return parts
+}
+
+function findBannedKeyword(...values: unknown[]) {
+  const combined = collectModerationParts(...values).join(' ')
+  const rawMatch = BANNED_KEYWORD_PATTERNS.find(({ pattern }) =&gt; pattern.test(combined))?.term
+  if (rawMatch) return rawMatch
+
+  const normalized = normalizeModerationText(combined)
+  const compact = normalized.replace(/[^a-z0-9]/g, '')
+  const collapsed = compact.replace(/(.)\1{2,}/g, '$1')
+
+  const normalizedTerm = NORMALIZED_BANNED_TERMS.find((term) =&gt; compact.includes(term) || collapsed.includes(term))
+  if (normalizedTerm) return normalizedTerm
+
+  return NORMALIZED_BANNED_PATTERNS.find(({ pattern }) =&gt; pattern.test(compact) || pattern.test(collapsed))?.term || null
 }
 
 function normalizeLearnedKey(input: string) {
@@ -31361,6 +32595,7 @@ export async function GET(request: NextRequest) {
       isActive:  true,
       quantity:  { gt: 0 },
       isDeleted: false,
+      moderationStatus: 'APPROVED', // Only show approved products in marketplace
       // Only filter by university when the user actually has one
       ...(user.universityId ? { universityId: user.universityId } : {}),
     }
@@ -31540,7 +32775,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const matchedBannedTerm = findBannedKeyword(name, description)
+    const matchedBannedTerm = findBannedKeyword(
+      name,
+      description,
+      category,
+      subcategory,
+      categoryKey,
+      subcategoryKey,
+      attributes,
+      variants,
+      deliveryEstimate
+    )
     if (matchedBannedTerm) {
       console.warn('Prohibited listing keyword rejected', {
         userId: user.id,
@@ -31549,27 +32794,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: PROHIBITED_LISTING_MESSAGE }, { status: 422 })
     }
 
-    const textModeration = await moderateListing(String(name || ''), String(description || ''))
-    if (!textModeration.allowed) {
-      console.warn('AI listing moderation rejected', {
-        userId: user.id,
-        reason: textModeration.reason,
-      })
-      return NextResponse.json(
-        { error: textModeration.reason || PROHIBITED_LISTING_MESSAGE },
-        { status: 422 }
-      )
-    }
-
     if (productDeliveryAgreement !== true) {
       return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
 
-    if (typeof price !== 'number' || price &lt;= 0) {
+    if (typeof price !== 'number' || price &lt;= 0 || price &gt; MAX_LISTING_PRICE) {
       return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
     }
 
-    if (typeof quantity !== 'number' || quantity &lt; 1) {
+    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity &lt; 1 || quantity &gt; MAX_LISTING_STOCK) {
       return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 })
     }
 
@@ -31582,8 +32815,19 @@ export async function POST(request: NextRequest) {
             sku: v?.sku ? String(v.sku) : null,
             imageUrl: v?.imageUrl ? String(v.imageUrl) : null,
           }))
-          .filter((v: any) =&gt; v.combination &amp;&amp; Number.isFinite(v.price) &amp;&amp; v.price &gt; 0 &amp;&amp; Number.isFinite(v.stock) &amp;&amp; v.stock &gt;= 0)
+          .filter((v: any) =&gt; (
+            v.combination &amp;&amp;
+            Number.isFinite(v.price) &amp;&amp;
+            v.price &gt; 0 &amp;&amp;
+            v.price &lt;= MAX_LISTING_PRICE &amp;&amp;
+            Number.isInteger(v.stock) &amp;&amp;
+            v.stock &gt;= 0 &amp;&amp;
+            v.stock &lt;= MAX_LISTING_STOCK
+          ))
       : []
+    if (Array.isArray(variants) &amp;&amp; variants.length &gt; 0 &amp;&amp; normalizedVariants.length !== variants.length) {
+      return NextResponse.json({ error: `Each variant needs a valid price and stock up to ${MAX_LISTING_STOCK}` }, { status: 400 })
+    }
 
     const hasStructuredVariants = normalizedVariants.length &gt; 0
     const normalizedAttributes = Array.isArray(attributes)
@@ -31616,6 +32860,9 @@ export async function POST(request: NextRequest) {
     const totalVariantStock = hasStructuredVariants
       ? normalizedVariants.reduce((sum: number, v: any) =&gt; sum + v.stock, 0)
       : Number(quantity)
+    if (!Number.isInteger(totalVariantStock) || totalVariantStock &lt; 1 || totalVariantStock &gt; MAX_LISTING_STOCK) {
+      return NextResponse.json({ error: `Stock cannot exceed ${MAX_LISTING_STOCK}` }, { status: 400 })
+    }
 
     const product = await prisma.product.create({
       data: {
@@ -31634,6 +32881,9 @@ export async function POST(request: NextRequest) {
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
+        // ── Product review system: start in PENDING status ──────────────────
+        moderationStatus: 'PENDING',
+        isActive:     false, // Not visible in marketplace until approved
         seller:      { connect: { id: user.id } },
         hostelName:  hostelName ? String(hostelName).trim() : (user.hostelName || ''),
         roomNumber:  roomNumber  ? String(roomNumber).trim()  : (user.roomNumber  || ''),
@@ -34666,6 +35916,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { moderateImage } from '@/lib/moderation/moderateImage'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 const MAX_SIZE_MB = 5
@@ -34676,9 +35927,17 @@ function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {
     return data.length &gt;= 3 &amp;&amp; data[0] === 0xff &amp;&amp; data[1] === 0xd8 &amp;&amp; data[2] === 0xff
   }
   if (mimeType === 'image/png') {
-    return data.length &gt;= 8 &amp;&amp;
-      data[0] === 0x89 &amp;&amp; data[1] === 0x50 &amp;&amp; data[2] === 0x4e &amp;&amp; data[3] === 0x47 &amp;&amp;
-      data[4] === 0x0d &amp;&amp; data[5] === 0x0a &amp;&amp; data[6] === 0x1a &amp;&amp; data[7] === 0x0a
+    return (
+      data.length &gt;= 8 &amp;&amp;
+      data[0] === 0x89 &amp;&amp;
+      data[1] === 0x50 &amp;&amp;
+      data[2] === 0x4e &amp;&amp;
+      data[3] === 0x47 &amp;&amp;
+      data[4] === 0x0d &amp;&amp;
+      data[5] === 0x0a &amp;&amp;
+      data[6] === 0x1a &amp;&amp;
+      data[7] === 0x0a
+    )
   }
   if (mimeType === 'image/webp') {
     if (data.length &lt; 12) return false
@@ -34689,7 +35948,10 @@ function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {
   return false
 }
 
-function signCloudinaryParams(params: Record&lt;string, string | number&gt;, apiSecret: string) {
+function signCloudinaryParams(
+  params: Record&lt;string, string | number&gt;,
+  apiSecret: string
+): string {
   const signatureBase = Object.entries(params)
     .sort(([a], [b]) =&gt; a.localeCompare(b))
     .map(([key, value]) =&gt; `${key}=${value}`)
@@ -34708,12 +35970,14 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromRequest(request)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
+    const ip = getIpKey(
+      request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip')
+    )
     const limit = await checkRateLimitDistributed(
       `upload:${user.id}:${ip}`,
       20,
       15 * 60 * 1000,
-      { requireDistributedInProduction: true },
+      { requireDistributedInProduction: true }
     )
     if (!limit.allowed) {
       return NextResponse.json(
@@ -34759,6 +36023,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── Image Content Moderation (FREE: Google Cloud Vision API) ──
+    console.log('🔍 Checking image content for inappropriate material...')
+    const imageModeration = await moderateImage(image)
+    if (!imageModeration.allowed) {
+      console.warn('🚫 Image rejected by content moderation:', {
+        userId: user.id,
+        reason: imageModeration.reason,
+      })
+      return NextResponse.json(
+        {
+          error:
+            imageModeration.reason ||
+            'Your image was rejected. It contains inappropriate content (nudity, weapons, violence, etc.). Please upload a different image.',
+        },
+        { status: 422 }
+      )
+    }
+
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME
     const apiKey = process.env.CLOUDINARY_API_KEY
     const apiSecret = process.env.CLOUDINARY_API_SECRET
@@ -34768,6 +36050,8 @@ export async function POST(request: NextRequest) {
 
     const timestamp = Math.round(Date.now() / 1000)
     const folder = `BATAMART-products/${user.id}`
+
+    // ── Cloudinary signed upload (no moderation add-on required) ──
     const signature = signCloudinaryParams({ folder, timestamp }, apiSecret)
 
     const formData = new FormData()
@@ -34776,14 +36060,17 @@ export async function POST(request: NextRequest) {
     formData.append('timestamp', timestamp.toString())
     formData.append('signature', signature)
     formData.append('folder', folder)
+    // NOTE: 'moderation: aws_rek' intentionally excluded until the
+    // AWS Rekognition add-on is enabled in the Cloudinary dashboard.
 
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: 'POST',
-      body: formData,
-    })
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      { method: 'POST', body: formData }
+    )
     const data = await response.json()
 
     if (!response.ok || typeof data?.secure_url !== 'string') {
+      console.error('Cloudinary upload failed:', data)
       return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
     }
 
@@ -34800,8 +36087,7 @@ export async function POST(request: NextRequest) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
-}
-</pre></div>
+}</pre></div>
 <div class='file-block'><div class='file-header'>app/api/wallet/route.ts</div><pre>// app/api/wallet/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -37545,12 +38831,12 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
         data: { isSuspended: true, suspendedUntil: suspension.days === null ? null : suspensionExpiry, suspensionReason: suspension.reason },
       })
     }
-    await tx.product.update({ where: { id: order.productId }, data: { isActive: strikeCount === 1 ? false : undefined, moderationStatus: 'UNDER_REVIEW' } })
+    await tx.product.update({ where: { id: order.productId }, data: { isActive: strikeCount === 1 ? false : undefined, moderationStatus: 'PENDING' } })
     await tx.oversizedDeclineLog.upsert({
       where: { orderId_riderId: { orderId: order.id, riderId: params.riderId } },
       update: { reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
       create: { orderId: order.id, productId: order.productId, sellerId: order.sellerId, riderId: params.riderId, buyerId: order.buyerId, reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
-    })
+    }))
 
     return { order, strikeCount, suspension, suspensionExpiry, refundAmount }
   })
@@ -39466,6 +40752,144 @@ export async function updateHotStatus(productId: string): Promise&lt;HotResult&g
   return result
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>lib/moderation/moderateImage.ts</div><pre>/**
+ * Image Moderation using Gemini Vision API (uses existing GEMINI_API_KEY)
+ * Analyzes images for: nudity, weapons, explicit content, violence, drugs
+ * Free tier: 60 requests/minute (plenty for a marketplace)
+ */
+
+type ImageModerationResult = {
+  allowed: boolean
+  reason?: string
+  confidence?: number
+}
+
+const GEMINI_VISION_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+
+const IMAGE_MODERATION_PROMPT = `You are a content moderator. Analyze this image ONLY for prohibited content.
+
+REJECT if image contains:
+- Nudity, genitals, or sexually explicit content
+- Weapons (guns, knives, explosives, grenades)
+- Drugs or drug paraphernalia (cannabis, cocaine, etc)
+- Violence, gore, or weapons being used
+- Human trafficking indicators
+
+Return ONLY valid JSON (no markdown):
+{"allowed": true} for safe images
+{"allowed": false, "reason": "brief reason"} for prohibited content`
+
+export async function moderateImage(imageBase64: string): Promise&lt;ImageModerationResult&gt; {
+  const apiKey = process.env.GEMINI_API_KEY
+  
+  // If no API key, use basic heuristic checks
+  if (!apiKey) {
+    console.warn('⚠️ GEMINI_API_KEY not set, using basic image checks')
+    return performBasicImageChecks(imageBase64)
+  }
+
+  try {
+    // Remove data URI prefix if present
+    const cleanBase64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64
+    
+    // Detect image type from base64 or default to jpeg
+    let mediaType = 'image/jpeg'
+    if (imageBase64.includes('image/png')) mediaType = 'image/png'
+    if (imageBase64.includes('image/webp')) mediaType = 'image/webp'
+
+    const response = await fetch(`${GEMINI_VISION_URL}?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType: mediaType,
+                  data: cleanBase64,
+                },
+              },
+              {
+                text: IMAGE_MODERATION_PROMPT,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 200,
+          responseMimeType: 'application/json',
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      console.warn(`Gemini image moderation API error: ${response.status}`)
+      return performBasicImageChecks(imageBase64)
+    }
+
+    const data = await response.json()
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text
+
+    if (typeof text !== 'string') {
+      console.warn('No response from Gemini image analysis')
+      return performBasicImageChecks(imageBase64)
+    }
+
+    // Parse JSON response
+    try {
+      const parsed = JSON.parse(text)
+      
+      if (!parsed.allowed) {
+        return {
+          allowed: false,
+          reason: parsed.reason || 'Your image contains prohibited content (nudity, weapons, violence, etc.)',
+          confidence: 0.9,
+        }
+      }
+      
+      return { allowed: true }
+    } catch (parseError) {
+      console.warn('Failed to parse Gemini response:', text)
+      return performBasicImageChecks(imageBase64)
+    }
+  } catch (error) {
+    console.error('Gemini image moderation error:', error)
+    // Fail open - allow if service unavailable
+    return { allowed: true }
+  }
+}
+
+/**
+ * Basic heuristic checks when API is unavailable
+ * Checks: image size, dimensions, format integrity
+ */
+function performBasicImageChecks(imageBase64: string): ImageModerationResult {
+  try {
+    const cleanBase64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64
+    const sizeBytes = Math.ceil(cleanBase64.length * 0.75)
+
+    // Check file size (very large = suspicious)
+    const maxSizeBytes = 10 * 1024 * 1024 // 10MB
+    if (sizeBytes &gt; maxSizeBytes) {
+      return { allowed: false, reason: 'Image file too large' }
+    }
+
+    // Check if base64 is valid and not too small
+    if (cleanBase64.length &lt; 100) {
+      return { allowed: false, reason: 'Image too small or invalid' }
+    }
+
+    // If it passes basic checks, allow it
+    return { allowed: true }
+  } catch (error) {
+    console.warn('Basic image checks failed:', error)
+    return { allowed: true }
+  }
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>lib/moderation/moderateListing.ts</div><pre>type ModerationResult = {
   allowed: boolean
   reason?: string
@@ -39973,15 +41397,24 @@ export async function processReferralReward(
 
   const buyer = await tx.user.findUnique({
     where: { id: buyerId },
-    select: { referredById: true },
+    select: { referredById: true, email: true },
   })
   if (!buyer?.referredById) return
 
+  // Safety check: buyer cannot be their own referrer
+  if (buyer.referredById === buyerId) {
+    console.warn(`[FRAUD] Buyer ${buyerId} (${buyer.email}) has referredById pointing to themselves!`)
+    return
+  }
+
   const referrer = await tx.user.findUnique({
     where: { id: buyer.referredById },
-    select: { id: true, availableBalance: true },
+    select: { id: true, availableBalance: true, email: true },
   })
   if (!referrer) return
+
+  // Log referral reward processing for audit trail
+  console.log(`[REFERRAL] Processing reward: Buyer ${buyer.email} → Referrer ${referrer.email}`)
 
   const rewardsInWindow = await tx.referralReward.aggregate({
     where: {
@@ -40713,6 +42146,145 @@ main()
     await prisma.$disconnect()
   })
 </pre></div>
+<div class='file-block'><div class='file-header'>scripts/check-referral-anomalies.ts</div><pre>// scripts/check-referral-anomalies.ts
+// Run with: npx ts-node scripts/check-referral-anomalies.ts
+// Purpose: Identify users with referral rewards and verify the referral relationships are valid
+
+import { prisma } from '@/lib/prisma'
+
+async function main() {
+  console.log('🔍 Checking for referral reward anomalies...\n')
+
+  // Find all users who received referral rewards
+  const usersWithRewards = await prisma.user.findMany({
+    where: {
+      referralReward: {
+        some: {},
+      },
+    },
+    select: {
+      id: true,
+      email: true,
+      availableBalance: true,
+      referralReward: {
+        select: {
+          id: true,
+          amount: true,
+          createdAt: true,
+          orderId: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  console.log(`Found ${usersWithRewards.length} users with referral rewards\n`)
+
+  for (const user of usersWithRewards) {
+    const totalRewardsAmount = user.referralReward.reduce((sum, r) =&gt; sum + r.amount, 0)
+    console.log(`📊 User: ${user.email}`)
+    console.log(`   Total Rewards: ₦${totalRewardsAmount}`)
+    console.log(`   Reward Count: ${user.referralReward.length}`)
+    console.log(`   Current Balance: ₦${user.availableBalance}`)
+
+    // Find all users who referred this person
+    const referredUsers = await prisma.user.findMany({
+      where: {
+        referralReward: {
+          some: {
+            order: {
+              buyerId: user.id,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    })
+
+    console.log(`   Referred by: ${referredUsers.map(u =&gt; u.email).join(', ') || 'Nobody (⚠️ ANOMALY)'}`)
+
+    // Check if there are any self-referrals (shouldn't exist with our validation)
+    const selfReferral = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { referredById: true },
+    })
+
+    if (selfReferral?.referredById === user.id) {
+      console.log(`   ⚠️ FRAUD DETECTED: Self-referral!`)
+    }
+
+    console.log()
+  }
+
+  // Check for orphaned referral rewards (rewards to users with no referrer)
+  console.log('\n🚨 Checking for orphaned referral rewards...')
+  const orphanedRewards = await prisma.referralReward.findMany({
+    include: {
+      order: {
+        select: {
+          buyerId: true,
+          buyer: {
+            select: {
+              email: true,
+              referredById: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const anomalies = orphanedRewards.filter(r =&gt; !r.order.buyer.referredById)
+
+  if (anomalies.length &gt; 0) {
+    console.log(`⚠️ Found ${anomalies.length} referral rewards for buyers with no referrer!\n`)
+    for (const anomaly of anomalies) {
+      console.log(`  - Buyer: ${anomaly.order.buyer.email} (Order ID: ${anomaly.orderId})`)
+      console.log(`    Reward Amount: ₦${anomaly.amount}`)
+    }
+  } else {
+    console.log('✅ No orphaned referral rewards found')
+  }
+
+  // Check for duplicate rewards on same order
+  console.log('\n🔄 Checking for duplicate rewards per order...')
+  const duplicates = await prisma.referralReward.groupBy({
+    by: ['orderId'],
+    _count: true,
+    having: {
+      orderId: {
+        _count: {
+          gt: 1,
+        },
+      },
+    },
+  })
+
+  if (duplicates.length &gt; 0) {
+    console.log(`⚠️ Found ${duplicates.length} orders with duplicate rewards!\n`)
+    for (const dup of duplicates) {
+      const rewards = await prisma.referralReward.findMany({
+        where: { orderId: dup.orderId },
+        select: { amount: true, createdAt: true },
+      })
+      console.log(`  - Order ID: ${dup.orderId}`)
+      console.log(`    Rewards: ${rewards.map(r =&gt; `₦${r.amount}`).join(', ')}`)
+    }
+  } else {
+    console.log('✅ No duplicate rewards per order')
+  }
+
+  console.log('\n✅ Diagnostic complete')
+}
+
+main().catch(e =&gt; {
+  console.error(e)
+  process.exit(1)
+})
+</pre></div>
 <div class='file-block'><div class='file-header'>scripts/oversized-protection.test.ts</div><pre>import assert from 'node:assert/strict'
 import { getSuspensionWindow } from '@/lib/oversized-protection'
 
@@ -40892,7 +42464,8 @@ model Product {
   isDeleted                Boolean                 @default(false)
   productDeliveryAgreement Boolean                 @default(false)
   deliveryEstimate         String?
-  moderationStatus         ProductModerationStatus @default(APPROVED)
+  moderationStatus         ProductModerationStatus @default(PENDING)
+  rejectionReason          String?
   estimatedWeightKg        Float?
   dimensionsCm             Json?
   universityId             String?
@@ -40930,6 +42503,7 @@ model Product {
   @@index([variantsEnabled])
   @@index([isActive])
   @@index([isDeleted])
+  @@index([moderationStatus])
   @@index([createdAt])
   @@index([universityId])
   @@index([nameKey])
@@ -40940,6 +42514,7 @@ model Product {
   @@index([nameKey, conditionType, hasChangedParts, variantKey])
   @@index([universityId, isActive, isDeleted, quantity])
   @@index([isHot, universityId])
+  @@index([moderationStatus, createdAt])
   @@schema("public")
 }
 
@@ -41695,8 +43270,9 @@ enum NotificationType {
 }
 
 enum ProductModerationStatus {
+  PENDING
   APPROVED
-  UNDER_REVIEW
+  REJECTED
   REMOVED
 
   @@schema("public")
@@ -42815,13 +44391,14 @@ body {
     }
   ],
   "crons": [
-    {
-      "path": "/api/cron/hot-status",
-      "schedule": "*/15 * * * *"
-    }
-  ]
+  {
+    "path": "/api/some-job",
+    "schedule": "0 0 * * *"
+  }
+]
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>.vercel/project.json</div><pre>{"projectId":"prj_ZgBy1vGKs2DctDLxV9gZ3uuRHcX2","orgId":"team_636YWKsg6tzW8QvmKm3mfphZ","projectName":"batamart"}</pre></div>
 <div class='file-block'><div class='file-header'>public/manifest.json</div><pre>{
   "name": "BATAMART",
   "short_name": "BataMart",

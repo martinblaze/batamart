@@ -64,12 +64,12 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
         data: { isSuspended: true, suspendedUntil: suspension.days === null ? null : suspensionExpiry, suspensionReason: suspension.reason },
       })
     }
-    await tx.product.update({ where: { id: order.productId }, data: { isActive: strikeCount === 1 ? false : undefined, moderationStatus: 'UNDER_REVIEW' } })
+    await tx.product.update({ where: { id: order.productId }, data: { isActive: strikeCount === 1 ? false : undefined, moderationStatus: 'PENDING' } })
     await tx.oversizedDeclineLog.upsert({
       where: { orderId_riderId: { orderId: order.id, riderId: params.riderId } },
       update: { reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
       create: { orderId: order.id, productId: order.productId, sellerId: order.sellerId, riderId: params.riderId, buyerId: order.buyerId, reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
-    })
+    }))
 
     return { order, strikeCount, suspension, suspensionExpiry, refundAmount }
   })

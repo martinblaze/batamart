@@ -77,7 +77,8 @@ const SHOP_CSS = `
 interface Product {
   id: string; name: string; price: number; quantity: number
   images: string[]; category: string; subcategory?: string
-  description: string; isActive: boolean
+  description: string; isActive: boolean; moderationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectionReason?: string | null
   deliveryEstimate?: string
   viewCount: number; createdAt: string
   _count: { orders: number }
@@ -127,6 +128,25 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: {
 
 const fmt = (price: number) =>
   new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(price)
+
+const getModerationStatusBadge = (status?: string, rejectionReason?: string | null) => {
+  if (!status || status === 'APPROVED') return null
+  
+  const config = {
+    PENDING: { bg: 'bg-yellow-50', text: 'text-yellow-700', label: 'Under Review', icon: <Timer className="w-3 h-3" /> },
+    REJECTED: { bg: 'bg-red-50', text: 'text-red-700', label: 'Rejected', icon: <XCircle className="w-3 h-3" /> },
+  }[status] || { bg: 'bg-gray-50', text: 'text-gray-700', label: status, icon: null }
+  
+  return (
+    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${config.bg} ${config.text} ring-1 ring-current ring-opacity-20`}>
+      {config.icon}
+      {config.label}
+      {status === 'REJECTED' && rejectionReason && (
+        <span className="ml-0.5 text-[8px] opacity-70 truncate max-w-xs" title={rejectionReason}>({rejectionReason})</span>
+      )}
+    </div>
+  )
+}
 
 export default function MyShopPage() {
   const router = useRouter()
@@ -411,6 +431,11 @@ export default function MyShopPage() {
                         {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                       </p>
                       <h3 className="font-black text-gray-900 text-base line-clamp-1 mb-0.5">{product.name}</h3>
+                      {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) && (
+                        <div className="mb-2">
+                          {getModerationStatusBadge(product.moderationStatus, product.rejectionReason)}
+                        </div>
+                      )}
                       {product.deliveryEstimate && <p className="text-[11px] font-semibold text-orange-600 mb-1">Delivery: {product.deliveryEstimate}</p>}
                       {/* ── Variant chips ── */}
                       {(() => {
@@ -478,6 +503,11 @@ export default function MyShopPage() {
                               {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
                             </p>
                             <h3 className="font-black text-gray-900 text-base leading-tight mt-0.5 line-clamp-1">{product.name}</h3>
+                            {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) && (
+                              <div className="mt-1.5 mb-1">
+                                {getModerationStatusBadge(product.moderationStatus, product.rejectionReason)}
+                              </div>
+                            )}
                             {product.deliveryEstimate && <p className="text-[11px] font-semibold text-orange-600 mt-1">Delivery: {product.deliveryEstimate}</p>}
                             {/* ── Variant chips ── */}
                             {(() => {

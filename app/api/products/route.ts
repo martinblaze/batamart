@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
-import { moderateListing } from '@/lib/moderation/moderateListing'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
@@ -295,6 +294,7 @@ export async function GET(request: NextRequest) {
       isActive:  true,
       quantity:  { gt: 0 },
       isDeleted: false,
+      moderationStatus: 'APPROVED', // Only show approved products in marketplace
       // Only filter by university when the user actually has one
       ...(user.universityId ? { universityId: user.universityId } : {}),
     }
@@ -493,18 +493,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: PROHIBITED_LISTING_MESSAGE }, { status: 422 })
     }
 
-    const textModeration = await moderateListing(String(name || ''), String(description || ''))
-    if (!textModeration.allowed) {
-      console.warn('AI listing moderation rejected', {
-        userId: user.id,
-        reason: textModeration.reason,
-      })
-      return NextResponse.json(
-        { error: textModeration.reason || PROHIBITED_LISTING_MESSAGE },
-        { status: 422 }
-      )
-    }
-
     if (productDeliveryAgreement !== true) {
       return NextResponse.json({ error: 'You must confirm motorcycle delivery suitability before listing.' }, { status: 400 })
     }
@@ -592,6 +580,9 @@ export async function POST(request: NextRequest) {
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
+        // ── Product review system: start in PENDING status ──────────────────
+        moderationStatus: 'PENDING',
+        isActive:     false, // Not visible in marketplace until approved
         seller:      { connect: { id: user.id } },
         hostelName:  hostelName ? String(hostelName).trim() : (user.hostelName || ''),
         roomNumber:  roomNumber  ? String(roomNumber).trim()  : (user.roomNumber  || ''),

@@ -141,6 +141,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Selected university is not available' }, { status: 400 })
     }
 
+    // ── Validate referral code (required) ───────────────────────────────────
+    const REQUIRED_REFERRAL_CODE = 'BATAMART-P70LZ6'
+    if (!referralCode || referralCode.trim().toUpperCase() !== REQUIRED_REFERRAL_CODE) {
+      return NextResponse.json(
+        { error: `Invalid referral code. Please use the correct code to sign up. Visit https://batamart.com/signup?ref=${REQUIRED_REFERRAL_CODE}` },
+        { status: 400 }
+      )
+    }
+
     // ── Duplicate account check ────────────────────────────────────────────
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] },
