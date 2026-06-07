@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { generateToken } from '@/lib/auth/auth'
 import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Block new signups until June 22 ────────────────────────────────────
-      const signupStatus = checkSignupsOpen()
+      const signupStatus = getSignupStatus(referralCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {

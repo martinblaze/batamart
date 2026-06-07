@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin } = body
+    const { email, isLogin, referralCode } = body
 
     if (!email) {
       return NextResponse.json(
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // ── Block new signups until June 22 ────────────────────────────────────
     if (!isLogin) {
-      const signupStatus = checkSignupsOpen()
+      const signupStatus = getSignupStatus(referralCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {

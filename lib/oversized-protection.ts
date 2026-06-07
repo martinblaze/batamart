@@ -69,7 +69,7 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
       where: { orderId_riderId: { orderId: order.id, riderId: params.riderId } },
       update: { reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
       create: { orderId: order.id, productId: order.productId, sellerId: order.sellerId, riderId: params.riderId, buyerId: order.buyerId, reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
-    }))
+    })
 
     return { order, strikeCount, suspension, suspensionExpiry, refundAmount }
   })

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import { getSignupStatus, hasSignupAccessCode } from '@/lib/signup-access'
 
 interface University {
   id:            string
@@ -103,6 +104,7 @@ function SignupForm() {
   const [signupsOpen, setSignupsOpen]           = useState(true)
   const [countdown, setCountdown]               = useState('')
   const [signupReopensDate, setSignupReopensDate] = useState('')
+  const hasAccessCode = hasSignupAccessCode(referralCode)
 
   useEffect(() => {
     const ref = searchParams.get('ref')
@@ -126,6 +128,13 @@ function SignupForm() {
   // ── Check if signups are open and update countdown ───────────────────────────
   useEffect(() => {
     const checkSignupStatus = () => {
+      const signupStatus = getSignupStatus(referralCode)
+      if (signupStatus.isOpen) {
+        setSignupsOpen(true)
+        setCountdown('')
+        return
+      }
+
       const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
       const now = Date.now()
       const msRemaining = SIGNUP_REOPENS_AT - now
@@ -159,7 +168,7 @@ function SignupForm() {
     checkSignupStatus()
     const interval = setInterval(checkSignupStatus, 1000)
     return () => clearInterval(interval)
-  }, [])
+  }, [referralCode])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters'
@@ -195,7 +204,7 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined }),
       })
       const data = await response.json()
       
@@ -327,7 +336,7 @@ function SignupForm() {
   if (step === 0) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && (
+        {!signupsOpen && !hasAccessCode && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -424,7 +433,7 @@ function SignupForm() {
   if (step === 1) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && (
+        {!signupsOpen && !hasAccessCode && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -586,7 +595,7 @@ function SignupForm() {
   if (step === 2) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && (
+        {!signupsOpen && !hasAccessCode && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -650,7 +659,7 @@ function SignupForm() {
 
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && (
+        {!signupsOpen && !hasAccessCode && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -773,7 +782,7 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     <PageShell selectedUniversity={selectedUniversity}>
-      {!signupsOpen && (
+      {!signupsOpen && !hasAccessCode && (
         <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
           <p className="text-2xl mb-2">🔒</p>
           <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
