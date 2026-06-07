@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
-import { getSignupStatus, hasSignupAccessCode } from '@/lib/signup-access'
+import { getSignupStatus, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
 interface University {
   id:            string
@@ -19,6 +19,7 @@ interface University {
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
 const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
+const SIGNUP_ACCESS_STORAGE_KEY = 'batamart:signup-access-code'
 
 const PageShell = ({
   children,
@@ -94,7 +95,12 @@ function SignupForm() {
   const [password, setPassword]               = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
-  const [referralCode, setReferralCode]       = useState('')
+  const [referralCode, setReferralCode]       = useState(() => {
+    if (typeof window === 'undefined') return ''
+    const urlRef = new URLSearchParams(window.location.search).get('ref')
+    const storedRef = window.sessionStorage.getItem(SIGNUP_ACCESS_STORAGE_KEY)
+    return normalizeSignupAccessCode(urlRef || storedRef || '')
+  })
 
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
@@ -107,9 +113,26 @@ function SignupForm() {
   const hasAccessCode = hasSignupAccessCode(referralCode)
 
   useEffect(() => {
-    const ref = searchParams.get('ref')
-    if (ref) setReferralCode(ref.trim().toUpperCase())
+    const ref = normalizeSignupAccessCode(searchParams.get('ref'))
+    if (ref) {
+      setReferralCode(ref)
+      if (hasSignupAccessCode(ref)) {
+        sessionStorage.setItem(SIGNUP_ACCESS_STORAGE_KEY, ref)
+      }
+      return
+    }
+
+    const storedRef = normalizeSignupAccessCode(sessionStorage.getItem(SIGNUP_ACCESS_STORAGE_KEY))
+    if (hasSignupAccessCode(storedRef)) {
+      setReferralCode(storedRef)
+    }
   }, [searchParams])
+
+  useEffect(() => {
+    if (hasSignupAccessCode(referralCode)) {
+      sessionStorage.setItem(SIGNUP_ACCESS_STORAGE_KEY, normalizeSignupAccessCode(referralCode))
+    }
+  }, [referralCode])
 
   useEffect(() => {
     if (step === 3 && phone && !deliveryPhone) {
