@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin, referralCode } = body
+    const { email, isLogin, signupAccessCode } = body
 
     if (!email) {
       return NextResponse.json(
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // ── Block new signups until June 22 ────────────────────────────────────
     if (!isLogin) {
-      const signupStatus = getSignupStatus(referralCode)
+      const signupStatus = getSignupStatus(signupAccessCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {

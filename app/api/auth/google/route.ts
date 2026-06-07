@@ -37,7 +37,7 @@ function googleAudience() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { idToken, mode, universityId, referralCode } = await request.json()
+    const { idToken, mode, universityId, referralCode, signupAccessCode } = await request.json()
 
     if (!idToken || typeof idToken !== 'string') {
       return NextResponse.json({ error: 'Google token is required' }, { status: 400 })
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Block new signups until June 22 ────────────────────────────────────
-      const signupStatus = getSignupStatus(referralCode)
+      const signupStatus = getSignupStatus(signupAccessCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
         name,
         universityId: typeof universityId === 'string' && universityId.trim() ? universityId : undefined,
         referralCode: typeof referralCode === 'string' && referralCode.trim() ? referralCode.trim().toUpperCase() : undefined,
+        signupAccessCode: typeof signupAccessCode === 'string' && signupAccessCode.trim() ? signupAccessCode.trim().toUpperCase() : undefined,
       })
 
       return NextResponse.json({

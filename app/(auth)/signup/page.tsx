@@ -19,7 +19,6 @@ interface University {
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
 const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
-const SIGNUP_ACCESS_STORAGE_KEY = 'batamart:signup-access-code'
 
 const PageShell = ({
   children,
@@ -98,8 +97,12 @@ function SignupForm() {
   const [referralCode, setReferralCode]       = useState(() => {
     if (typeof window === 'undefined') return ''
     const urlRef = new URLSearchParams(window.location.search).get('ref')
-    const storedRef = window.sessionStorage.getItem(SIGNUP_ACCESS_STORAGE_KEY)
-    return normalizeSignupAccessCode(urlRef || storedRef || '')
+    return hasSignupAccessCode(urlRef) ? '' : normalizeSignupAccessCode(urlRef || '')
+  })
+  const [signupAccessCode, setSignupAccessCode] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    const urlRef = new URLSearchParams(window.location.search).get('ref')
+    return hasSignupAccessCode(urlRef) ? normalizeSignupAccessCode(urlRef) : ''
   })
 
   const [loading, setLoading]             = useState(false)
@@ -110,29 +113,21 @@ function SignupForm() {
   const [signupsOpen, setSignupsOpen]           = useState(true)
   const [countdown, setCountdown]               = useState('')
   const [signupReopensDate, setSignupReopensDate] = useState('')
-  const hasAccessCode = hasSignupAccessCode(referralCode)
+  const hasAccessCode = hasSignupAccessCode(signupAccessCode)
 
   useEffect(() => {
     const ref = normalizeSignupAccessCode(searchParams.get('ref'))
-    if (ref) {
-      setReferralCode(ref)
-      if (hasSignupAccessCode(ref)) {
-        sessionStorage.setItem(SIGNUP_ACCESS_STORAGE_KEY, ref)
-      }
+    if (hasSignupAccessCode(ref)) {
+      setSignupAccessCode(ref)
+      setReferralCode('')
       return
     }
 
-    const storedRef = normalizeSignupAccessCode(sessionStorage.getItem(SIGNUP_ACCESS_STORAGE_KEY))
-    if (hasSignupAccessCode(storedRef)) {
-      setReferralCode(storedRef)
+    setSignupAccessCode('')
+    if (ref) {
+      setReferralCode(ref)
     }
   }, [searchParams])
-
-  useEffect(() => {
-    if (hasSignupAccessCode(referralCode)) {
-      sessionStorage.setItem(SIGNUP_ACCESS_STORAGE_KEY, normalizeSignupAccessCode(referralCode))
-    }
-  }, [referralCode])
 
   useEffect(() => {
     if (step === 3 && phone && !deliveryPhone) {
@@ -151,7 +146,7 @@ function SignupForm() {
   // ── Check if signups are open and update countdown ───────────────────────────
   useEffect(() => {
     const checkSignupStatus = () => {
-      const signupStatus = getSignupStatus(referralCode)
+      const signupStatus = getSignupStatus(signupAccessCode)
       if (signupStatus.isOpen) {
         setSignupsOpen(true)
         setCountdown('')
@@ -191,7 +186,7 @@ function SignupForm() {
     checkSignupStatus()
     const interval = setInterval(checkSignupStatus, 1000)
     return () => clearInterval(interval)
-  }, [referralCode])
+  }, [signupAccessCode])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters'
@@ -227,7 +222,7 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, referralCode: referralCode || undefined }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: signupAccessCode || undefined }),
       })
       const data = await response.json()
       
@@ -320,6 +315,7 @@ function SignupForm() {
           email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
+          signupAccessCode: signupAccessCode || undefined,
           universityId: selectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
@@ -482,6 +478,7 @@ function SignupForm() {
               payload={{
                 universityId: selectedUniversity?.id,
                 referralCode: referralCode || undefined,
+                signupAccessCode: signupAccessCode || undefined,
               }}
               onError={setError}
               onLoading={setLoading}

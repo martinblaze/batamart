@@ -5,6 +5,7 @@ type GoogleSignupPayload = {
   name: string
   universityId?: string
   referralCode?: string
+  signupAccessCode?: string
 }
 
 function getSecret(): string {
@@ -27,9 +28,9 @@ export function verifyGoogleSignupToken(token: string): GoogleSignupPayload | nu
       name: String(decoded.name),
       universityId: decoded.universityId ? String(decoded.universityId) : undefined,
       referralCode: decoded.referralCode ? String(decoded.referralCode) : undefined,
+      signupAccessCode: decoded.signupAccessCode ? String(decoded.signupAccessCode) : undefined,
     }
   } catch {
     return null
   }
 }
-

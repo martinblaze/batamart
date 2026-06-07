@@ -7,7 +7,7 @@ import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { getSignupStatus, SIGNUP_ACCESS_CODE } from '@/lib/signup-access'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
@@ -64,25 +64,13 @@ export async function POST(request: NextRequest) {
       // only via the /become-seller flow (POST /api/auth/become-seller).
       phone,
       referralCode,
+      signupAccessCode,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
       hostelName,
       roomNumber,
       landmark,
     } = body
-
-    const signupStatus = getSignupStatus(referralCode)
-    if (!signupStatus.isOpen) {
-      return NextResponse.json(
-        {
-          error: 'Signups are temporarily closed for maintenance',
-          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-          countdown: signupStatus.countdown,
-          reopensAt: signupStatus.reopensAt,
-        },
-        { status: 503 }
-      )
-    }
 
     // ── Field presence check ───────────────────────────────────────────────
     if (!email || !otpSessionToken || !password || !name || !phone) {
@@ -133,6 +121,20 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate university exists ─────────────────────────────────────────
+    const effectiveSignupAccessCode = signupAccessCode || googleSignup?.signupAccessCode
+    const signupStatus = getSignupStatus(effectiveSignupAccessCode)
+    if (!signupStatus.isOpen) {
+      return NextResponse.json(
+        {
+          error: 'Signups are temporarily closed for maintenance',
+          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+          countdown: signupStatus.countdown,
+          reopensAt: signupStatus.reopensAt,
+        },
+        { status: 503 }
+      )
+    }
+
     const university = await prisma.university.findUnique({
       where:  { id: universityId },
       select: { id: true, isActive: true, name: true, shortName: true },
@@ -143,12 +145,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate referral code (required) ───────────────────────────────────
-    if (!referralCode || referralCode.trim().toUpperCase() !== SIGNUP_ACCESS_CODE) {
-      return NextResponse.json(
-        { error: `Invalid referral code. Please use the correct code to sign up. Visit https://batamart.com/signup?ref=${SIGNUP_ACCESS_CODE}` },
-        { status: 400 }
-      )
-    }
+    
 
     // ── Duplicate account check ────────────────────────────────────────────
     const existingUser = await prisma.user.findFirst({
