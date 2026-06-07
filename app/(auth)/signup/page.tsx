@@ -113,10 +113,20 @@ function SignupForm() {
   const [signupsOpen, setSignupsOpen]           = useState(true)
   const [countdown, setCountdown]               = useState('')
   const [signupReopensDate, setSignupReopensDate] = useState('')
-  const hasAccessCode = hasSignupAccessCode(signupAccessCode)
+  const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
+  const locationRef = typeof window === 'undefined'
+    ? ''
+    : normalizeSignupAccessCode(new URLSearchParams(window.location.search).get('ref'))
+  const activeSignupAccessCode =
+    hasSignupAccessCode(signupAccessCode) ? signupAccessCode :
+    hasSignupAccessCode(searchRef) ? searchRef :
+    hasSignupAccessCode(locationRef) ? locationRef :
+    ''
+  const hasAccessCode = hasSignupAccessCode(activeSignupAccessCode)
+  const signupAllowed = signupsOpen || hasAccessCode
 
   useEffect(() => {
-    const ref = normalizeSignupAccessCode(searchParams.get('ref'))
+    const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
     if (hasSignupAccessCode(ref)) {
       setSignupAccessCode(ref)
       setReferralCode('')
@@ -146,7 +156,7 @@ function SignupForm() {
   // ── Check if signups are open and update countdown ───────────────────────────
   useEffect(() => {
     const checkSignupStatus = () => {
-      const signupStatus = getSignupStatus(signupAccessCode)
+      const signupStatus = getSignupStatus(activeSignupAccessCode)
       if (signupStatus.isOpen) {
         setSignupsOpen(true)
         setCountdown('')
@@ -186,7 +196,7 @@ function SignupForm() {
     checkSignupStatus()
     const interval = setInterval(checkSignupStatus, 1000)
     return () => clearInterval(interval)
-  }, [signupAccessCode])
+  }, [activeSignupAccessCode])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters'
@@ -222,7 +232,7 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: signupAccessCode || undefined }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined }),
       })
       const data = await response.json()
       
@@ -315,7 +325,7 @@ function SignupForm() {
           email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
-          signupAccessCode: signupAccessCode || undefined,
+          signupAccessCode: activeSignupAccessCode || undefined,
           universityId: selectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
@@ -355,7 +365,7 @@ function SignupForm() {
   if (step === 0) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && !hasAccessCode && (
+        {!signupAllowed && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -391,7 +401,7 @@ function SignupForm() {
                 <button
                   key={uni.id}
                   onClick={() => {
-                    if (!signupsOpen) {
+                    if (!signupAllowed) {
                       setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
                       return
                     }
@@ -401,7 +411,7 @@ function SignupForm() {
                     selectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  } ${!signupsOpen ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  } ${!signupAllowed ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -452,7 +462,7 @@ function SignupForm() {
   if (step === 1) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && !hasAccessCode && (
+        {!signupAllowed && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -478,7 +488,7 @@ function SignupForm() {
               payload={{
                 universityId: selectedUniversity?.id,
                 referralCode: referralCode || undefined,
-                signupAccessCode: signupAccessCode || undefined,
+                signupAccessCode: activeSignupAccessCode || undefined,
               }}
               onError={setError}
               onLoading={setLoading}
@@ -615,7 +625,7 @@ function SignupForm() {
   if (step === 2) {
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && !hasAccessCode && (
+        {!signupAllowed && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -679,7 +689,7 @@ function SignupForm() {
 
     return (
       <PageShell selectedUniversity={selectedUniversity}>
-        {!signupsOpen && !hasAccessCode && (
+        {!signupAllowed && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
             <p className="text-2xl mb-2">🔒</p>
             <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
@@ -802,7 +812,7 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     <PageShell selectedUniversity={selectedUniversity}>
-      {!signupsOpen && !hasAccessCode && (
+      {!signupAllowed && (
         <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
           <p className="text-2xl mb-2">🔒</p>
           <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
