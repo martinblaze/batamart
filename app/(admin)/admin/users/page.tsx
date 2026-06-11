@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Search, Shield, CheckCircle, XCircle,
+  Search, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, X, UserPlus,
   Eye, EyeOff, Copy, Check, Building2,
 } from 'lucide-react'
@@ -48,7 +48,20 @@ interface CreateRiderForm {
   universityId: string
 }
 
+type RiderInputField = 'name' | 'phone' | 'email'
+
 const PAGE_SIZE = 50
+
+const RIDER_FIELDS = [
+  { label: 'Full Name', field: 'name', type: 'text', placeholder: 'Rider full name' },
+  { label: 'Phone Number', field: 'phone', type: 'tel', placeholder: '080xxxxxxxx' },
+  { label: 'Email Address', field: 'email', type: 'email', placeholder: 'rider@email.com' },
+] as const satisfies ReadonlyArray<{
+  label: string
+  field: RiderInputField
+  type: 'text' | 'tel' | 'email'
+  placeholder: string
+}>
 
 export default function UsersPage() {
   const [users, setUsers]               = useState<User[]>([])
@@ -228,7 +241,8 @@ export default function UsersPage() {
         showToast('User unsuspended successfully')
         fetchUsers(page)
       } else {
-        showToast('Failed to unsuspend user', 'error')
+        const data = await res.json().catch(() => null)
+        showToast(data?.error || 'Failed to unsuspend user', 'error')
       }
     } catch {
       showToast('Network error', 'error')
@@ -555,16 +569,12 @@ export default function UsersPage() {
                       ))}
                     </select>
                   </div>
-                  {[
-                    { label: 'Full Name',     field: 'name',  type: 'text',  placeholder: 'Rider full name' },
-                    { label: 'Phone Number',  field: 'phone', type: 'tel',   placeholder: '080xxxxxxxx' },
-                    { label: 'Email Address', field: 'email', type: 'email', placeholder: 'rider@email.com' },
-                  ].map(({ label, field, type, placeholder }) => (
+                  {RIDER_FIELDS.map(({ label, field, type, placeholder }) => (
                     <div key={field}>
                       <label className="block text-xs text-gray-400 mb-1">{label}</label>
                       <input
                         type={type}
-                        value={(riderForm as any)[field]}
+                        value={riderForm[field]}
                         onChange={e => setRiderForm({ ...riderForm, [field]: e.target.value })}
                         placeholder={placeholder}
                         required
