@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ChevronLeft, Filter, Loader2, Search, X } from 'lucide-react'
 import { CATEGORY_TREE } from '@/lib/variants'
 import FilterGroup from '@/components/FilterGroup'
@@ -40,8 +42,9 @@ const fmt = (n: number) => new Intl.NumberFormat('en-NG', { style: 'currency', c
 
 function SearchPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const initialQ = searchParams.get('q') || ''
+  const initialQ = typeof window === 'undefined'
+    ? ''
+    : (new URLSearchParams(window.location.search).get('q') || '')
 
   const [products, setProducts] = useState<Product[]>([])
   const [filters, setFilters] = useState<Record<string, string>>({})

@@ -2,8 +2,10 @@
 // ── UPGRADED: Parses variant selection from orderNote and displays it ─────────
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Star, CheckCircle, Loader2, Package, MapPin, User,
@@ -95,7 +97,6 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function OrdersPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [checkingAuth, setCheckingAuth] = useState(true)
@@ -106,13 +107,14 @@ export default function OrdersPage() {
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<PeopleLikeYouItem[]>([])
 
   useEffect(() => {
+    const query = new URLSearchParams(window.location.search)
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
     setCheckingAuth(false)
 
-    const paymentStatus = searchParams.get('payment')
-    const orderNumber = searchParams.get('order')
-    const orderCount = searchParams.get('count')
+    const paymentStatus = query.get('payment')
+    const orderNumber = query.get('order')
+    const orderCount = query.get('count')
 
     if (paymentStatus === 'success') {
       setPostPayment(true)
@@ -131,7 +133,7 @@ export default function OrdersPage() {
 
     fetchOrders()
     fetchPeopleLikeYouBought()
-  }, [searchParams])
+  }, [router])
 
   const fetchOrders = async () => {
     try {

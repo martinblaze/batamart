@@ -1,7 +1,9 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, AlertTriangle, Package, ChevronRight, ShoppingBag } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
@@ -23,21 +25,21 @@ const DISPUTE_ELIGIBLE = ['DELIVERED', 'COMPLETED']
 
 export default function SelectOrderForDisputePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const isApp = searchParams.get('app') === 'true'
+  const [isApp, setIsApp] = useState(false)
 
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    setIsApp(new URLSearchParams(window.location.search).get('app') === 'true')
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login?returnTo=/dispute/select-order')
       return
     }
     fetchOrders()
-  }, [])
+  }, [router])
 
   const fetchOrders = async () => {
     try {

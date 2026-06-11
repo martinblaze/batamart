@@ -1,13 +1,14 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 function LoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +18,7 @@ function LoginForm() {
   const [suspensionMessage, setSuspensionMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    const wasSuspended = searchParams.get('suspended') === '1'
+    const wasSuspended = new URLSearchParams(window.location.search).get('suspended') === '1'
     if (!wasSuspended) return
 
     const fetchSuspensionInfo = async () => {
@@ -37,7 +38,7 @@ function LoginForm() {
       }
     }
     fetchSuspensionInfo()
-  }, [searchParams])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

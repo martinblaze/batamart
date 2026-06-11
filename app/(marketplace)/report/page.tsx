@@ -1,13 +1,17 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { AlertCircle, Upload, X, Link, User, Package, Shield, Clock, MessageSquare, CheckCircle } from 'lucide-react'
 
 // Separate the component that uses useSearchParams
 function ReportFormContent() {
     const router = useRouter()
-    const searchParams = useSearchParams()
+    const searchParams = typeof window === 'undefined'
+        ? new URLSearchParams()
+        : new URLSearchParams(window.location.search)
 
     // Get pre-filled data from URL params
     const type = searchParams.get('type') || ''

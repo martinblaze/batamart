@@ -1,12 +1,13 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 function RiderLoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,7 +16,7 @@ function RiderLoginForm() {
   useEffect(() => {
     // ── If middleware bounced rider here after accessing a forbidden page ──
     // Clear ALL local auth state so they're fully logged out client-side too.
-    const reason = searchParams.get('reason')
+    const reason = new URLSearchParams(window.location.search).get('reason')
     if (reason === 'no_access') {
       localStorage.clear()
       sessionStorage.removeItem('batamart_rider_mode')
@@ -30,7 +31,7 @@ function RiderLoginForm() {
     if (role === 'RIDER') {
       router.replace('/rider-dashboard')
     }
-  }, [router, searchParams])
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
