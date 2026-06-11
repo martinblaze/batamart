@@ -4,10 +4,19 @@
 // WARNING: This performs destructive operations - logs all changes for audit trail
 
 import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { verifyAdminToken } from '@/lib/auth-client'
 
 export const dynamic = 'force-dynamic'
+
+async function verifyAdminToken(token: string) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { role?: string }
+    return decoded.role === 'ADMIN' ? decoded : null
+  } catch {
+    return null
+  }
+}
 
 interface CleanupResult {
   removedRewards: {
