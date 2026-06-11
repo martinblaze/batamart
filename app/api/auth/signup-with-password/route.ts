@@ -7,33 +7,11 @@ import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now >= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     // ── Block new signups until June 22 ────────────────────────────────────
@@ -64,7 +42,6 @@ export async function POST(request: NextRequest) {
       // only via the /become-seller flow (POST /api/auth/become-seller).
       phone,
       referralCode,
-      signupAccessCode,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
       hostelName,
@@ -121,20 +98,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate university exists ─────────────────────────────────────────
-    const effectiveSignupAccessCode = signupAccessCode || googleSignup?.signupAccessCode
-    const signupStatus = getSignupStatus(effectiveSignupAccessCode)
-    if (!signupStatus.isOpen) {
-      return NextResponse.json(
-        {
-          error: 'Signups are temporarily closed for maintenance',
-          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-          countdown: signupStatus.countdown,
-          reopensAt: signupStatus.reopensAt,
-        },
-        { status: 503 }
-      )
-    }
-
     const university = await prisma.university.findUnique({
       where:  { id: universityId },
       select: { id: true, isActive: true, name: true, shortName: true },

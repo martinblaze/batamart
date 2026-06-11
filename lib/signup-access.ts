@@ -11,16 +11,8 @@ export function hasSignupAccessCode(code: unknown) {
 }
 
 export function getSignupStatus(accessCode?: unknown) {
-  if (hasSignupAccessCode(accessCode)) {
-    return { isOpen: true, bypassed: true }
-  }
-
   const reopensAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
   const now = Date.now()
-  if (now >= reopensAt) {
-    return { isOpen: true, bypassed: false }
-  }
-
   const msRemaining = reopensAt - now
   const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
   const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -28,9 +20,9 @@ export function getSignupStatus(accessCode?: unknown) {
   const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
 
   return {
-    isOpen: false,
-    bypassed: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    isOpen: true,
+    bypassed: hasSignupAccessCode(accessCode),
+    countdown: `${Math.max(0, daysRemaining)}d ${Math.max(0, hoursRemaining)}h ${Math.max(0, minutesRemaining)}m ${Math.max(0, secondsRemaining)}s`,
     reopensAt: SIGNUP_REOPENS_DATE,
   }
 }

@@ -5223,6 +5223,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import { getSignupStatus, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
 interface University {
   id:            string
@@ -5311,7 +5312,16 @@ function SignupForm() {
   const [password, setPassword]               = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
-  const [referralCode, setReferralCode]       = useState('')
+  const [referralCode, setReferralCode]       = useState(() =&gt; {
+    if (typeof window === 'undefined') return ''
+    const urlRef = new URLSearchParams(window.location.search).get('ref')
+    return hasSignupAccessCode(urlRef) ? '' : normalizeSignupAccessCode(urlRef || '')
+  })
+  const [signupAccessCode, setSignupAccessCode] = useState(() =&gt; {
+    if (typeof window === 'undefined') return ''
+    const urlRef = new URLSearchParams(window.location.search).get('ref')
+    return hasSignupAccessCode(urlRef) ? normalizeSignupAccessCode(urlRef) : ''
+  })
 
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
@@ -5321,10 +5331,30 @@ function SignupForm() {
   const [signupsOpen, setSignupsOpen]           = useState(true)
   const [countdown, setCountdown]               = useState('')
   const [signupReopensDate, setSignupReopensDate] = useState('')
+  const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
+  const locationRef = typeof window === 'undefined'
+    ? ''
+    : normalizeSignupAccessCode(new URLSearchParams(window.location.search).get('ref'))
+  const activeSignupAccessCode =
+    hasSignupAccessCode(signupAccessCode) ? signupAccessCode :
+    hasSignupAccessCode(searchRef) ? searchRef :
+    hasSignupAccessCode(locationRef) ? locationRef :
+    ''
+  const hasAccessCode = hasSignupAccessCode(activeSignupAccessCode)
+  const signupAllowed = signupsOpen || hasAccessCode
 
   useEffect(() =&gt; {
-    const ref = searchParams.get('ref')
-    if (ref) setReferralCode(ref.trim().toUpperCase())
+    const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
+    if (hasSignupAccessCode(ref)) {
+      setSignupAccessCode(ref)
+      setReferralCode('')
+      return
+    }
+
+    setSignupAccessCode('')
+    if (ref) {
+      setReferralCode(ref)
+    }
   }, [searchParams])
 
   useEffect(() =&gt; {
@@ -5344,6 +5374,13 @@ function SignupForm() {
   // ── Check if signups are open and update countdown ───────────────────────────
   useEffect(() =&gt; {
     const checkSignupStatus = () =&gt; {
+      const signupStatus = getSignupStatus(activeSignupAccessCode)
+      if (signupStatus.isOpen) {
+        setSignupsOpen(true)
+        setCountdown('')
+        return
+      }
+
       const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
       const now = Date.now()
       const msRemaining = SIGNUP_REOPENS_AT - now
@@ -5377,7 +5414,7 @@ function SignupForm() {
     checkSignupStatus()
     const interval = setInterval(checkSignupStatus, 1000)
     return () =&gt; clearInterval(interval)
-  }, [])
+  }, [activeSignupAccessCode])
 
   const validatePassword = (pwd: string) =&gt; {
     if (pwd.length &lt; 8) return 'Password must be at least 8 characters'
@@ -5413,7 +5450,7 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined }),
       })
       const data = await response.json()
       
@@ -5506,6 +5543,7 @@ function SignupForm() {
           email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
+          signupAccessCode: activeSignupAccessCode || undefined,
           universityId: selectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
@@ -5545,7 +5583,7 @@ function SignupForm() {
   if (step === 0) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupsOpen &amp;&amp; (
+        {!signupAllowed &amp;&amp; (
           &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
             &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
             &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
@@ -5581,7 +5619,7 @@ function SignupForm() {
                 &lt;button
                   key={uni.id}
                   onClick={() =&gt; {
-                    if (!signupsOpen) {
+                    if (!signupAllowed) {
                       setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
                       return
                     }
@@ -5591,7 +5629,7 @@ function SignupForm() {
                     selectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  } ${!signupsOpen ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  } ${!signupAllowed ? 'opacity-60 cursor-not-allowed' : ''}`}
                 &gt;
                   &lt;div className="flex items-center justify-between"&gt;
                     &lt;div&gt;
@@ -5642,7 +5680,7 @@ function SignupForm() {
   if (step === 1) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupsOpen &amp;&amp; (
+        {!signupAllowed &amp;&amp; (
           &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
             &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
             &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
@@ -5668,6 +5706,7 @@ function SignupForm() {
               payload={{
                 universityId: selectedUniversity?.id,
                 referralCode: referralCode || undefined,
+                signupAccessCode: activeSignupAccessCode || undefined,
               }}
               onError={setError}
               onLoading={setLoading}
@@ -5804,7 +5843,7 @@ function SignupForm() {
   if (step === 2) {
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupsOpen &amp;&amp; (
+        {!signupAllowed &amp;&amp; (
           &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
             &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
             &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
@@ -5868,7 +5907,7 @@ function SignupForm() {
 
     return (
       &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupsOpen &amp;&amp; (
+        {!signupAllowed &amp;&amp; (
           &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
             &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
             &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
@@ -5991,7 +6030,7 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   return (
     &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-      {!signupsOpen &amp;&amp; (
+      {!signupAllowed &amp;&amp; (
         &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
           &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
           &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
@@ -28606,6 +28645,7 @@ import { prisma } from '@/lib/prisma'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { generateToken } from '@/lib/auth/auth'
 import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
@@ -28637,7 +28677,7 @@ function googleAudience() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { idToken, mode, universityId, referralCode } = await request.json()
+    const { idToken, mode, universityId, referralCode, signupAccessCode } = await request.json()
 
     if (!idToken || typeof idToken !== 'string') {
       return NextResponse.json({ error: 'Google token is required' }, { status: 400 })
@@ -28668,7 +28708,7 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Block new signups until June 22 ────────────────────────────────────
-      const signupStatus = checkSignupsOpen()
+      const signupStatus = getSignupStatus(signupAccessCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {
@@ -28686,6 +28726,7 @@ export async function POST(request: NextRequest) {
         name,
         universityId: typeof universityId === 'string' &amp;&amp; universityId.trim() ? universityId : undefined,
         referralCode: typeof referralCode === 'string' &amp;&amp; referralCode.trim() ? referralCode.trim().toUpperCase() : undefined,
+        signupAccessCode: typeof signupAccessCode === 'string' &amp;&amp; signupAccessCode.trim() ? signupAccessCode.trim().toUpperCase() : undefined,
       })
 
       return NextResponse.json({
@@ -29093,6 +29134,7 @@ import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
@@ -29145,7 +29187,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin } = body
+    const { email, isLogin, signupAccessCode } = body
 
     if (!email) {
       return NextResponse.json(
@@ -29156,7 +29198,7 @@ export async function POST(request: NextRequest) {
 
     // ── Block new signups until June 22 ────────────────────────────────────
     if (!isLogin) {
-      const signupStatus = checkSignupsOpen()
+      const signupStatus = getSignupStatus(signupAccessCode)
       if (!signupStatus.isOpen) {
         return NextResponse.json(
           {
@@ -29220,6 +29262,7 @@ import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+import { getSignupStatus } from '@/lib/signup-access'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
@@ -29249,19 +29292,6 @@ function checkSignupsOpen() {
 export async function POST(request: NextRequest) {
   try {
     // ── Block new signups until June 22 ────────────────────────────────────
-    const signupStatus = checkSignupsOpen()
-    if (!signupStatus.isOpen) {
-      return NextResponse.json(
-        {
-          error: 'Signups are temporarily closed for maintenance',
-          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-          countdown: signupStatus.countdown,
-          reopensAt: signupStatus.reopensAt,
-        },
-        { status: 503 }
-      )
-    }
-
     const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
     const rateLimitKey = `signup:${ip}`
     const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
@@ -29289,6 +29319,7 @@ export async function POST(request: NextRequest) {
       // only via the /become-seller flow (POST /api/auth/become-seller).
       phone,
       referralCode,
+      signupAccessCode,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
       hostelName,
@@ -29345,6 +29376,20 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate university exists ─────────────────────────────────────────
+    const effectiveSignupAccessCode = signupAccessCode || googleSignup?.signupAccessCode
+    const signupStatus = getSignupStatus(effectiveSignupAccessCode)
+    if (!signupStatus.isOpen) {
+      return NextResponse.json(
+        {
+          error: 'Signups are temporarily closed for maintenance',
+          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
+          countdown: signupStatus.countdown,
+          reopensAt: signupStatus.reopensAt,
+        },
+        { status: 503 }
+      )
+    }
+
     const university = await prisma.university.findUnique({
       where:  { id: universityId },
       select: { id: true, isActive: true, name: true, shortName: true },
@@ -29355,13 +29400,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate referral code (required) ───────────────────────────────────
-    const REQUIRED_REFERRAL_CODE = 'BATAMART-P70LZ6'
-    if (!referralCode || referralCode.trim().toUpperCase() !== REQUIRED_REFERRAL_CODE) {
-      return NextResponse.json(
-        { error: `Invalid referral code. Please use the correct code to sign up. Visit https://batamart.com/signup?ref=${REQUIRED_REFERRAL_CODE}` },
-        { status: 400 }
-      )
-    }
+    
 
     // ── Duplicate account check ────────────────────────────────────────────
     const existingUser = await prisma.user.findFirst({
@@ -38836,7 +38875,7 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
       where: { orderId_riderId: { orderId: order.id, riderId: params.riderId } },
       update: { reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
       create: { orderId: order.id, productId: order.productId, sellerId: order.sellerId, riderId: params.riderId, buyerId: order.buyerId, reason: OVERSIZED_REASON, proofImageUrl: params.proofImageUrl || null, refundIssued: true, refundAmount, deliveryFeeKept: Number(order.deliveryFee) },
-    }))
+    })
 
     return { order, strikeCount, suspension, suspensionExpiry, refundAmount }
   })
@@ -39057,6 +39096,43 @@ export function keywordMatchScore(productText: string, keyword: string): number 
   return 0.2
 }
 
+</pre></div>
+<div class='file-block'><div class='file-header'>lib/signup-access.ts</div><pre>export const SIGNUP_ACCESS_CODE = 'BATAMART-P70LZ6'
+export const SIGNUP_REOPENS_AT_ISO = '2026-06-22T00:00:00Z'
+export const SIGNUP_REOPENS_DATE = '2026-06-22'
+
+export function normalizeSignupAccessCode(code: unknown) {
+  return typeof code === 'string' ? code.trim().toUpperCase() : ''
+}
+
+export function hasSignupAccessCode(code: unknown) {
+  return normalizeSignupAccessCode(code) === SIGNUP_ACCESS_CODE
+}
+
+export function getSignupStatus(accessCode?: unknown) {
+  if (hasSignupAccessCode(accessCode)) {
+    return { isOpen: true, bypassed: true }
+  }
+
+  const reopensAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
+  const now = Date.now()
+  if (now &gt;= reopensAt) {
+    return { isOpen: true, bypassed: false }
+  }
+
+  const msRemaining = reopensAt - now
+  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
+  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
+  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
+
+  return {
+    isOpen: false,
+    bypassed: false,
+    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    reopensAt: SIGNUP_REOPENS_DATE,
+  }
+}
 </pre></div>
 <div class='file-block'><div class='file-header'>lib/utils.ts</div><pre>import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -40084,6 +40160,7 @@ type GoogleSignupPayload = {
   name: string
   universityId?: string
   referralCode?: string
+  signupAccessCode?: string
 }
 
 function getSecret(): string {
@@ -40106,12 +40183,12 @@ export function verifyGoogleSignupToken(token: string): GoogleSignupPayload | nu
       name: String(decoded.name),
       universityId: decoded.universityId ? String(decoded.universityId) : undefined,
       referralCode: decoded.referralCode ? String(decoded.referralCode) : undefined,
+      signupAccessCode: decoded.signupAccessCode ? String(decoded.signupAccessCode) : undefined,
     }
   } catch {
     return null
   }
 }
-
 </pre></div>
 <div class='file-block'><div class='file-header'>lib/auth/index.ts</div><pre>import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
@@ -43271,6 +43348,7 @@ enum NotificationType {
 
 enum ProductModerationStatus {
   PENDING
+  UNDER_REVIEW
   APPROVED
   REJECTED
   REMOVED

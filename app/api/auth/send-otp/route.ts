@@ -4,33 +4,11 @@ import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now >= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const jsonErr = enforceJsonRequest(request)
@@ -57,7 +35,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin, signupAccessCode } = body
+    const { email, isLogin } = body
 
     if (!email) {
       return NextResponse.json(
@@ -67,21 +45,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Block new signups until June 22 ────────────────────────────────────
-    if (!isLogin) {
-      const signupStatus = getSignupStatus(signupAccessCode)
-      if (!signupStatus.isOpen) {
-        return NextResponse.json(
-          {
-            error: 'Signups are temporarily closed for maintenance',
-            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-            countdown: signupStatus.countdown,
-            reopensAt: signupStatus.reopensAt,
-          },
-          { status: 503 }
-        )
-      }
-    }
-
     if (isLogin) {
       const user = await prisma.user.findUnique({ where: { email } })
       if (!user) {

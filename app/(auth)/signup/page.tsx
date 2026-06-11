@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
-import { getSignupStatus, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
+import { SIGNUP_REOPENS_AT_ISO, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
 interface University {
   id:            string
@@ -109,10 +109,8 @@ function SignupForm() {
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
 
-  // ── Signup closure state ─────────────────────────────────────────────────────
-  const [signupsOpen, setSignupsOpen]           = useState(true)
+  // ── Signup timer state ───────────────────────────────────────────────────────
   const [countdown, setCountdown]               = useState('')
-  const [signupReopensDate, setSignupReopensDate] = useState('')
   const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
   const locationRef = typeof window === 'undefined'
     ? ''
@@ -122,8 +120,8 @@ function SignupForm() {
     hasSignupAccessCode(searchRef) ? searchRef :
     hasSignupAccessCode(locationRef) ? locationRef :
     ''
-  const hasAccessCode = hasSignupAccessCode(activeSignupAccessCode)
-  const signupAllowed = signupsOpen || hasAccessCode
+  const signupOpenAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
+  const effectiveSelectedUniversity = selectedUniversity ?? universities[0] ?? null
 
   useEffect(() => {
     const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
@@ -148,41 +146,26 @@ function SignupForm() {
   useEffect(() => {
     fetch('/api/universities')
       .then(r => r.json())
-      .then(data => setUniversities(data.universities ?? []))
+      .then(data => {
+        const loadedUniversities = data.universities ?? []
+        setUniversities(loadedUniversities)
+        setSelectedUniversity(current => current ?? loadedUniversities[0] ?? null)
+      })
       .catch(() => {})
       .finally(() => setUniLoading(false))
   }, [])
 
-  // ── Check if signups are open and update countdown ───────────────────────────
+  // ── Update countdown display without blocking signup access ──────────────────
   useEffect(() => {
     const checkSignupStatus = () => {
-      const signupStatus = getSignupStatus(activeSignupAccessCode)
-      if (signupStatus.isOpen) {
-        setSignupsOpen(true)
-        setCountdown('')
-        return
-      }
-
-      const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
       const now = Date.now()
-      const msRemaining = SIGNUP_REOPENS_AT - now
-      
-      console.log('🔒 Signup Status Check:', {
-        now: new Date(now).toISOString(),
-        reopensAt: new Date(SIGNUP_REOPENS_AT).toISOString(),
-        msRemaining,
-        signupsOpen: now >= SIGNUP_REOPENS_AT,
-      })
-      
-      if (now >= SIGNUP_REOPENS_AT) {
-        setSignupsOpen(true)
+      const msRemaining = signupOpenAt - now
+
+      if (msRemaining <= 0) {
         setCountdown('')
         return
       }
 
-      setSignupsOpen(false)
-      setSignupReopensDate('2026-06-22')
-      
       const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
       const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
@@ -190,13 +173,12 @@ function SignupForm() {
       
       const countdownStr = `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`
       setCountdown(countdownStr)
-      console.log('⏱️ Countdown updated:', countdownStr)
     }
 
     checkSignupStatus()
     const interval = setInterval(checkSignupStatus, 1000)
     return () => clearInterval(interval)
-  }, [activeSignupAccessCode])
+  }, [signupOpenAt])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters'
@@ -235,15 +217,6 @@ function SignupForm() {
         body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined }),
       })
       const data = await response.json()
-      
-      // ── Handle signup closure ────────────────────────────────────────────────────
-      if (response.status === 503 && data.countdown) {
-        setSignupsOpen(false)
-        setCountdown(data.countdown)
-        setSignupReopensDate(data.reopensAt || '2026-06-22')
-        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
-        return
-      }
       
       if (response.ok) { setStep(2) }
       else { setError(data.error || 'Failed to send OTP') }
@@ -326,22 +299,13 @@ function SignupForm() {
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           signupAccessCode: activeSignupAccessCode || undefined,
-          universityId: selectedUniversity!.id,
+          universityId: effectiveSelectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
           landmark:     selectedArea,
         }),
       })
       const data = await response.json()
-      
-      // ── Handle signup closure ────────────────────────────────────────────────────
-      if (response.status === 503 && data.countdown) {
-        setSignupsOpen(false)
-        setCountdown(data.countdown)
-        setSignupReopensDate(data.reopensAt || '2026-06-22')
-        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
-        return
-      }
       
       if (response.ok) {
         localStorage.setItem('token',    data.token)
@@ -364,16 +328,16 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   if (step === 0) {
     return (
-      <PageShell selectedUniversity={selectedUniversity}>
-        {!signupAllowed && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
-            <p className="text-2xl mb-2">🔒</p>
-            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
-            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+      <PageShell selectedUniversity={effectiveSelectedUniversity}>
+        {countdown && (
+          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+            <p className="text-2xl mb-2">⏱️</p>
+            <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
+            <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
-              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
-              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
+              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
@@ -383,8 +347,8 @@ function SignupForm() {
               <MapPin className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-xl font-black text-gray-900">Select Your Campus</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              You'll only see buyers, sellers, and riders from your campus.
+              <p className="text-sm text-gray-500 mt-1">
+              You will only see buyers, sellers, and riders from your campus.
             </p>
           </div>
 
@@ -401,17 +365,13 @@ function SignupForm() {
                 <button
                   key={uni.id}
                   onClick={() => {
-                    if (!signupAllowed) {
-                      setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
-                      return
-                    }
                     setSelectedUniversity(uni)
                   }}
                   className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                    selectedUniversity?.id === uni.id
+                    effectiveSelectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  } ${!signupAllowed ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -420,11 +380,11 @@ function SignupForm() {
                       <p className="text-xs text-blue-500 mt-0.5">{uni.location}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      selectedUniversity?.id === uni.id
+                      effectiveSelectedUniversity?.id === uni.id
                         ? 'border-blue-500 bg-blue-500'
                         : 'border-gray-300'
                     }`}>
-                      {selectedUniversity?.id === uni.id && (
+                      {effectiveSelectedUniversity?.id === uni.id && (
                         <div className="w-2 h-2 rounded-full bg-white" />
                       )}
                     </div>
@@ -438,12 +398,12 @@ function SignupForm() {
           )}
 
           <button
-            onClick={() => { if (selectedUniversity) setStep(1) }}
-            disabled={!selectedUniversity}
+            onClick={() => { if (effectiveSelectedUniversity) setStep(1) }}
+            disabled={!effectiveSelectedUniversity}
             className="w-full mt-6 py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             style={btnStyle}
           >
-            Continue with {selectedUniversity?.shortName ?? 'your campus'}
+            Continue with {effectiveSelectedUniversity?.shortName ?? 'your campus'}
             <ChevronRight className="w-5 h-5" />
           </button>
 
@@ -461,23 +421,23 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   if (step === 1) {
     return (
-      <PageShell selectedUniversity={selectedUniversity}>
-        {!signupAllowed && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
-            <p className="text-2xl mb-2">🔒</p>
-            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
-            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+      <PageShell selectedUniversity={effectiveSelectedUniversity}>
+        {countdown && (
+          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+            <p className="text-2xl mb-2">⏱️</p>
+            <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
+            <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
-              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
-              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
+              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <StepDots current={1} />
           <h2 className="text-xl font-black text-gray-900 mb-1">Create account</h2>
-          <p className="text-sm text-gray-500 mb-6">Join the {selectedUniversity?.shortName} marketplace</p>
+          <p className="text-sm text-gray-500 mb-6">Join the {effectiveSelectedUniversity?.shortName} marketplace</p>
 
           <ErrorBox error={error} />
 
@@ -486,7 +446,7 @@ function SignupForm() {
             <GoogleAuthButton
               mode="signup"
               payload={{
-                universityId: selectedUniversity?.id,
+                universityId: effectiveSelectedUniversity?.id,
                 referralCode: referralCode || undefined,
                 signupAccessCode: activeSignupAccessCode || undefined,
               }}
@@ -624,16 +584,16 @@ function SignupForm() {
   // ════════════════════════════════════════════════════════
   if (step === 2) {
     return (
-      <PageShell selectedUniversity={selectedUniversity}>
-        {!signupAllowed && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
-            <p className="text-2xl mb-2">🔒</p>
-            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
-            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+        <PageShell selectedUniversity={effectiveSelectedUniversity}>
+        {countdown && (
+          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+            <p className="text-2xl mb-2">⏱️</p>
+            <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
+            <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
-              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
-              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
+              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
@@ -683,21 +643,21 @@ function SignupForm() {
   // STEP 3 — Delivery location
   // ════════════════════════════════════════════════════════
   if (step === 3) {
-    const areas: string[] = Array.isArray(selectedUniversity?.deliveryAreas)
-      ? selectedUniversity!.deliveryAreas
+    const areas: string[] = Array.isArray(effectiveSelectedUniversity?.deliveryAreas)
+      ? effectiveSelectedUniversity!.deliveryAreas
       : ['Aroma', 'Tempsite', 'Express Gate', 'Ifite', 'Bus Stand', 'School Hostel']
 
     return (
-      <PageShell selectedUniversity={selectedUniversity}>
-        {!signupAllowed && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
-            <p className="text-2xl mb-2">🔒</p>
-            <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
-            <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+      <PageShell selectedUniversity={effectiveSelectedUniversity}>
+        {countdown && (
+          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+            <p className="text-2xl mb-2">⏱️</p>
+            <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
+            <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
-              <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
-              <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
+              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
+              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
@@ -811,16 +771,16 @@ function SignupForm() {
   // STEP 4 — Password + terms
   // ════════════════════════════════════════════════════════
   return (
-    <PageShell selectedUniversity={selectedUniversity}>
-      {!signupAllowed && (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center">
-          <p className="text-2xl mb-2">🔒</p>
-          <h3 className="font-black text-amber-900 text-lg mb-1">Signups Temporarily Closed</h3>
-          <p className="text-sm text-amber-700 mb-2">We're upgrading our platform for you!</p>
+      <PageShell selectedUniversity={effectiveSelectedUniversity}>
+      {countdown && (
+        <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+          <p className="text-2xl mb-2">⏱️</p>
+          <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
+          <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
           <div className="bg-white rounded-xl px-4 py-3 inline-block">
-            <p className="text-xs text-amber-600 font-semibold mb-1">Reopens in</p>
-            <p className="text-2xl font-black text-amber-600 font-mono">{countdown || 'Loading...'}</p>
-            <p className="text-xs text-amber-500 mt-1">June 22, 2026</p>
+            <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
+            <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
+            <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
           </div>
         </div>
       )}
@@ -883,7 +843,7 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           >
-            {loading ? 'Creating account…' : `Join ${selectedUniversity?.shortName} 🎉`}
+            {loading ? 'Creating account…' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} 🎉`}
           </button>
         </form>
 

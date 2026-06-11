@@ -5,32 +5,10 @@ import { prisma } from '@/lib/prisma'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { generateToken } from '@/lib/auth/auth'
 import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now >= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 function googleAudience() {
   return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 }
@@ -60,7 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Google account has no email' }, { status: 400 })
     }
 
-    let user = await prisma.user.findUnique({ where: { email } })
+    const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
       if (mode !== 'signup') {
@@ -68,19 +46,6 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Block new signups until June 22 ────────────────────────────────────
-      const signupStatus = getSignupStatus(signupAccessCode)
-      if (!signupStatus.isOpen) {
-        return NextResponse.json(
-          {
-            error: 'Signups are temporarily closed for maintenance',
-            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-            countdown: signupStatus.countdown,
-            reopensAt: signupStatus.reopensAt,
-          },
-          { status: 503 }
-        )
-      }
-
       const signupToken = issueGoogleSignupToken({
         email,
         name,
