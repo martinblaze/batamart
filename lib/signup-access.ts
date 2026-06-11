@@ -11,18 +11,25 @@ export function hasSignupAccessCode(code: unknown) {
 }
 
 export function getSignupStatus(accessCode?: unknown) {
-  // Signup is always open now. Keep the countdown info available for UI display.
+  if (hasSignupAccessCode(accessCode)) {
+    return { isOpen: true, bypassed: true }
+  }
+
   const reopensAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
   const now = Date.now()
-  const msRemaining = Math.max(0, reopensAt - now)
+  if (now >= reopensAt) {
+    return { isOpen: true, bypassed: false }
+  }
+
+  const msRemaining = reopensAt - now
   const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
   const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
   const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
   const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
 
   return {
-    isOpen: true,
-    bypassed: hasSignupAccessCode(accessCode),
+    isOpen: false,
+    bypassed: false,
     countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
     reopensAt: SIGNUP_REOPENS_DATE,
   }
