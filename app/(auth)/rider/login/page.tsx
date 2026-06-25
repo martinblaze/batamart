@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,19 +14,19 @@ function RiderLoginForm() {
   const [wasForceLoggedOut, setWasForceLoggedOut] = useState(false)
 
   useEffect(() => {
-    // ── If middleware bounced rider here after accessing a forbidden page ──
+    // â”€â”€ If middleware bounced rider here after accessing a forbidden page â”€â”€
     // Clear ALL local auth state so they're fully logged out client-side too.
     const reason = new URLSearchParams(window.location.search).get('reason')
     if (reason === 'no_access') {
       localStorage.clear()
       sessionStorage.removeItem('batamart_rider_mode')
-      // Cookie is already cleared by middleware — just notify UI
+      // Cookie is already cleared by middleware â€” just notify UI
       window.dispatchEvent(new Event('auth-change'))
       setWasForceLoggedOut(true)
       return // Don't auto-redirect to dashboard even if stale role is in storage
     }
 
-    // ── If already properly logged in as a rider, go straight to dashboard ──
+    // â”€â”€ If already properly logged in as a rider, go straight to dashboard â”€â”€
     const role = localStorage.getItem('userRole')
     if (role === 'RIDER') {
       router.replace('/rider-dashboard')
@@ -91,10 +91,10 @@ function RiderLoginForm() {
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
 
-          {/* ── Force-logout notice ─────────────────────────────────────────── */}
+          {/* â”€â”€ Force-logout notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {wasForceLoggedOut && (
             <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-amber-500 text-xl flex-shrink-0">⚠️</span>
+              <span className="text-amber-500 text-xl flex-shrink-0">âš ï¸</span>
               <div>
                 <p className="font-semibold text-amber-900 text-sm">Access Denied</p>
                 <p className="text-amber-700 text-sm mt-1">
@@ -105,7 +105,7 @@ function RiderLoginForm() {
                   href="/login"
                   className="inline-block mt-2 text-sm text-amber-800 font-semibold underline hover:no-underline"
                 >
-                  Use a regular account →
+                  Use a regular account â†’
                 </Link>
               </div>
             </div>
@@ -160,25 +160,25 @@ function RiderLoginForm() {
                   Logging in...
                 </span>
               ) : (
-                '🚴 Log In as Rider'
+                'ðŸš´ Log In as Rider'
               )}
             </button>
 
           </form>
 
-          {/* No signup link — riders are created by admin only */}
+          {/* No signup link â€” riders are created by admin only */}
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               Not a rider?{' '}
               <Link href="/login" className="text-gray-500 hover:underline">
-                Regular login →
+                Regular login â†’
               </Link>
             </p>
           </div>
         </div>
 
         <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-          <p className="text-green-800 text-sm font-semibold">💰 Earn ₦560 per delivery</p>
+          <p className="text-green-800 text-sm font-semibold">ðŸ’° Earn â‚¦560 per delivery</p>
           <p className="text-green-700 text-xs mt-1">Withdraw anytime to your bank account</p>
         </div>
 

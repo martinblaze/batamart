@@ -1,4 +1,4 @@
-// lib/auth/auth.ts
+﻿// lib/auth/auth.ts
 
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
@@ -12,7 +12,7 @@ function getJwtSecret(): string {
   return secret
 }
 
-// ── FIXED: added optional `role` param so rider tokens carry the role claim ──
+// â”€â”€ FIXED: added optional `role` param so rider tokens carry the role claim â”€â”€
 export function generateToken(userId: string, phone: string | null, role?: string): string {
   return jwt.sign({ userId, phone, ...(role ? { role } : {}) }, getJwtSecret(), { expiresIn: '30d' })
 }
@@ -91,7 +91,8 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
         body: JSON.stringify({
           from: process.env.RESEND_FROM_EMAIL || 'BATAMART <noreply@batamart.com>',
           to: [email],
-          subject: 'Your BATAMART Verification Code',
+          subject: `Your BATAMART code is ${code}`,
+          text: `Your BATAMART verification code is ${code}. It expires in 10 minutes.`, 
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #3D95E8, #4DABFF); padding: 20px; text-align: center;">
@@ -119,7 +120,7 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
       return true
     } else {
       console.log('=====================================')
-      console.log('📧 EMAIL OTP (dev mode - no RESEND_API_KEY set)')
+      console.log('ðŸ“§ EMAIL OTP (dev mode - no RESEND_API_KEY set)')
       console.log(`To: ${email}`)
       console.log(`Code: ${code}`)
       console.log('=====================================')
@@ -131,7 +132,7 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
   }
 }
 
-// ─── Suspension check helper ──────────────────────────────────────────────────
+// â”€â”€â”€ Suspension check helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function checkSuspension(userId: string): Promise<{ suspended: boolean; reason?: string; until?: Date | null }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -160,7 +161,7 @@ export async function checkSuspension(userId: string): Promise<{ suspended: bool
   return { suspended: false }
 }
 
-// ─── getUserFromRequest ────────────────────────────────────────────────────────
+// â”€â”€â”€ getUserFromRequest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Used by every API route to get the current authenticated user.
 export const getUserFromRequest = async (request: Request) => {
   const authHeader = request.headers.get('authorization')

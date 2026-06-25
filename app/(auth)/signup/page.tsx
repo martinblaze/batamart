@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +9,69 @@ import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import { SIGNUP_REOPENS_AT_ISO, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
+const SIGNUP_DRAFT_KEY = 'batamart_signup_draft'
+const SIGNUP_DRAFT_TTL_MS = 24 * 60 * 60 * 1000
+const EMPTY_OTP = ['', '', '', '', '', '']
+
+type SignupDraft = {
+  step?: number
+  email?: string
+  name?: string
+  phone?: string
+  otp?: string[]
+  otpSessionToken?: string
+  selectedUniversityId?: string
+  selectedArea?: string
+  hostelName?: string
+  roomNumber?: string
+  deliveryPhone?: string
+  referralCode?: string
+  signupAccessCode?: string
+  showEmailForm?: boolean
+  updatedAt: number
+}
+
+function normalizeOtpDigits(value: unknown): string[] {
+  const digits = Array.isArray(value) ? value.map(String).join('') : String(value ?? '')
+  return digits.replace(/\D/g, '').slice(0, 6).split('').concat(EMPTY_OTP).slice(0, 6)
+}
+
+function readSignupDraft(): SignupDraft | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = localStorage.getItem(SIGNUP_DRAFT_KEY)
+    if (!raw) return null
+
+    const draft = JSON.parse(raw) as SignupDraft
+    if (!draft.updatedAt || Date.now() - draft.updatedAt > SIGNUP_DRAFT_TTL_MS) {
+      localStorage.removeItem(SIGNUP_DRAFT_KEY)
+      return null
+    }
+
+    return draft
+  } catch {
+    return null
+  }
+}
+
+function writeSignupDraft(draft: SignupDraft) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // Ignore storage quota / privacy mode failures.
+  }
+}
+
+function clearSignupDraft() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(SIGNUP_DRAFT_KEY)
+  } catch {
+    // Ignore storage failures.
+  }
+}
 interface University {
   id:            string
   name:          string
@@ -18,7 +81,7 @@ interface University {
   deliveryAreas: string[]
 }
 
-// ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
+// â”€â”€ Shared UI helpers â€” defined OUTSIDE SignupForm so they don't remount â”€â”€
 const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
@@ -38,7 +101,7 @@ const PageShell = ({
           <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30">
             <MapPin className="w-3.5 h-3.5 text-blue-300" />
             <span className="text-blue-300 text-xs font-semibold">
-              {selectedUniversity.shortName} — {selectedUniversity.location}
+              {selectedUniversity.shortName} â€” {selectedUniversity.location}
             </span>
           </div>
         )}
@@ -70,7 +133,7 @@ const StepDots = ({ current }: { current: number }) => (
   </div>
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SignupForm() {
   const router       = useRouter()
@@ -79,13 +142,14 @@ function SignupForm() {
   const [step, setStep]                             = useState(0)
   const [universities, setUniversities]             = useState<University[]>([])
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null)
+  const [selectedUniversityId, setSelectedUniversityId] = useState('')
   const [uniLoading, setUniLoading]                 = useState(true)
 
   const [email, setEmail] = useState('')
   const [name, setName]   = useState('')
   const [phone, setPhone] = useState('')
 
-  const [otp, setOtp]                         = useState(['', '', '', '', '', ''])
+  const [otp, setOtp]                         = useState<string[]>(EMPTY_OTP)
   const [otpSessionToken, setOtpSessionToken] = useState('')
 
   const [selectedArea, setSelectedArea]   = useState('')
@@ -110,8 +174,9 @@ function SignupForm() {
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
 
-  // ── Signup timer state ───────────────────────────────────────────────────────
+  // â”€â”€ Signup timer state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [countdown, setCountdown]               = useState('')
   const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
   const locationRef = typeof window === 'undefined'
@@ -125,6 +190,7 @@ function SignupForm() {
   const signupOpenAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
   const effectiveSelectedUniversity = selectedUniversity ?? universities[0] ?? null
 
+  // â”€â”€ Update countdown display without blocking signup access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
     if (hasSignupAccessCode(ref)) {
@@ -133,11 +199,35 @@ function SignupForm() {
       return
     }
 
-    setSignupAccessCode('')
     if (ref) {
+      setSignupAccessCode('')
       setReferralCode(ref)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    const draft = readSignupDraft()
+    if (!draft) {
+      setDraftRestored(true)
+      return
+    }
+
+    setStep(draft.step ?? 0)
+    setEmail(draft.email ?? '')
+    setName(draft.name ?? '')
+    setPhone(draft.phone ?? '')
+    setOtp(normalizeOtpDigits(draft.otp))
+    setOtpSessionToken(draft.otpSessionToken ?? '')
+    setSelectedUniversityId(draft.selectedUniversityId ?? '')
+    setSelectedArea(draft.selectedArea ?? '')
+    setHostelName(draft.hostelName ?? '')
+    setRoomNumber(draft.roomNumber ?? '')
+    setDeliveryPhone(draft.deliveryPhone ?? '')
+    setReferralCode(draft.referralCode ?? '')
+    setSignupAccessCode(draft.signupAccessCode ?? '')
+    setShowEmailForm(Boolean(draft.showEmailForm))
+    setDraftRestored(true)
+  }, [])
 
   useEffect(() => {
     if (step === 3 && phone && !deliveryPhone) {
@@ -151,36 +241,56 @@ function SignupForm() {
       .then(data => {
         const loadedUniversities = data.universities ?? []
         setUniversities(loadedUniversities)
-        setSelectedUniversity(current => current ?? loadedUniversities[0] ?? null)
       })
       .catch(() => {})
       .finally(() => setUniLoading(false))
   }, [])
 
-  // ── Update countdown display without blocking signup access ──────────────────
   useEffect(() => {
-    const checkSignupStatus = () => {
-      const now = Date.now()
-      const msRemaining = signupOpenAt - now
+    if (!universities.length) return
 
-      if (msRemaining <= 0) {
-        setCountdown('')
-        return
-      }
+    const nextSelected = universities.find(university => university.id === selectedUniversityId) ?? universities[0] ?? null
+    setSelectedUniversity(nextSelected)
+  }, [universities, selectedUniversityId])
 
-      const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-      const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-      const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-      
-      const countdownStr = `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`
-      setCountdown(countdownStr)
-    }
+  useEffect(() => {
+    if (!draftRestored) return
 
-    checkSignupStatus()
-    const interval = setInterval(checkSignupStatus, 1000)
-    return () => clearInterval(interval)
-  }, [signupOpenAt])
+    writeSignupDraft({
+      step,
+      email,
+      name,
+      phone,
+      otp,
+      otpSessionToken,
+      selectedUniversityId: selectedUniversity?.id ?? selectedUniversityId,
+      selectedArea,
+      hostelName,
+      roomNumber,
+      deliveryPhone,
+      referralCode,
+      signupAccessCode,
+      showEmailForm,
+      updatedAt: Date.now(),
+    })
+  }, [
+    draftRestored,
+    step,
+    email,
+    name,
+    phone,
+    otp,
+    otpSessionToken,
+    selectedUniversity?.id,
+    selectedUniversityId,
+    selectedArea,
+    hostelName,
+    roomNumber,
+    deliveryPhone,
+    referralCode,
+    signupAccessCode,
+    showEmailForm,
+  ])
 
   const validatePassword = (pwd: string) => {
     if (pwd.length < 8) return 'Password must be at least 8 characters'
@@ -230,13 +340,37 @@ function SignupForm() {
   }
 
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-    if (value && index < 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus()
+    const digits = value.replace(/\D/g, '')
+    if (!digits) {
+      const nextOtp = [...otp]
+      nextOtp[index] = ''
+      setOtp(nextOtp)
+      return
     }
+
+    const nextOtp = [...otp]
+    digits.slice(0, 6 - index).split('').forEach((digit, offset) => {
+      nextOtp[index + offset] = digit
+    })
+    setOtp(nextOtp)
+
+    const focusIndex = Math.min(index + digits.length, 5)
+    document.getElementById(`otp-${focusIndex}`)?.focus()
+  }
+
+  const handleOtpPaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '')
+    if (!pasted) return
+
+    e.preventDefault()
+    const nextOtp = [...otp]
+    pasted.slice(0, 6 - index).split('').forEach((digit, offset) => {
+      nextOtp[index + offset] = digit
+    })
+    setOtp(nextOtp)
+
+    const focusIndex = Math.min(index + pasted.length, 5)
+    document.getElementById(`otp-${focusIndex}`)?.focus()
   }
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -298,7 +432,7 @@ function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email, name, phone: accountPhone, password, otpSessionToken,
-          role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
+          role:         'BUYER', // â† Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           signupAccessCode: activeSignupAccessCode || undefined,
           universityId: effectiveSelectedUniversity!.id,
@@ -310,6 +444,7 @@ function SignupForm() {
       const data = await response.json()
       
       if (response.ok) {
+        clearSignupDraft()
         localStorage.setItem('token',    data.token)
         localStorage.setItem('userName', data.user.name)
         localStorage.setItem('userRole', data.user.role)
@@ -325,15 +460,15 @@ function SignupForm() {
     }
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 0 — University selector
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 0 â€” University selector
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 0) {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">⏱️</p>
+            <p className="text-2xl mb-2">â±ï¸</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -368,6 +503,7 @@ function SignupForm() {
                   key={uni.id}
                   onClick={() => {
                     setSelectedUniversity(uni)
+                    setSelectedUniversityId(uni.id)
                   }}
                   className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
                     effectiveSelectedUniversity?.id === uni.id
@@ -418,15 +554,15 @@ function SignupForm() {
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 1 — Google first, email form secondary
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 1 â€” Google first, email form secondary
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 1) {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">⏱️</p>
+            <p className="text-2xl mb-2">â±ï¸</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -443,7 +579,7 @@ function SignupForm() {
 
           <ErrorBox error={error} />
 
-          {/* ── PRIMARY: Google Sign-Up ── */}
+          {/* â”€â”€ PRIMARY: Google Sign-Up â”€â”€ */}
           <div className="mb-2">
             <GoogleAuthButton
               mode="signup"
@@ -464,6 +600,7 @@ function SignupForm() {
                 }
 
                 if (data?.token && data?.user) {
+                  clearSignupDraft()
                   localStorage.setItem('token', data.token)
                   localStorage.setItem('userName', data.user.name)
                   localStorage.setItem('userRole', data.user.role || '')
@@ -477,7 +614,7 @@ function SignupForm() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended · No password needed · Fast setup
+            Recommended Â· No password needed Â· Fast setup
           </p>
 
           {/* Divider */}
@@ -487,7 +624,7 @@ function SignupForm() {
             <div className="h-px bg-gray-200 flex-1" />
           </div>
 
-          {/* ── SECONDARY: Email form (collapsed by default) ── */}
+          {/* â”€â”€ SECONDARY: Email form (collapsed by default) â”€â”€ */}
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
@@ -534,7 +671,7 @@ function SignupForm() {
                 />
               </div>
 
-              {/* ── REMOVED: "I also want to sell" checkbox ── */}
+              {/* â”€â”€ REMOVED: "I also want to sell" checkbox â”€â”€ */}
               {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                   which redirects them to /become-seller to upgrade their account. */}
 
@@ -556,7 +693,7 @@ function SignupForm() {
                 className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
                 style={btnStyle}
               >
-                {loading ? 'Sending OTP…' : 'Continue →'}
+                {loading ? 'Sending OTPâ€¦' : 'Continue â†’'}
               </button>
 
               <button
@@ -564,13 +701,21 @@ function SignupForm() {
                 onClick={() => setShowEmailForm(false)}
                 className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                ← Back to Google Sign-Up
+                â† Back to Google Sign-Up
               </button>
             </form>
           )}
 
-          <button onClick={() => setStep(0)} className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600">
-            ← Change campus
+          <button
+            onClick={() => {
+              clearSignupDraft()
+              setSelectedUniversity(null)
+              setSelectedUniversityId('')
+              setStep(0)
+            }}
+            className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"
+          >
+            â† Change campus
           </button>
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}
@@ -581,15 +726,15 @@ function SignupForm() {
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 2 — OTP verification
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 2 â€” OTP verification
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 2) {
     return (
         <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">⏱️</p>
+            <p className="text-2xl mb-2">â±ï¸</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -615,9 +760,11 @@ function SignupForm() {
                 id={`otp-${i}`}
                 type="text"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={1}
                 value={digit}
                 onChange={e => handleOtpChange(i, e.target.value)}
+                onPaste={e => handleOtpPaste(i, e)}
                 onKeyDown={e => handleKeyDown(i, e)}
                 className="w-12 h-12 text-center text-xl font-bold border-2 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
               />
@@ -630,20 +777,20 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           >
-            {loading ? 'Verifying…' : 'Verify Code'}
+            {loading ? 'Verifyingâ€¦' : 'Verify Code'}
           </button>
 
           <button onClick={() => setStep(1)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-            ← Back
+            â† Back
           </button>
         </div>
       </PageShell>
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 3 — Delivery location
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 3 â€” Delivery location
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 3) {
     const areas: string[] = Array.isArray(effectiveSelectedUniversity?.deliveryAreas)
       ? effectiveSelectedUniversity!.deliveryAreas
@@ -653,7 +800,7 @@ function SignupForm() {
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">⏱️</p>
+            <p className="text-2xl mb-2">â±ï¸</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -678,7 +825,7 @@ function SignupForm() {
 
           {referralCode && (
             <div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              🎁 Referral code <strong>{referralCode}</strong> applied
+              ðŸŽ Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
@@ -697,7 +844,7 @@ function SignupForm() {
                         : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
                     }`}
                   >
-                    <span className="text-base">📍</span>
+                    <span className="text-base">ðŸ“</span>
                     {area}
                   </button>
                 ))}
@@ -752,31 +899,31 @@ function SignupForm() {
 
             <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
               <p className="text-xs text-blue-700">
-                💡 You can update your delivery location anytime from your profile settings.
+                ðŸ’¡ You can update your delivery location anytime from your profile settings.
               </p>
             </div>
 
             <button type="submit" className="w-full py-4 rounded-2xl text-white font-bold text-base" style={btnStyle}>
-              Continue →
+              Continue â†’
             </button>
           </form>
 
           <button onClick={() => setStep(2)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-            ← Back
+            â† Back
           </button>
         </div>
       </PageShell>
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 4 — Password + terms
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 4 â€” Password + terms
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
       {countdown && (
         <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-          <p className="text-2xl mb-2">⏱️</p>
+          <p className="text-2xl mb-2">â±ï¸</p>
           <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
           <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
           <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -819,7 +966,7 @@ function SignupForm() {
 
           {referralCode && (
             <div className="p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              🎁 Referral code <strong>{referralCode}</strong> applied
+              ðŸŽ Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
@@ -845,12 +992,12 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           >
-            {loading ? 'Creating account…' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} 🎉`}
+            {loading ? 'Creating accountâ€¦' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} ðŸŽ‰`}
           </button>
         </form>
 
         <button onClick={() => setStep(3)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-          ← Back
+          â† Back
         </button>
       </div>
     </PageShell>
@@ -862,10 +1009,12 @@ export default function SignupPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}>
-        <div className="text-white text-xl font-bold">Loading…</div>
+        <div className="text-white text-xl font-bold">Loadingâ€¦</div>
       </div>
     }>
       <SignupForm />
     </Suspense>
   )
 }
+
+
