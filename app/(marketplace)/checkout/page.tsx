@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const paymentsPaused = true
 
   // Delivery fee and totals come from the server, not hardcoded
   const [serverDeliveryFee, setServerDeliveryFee] = useState<number | null>(null)
@@ -107,6 +108,10 @@ export default function CheckoutPage() {
   }
 
   const handlePayment = async () => {
+    if (paymentsPaused) {
+      setError('Payments are temporarily disabled while we update checkout. Please try again later.')
+      return
+    }
     if (!deliverySuitabilityConfirmed) {
       setError('Please confirm rider-delivery suitability before payment.')
       return
@@ -470,18 +475,22 @@ export default function CheckoutPage() {
 
               <button
                 onClick={handlePayment}
-                disabled={loading || !deliverySuitabilityConfirmed}
+                disabled={loading || paymentsPaused || !deliverySuitabilityConfirmed}
                 className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
               >
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+                ) : paymentsPaused ? (
+                  <>Payments Temporarily Disabled</>
                 ) : (
                   <><Lock className="w-4 h-4" /> Pay Securely · {formatPrice(totalAmount)}</>
                 )}
               </button>
 
               <p className="text-[11px] text-center text-gray-400 mt-3 leading-relaxed">
-                By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack.
+                {paymentsPaused
+                  ? 'Payments are temporarily disabled. Please try again later.'
+                  : "By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack."}
               </p>
 
               <div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-center gap-4">

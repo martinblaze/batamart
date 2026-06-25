@@ -50,6 +50,14 @@ export function calculateFees(subtotal: number, deliveryFee: number = 800) {
 
 export async function POST(request: NextRequest) {
   try {
+    const paymentsPaused = true
+    if (paymentsPaused) {
+      return NextResponse.json(
+        { error: 'Payments are temporarily disabled. Please try again later.' },
+        { status: 503 }
+      )
+    }
+
     const jsonErr = enforceJsonRequest(request)
     if (jsonErr) return jsonErr
     const originErr = enforceSameOrigin(request)
