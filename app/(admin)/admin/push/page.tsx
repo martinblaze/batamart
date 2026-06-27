@@ -6,6 +6,17 @@ import { adminFetch } from '@/lib/auth-client'
 
 const sampleMessage = `This is a test push notification from BATAMART Admin. Please confirm receipt in your browser.`
 
+type AdminPushResult = {
+  success: boolean
+  message: string
+  attempted: number
+  delivered: number
+  target: 'all' | 'user'
+  targetedEmail?: string
+  userSubscriptionCount?: number
+  totalSubscribers?: number
+}
+
 export default function AdminPushPage() {
   const [title, setTitle] = useState('BATAMART Test Notification')
   const [message, setMessage] = useState(sampleMessage)
@@ -13,10 +24,12 @@ export default function AdminPushPage() {
   const [email, setEmail] = useState('')
   const [url, setUrl] = useState('/')
   const [status, setStatus] = useState<string | null>(null)
+  const [result, setResult] = useState<AdminPushResult | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleSend = async () => {
     setStatus(null)
+    setResult(null)
     setLoading(true)
 
     try {
@@ -28,7 +41,8 @@ export default function AdminPushPage() {
 
       const data = await res.json()
       if (res.ok) {
-        setStatus(`✅ ${data.message} Attempted: ${data.attempted}, Delivered: ${data.delivered}`)
+        setResult(data)
+        setStatus(data.success ? `✅ ${data.message}` : `⚠️ ${data.message}`)
       } else {
         setStatus(`❌ ${data.error || 'Failed to send push notification.'}`)
       }
@@ -143,6 +157,35 @@ export default function AdminPushPage() {
         {status && (
           <div className="mt-6 rounded-3xl border border-gray-700 bg-gray-950/40 p-4 text-sm text-gray-200">
             {status}
+          </div>
+        )}
+
+        {result && (
+          <div className="mt-4 rounded-3xl border border-gray-700 bg-gray-950/40 p-4 text-sm text-gray-200">
+            {result.targetedEmail && (
+              <p>
+                <span className="font-medium text-white">Targeted email:</span> {result.targetedEmail}
+              </p>
+            )}
+            <p>
+              <span className="font-medium text-white">Target:</span> {result.target === 'all' ? 'All users' : 'Single user'}
+            </p>
+            <p>
+              <span className="font-medium text-white">Attempted:</span> {result.attempted}
+            </p>
+            <p>
+              <span className="font-medium text-white">Delivered:</span> {result.delivered}
+            </p>
+            {typeof result.userSubscriptionCount === 'number' && (
+              <p>
+                <span className="font-medium text-white">User subscriptions:</span> {result.userSubscriptionCount}
+              </p>
+            )}
+            {typeof result.totalSubscribers === 'number' && (
+              <p>
+                <span className="font-medium text-white">Subscribed users:</span> {result.totalSubscribers}
+              </p>
+            )}
           </div>
         )}
       </div>
