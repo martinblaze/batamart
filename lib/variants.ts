@@ -500,6 +500,21 @@ export function getCategoryList() {
   }))
 }
 
+export function getCategoryDisplayInfo(categoryKey?: string | null, subcategoryKey?: string | null, fallbackCategory?: string | null, fallbackSubcategory?: string | null) {
+  const categoryLabel = categoryKey && CATEGORY_TREE[categoryKey]?.label
+    ? CATEGORY_TREE[categoryKey].label
+    : fallbackCategory || ''
+
+  const subcategoryLabel = categoryKey && subcategoryKey && CATEGORY_TREE[categoryKey]?.subcategories?.[subcategoryKey]?.label
+    ? CATEGORY_TREE[categoryKey].subcategories[subcategoryKey].label
+    : fallbackSubcategory || ''
+
+  return {
+    category: categoryLabel || fallbackCategory || '',
+    subcategory: subcategoryLabel || fallbackSubcategory || null,
+  }
+}
+
 export function getSubcategoryList(categoryKey: string) {
   const cat = CATEGORY_TREE[categoryKey]
   if (!cat) return []

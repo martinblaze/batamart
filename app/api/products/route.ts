@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
-import { CATEGORY_TREE } from '@/lib/variants'
+import { CATEGORY_TREE, getCategoryDisplayInfo } from '@/lib/variants'
 import { normalizeText } from '@/lib/search-utils'
 
 const DEFAULT_PAGE_SIZE = 40
@@ -340,6 +340,21 @@ function buildAttributeKeyClause(key: string, values: string[]) {
   return { OR: orClauses }
 }
 
+function enrichProductCategoryMeta(product: any) {
+  const { category, subcategory } = getCategoryDisplayInfo(
+    product?.categoryKey,
+    product?.subcategoryKey,
+    product?.category,
+    product?.subcategory,
+  )
+
+  return {
+    ...product,
+    category: category || product?.category || '',
+    subcategory: subcategory || product?.subcategory || null,
+  }
+}
+
 function scoreProduct(product: any, query: string): number {
   const q = normalizeText(query)
   if (!q) return 0
@@ -486,7 +501,8 @@ export async function GET(request: NextRequest) {
       prisma.product.count({ where }),
     ])
 
-    const ranked = [...products]
+    const enrichedProducts = products.map(enrichProductCategoryMeta)
+    const ranked = [...enrichedProducts]
     if (sortBy === 'relevance' && queryText) {
       ranked.sort((a, b) => scoreProduct(b, queryText) - scoreProduct(a, queryText))
     } else if (sortBy === 'popular') {

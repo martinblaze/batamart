@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { getCategoryDisplayInfo } from '@/lib/variants'
 
 // GET single product
 export async function GET(
@@ -48,6 +49,18 @@ export async function GET(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
+    const { category, subcategory } = getCategoryDisplayInfo(
+      product.categoryKey,
+      product.subcategoryKey,
+      product.category,
+      product.subcategory,
+    )
+    const hydratedProduct = {
+      ...product,
+      category: category || product.category || '',
+      subcategory: subcategory || product.subcategory || null,
+    }
+
     // Increment view count (only for authenticated users or internal requests)
     // This prevents spam from crawlers
     if (!isInternal) {
@@ -57,7 +70,7 @@ export async function GET(
       }).catch(err => console.error('View count increment failed:', err))
     }
 
-    return NextResponse.json({ product })
+    return NextResponse.json({ product: hydratedProduct })
   } catch (error) {
     console.error('Fetch product error:', error)
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
