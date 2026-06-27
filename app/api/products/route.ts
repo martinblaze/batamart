@@ -496,15 +496,18 @@ export async function GET(request: NextRequest) {
     }
 
     if (queryText) {
-      prisma.searchLog.create({
-        data: {
-          userId: user.id,
-          universityId: user.universityId,
-          query: queryText,
-          category: categoryKey || subcategoryKey || null,
-          resultCount: ranked.length,
-        },
-      }).catch(() => {})
+      const searchLogClient = (prisma as any).searchLog
+      if (searchLogClient?.create) {
+        searchLogClient.create({
+          data: {
+            userId: user.id,
+            universityId: user.universityId,
+            query: queryText,
+            category: categoryKey || subcategoryKey || null,
+            resultCount: ranked.length,
+          },
+        }).catch(() => {})
+      }
     }
 
     return NextResponse.json({

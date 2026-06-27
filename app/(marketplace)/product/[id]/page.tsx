@@ -17,6 +17,7 @@ import {
 import { useCartStore } from '@/lib/cart-store'
 import { decodeProductData } from '@/lib/variants'
 import { useToast } from '@/components/ui/Toast'
+import RelatedProductCard from '@/components/marketplace/RelatedProductCard'
 
 // ─────────────────────────────────────────────────────────
 // Types
@@ -75,6 +76,20 @@ interface RelatedProduct {
   category: string
   seller: { name: string; trustLevel: string; avgRating: number }
   _isNameRelated: boolean
+}
+
+type RelatedSection = {
+  title: string
+  reason: string
+  products: RelatedProduct[]
+}
+
+type RecentlyViewedItem = {
+  id: string
+  name: string
+  price: number
+  image?: string
+  categoryKey?: string
 }
 
 // ─────────────────────────────────────────────────────────
@@ -390,6 +405,7 @@ export default function ProductDetailPage() {
   const [relatedPage, setRelatedPage] = useState(1)
   const [relatedHasMore, setRelatedHasMore] = useState(false)
   const [relatedLoadingMore, setRelatedLoadingMore] = useState(false)
+  const [relatedSections, setRelatedSections] = useState<RelatedSection[]>([])
   const RELATED_PAGE_SIZE = 8
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<RelatedProduct[]>([])
   const [peopleLikeLoading, setPeopleLikeLoading] = useState(false)
@@ -405,6 +421,7 @@ export default function ProductDetailPage() {
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [showStickyBar, setShowStickyBar] = useState(false)
   const [sessionId, setSessionId] = useState('')
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([])
 
   const { addItem, items } = useCartStore()
   const toast = useToast()
@@ -511,6 +528,17 @@ export default function ProductDetailPage() {
         const viewed = JSON.parse(localStorage.getItem('BATAMART-recently-viewed') || '[]')
         const updated = [p, ...viewed.filter((v: any) => v.id !== p.id)].slice(0, 20)
         localStorage.setItem('BATAMART-recently-viewed', JSON.stringify(updated))
+        // also maintain new client-side key for Recently Viewed (lowercase key per spec)
+        setTimeout(() => {
+          try {
+            const key = 'batamart_recently_viewed'
+            const raw = JSON.parse(localStorage.getItem(key) || '[]')
+            const stub = { id: p.id, name: p.name, price: p.price, image: p.images?.[0] || '', categoryKey: p.subcategoryKey || p.categoryKey || p.category }
+            const merged = [stub, ...raw.filter((r: any) => r.id !== stub.id)].slice(0, 20)
+            localStorage.setItem(key, JSON.stringify(merged))
+            setRecentlyViewed(merged)
+          } catch {}
+        }, 1000)
       } catch {}
 
       fetchRelatedFirst(token)
@@ -551,10 +579,15 @@ export default function ProductDetailPage() {
       )
       const data = await res.json()
       if (data.success) {
-        setRelatedNameRelated(data.related?.nameRelated || [])
-        const others: RelatedProduct[] = data.related?.others || []
-        setRelatedOthers(others)
-        setRelatedSourceName(data.sourceProduct?.name || '')
+        // prefer new `sections` shape; fall back to legacy shape
+        if (Array.isArray(data.sections)) {
+          setRelatedSections(data.sections)
+        } else {
+          setRelatedNameRelated(data.related?.nameRelated || [])
+          const others: RelatedProduct[] = data.related?.others || []
+          setRelatedOthers(others)
+          setRelatedSourceName(data.sourceProduct?.name || '')
+        }
         setRelatedHasMore(Boolean(data.hasMore))
         setRelatedPage(1)
       }
@@ -619,6 +652,14 @@ export default function ProductDetailPage() {
       setAlsoLikeLoading(false)
     }
   }, [alsoLikeLoading, alsoLikeHasMore, alsoLikePage, product, productId])
+
+  // Load client-side recently viewed on mount
+  useEffect(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('batamart_recently_viewed') || '[]')
+      if (Array.isArray(raw)) setRecentlyViewed(raw.slice(0, 20))
+    } catch {}
+  }, [])
 
   // ── IntersectionObserver for infinite scroll ────────────
   useEffect(() => {
@@ -919,6 +960,46 @@ export default function ProductDetailPage() {
                 {reporting ? 'Submitting...' : 'Submit Report'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Recently viewed (client-side only) ─────── */}
+      {recentlyViewed.length > 0 && (
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Recently viewed</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Items you recently looked at</p>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem('batamart_recently_viewed')
+                setRecentlyViewed([])
+              }}
+              className="text-xs text-gray-500 hover:underline"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-3">
+            {recentlyViewed.map(item => (
+              <div key={item.id} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden bg-white border" style={{ borderColor: '#f0f0f0' }}>
+                <div className="aspect-square bg-gray-50">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">No image</div>
+                  )}
+                </div>
+                <div className="p-2">
+                  <p className="text-xs font-semibold line-clamp-2">{item.name}</p>
+                  <p className="text-sm font-bold text-indigo-600 mt-1">{fmt(item.price)}</p>
+                  <button onClick={() => navigateRelatedTracked(item.id)} className="mt-2 text-xs text-indigo-600">View</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -1538,52 +1619,51 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* ── Related products (horizontal scroll) ──────── */}
-        {hasRelated && (
+        {/* ── Related products: multiple sections ──────── */}
+        {((relatedSections && relatedSections.length > 0) || hasRelated) && (
           <div className="fade-up" style={{ animationDelay: '0.15s' }}>
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-500" />
-                  Deals on related products
-                </h2>
-                {relatedSourceName && (
-                  <p className="text-xs text-gray-400 mt-0.5">Similar to "{relatedSourceName}"</p>
-                )}
-              </div>
-            </div>
+            {(relatedSections && relatedSections.length > 0 ? relatedSections : [
+              relatedNameRelated.length ? { title: 'Related', reason: relatedSourceName ? `Similar to "${relatedSourceName}"` : '', products: [...relatedNameRelated, ...relatedOthers] } : null
+            ].filter(Boolean) as RelatedSection[]).map((section) => (
+              <section key={section.title} className="mt-8">
+                <div className="flex items-baseline justify-between mb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-white">{section.title}</h2>
+                    <p className="text-xs text-gray-500 dark:text-[#94a3b8] mt-0.5">{section.reason}</p>
+                  </div>
+                  <a href={`/search?sub=${product.subcategoryKey}`} className="text-xs text-blue-600">See all</a>
+                </div>
 
-            {relatedLoading ? (
-              <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden">
-                    <div className="shimmer aspect-square w-full" />
-                    <div className="bg-white p-2 space-y-1.5">
-                      <div className="shimmer h-3 w-full rounded" />
-                      <div className="shimmer h-3 w-2/3 rounded" />
-                      <div className="shimmer h-4 w-1/2 rounded" />
+                <div className="flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-4 md:overflow-visible">
+                  {section.products.map(p => (
+                    <div key={p.id} className="flex-shrink-0 w-40 md:w-full">
+                      <RelatedProductCard
+                        product={{
+                          id: p.id,
+                          name: p.name,
+                          price: p.price,
+                          images: p.images,
+                          avgRating: p.seller?.avgRating,
+                          totalReviews: 0,
+                          isHot: false,
+                          isDeal: false,
+                          discountPercent: null,
+                          seller: p.seller,
+                          deliveryEstimate: undefined,
+                          matchReason: (p as any).matchReason,
+                        }}
+                        onOpen={() => navigateRelatedTracked(p.id)}
+                        onAddToCart={() => {
+                          // quick add to cart
+                          addItem({ productId: p.id, variantId: undefined, name: p.name, price: p.price, image: p.images?.[0] || '', sellerId: p.seller?.id || '', sellerName: p.seller?.name || '', maxQuantity: 1, quantity: 1, selectedVariants: {}, category: product.category, subcategory: product.subcategory, deliveryEstimate: undefined })
+                          toast.success('Added to cart')
+                        }}
+                      />
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div ref={relatedScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar pb-3">
-                {relatedNameRelated.map(p => (
-                  <RelatedCard key={p.id} product={p} onClick={() => navigateRelatedTracked(p.id)} />
-                ))}
-                {relatedNameRelated.length > 0 && relatedOthers.length > 0 && (
-                  <div className="flex-shrink-0 flex items-center px-1">
-                    <div className="w-px h-24 bg-gray-200" />
-                  </div>
-                )}
-                {relatedOthers.map(p => (
-                  <RelatedCard key={p.id} product={p} onClick={() => navigateRelatedTracked(p.id)} />
-                ))}
-                {relatedHasMore && (
-                  <SeeMoreCard onClick={loadMoreRelated} loading={relatedLoadingMore} />
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
         )}
 

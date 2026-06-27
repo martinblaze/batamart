@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { CATEGORY_TREE } from './variants'
 
 export type AttributeQueryFilters = Record<string, string | string[]>
 
@@ -116,4 +117,17 @@ export function buildAttributeFiltersFromQuery(searchParams: URLSearchParams): A
   }
 
   return out
+}
+
+export function getSubcategoryOrCategoryFallback(categoryKey?: string | null, subcategoryKey?: string | null) {
+  if (!categoryKey) return null
+  if (!subcategoryKey) return categoryKey
+  try {
+    const cat = CATEGORY_TREE[categoryKey]
+    if (!cat) return categoryKey
+    if (Object.prototype.hasOwnProperty.call(cat.subcategories || {}, subcategoryKey)) return subcategoryKey
+    return categoryKey
+  } catch {
+    return categoryKey
+  }
 }
