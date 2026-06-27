@@ -17,12 +17,17 @@ import {
 
 let vapidConfigured = false
 
+function normalizeVapidEmail(email: string): string {
+  const normalized = email.trim().replace(/^mailto:/i, '')
+  return normalized.startsWith('http') ? normalized : `mailto:${normalized}`
+}
+
 function ensureVapidConfigured(): boolean {
   if (vapidConfigured) return true
 
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  const privateKey = process.env.VAPID_PRIVATE_KEY
-  const vapidEmail = process.env.VAPID_EMAIL
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim().replace(/^"(.*)"$/s, '$1')
+  const privateKey = process.env.VAPID_PRIVATE_KEY?.trim().replace(/^"(.*)"$/s, '$1')
+  const vapidEmail = process.env.VAPID_EMAIL?.trim().replace(/^"(.*)"$/s, '$1')
 
   if (!publicKey || !privateKey || !vapidEmail) {
     console.warn('[Push] VAPID env vars are missing. Push notifications are disabled.')
@@ -30,7 +35,7 @@ function ensureVapidConfigured(): boolean {
   }
 
   try {
-    webpush.setVapidDetails(`mailto:${vapidEmail}`, publicKey, privateKey)
+    webpush.setVapidDetails(normalizeVapidEmail(vapidEmail), publicKey, privateKey)
     vapidConfigured = true
     return true
   } catch (error) {

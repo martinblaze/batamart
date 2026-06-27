@@ -87,7 +87,7 @@ export function usePushSubscription() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim().replace(/^"(.*)"$/s, '$1')
       if (!vapidKey) return
 
       const registration = await getServiceWorkerRegistration()
@@ -158,7 +158,7 @@ export function usePushSubscription() {
       return false
     }
 
-    const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim().replace(/^"(.*)"$/s, '$1')
     if (!vapidKey) {
       console.error('[Push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set')
       toast.error('Notifications are not configured yet. Please try again later.')
