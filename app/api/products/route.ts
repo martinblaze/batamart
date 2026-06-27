@@ -256,6 +256,33 @@ function normalizeLearnedKey(input: string) {
     .replace(/^_+|_+$/g, '')
 }
 
+function resolveCategoryKey(input: string) {
+  const value = input?.trim()
+  if (!value) return ''
+
+  if (CATEGORY_TREE[value]) return value
+  const normalized = value.toLowerCase()
+  const match = Object.entries(CATEGORY_TREE).find(([key, category]) => {
+    return key.toLowerCase() === normalized || category.label.toLowerCase() === normalized
+  })
+  return match?.[0] || ''
+}
+
+function resolveSubcategoryKey(categoryKey: string, input: string) {
+  const value = input?.trim()
+  if (!categoryKey || !value) return ''
+
+  const category = CATEGORY_TREE[categoryKey]
+  if (!category?.subcategories) return ''
+
+  if (category.subcategories[value]) return value
+  const normalized = value.toLowerCase()
+  const match = Object.entries(category.subcategories).find(([key, subcategory]) => {
+    return key.toLowerCase() === normalized || subcategory.label.toLowerCase() === normalized
+  })
+  return match?.[0] || ''
+}
+
 function isSafePromotableKey(key: string) {
   if (!key || key.length > 30) return false
   if (!/^[a-z][a-z0-9_]*$/.test(key)) return false
@@ -400,8 +427,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const categoryKey = searchParams.get('categoryKey') || searchParams.get('category') || ''
-    const subcategoryKey = searchParams.get('subcategoryKey') || searchParams.get('sub') || ''
+    const requestedCategoryKey = searchParams.get('categoryKey') || searchParams.get('category') || ''
+    const requestedSubcategoryKey = searchParams.get('subcategoryKey') || searchParams.get('sub') || ''
+    const categoryKey = resolveCategoryKey(requestedCategoryKey)
+    const subcategoryKey = resolveSubcategoryKey(categoryKey, requestedSubcategoryKey)
     const sellerId = searchParams.get('sellerId') || ''
     const hostel = searchParams.get('hostel') || ''
     const q = (searchParams.get('q') || searchParams.get('search') || '').trim()
@@ -438,8 +467,28 @@ export async function GET(request: NextRequest) {
       }]
     }
     if (sellerId) where.sellerId = sellerId
-    if (categoryKey && categoryKey !== 'all') where.categoryKey = categoryKey
-    if (subcategoryKey) where.subcategoryKey = subcategoryKey
+    if (categoryKey && categoryKey !== 'all') {
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { categoryKey: categoryKey },
+            { category: { equals: requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || '' } },
+          ],
+        },
+      ]
+    }
+    if (subcategoryKey) {
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            { subcategoryKey: subcategoryKey },
+            { subcategory: { equals: requestedSubcategoryKey || CATEGORY_TREE[categoryKey]?.subcategories?.[subcategoryKey]?.label || '' } },
+          ],
+        },
+      ]
+    }
     if (hostel && hostel !== 'All') where.hostelName = { contains: hostel, mode: 'insensitive' }
 
     if (minPrice || maxPrice) {

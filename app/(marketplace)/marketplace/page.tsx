@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 
-import { decodeProductData, getCategoryDisplayInfo, getCategoryList } from '@/lib/variants'
+import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
 
 // ─────────────────────────────────────────────
@@ -722,7 +722,7 @@ function CategorySpotlightGrid({ allProducts, onCategorySelect }: {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {CATEGORY_SPOTLIGHTS.map(spot => {
-        const catProducts = allProducts.filter(p => p.category === spot.catFilter).slice(0, 4)
+        const catProducts = allProducts.filter((p: any) => matchesCategoryFilter(p, spot.catFilter)).slice(0, 4)
         return (
           <div
             key={spot.title}
@@ -917,7 +917,7 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {PRICE_PANELS.map((panel, pi) => {
-        const catProds = allProducts.filter(p => p.category === panel.catFilter)
+        const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
         return (
           <div key={panel.title} className={`bg-gradient-to-br ${panel.bg} rounded-2xl border border-white shadow-sm overflow-hidden`}>
             <div className="p-3 pb-2">
@@ -1030,7 +1030,7 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       {SHOWCASE_PANELS.map((panel, pi) => {
-        const catProds = allProducts.filter(p => p.category === panel.catFilter)
+        const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
         // Pick 4 random products, shuffled differently each render
         const shuffled = seededShuffle(catProds, renderSeed + pi * 37)
         const picks = shuffled.slice(0, 4)
@@ -2168,7 +2168,17 @@ export default function MarketplacePage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) return
-      const res  = await fetch(`/api/products?category=${encodeURIComponent(category)}`, { headers: { Authorization: `Bearer ${token}` } })
+
+      const matchedCategory = getCategoryList().find((cat) => {
+        const normalizedCategory = category.trim().toLowerCase()
+        return cat.label.toLowerCase() === normalizedCategory || cat.key.toLowerCase() === normalizedCategory
+      })
+
+      const params = new URLSearchParams()
+      if (matchedCategory?.key) params.set('categoryKey', matchedCategory.key)
+      if (category && category !== 'All') params.set('category', category)
+
+      const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (res.ok) {
         const products = data.products || []
@@ -2290,7 +2300,7 @@ export default function MarketplacePage() {
   }, [allProducts, forYouProducts, trendingProducts, newListings])
 
   const filteredByCategory = useMemo(() => {
-    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter(p => p.category === selectedCategory)
+    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, selectedCategory))
     if (maxPriceFilter !== null) prods = prods.filter(p => p.price <= maxPriceFilter)
     return prods
   }, [allProducts, selectedCategory, maxPriceFilter])
@@ -2309,7 +2319,7 @@ export default function MarketplacePage() {
   const productsByCategory = useMemo(() => {
     const map: Record<string, any[]> = {}
     for (const cat of CATEGORIES.slice(1)) {
-      map[cat.name] = allProducts.filter(p => p.category === cat.name).slice(0, 10)
+      map[cat.name] = allProducts.filter((p: any) => matchesCategoryFilter(p, cat.name)).slice(0, 10)
     }
     return map
   }, [allProducts])

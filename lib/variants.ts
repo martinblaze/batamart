@@ -515,6 +515,17 @@ export function getCategoryDisplayInfo(categoryKey?: string | null, subcategoryK
   }
 }
 
+export function matchesCategoryFilter(product: { categoryKey?: string | null; category?: string | null }, selectedCategory?: string | null) {
+  if (!selectedCategory || !product) return false
+  const normalizedSelection = selectedCategory.trim().toLowerCase()
+  if (!normalizedSelection || normalizedSelection === 'all') return true
+
+  const categoryKey = (product.categoryKey || '').trim().toLowerCase()
+  const categoryLabel = (product.category || '').trim().toLowerCase()
+
+  return categoryKey === normalizedSelection || categoryLabel === normalizedSelection
+}
+
 export function getSubcategoryList(categoryKey: string) {
   const cat = CATEGORY_TREE[categoryKey]
   if (!cat) return []
