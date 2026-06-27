@@ -5,6 +5,36 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/components/ui/Toast'
 import { useNotificationNudge } from '@/hooks/useNotificationNudge'
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i)
+  return outputArray
+}
+
+function isIosBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /iphone|ipad|ipod/i.test(navigator.userAgent)
+}
+
+function isStandaloneMode(): boolean {
+  if (typeof window === 'undefined') return false
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as any).standalone === true
+  )
+}
+
+export function isIosBrowserTab(): boolean {
+  return isIosBrowser() && !isStandaloneMode()
+}
+
+export function isIosPwa(): boolean {
+  return isIosBrowser() && isStandaloneMode()
+}
+
 export function usePushSubscription() {
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [isSupported, setIsSupported] = useState(false)
@@ -14,29 +44,31 @@ export function usePushSubscription() {
 
   useEffect(() => {
     if (
-      typeof window !== 'undefined' &&
-      'Notification' in window &&
-      'serviceWorker' in navigator &&
-      'PushManager' in window
-    ) {
-      setIsSupported(true)
-      setPermission(Notification.permission)
-      checkSubscription()
-    }
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    ) return
+
+    if (isIosBrowserTab()) return
+
+    setIsSupported(true)
+    setPermission(Notification.permission)
+    checkSubscription()
   }, [])
 
-  // ✅ Auto re-subscribe on page load if permission already granted
-  // This ensures mobile users stay subscribed after closing and reopening the app
   useEffect(() => {
     if (
-      typeof window !== 'undefined' &&
-      'Notification' in window &&
-      Notification.permission === 'granted' &&
-      'serviceWorker' in navigator &&
-      'PushManager' in window
-    ) {
-      autoResubscribeIfNeeded()
-    }
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      Notification.permission !== 'granted' ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    ) return
+
+    if (isIosBrowserTab()) return
+
+    autoResubscribeIfNeeded()
   }, [])
 
   const checkSubscription = async () => {
@@ -50,8 +82,6 @@ export function usePushSubscription() {
     }
   }
 
-  // ✅ Silently re-subscribe if permission is granted but subscription is missing
-  // This fixes the case where mobile browser clears the subscription in the background
   const autoResubscribeIfNeeded = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -64,20 +94,27 @@ export function usePushSubscription() {
       if (!registration) return
 
       const existing = await registration.pushManager.getSubscription()
+
       if (existing) {
-        // Already subscribed — make sure server has this subscription saved
+        const lastSync = parseInt(localStorage.getItem('batamart_push_synced') || '0')
+        const twentyFourHours = 24 * 60 * 60 * 1000
+        if (Date.now() - lastSync < twentyFourHours) {
+          setIsSubscribed(true)
+          return
+        }
         await saveSubscriptionToServer(existing, token)
+        localStorage.setItem('batamart_push_synced', String(Date.now()))
         setIsSubscribed(true)
         return
       }
 
-      // No subscription found — silently re-subscribe
-      console.log('[Push] No subscription found despite permission granted — re-subscribing...')
+      console.log('[Push] No subscription found — re-subscribing silently...')
       const newSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       })
       await saveSubscriptionToServer(newSubscription, token)
+      localStorage.setItem('batamart_push_synced', String(Date.now()))
       setIsSubscribed(true)
       console.log('[Push] ✅ Auto re-subscribed successfully')
     } catch (error) {
@@ -131,13 +168,11 @@ export function usePushSubscription() {
     setIsLoading(true)
 
     try {
-      // ✅ Must use service worker pushManager — NOT new Notification() directly
-      // new Notification() doesn't work on mobile/PWA; service worker does
       const result = await Notification.requestPermission()
       setPermission(result)
 
       if (result === 'denied') {
-        toast.error('Notification permission denied. You can enable it in your browser settings.')
+        toast.error('Notification permission denied. Enable it in your device settings.')
         return false
       }
 
@@ -145,66 +180,51 @@ export function usePushSubscription() {
 
       const registration = await getServiceWorkerRegistration()
       if (!registration) {
-        toast.error('Failed to set up notifications. Please reload the page and try again.')
+        toast.error('Service worker not ready. Please refresh and try again.')
         return false
       }
 
-      let subscription: PushSubscription
-      try {
-        const existing = await registration.pushManager.getSubscription()
-        if (existing) {
-          subscription = existing
-        } else {
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidKey),
-          })
-        }
-      } catch (subError: any) {
-        console.error('[Push] pushManager.subscribe failed:', subError)
-        if (subError.name === 'InvalidStateError') {
-          toast.error('Notification setup conflict. Please reload and try again.')
-        } else {
-          toast.error('Failed to subscribe to notifications.')
-        }
-        return false
-      }
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      })
 
       const token = localStorage.getItem('token')
       if (!token) {
-        toast.error('Please log in to enable notifications.')
+        toast.error('Please log in to enable notifications')
         return false
       }
 
-      try {
-        await saveSubscriptionToServer(subscription, token)
-      } catch (err) {
-        console.error('[Push] Server failed to save subscription:', err)
-        toast.error('Failed to save notification settings. Please try again.')
-        return false
-      }
-
+      await saveSubscriptionToServer(subscription, token)
+      localStorage.setItem('batamart_push_synced', String(Date.now()))
       setIsSubscribed(true)
-      toast.success("Notifications enabled! You'll get updates even when your browser is closed.")
+      toast.success('Notifications enabled!')
       return true
     } catch (error) {
       console.error('[Push] Subscribe error:', error)
-      toast.error('Something went wrong. Please try again.')
+      toast.error('Failed to enable notifications. Please try again.')
       return false
     } finally {
       setIsLoading(false)
     }
   }
 
-  const unsubscribe = async () => {
-    setIsLoading(true)
+  const unsubscribe = async (): Promise<boolean> => {
     try {
+      setIsLoading(true)
       const registration = await getServiceWorkerRegistration()
-      if (!registration) return
+      if (!registration) return false
 
       const subscription = await registration.pushManager.getSubscription()
-      if (subscription) {
-        const token = localStorage.getItem('token')
+      if (!subscription) {
+        setIsSubscribed(false)
+        return true
+      }
+
+      await subscription.unsubscribe()
+
+      const token = localStorage.getItem('token')
+      if (token) {
         await fetch('/api/push/subscribe', {
           method: 'DELETE',
           headers: {
@@ -213,14 +233,15 @@ export function usePushSubscription() {
           },
           body: JSON.stringify({ endpoint: subscription.endpoint }),
         })
-        await subscription.unsubscribe()
       }
 
+      localStorage.removeItem('batamart_push_synced')
       setIsSubscribed(false)
       toast.success('Notifications disabled')
+      return true
     } catch (error) {
       console.error('[Push] Unsubscribe error:', error)
-      toast.error('Failed to disable notifications')
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -236,19 +257,6 @@ export function usePushSubscription() {
   }
 }
 
-// ── Helper ────────────────────────────────────────────────────────────────────
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length) as Uint8Array<ArrayBuffer>
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
-  }
-  return outputArray
-}
-
-// ── Global NotificationPrompt ─────────────────────────────────────────────────
 export function NotificationPrompt() {
   const { shouldShowPassive, snooze, markGranted } = useNotificationNudge()
   const { isLoading, subscribe } = usePushSubscription()
@@ -304,28 +312,22 @@ export function NotificationPrompt() {
         .np-bell { animation: npBellRing 1.6s ease 0.5s both; }
       `}</style>
 
-      {/* Backdrop */}
       <div
         className="np-backdrop fixed inset-0 z-[9998] bg-black/30"
         onClick={() => dismiss(true)}
       />
 
-      {/* Bottom sheet */}
       <div
         className="np-sheet fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl overflow-hidden"
         style={{ boxShadow: '0 -8px 40px rgba(0,0,0,0.18)' }}
       >
-        {/* Gradient accent bar */}
         <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#1a3f8f,#3b9ef5)' }} />
 
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
 
         <div className="px-5 pt-2 pb-6" style={{ paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))' }}>
-
-          {/* Header row */}
           <div className="flex items-start gap-3 mb-4">
             <div
               className="np-bell flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center"
@@ -353,7 +355,6 @@ export function NotificationPrompt() {
             </button>
           </div>
 
-          {/* Benefit chips */}
           <div className="flex flex-wrap gap-2 mb-5">
             {[
               { icon: '📦', text: 'Order updates' },
@@ -370,7 +371,6 @@ export function NotificationPrompt() {
             ))}
           </div>
 
-          {/* Buttons */}
           <button
             onClick={handleEnable}
             disabled={isLoading}

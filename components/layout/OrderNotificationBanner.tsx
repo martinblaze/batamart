@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { Bell, BellOff, X, Loader2 } from 'lucide-react'
-import { usePushSubscription } from '@/hooks/usePushSubscription'
+import { isIosBrowserTab, usePushSubscription } from '@/hooks/usePushSubscription'
 import { useNotificationNudge } from '@/hooks/useNotificationNudge'
 
 interface Props {
@@ -16,6 +16,8 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
   const [visible, setVisible]     = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [enabling, setEnabling]   = useState(false)
+
+  if (isIosBrowserTab()) return null
 
   useEffect(() => {
     if (dismissed) return
@@ -30,6 +32,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
   }, [postPayment, shouldShowContextual, shouldShowPassive, dismissed])
 
   const handleEnable = async () => {
+    if (isIosBrowserTab()) return
     setEnabling(true)
     const granted = await subscribe()
     setEnabling(false)

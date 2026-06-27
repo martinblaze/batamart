@@ -12,8 +12,8 @@ export default function InstallPrompt() {
     // Don't show if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) return
 
-    // Don't show if previously dismissed
-    if (localStorage.getItem('installPromptDismissed')) return
+    const snoozedUntil = parseInt(localStorage.getItem('installPromptSnoozedUntil') || '0')
+    if (Date.now() < snoozedUntil) return
 
     const handler = (e: any) => {
       e.preventDefault()
@@ -39,7 +39,8 @@ export default function InstallPrompt() {
   const dismiss = () => {
     setDismissed(true)
     setShow(false)
-    localStorage.setItem('installPromptDismissed', 'true')
+    const snoozeUntil = Date.now() + 7 * 24 * 60 * 60 * 1000
+    localStorage.setItem('installPromptSnoozedUntil', String(snoozeUntil))
   }
 
   if (!show || dismissed) return null

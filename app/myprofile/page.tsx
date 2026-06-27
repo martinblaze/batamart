@@ -185,6 +185,11 @@ export default function MyProfilePage() {
   const [biometricMessage, setBiometricMessage] = useState('')
 
   const { isSupported, isSubscribed, isLoading: notifLoading, permission, subscribe, unsubscribe } = usePushSubscription()
+  const isIos = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const isStandalone = typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true)
+  const isIosBrowserTab = isIos && !isStandalone
+  const isIosPwa = isIos && isStandalone
 
   useEffect(() => {
     if (document.getElementById('profile-anim')) return
@@ -681,55 +686,75 @@ export default function MyProfilePage() {
             </div>
 
             {/* Notifications */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Bell className="w-3.5 h-3.5 text-blue-600" />
-                </div>
-                <h2 className="font-black text-gray-900 text-sm">Push Notifications</h2>
+            <div className="section-card bg-white rounded-2xl border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-50">
+                <h3 className="font-semibold text-gray-900 text-sm">Order Notifications</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Get alerted when your order is picked up and delivered</p>
               </div>
-              <div className="p-5">
-                {isIOSBrowser ? (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-                        <span className="text-lg">📲</span>
-                      </div>
-                      <div>
-                        <p className="font-black text-sm text-gray-900">Push Notifications</p>
-                        <p className="text-xs text-gray-400 mt-0.5">Install to Home Screen to enable</p>
-                      </div>
+
+              <div className="px-5 py-4">
+                {isIosBrowserTab && (
+                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <span className="text-xl flex-shrink-0">📲</span>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Install app first to get notifications</p>
+                      <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                        iPhone notifications only work when BataMart is installed to your Home Screen.
+                        Tap Share in Safari → "Add to Home Screen", then open from your home screen and enable notifications here.
+                      </p>
                     </div>
-                    <button onClick={() => setShowIOSInstallModal(true)}
-                      className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black text-white transition-all hover:scale-105"
-                      style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
-                      How to
-                    </button>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${isSubscribed ? 'bg-emerald-50' : 'bg-gray-100'}`}>
-                        {isSubscribed ? <Bell className="w-5 h-5 text-emerald-600" /> : <BellOff className="w-5 h-5 text-gray-400" />}
-                      </div>
-                      <div>
-                        <p className="font-black text-sm text-gray-900">{isSubscribed ? 'Notifications On' : 'Notifications Off'}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {!isSupported ? 'Not supported in this browser'
-                            : permission === 'denied' ? 'Blocked — enable in browser settings'
-                              : isSubscribed ? 'You\'ll get order & payment alerts'
-                                : 'Enable to get real-time alerts'}
-                        </p>
-                      </div>
+                )}
+
+                {!isIosBrowserTab && permission === 'denied' && (
+                  <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+                    <span className="text-xl flex-shrink-0">🔕</span>
+                    <div>
+                      <p className="text-sm font-semibold text-red-700">Notifications are blocked</p>
+                      <p className="text-xs text-red-600 mt-1 leading-relaxed">
+                        {isIosPwa
+                          ? 'Go to iPhone Settings → BataMart → Notifications → turn on "Allow Notifications".'
+                          : 'Go to your browser Settings → Site Settings → Notifications → find BataMart and allow it.'}
+                      </p>
                     </div>
-                    {isSupported && permission !== 'denied' && (
-                      <button onClick={isSubscribed ? unsubscribe : subscribe} disabled={notifLoading}
-                        className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition-all hover:scale-105 disabled:opacity-50 ${isSubscribed ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'text-white shadow-md'}`}
-                        style={!isSubscribed ? { background: 'linear-gradient(135deg, #6366f1, #4c1d95)' } : {}}>
-                        {notifLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isSubscribed ? 'Turn Off' : 'Enable'}
-                      </button>
-                    )}
-                    {permission === 'denied' && <span className="text-xs text-red-500 font-black bg-red-50 px-2.5 py-1 rounded-full">Blocked</span>}
+                  </div>
+                )}
+
+                {isIosPwa && permission !== 'granted' && permission !== 'denied' && (
+                  <div className="mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-xs text-blue-700 leading-relaxed">
+                      After enabling below, also go to <strong>iPhone Settings → BataMart → Notifications</strong> and turn on "Allow Notifications".
+                    </p>
+                  </div>
+                )}
+
+                {!isIosBrowserTab && permission !== 'denied' && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">
+                        {isSubscribed ? 'Notifications enabled' : 'Enable notifications'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {isSubscribed
+                          ? 'You\'ll be notified for orders, deliveries, and payments'
+                          : 'Stay updated on your orders in real time'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={isSubscribed ? unsubscribe : subscribe}
+                      disabled={notifLoading || !isSupported}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        isSubscribed ? 'bg-indigo-600' : 'bg-gray-200'
+                      } ${notifLoading || !isSupported ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      role="switch"
+                      aria-checked={isSubscribed}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          isSubscribed ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
                 )}
               </div>

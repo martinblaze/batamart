@@ -9,9 +9,10 @@ export default function IosInstallPrompt() {
   useEffect(() => {
     const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    const wasDismissed = localStorage.getItem('iosInstallDismissed')
+    const snoozedUntil = parseInt(localStorage.getItem('iosInstallSnoozedUntil') || '0')
+    const isSnoozed = Date.now() < snoozedUntil
 
-    if (!isIos || isStandalone || wasDismissed) return
+    if (!isIos || isStandalone || isSnoozed) return
 
     setTimeout(() => setShow(true), 4000)
   }, [])
@@ -19,7 +20,8 @@ export default function IosInstallPrompt() {
   const dismiss = () => {
     setDismissed(true)
     setShow(false)
-    localStorage.setItem('iosInstallDismissed', 'true')
+    const snoozeUntil = Date.now() + 7 * 24 * 60 * 60 * 1000
+    localStorage.setItem('iosInstallSnoozedUntil', String(snoozeUntil))
   }
 
   if (!show || dismissed) return null
@@ -141,26 +143,25 @@ export default function IosInstallPrompt() {
               </div>
             </div>
 
-            {/* Step 3 */}
+            {/* Step 3 — Notifications */}
             <div
               className="flex items-center gap-3 p-3 rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #fff7ed, #fffbeb)' }}
+              style={{ background: 'linear-gradient(135deg, #fef3c7, #fffbeb)' }}
             >
               <div
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #d97706, #f59e0b)', boxShadow: '0 4px 10px rgba(217,119,6,0.3)' }}
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', boxShadow: '0 4px 10px rgba(245,158,11,0.3)' }}
               >
-                {/* Checkmark icon */}
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-800">
-                  Tap "Add" to confirm
+                  Then enable notifications
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  BataMart will appear on your home screen
+                  Open the installed app → Profile → Enable Notifications
                 </p>
               </div>
             </div>
