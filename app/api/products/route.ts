@@ -1,10 +1,12 @@
-// app/api/products/route.ts
+﻿// app/api/products/route.ts
 export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
+import { CATEGORY_TREE } from '@/lib/variants'
+import { normalizeText } from '@/lib/search-utils'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
@@ -196,11 +198,11 @@ function normalizeModerationText(value: unknown) {
   return String(value || '')
     .normalize('NFKD')
     .toLowerCase()
-    .replace(/[áàâäãå]/g, 'a')
-    .replace(/[éèêë]/g, 'e')
-    .replace(/[íìîï]/g, 'i')
-    .replace(/[óòôöõ]/g, 'o')
-    .replace(/[úùûü]/g, 'u')
+    .replace(/[Ã¡Ã Ã¢Ã¤Ã£Ã¥]/g, 'a')
+    .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e')
+    .replace(/[Ã­Ã¬Ã®Ã¯]/g, 'i')
+    .replace(/[Ã³Ã²Ã´Ã¶Ãµ]/g, 'o')
+    .replace(/[ÃºÃ¹Ã»Ã¼]/g, 'u')
     .replace(/[$]/g, 's')
     .replace(/[!|]/g, 'i')
     .replace(/[@]/g, 'a')
@@ -261,54 +263,169 @@ function isSafePromotableKey(key: string) {
   return !blocked.includes(key)
 }
 
+function parseMultiValueParams(searchParams: URLSearchParams): Record<string, string[]> {
+  const filters: Record<string, string[]> = {}
+
+  const rawAttributes = searchParams.get('attributes')
+  if (rawAttributes) {
+    try {
+      const parsed = JSON.parse(rawAttributes)
+      if (parsed && typeof parsed === 'object') {
+        for (const [key, value] of Object.entries(parsed)) {
+          const normalized = normalizeAttributeValue(value)
+          if (normalized === null) continue
+          const arr = Array.isArray(normalized) ? normalized : [String(normalized)]
+          filters[key] = [...new Set(arr.map((item) => String(item).trim()).filter(Boolean))]
+        }
+      }
+    } catch {
+      // ignore malformed JSON
+    }
+  }
+
+  for (const [key, value] of searchParams.entries()) {
+    const cleanKey = key.endsWith('[]') ? key.slice(0, -2) : key
+    if ([
+      'category', 'categoryKey', 'subcategory', 'subcategoryKey', 'hostel', 'search', 'q',
+      'minPrice', 'maxPrice', 'minRating', 'sort', 'sortBy', 'page', 'limit', 'attributes',
+      'sellerId', 'inStock', 'delivery', 'fastDelivery', 'priceDisplay'
+    ].includes(cleanKey)) continue
+    if (!value?.trim()) continue
+    filters[cleanKey] = [...new Set([...(filters[cleanKey] || []), ...value.split(',').map((item) => item.trim()).filter(Boolean)])]
+  }
+
+  return filters
+}
+
+function buildSearchTextCondition(queryText: string) {
+  const normalized = queryText.trim()
+  if (!normalized) return []
+  const tokens = normalized.substring(0, 120).split(/\s+/).filter(Boolean)
+  return tokens.map((token) => ({
+    OR: [
+      { name: { contains: token, mode: 'insensitive' } },
+      { description: { contains: token, mode: 'insensitive' } },
+      { category: { contains: token, mode: 'insensitive' } },
+      { subcategory: { contains: token, mode: 'insensitive' } },
+      { seller: { name: { contains: token, mode: 'insensitive' } } },
+    ],
+  }))
+}
+
+function buildAttributeKeyClause(key: string, values: string[]) {
+  const orClauses = values.flatMap((value) => ([
+    {
+      attributeValues: {
+        some: {
+          key,
+          OR: [
+            { value: { equals: value } },
+            { value: { array_contains: [value] } },
+          ],
+        },
+      },
+    },
+    {
+      variants: {
+        some: {
+          combination: {
+            path: [key],
+            equals: value,
+          },
+        },
+      },
+    },
+  ]))
+
+  return { OR: orClauses }
+}
+
+function scoreProduct(product: any, query: string): number {
+  const q = normalizeText(query)
+  if (!q) return 0
+
+  let score = 0
+  const name = normalizeText(product.name || '')
+  const desc = normalizeText(product.description || '')
+  const cat = normalizeText(product.category || '')
+  const seller = normalizeText(product.seller?.name || '')
+
+  if (name === q) score += 100
+  else if (name.startsWith(q)) score += 80
+  else if (name.includes(q)) score += 60
+
+  const qTokens = q.split(' ').filter(Boolean)
+  const nameTokens = new Set(name.split(' ').filter(Boolean))
+  const overlap = qTokens.filter((token) => nameTokens.has(token)).length
+  if (qTokens.length > 0) score += (overlap / qTokens.length) * 40
+
+  if (desc.includes(q)) score += 20
+  if (cat.includes(q)) score += 15
+  if (seller.includes(q)) score += 12
+
+  score += Math.min(product._count?.orders || 0, 50) * 0.5
+  score += Math.min(product.viewCount || 0, 1000) * 0.05
+
+  const ageDays = (Date.now() - new Date(product.createdAt).getTime()) / 86400000
+  score += Math.max(0, 10 - ageDays * 0.1)
+
+  if (product.isHot) score += 12
+  if (product.isDeal) score += 8
+  if (product.isNew) score += 6
+
+  return score
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user.universityId) {
+      return NextResponse.json({ error: 'No university associated with your account.' }, { status: 403 })
     }
-
-    // It's valid for some users to not have a university set.
-    // Do not block GET browsing for users without a university.
 
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const categoryKey = searchParams.get('categoryKey')
-    const subcategoryKey = searchParams.get('subcategoryKey')
-    const hostel   = searchParams.get('hostel')
+    const categoryKey = searchParams.get('categoryKey') || searchParams.get('category') || ''
+    const subcategoryKey = searchParams.get('subcategoryKey') || searchParams.get('sub') || ''
+    const sellerId = searchParams.get('sellerId') || ''
+    const hostel = searchParams.get('hostel') || ''
+    const q = (searchParams.get('q') || searchParams.get('search') || '').trim()
+    const sortBy = (searchParams.get('sortBy') || searchParams.get('sort') || 'relevance').toLowerCase()
     const minPrice = searchParams.get('minPrice')
     const maxPrice = searchParams.get('maxPrice')
-    const search   = searchParams.get('search')
-    const q        = searchParams.get('q')
-    const queryText = q || search
-    const sortBy = searchParams.get('sortBy') || 'relevance'
-
-    const page  = Math.max(1, parseInt(searchParams.get('page')  || '1'))
-    const limit = Math.min(
-      MAX_PAGE_SIZE,
-      Math.max(1, parseInt(searchParams.get('limit') || String(DEFAULT_PAGE_SIZE)))
-    )
+    const minRating = parseFloat(searchParams.get('minRating') || searchParams.get('rating') || '0') || 0
+    const inStock = (searchParams.get('inStock') || '').toLowerCase() === 'true'
+    const deliveryFast = (searchParams.get('delivery') || '').toLowerCase() === 'fast'
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(searchParams.get('limit') || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE))
     const skip = (page - 1) * limit
 
+    const selectedFilters = parseMultiValueParams(searchParams)
+    const attributeFilters = buildAttributeFiltersFromQuery(searchParams)
+    const queryText = q
+
     const where: any = {
-      isActive:  true,
-      quantity:  { gt: 0 },
+      isActive: true,
       isDeleted: false,
-      moderationStatus: 'APPROVED', // Only show approved products in marketplace
-      // Only filter by university when the user actually has one
-      ...(user.universityId ? { universityId: user.universityId } : {}),
+      moderationStatus: 'APPROVED',
+      universityId: user.universityId,
     }
 
-    if (category && category !== 'All') {
-      where.category = category
+    if (inStock) where.quantity = { gt: 0 }
+    if (deliveryFast) {
+      where.AND = [...(where.AND || []), {
+        OR: [
+          { deliveryEstimate: { contains: 'fast', mode: 'insensitive' } },
+          { deliveryEstimate: { contains: 'today', mode: 'insensitive' } },
+          { deliveryEstimate: { contains: 'same', mode: 'insensitive' } },
+          { deliveryEstimate: { contains: '24', mode: 'insensitive' } },
+        ],
+      }]
     }
-    // Removed suspended-seller check from GET: suspension should block listing (POST), not browsing (GET).
-    if (categoryKey) where.categoryKey = categoryKey
+    if (sellerId) where.sellerId = sellerId
+    if (categoryKey && categoryKey !== 'all') where.categoryKey = categoryKey
     if (subcategoryKey) where.subcategoryKey = subcategoryKey
-
-    if (hostel && hostel !== 'All') {
-      where.hostelName = { contains: hostel, mode: 'insensitive' }
-    }
+    if (hostel && hostel !== 'All') where.hostelName = { contains: hostel, mode: 'insensitive' }
 
     if (minPrice || maxPrice) {
       where.price = {}
@@ -316,85 +433,32 @@ export async function GET(request: NextRequest) {
       if (maxPrice) where.price.lte = parseFloat(maxPrice)
     }
 
-    if (queryText && queryText.trim()) {
-      const tokens = queryText.trim().substring(0, 100).split(/\s+/).filter(Boolean)
-      where.AND = tokens.map((token: string) => ({
-        OR: [
-          { name:        { contains: token, mode: 'insensitive' } },
-          { category:    { contains: token, mode: 'insensitive' } },
-          { categoryKey: { contains: token, mode: 'insensitive' } },
-          { subcategory: { contains: token, mode: 'insensitive' } },
-          { subcategoryKey: { contains: token, mode: 'insensitive' } },
-          { description: { contains: token, mode: 'insensitive' } },
-          {
-            attributeValues: {
-              some: {
-                OR: [
-                  { key: { contains: token, mode: 'insensitive' } },
-                  { label: { contains: token, mode: 'insensitive' } },
-                ],
-              },
-            },
-          },
-        ],
-      }))
+    if (minRating > 0) {
+      where.OR = [
+        { avgRating: { gte: minRating } },
+        { seller: { avgRating: { gte: minRating } } },
+      ]
     }
 
-    const attributeFilters = buildAttributeFiltersFromQuery(searchParams)
-    const attributeFilterEntries = Object.entries(attributeFilters)
-    if (attributeFilterEntries.length > 0) {
+    const searchClauses = buildSearchTextCondition(queryText)
+    if (searchClauses.length > 0) {
+      where.AND = [...(where.AND || []), ...searchClauses]
+    }
+
+    const allFilters = { ...attributeFilters, ...selectedFilters }
+    for (const [key, rawValue] of Object.entries(allFilters)) {
+      const values = Array.isArray(rawValue) ? rawValue : [rawValue].filter(Boolean)
+      if (values.length === 0) continue
       where.AND = where.AND || []
-      for (const [key, rawFilter] of attributeFilterEntries) {
-        const filterValue = normalizeAttributeValue(rawFilter)
-        if (filterValue === null) continue
-        if (Array.isArray(filterValue)) {
-          for (const f of filterValue) {
-            where.AND.push({
-              attributeValues: {
-                some: {
-                  key,
-                  OR: [
-                    { value: { array_contains: [f] } },
-                    { value: { equals: f } },
-                  ],
-                },
-              },
-            })
-          }
-          continue
-        }
-        where.AND.push({
-          OR: [
-            {
-              attributeValues: {
-                some: {
-                  key,
-                  OR: [
-                    { value: { equals: filterValue } },
-                    { value: { array_contains: [filterValue] } },
-                  ],
-                },
-              },
-            },
-            {
-              variants: {
-                some: {
-                  combination: {
-                    path: [key],
-                    equals: filterValue,
-                  },
-                },
-              },
-            },
-          ],
-        })
-      }
+      where.AND.push(buildAttributeKeyClause(key, values.map((value) => String(value))))
     }
 
     let orderBy: any = { createdAt: 'desc' }
     if (sortBy === 'newest') orderBy = { createdAt: 'desc' }
-    else if (sortBy === 'priceLow') orderBy = { price: 'asc' }
-    else if (sortBy === 'priceHigh') orderBy = { price: 'desc' }
+    else if (sortBy === 'price_asc' || sortBy === 'priceLow') orderBy = { price: 'asc' }
+    else if (sortBy === 'price_desc' || sortBy === 'priceHigh') orderBy = { price: 'desc' }
+    else if (sortBy === 'rating') orderBy = [{ avgRating: 'desc' }, { totalReviews: 'desc' }, { createdAt: 'desc' }]
+    else if (sortBy === 'popular') orderBy = [{ viewCount: 'desc' }, { createdAt: 'desc' }]
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
@@ -402,38 +466,62 @@ export async function GET(request: NextRequest) {
         include: {
           seller: {
             select: {
-              id:              true,
-              name:            true,
-              avgRating:       true,
-              trustLevel:      true,
+              id: true,
+              name: true,
+              avgRating: true,
+              trustLevel: true,
               completedOrders: true,
             },
           },
           variants: true,
           attributeValues: true,
+          _count: {
+            select: { orders: true },
+          },
         },
         orderBy,
-        take:    limit,
+        take: limit,
         skip,
       }),
       prisma.product.count({ where }),
     ])
 
+    const ranked = [...products]
+    if (sortBy === 'relevance' && queryText) {
+      ranked.sort((a, b) => scoreProduct(b, queryText) - scoreProduct(a, queryText))
+    } else if (sortBy === 'popular') {
+      ranked.sort((a, b) => (b._count?.orders || 0) - (a._count?.orders || 0) || (b.viewCount || 0) - (a.viewCount || 0))
+    } else if (sortBy === 'rating') {
+      ranked.sort((a, b) => (b.avgRating || b.seller?.avgRating || 0) - (a.avgRating || a.seller?.avgRating || 0))
+    }
+
+    if (queryText) {
+      prisma.searchLog.create({
+        data: {
+          userId: user.id,
+          universityId: user.universityId,
+          query: queryText,
+          category: categoryKey || subcategoryKey || null,
+          resultCount: ranked.length,
+        },
+      }).catch(() => {})
+    }
+
     return NextResponse.json({
       success: true,
-      products,
-      count:   products.length,
+      products: ranked,
+      count: ranked.length,
       total,
       page,
-      pages:   Math.ceil(total / limit),
-      hasMore: skip + products.length < total,
+      limit,
+      pages: Math.ceil(total / limit),
+      hasMore: skip + ranked.length < total,
     })
   } catch (error) {
     console.error('Fetch products error:', error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
-
 export async function POST(request: NextRequest) {
   try {
     const user = await getUserFromRequest(request)
@@ -580,7 +668,7 @@ export async function POST(request: NextRequest) {
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
-        // ── Product review system: start in PENDING status ──────────────────
+        // â”€â”€ Product review system: start in PENDING status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         moderationStatus: 'PENDING',
         isActive:     false, // Not visible in marketplace until approved
         seller:      { connect: { id: user.id } },
@@ -719,3 +807,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }
+
+
+

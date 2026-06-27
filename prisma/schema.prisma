@@ -485,6 +485,20 @@ model ProductReview {
   @@schema("public")
 }
 
+model SearchLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  universityId String?
+  query       String
+  category    String?
+  resultCount Int      @default(0)
+  clickedId   String?
+  createdAt   DateTime @default(now())
+
+  @@index([universityId, createdAt])
+  @@index([query])
+  @@schema("public")
+}
 model OTP {
   id        String   @id @default(cuid())
   phone     String?
@@ -1020,3 +1034,4 @@ enum PaymentMethod {
 
   @@schema("public")
 }
+

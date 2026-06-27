@@ -1,8 +1,8 @@
-﻿import { notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import RatingBadge from '@/components/reviews/RatingBadge'
 import ReviewList from '@/components/reviews/ReviewList'
-import { User, Package, Star, ShoppingBag, Calendar, Shield, ChevronRight, BadgeCheck, Award, TrendingUp, Eye, Zap } from 'lucide-react'
+import { User, Package, Star, ShoppingBag, Calendar, Shield, ChevronRight, BadgeCheck, Award, TrendingUp, Eye, Zap, Search } from 'lucide-react'
 import Link from 'next/link'
 import { Product } from '@prisma/client'
 
@@ -68,7 +68,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
   return (
     <div className="min-h-screen bg-[#f0f2f5]">
 
-      {/* â”€â”€ Header banner â”€â”€ */}
+      {/* ── Header banner ── */}
       <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)' }}>
         {/* Decorative circles */}
         <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
@@ -114,12 +114,29 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
               {seller.bio && (
                 <p className="text-white/60 text-sm mb-4 max-w-xl leading-relaxed">{seller.bio}</p>
               )}
+              <form action="/search" method="get" className="mb-4 max-w-xl">
+                <input type="hidden" name="sellerId" value={id} />
+                <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 p-2 backdrop-blur-sm">
+                  <Search className="ml-1 h-4 w-4 flex-shrink-0 text-white/50" />
+                  <input
+                    name="q"
+                    placeholder="Search within this seller"
+                    className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-sm font-medium text-white placeholder:text-white/35 outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-xs font-black text-indigo-700 transition hover:bg-indigo-50"
+                  >
+                    Search
+                  </button>
+                </div>
+              </form>
               {/* Quick stats */}
               <div className="flex flex-wrap gap-4 sm:gap-6">
                 {[
                   { icon: <ShoppingBag className="w-3.5 h-3.5" />, value: totalSales, label: 'sales' },
                   { icon: <Package className="w-3.5 h-3.5" />, value: totalProducts, label: 'products' },
-                  { icon: <Star className="w-3.5 h-3.5" />, value: seller.avgRating?.toFixed(1) || 'â€”', label: `(${seller.totalReviews || 0} reviews)` },
+                  { icon: <Star className="w-3.5 h-3.5" />, value: seller.avgRating?.toFixed(1) || '—', label: `(${seller.totalReviews || 0} reviews)` },
                   { icon: <Calendar className="w-3.5 h-3.5" />, value: joinDate, label: '' },
                 ].map(({ icon, value, label }, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-sm text-white/70">
@@ -145,7 +162,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* â”€â”€ Stats cards (overlap the header) â”€â”€ */}
+      {/* ── Stats cards (overlap the header) ── */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:-mt-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
@@ -164,11 +181,11 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* â”€â”€ Products + Reviews â”€â”€ */}
+      {/* ── Products + Reviews ── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* Products â€” 2 cols */}
+          {/* Products — 2 cols */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
@@ -196,7 +213,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
                       <h3 className="text-xs sm:text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' Â· ')}</p>
+                      <p className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' · ')}</p>
                       <div className="flex items-center justify-between mt-1.5 sm:mt-2.5">
                         <span className="text-xs sm:text-sm font-black text-indigo-600">{fmt(product.price)}</span>
                         <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-black ${
@@ -222,7 +239,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Reviews â€” 1 col */}
+          {/* Reviews — 1 col */}
           <div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sticky top-6">
               <div className="px-5 py-4 border-b border-gray-50">
@@ -280,4 +297,5 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
     </div>
   )
 }
+
 

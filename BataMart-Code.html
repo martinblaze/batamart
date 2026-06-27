@@ -3566,7 +3566,7 @@ export default function AdminUsagePage() {
 
 import { useState, useEffect } from 'react'
 import {
-  Search, Shield, CheckCircle, XCircle,
+  Search, CheckCircle, XCircle,
   ChevronLeft, ChevronRight, X, UserPlus,
   Eye, EyeOff, Copy, Check, Building2,
 } from 'lucide-react'
@@ -3611,7 +3611,20 @@ interface CreateRiderForm {
   universityId: string
 }
 
+type RiderInputField = 'name' | 'phone' | 'email'
+
 const PAGE_SIZE = 50
+
+const RIDER_FIELDS = [
+  { label: 'Full Name', field: 'name', type: 'text', placeholder: 'Rider full name' },
+  { label: 'Phone Number', field: 'phone', type: 'tel', placeholder: '080xxxxxxxx' },
+  { label: 'Email Address', field: 'email', type: 'email', placeholder: 'rider@email.com' },
+] as const satisfies ReadonlyArray&lt;{
+  label: string
+  field: RiderInputField
+  type: 'text' | 'tel' | 'email'
+  placeholder: string
+}&gt;
 
 export default function UsersPage() {
   const [users, setUsers]               = useState&lt;User[]&gt;([])
@@ -3791,7 +3804,8 @@ export default function UsersPage() {
         showToast('User unsuspended successfully')
         fetchUsers(page)
       } else {
-        showToast('Failed to unsuspend user', 'error')
+        const data = await res.json().catch(() =&gt; null)
+        showToast(data?.error || 'Failed to unsuspend user', 'error')
       }
     } catch {
       showToast('Network error', 'error')
@@ -4118,16 +4132,12 @@ export default function UsersPage() {
                       ))}
                     &lt;/select&gt;
                   &lt;/div&gt;
-                  {[
-                    { label: 'Full Name',     field: 'name',  type: 'text',  placeholder: 'Rider full name' },
-                    { label: 'Phone Number',  field: 'phone', type: 'tel',   placeholder: '080xxxxxxxx' },
-                    { label: 'Email Address', field: 'email', type: 'email', placeholder: 'rider@email.com' },
-                  ].map(({ label, field, type, placeholder }) =&gt; (
+                  {RIDER_FIELDS.map(({ label, field, type, placeholder }) =&gt; (
                     &lt;div key={field}&gt;
                       &lt;label className="block text-xs text-gray-400 mb-1"&gt;{label}&lt;/label&gt;
                       &lt;input
                         type={type}
-                        value={(riderForm as any)[field]}
+                        value={riderForm[field]}
                         onChange={e =&gt; setRiderForm({ ...riderForm, [field]: e.target.value })}
                         placeholder={placeholder}
                         required
@@ -4166,7 +4176,8 @@ export default function UsersPage() {
       )}
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(admin)/admin-login/page.tsx</div><pre>// app/(admin)/admin-login/page.tsx
 'use client'
 
@@ -4567,14 +4578,15 @@ export default function ForgotPasswordPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/login/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 
 function LoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -4584,7 +4596,7 @@ function LoginForm() {
   const [suspensionMessage, setSuspensionMessage] = useState&lt;string | null&gt;(null)
 
   useEffect(() =&gt; {
-    const wasSuspended = searchParams.get('suspended') === '1'
+    const wasSuspended = new URLSearchParams(window.location.search).get('suspended') === '1'
     if (!wasSuspended) return
 
     const fetchSuspensionInfo = async () =&gt; {
@@ -4604,7 +4616,7 @@ function LoginForm() {
       }
     }
     fetchSuspensionInfo()
-  }, [searchParams])
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) =&gt; {
     e.preventDefault()
@@ -5017,37 +5029,38 @@ export default function ProfileSetupPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/rider/login/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 function RiderLoginForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [wasForceLoggedOut, setWasForceLoggedOut] = useState(false)
 
   useEffect(() =&gt; {
-    // ── If middleware bounced rider here after accessing a forbidden page ──
+    // â”€â”€ If middleware bounced rider here after accessing a forbidden page â”€â”€
     // Clear ALL local auth state so they're fully logged out client-side too.
-    const reason = searchParams.get('reason')
+    const reason = new URLSearchParams(window.location.search).get('reason')
     if (reason === 'no_access') {
       localStorage.clear()
       sessionStorage.removeItem('batamart_rider_mode')
-      // Cookie is already cleared by middleware — just notify UI
+      // Cookie is already cleared by middleware â€” just notify UI
       window.dispatchEvent(new Event('auth-change'))
       setWasForceLoggedOut(true)
       return // Don't auto-redirect to dashboard even if stale role is in storage
     }
 
-    // ── If already properly logged in as a rider, go straight to dashboard ──
+    // â”€â”€ If already properly logged in as a rider, go straight to dashboard â”€â”€
     const role = localStorage.getItem('userRole')
     if (role === 'RIDER') {
       router.replace('/rider-dashboard')
     }
-  }, [router, searchParams])
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) =&gt; {
     e.preventDefault()
@@ -5107,10 +5120,10 @@ function RiderLoginForm() {
 
         &lt;div className="bg-white rounded-2xl shadow-xl p-8"&gt;
 
-          {/* ── Force-logout notice ─────────────────────────────────────────── */}
+          {/* â”€â”€ Force-logout notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {wasForceLoggedOut &amp;&amp; (
             &lt;div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3"&gt;
-              &lt;span className="text-amber-500 text-xl flex-shrink-0"&gt;⚠️&lt;/span&gt;
+              &lt;span className="text-amber-500 text-xl flex-shrink-0"&gt;âš ï¸&lt;/span&gt;
               &lt;div&gt;
                 &lt;p className="font-semibold text-amber-900 text-sm"&gt;Access Denied&lt;/p&gt;
                 &lt;p className="text-amber-700 text-sm mt-1"&gt;
@@ -5121,7 +5134,7 @@ function RiderLoginForm() {
                   href="/login"
                   className="inline-block mt-2 text-sm text-amber-800 font-semibold underline hover:no-underline"
                 &gt;
-                  Use a regular account →
+                  Use a regular account â†’
                 &lt;/Link&gt;
               &lt;/div&gt;
             &lt;/div&gt;
@@ -5176,25 +5189,25 @@ function RiderLoginForm() {
                   Logging in...
                 &lt;/span&gt;
               ) : (
-                '🚴 Log In as Rider'
+                'ðŸš´ Log In as Rider'
               )}
             &lt;/button&gt;
 
           &lt;/form&gt;
 
-          {/* No signup link — riders are created by admin only */}
+          {/* No signup link â€” riders are created by admin only */}
           &lt;div className="mt-6 text-center"&gt;
             &lt;p className="text-gray-500 text-sm"&gt;
               Not a rider?{' '}
               &lt;Link href="/login" className="text-gray-500 hover:underline"&gt;
-                Regular login →
+                Regular login â†’
               &lt;/Link&gt;
             &lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
 
         &lt;div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-center"&gt;
-          &lt;p className="text-green-800 text-sm font-semibold"&gt;💰 Earn ₦560 per delivery&lt;/p&gt;
+          &lt;p className="text-green-800 text-sm font-semibold"&gt;ðŸ’° Earn â‚¦560 per delivery&lt;/p&gt;
           &lt;p className="text-green-700 text-xs mt-1"&gt;Withdraw anytime to your bank account&lt;/p&gt;
         &lt;/div&gt;
 
@@ -5218,13 +5231,78 @@ export default function RiderLoginPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/signup/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
-import { getSignupStatus, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
+import { SIGNUP_REOPENS_AT_ISO, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
+const SIGNUP_DRAFT_KEY = 'batamart_signup_draft'
+const SIGNUP_DRAFT_TTL_MS = 24 * 60 * 60 * 1000
+const EMPTY_OTP = ['', '', '', '', '', '']
+
+type SignupDraft = {
+  step?: number
+  email?: string
+  name?: string
+  phone?: string
+  otp?: string[]
+  otpSessionToken?: string
+  selectedUniversityId?: string
+  selectedArea?: string
+  hostelName?: string
+  roomNumber?: string
+  deliveryPhone?: string
+  referralCode?: string
+  signupAccessCode?: string
+  showEmailForm?: boolean
+  updatedAt: number
+}
+
+function normalizeOtpDigits(value: unknown): string[] {
+  const digits = Array.isArray(value) ? value.map(String).join('') : String(value ?? '')
+  return digits.replace(/\D/g, '').slice(0, 6).split('').concat(EMPTY_OTP).slice(0, 6)
+}
+
+function readSignupDraft(): SignupDraft | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = localStorage.getItem(SIGNUP_DRAFT_KEY)
+    if (!raw) return null
+
+    const draft = JSON.parse(raw) as SignupDraft
+    if (!draft.updatedAt || Date.now() - draft.updatedAt &gt; SIGNUP_DRAFT_TTL_MS) {
+      localStorage.removeItem(SIGNUP_DRAFT_KEY)
+      return null
+    }
+
+    return draft
+  } catch {
+    return null
+  }
+}
+
+function writeSignupDraft(draft: SignupDraft) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // Ignore storage quota / privacy mode failures.
+  }
+}
+
+function clearSignupDraft() {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(SIGNUP_DRAFT_KEY)
+  } catch {
+    // Ignore storage failures.
+  }
+}
 interface University {
   id:            string
   name:          string
@@ -5234,7 +5312,7 @@ interface University {
   deliveryAreas: string[]
 }
 
-// ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
+// â”€â”€ Shared UI helpers â€” defined OUTSIDE SignupForm so they don't remount â”€â”€
 const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
@@ -5254,7 +5332,7 @@ const PageShell = ({
           &lt;div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30"&gt;
             &lt;MapPin className="w-3.5 h-3.5 text-blue-300" /&gt;
             &lt;span className="text-blue-300 text-xs font-semibold"&gt;
-              {selectedUniversity.shortName} — {selectedUniversity.location}
+              {selectedUniversity.shortName} â€” {selectedUniversity.location}
             &lt;/span&gt;
           &lt;/div&gt;
         )}
@@ -5286,7 +5364,7 @@ const StepDots = ({ current }: { current: number }) =&gt; (
   &lt;/div&gt;
 )
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SignupForm() {
   const router       = useRouter()
@@ -5295,13 +5373,14 @@ function SignupForm() {
   const [step, setStep]                             = useState(0)
   const [universities, setUniversities]             = useState&lt;University[]&gt;([])
   const [selectedUniversity, setSelectedUniversity] = useState&lt;University | null&gt;(null)
+  const [selectedUniversityId, setSelectedUniversityId] = useState('')
   const [uniLoading, setUniLoading]                 = useState(true)
 
   const [email, setEmail] = useState('')
   const [name, setName]   = useState('')
   const [phone, setPhone] = useState('')
 
-  const [otp, setOtp]                         = useState(['', '', '', '', '', ''])
+  const [otp, setOtp]                         = useState&lt;string[]&gt;(EMPTY_OTP)
   const [otpSessionToken, setOtpSessionToken] = useState('')
 
   const [selectedArea, setSelectedArea]   = useState('')
@@ -5326,11 +5405,10 @@ function SignupForm() {
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
 
-  // ── Signup closure state ─────────────────────────────────────────────────────
-  const [signupsOpen, setSignupsOpen]           = useState(true)
+  // â”€â”€ Signup timer state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [countdown, setCountdown]               = useState('')
-  const [signupReopensDate, setSignupReopensDate] = useState('')
   const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
   const locationRef = typeof window === 'undefined'
     ? ''
@@ -5340,9 +5418,10 @@ function SignupForm() {
     hasSignupAccessCode(searchRef) ? searchRef :
     hasSignupAccessCode(locationRef) ? locationRef :
     ''
-  const hasAccessCode = hasSignupAccessCode(activeSignupAccessCode)
-  const signupAllowed = signupsOpen || hasAccessCode
+  const signupOpenAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
+  const effectiveSelectedUniversity = selectedUniversity ?? universities[0] ?? null
 
+  // â”€â”€ Update countdown display without blocking signup access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() =&gt; {
     const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
     if (hasSignupAccessCode(ref)) {
@@ -5351,11 +5430,35 @@ function SignupForm() {
       return
     }
 
-    setSignupAccessCode('')
     if (ref) {
+      setSignupAccessCode('')
       setReferralCode(ref)
     }
   }, [searchParams])
+
+  useEffect(() =&gt; {
+    const draft = readSignupDraft()
+    if (!draft) {
+      setDraftRestored(true)
+      return
+    }
+
+    setStep(draft.step ?? 0)
+    setEmail(draft.email ?? '')
+    setName(draft.name ?? '')
+    setPhone(draft.phone ?? '')
+    setOtp(normalizeOtpDigits(draft.otp))
+    setOtpSessionToken(draft.otpSessionToken ?? '')
+    setSelectedUniversityId(draft.selectedUniversityId ?? '')
+    setSelectedArea(draft.selectedArea ?? '')
+    setHostelName(draft.hostelName ?? '')
+    setRoomNumber(draft.roomNumber ?? '')
+    setDeliveryPhone(draft.deliveryPhone ?? '')
+    setReferralCode(draft.referralCode ?? '')
+    setSignupAccessCode(draft.signupAccessCode ?? '')
+    setShowEmailForm(Boolean(draft.showEmailForm))
+    setDraftRestored(true)
+  }, [])
 
   useEffect(() =&gt; {
     if (step === 3 &amp;&amp; phone &amp;&amp; !deliveryPhone) {
@@ -5366,55 +5469,59 @@ function SignupForm() {
   useEffect(() =&gt; {
     fetch('/api/universities')
       .then(r =&gt; r.json())
-      .then(data =&gt; setUniversities(data.universities ?? []))
+      .then(data =&gt; {
+        const loadedUniversities = data.universities ?? []
+        setUniversities(loadedUniversities)
+      })
       .catch(() =&gt; {})
       .finally(() =&gt; setUniLoading(false))
   }, [])
 
-  // ── Check if signups are open and update countdown ───────────────────────────
   useEffect(() =&gt; {
-    const checkSignupStatus = () =&gt; {
-      const signupStatus = getSignupStatus(activeSignupAccessCode)
-      if (signupStatus.isOpen) {
-        setSignupsOpen(true)
-        setCountdown('')
-        return
-      }
+    if (!universities.length) return
 
-      const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-      const now = Date.now()
-      const msRemaining = SIGNUP_REOPENS_AT - now
-      
-      console.log('🔒 Signup Status Check:', {
-        now: new Date(now).toISOString(),
-        reopensAt: new Date(SIGNUP_REOPENS_AT).toISOString(),
-        msRemaining,
-        signupsOpen: now &gt;= SIGNUP_REOPENS_AT,
-      })
-      
-      if (now &gt;= SIGNUP_REOPENS_AT) {
-        setSignupsOpen(true)
-        setCountdown('')
-        return
-      }
+    const nextSelected = universities.find(university =&gt; university.id === selectedUniversityId) ?? universities[0] ?? null
+    setSelectedUniversity(nextSelected)
+  }, [universities, selectedUniversityId])
 
-      setSignupsOpen(false)
-      setSignupReopensDate('2026-06-22')
-      
-      const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-      const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-      const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-      
-      const countdownStr = `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`
-      setCountdown(countdownStr)
-      console.log('⏱️ Countdown updated:', countdownStr)
-    }
+  useEffect(() =&gt; {
+    if (!draftRestored) return
 
-    checkSignupStatus()
-    const interval = setInterval(checkSignupStatus, 1000)
-    return () =&gt; clearInterval(interval)
-  }, [activeSignupAccessCode])
+    writeSignupDraft({
+      step,
+      email,
+      name,
+      phone,
+      otp,
+      otpSessionToken,
+      selectedUniversityId: selectedUniversity?.id ?? selectedUniversityId,
+      selectedArea,
+      hostelName,
+      roomNumber,
+      deliveryPhone,
+      referralCode,
+      signupAccessCode,
+      showEmailForm,
+      updatedAt: Date.now(),
+    })
+  }, [
+    draftRestored,
+    step,
+    email,
+    name,
+    phone,
+    otp,
+    otpSessionToken,
+    selectedUniversity?.id,
+    selectedUniversityId,
+    selectedArea,
+    hostelName,
+    roomNumber,
+    deliveryPhone,
+    referralCode,
+    signupAccessCode,
+    showEmailForm,
+  ])
 
   const validatePassword = (pwd: string) =&gt; {
     if (pwd.length &lt; 8) return 'Password must be at least 8 characters'
@@ -5454,15 +5561,6 @@ function SignupForm() {
       })
       const data = await response.json()
       
-      // ── Handle signup closure ────────────────────────────────────────────────────
-      if (response.status === 503 &amp;&amp; data.countdown) {
-        setSignupsOpen(false)
-        setCountdown(data.countdown)
-        setSignupReopensDate(data.reopensAt || '2026-06-22')
-        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
-        return
-      }
-      
       if (response.ok) { setStep(2) }
       else { setError(data.error || 'Failed to send OTP') }
     } catch {
@@ -5473,13 +5571,37 @@ function SignupForm() {
   }
 
   const handleOtpChange = (index: number, value: string) =&gt; {
-    if (value.length &gt; 1) return
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-    if (value &amp;&amp; index &lt; 5) {
-      document.getElementById(`otp-${index + 1}`)?.focus()
+    const digits = value.replace(/\D/g, '')
+    if (!digits) {
+      const nextOtp = [...otp]
+      nextOtp[index] = ''
+      setOtp(nextOtp)
+      return
     }
+
+    const nextOtp = [...otp]
+    digits.slice(0, 6 - index).split('').forEach((digit, offset) =&gt; {
+      nextOtp[index + offset] = digit
+    })
+    setOtp(nextOtp)
+
+    const focusIndex = Math.min(index + digits.length, 5)
+    document.getElementById(`otp-${focusIndex}`)?.focus()
+  }
+
+  const handleOtpPaste = (index: number, e: React.ClipboardEvent&lt;HTMLInputElement&gt;) =&gt; {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '')
+    if (!pasted) return
+
+    e.preventDefault()
+    const nextOtp = [...otp]
+    pasted.slice(0, 6 - index).split('').forEach((digit, offset) =&gt; {
+      nextOtp[index + offset] = digit
+    })
+    setOtp(nextOtp)
+
+    const focusIndex = Math.min(index + pasted.length, 5)
+    document.getElementById(`otp-${focusIndex}`)?.focus()
   }
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) =&gt; {
@@ -5541,10 +5663,10 @@ function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email, name, phone: accountPhone, password, otpSessionToken,
-          role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
+          role:         'BUYER', // â† Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           signupAccessCode: activeSignupAccessCode || undefined,
-          universityId: selectedUniversity!.id,
+          universityId: effectiveSelectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
           landmark:     selectedArea,
@@ -5552,16 +5674,8 @@ function SignupForm() {
       })
       const data = await response.json()
       
-      // ── Handle signup closure ────────────────────────────────────────────────────
-      if (response.status === 503 &amp;&amp; data.countdown) {
-        setSignupsOpen(false)
-        setCountdown(data.countdown)
-        setSignupReopensDate(data.reopensAt || '2026-06-22')
-        setError(`${data.message || data.error}. Reopens in: ${data.countdown}`)
-        return
-      }
-      
       if (response.ok) {
+        clearSignupDraft()
         localStorage.setItem('token',    data.token)
         localStorage.setItem('userName', data.user.name)
         localStorage.setItem('userRole', data.user.role)
@@ -5577,21 +5691,21 @@ function SignupForm() {
     }
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 0 — University selector
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 0 â€” University selector
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 0) {
     return (
-      &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupAllowed &amp;&amp; (
-          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
-            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
-            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
-            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+      &lt;PageShell selectedUniversity={effectiveSelectedUniversity}&gt;
+        {countdown &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;â±ï¸&lt;/p&gt;
+            &lt;h3 className="font-black text-blue-900 text-lg mb-1"&gt;Signup Timer&lt;/h3&gt;
+            &lt;p className="text-sm text-blue-700 mb-2"&gt;Signups are open now. This timer is just a visual reminder.&lt;/p&gt;
             &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
-              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
-              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
-              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+              &lt;p className="text-xs text-blue-600 font-semibold mb-1"&gt;Countdown&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-blue-600 font-mono"&gt;{countdown}&lt;/p&gt;
+              &lt;p className="text-xs text-blue-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
         )}
@@ -5601,8 +5715,8 @@ function SignupForm() {
               &lt;MapPin className="w-7 h-7 text-white" /&gt;
             &lt;/div&gt;
             &lt;h2 className="text-xl font-black text-gray-900"&gt;Select Your Campus&lt;/h2&gt;
-            &lt;p className="text-sm text-gray-500 mt-1"&gt;
-              You'll only see buyers, sellers, and riders from your campus.
+              &lt;p className="text-sm text-gray-500 mt-1"&gt;
+              You will only see buyers, sellers, and riders from your campus.
             &lt;/p&gt;
           &lt;/div&gt;
 
@@ -5619,17 +5733,14 @@ function SignupForm() {
                 &lt;button
                   key={uni.id}
                   onClick={() =&gt; {
-                    if (!signupAllowed) {
-                      setError(`Signups are closed until ${signupReopensDate}. Reopens in: ${countdown}`)
-                      return
-                    }
                     setSelectedUniversity(uni)
+                    setSelectedUniversityId(uni.id)
                   }}
                   className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                    selectedUniversity?.id === uni.id
+                    effectiveSelectedUniversity?.id === uni.id
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  } ${!signupAllowed ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  }`}
                 &gt;
                   &lt;div className="flex items-center justify-between"&gt;
                     &lt;div&gt;
@@ -5638,11 +5749,11 @@ function SignupForm() {
                       &lt;p className="text-xs text-blue-500 mt-0.5"&gt;{uni.location}&lt;/p&gt;
                     &lt;/div&gt;
                     &lt;div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      selectedUniversity?.id === uni.id
+                      effectiveSelectedUniversity?.id === uni.id
                         ? 'border-blue-500 bg-blue-500'
                         : 'border-gray-300'
                     }`}&gt;
-                      {selectedUniversity?.id === uni.id &amp;&amp; (
+                      {effectiveSelectedUniversity?.id === uni.id &amp;&amp; (
                         &lt;div className="w-2 h-2 rounded-full bg-white" /&gt;
                       )}
                     &lt;/div&gt;
@@ -5656,12 +5767,12 @@ function SignupForm() {
           )}
 
           &lt;button
-            onClick={() =&gt; { if (selectedUniversity) setStep(1) }}
-            disabled={!selectedUniversity}
+            onClick={() =&gt; { if (effectiveSelectedUniversity) setStep(1) }}
+            disabled={!effectiveSelectedUniversity}
             className="w-full mt-6 py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2"
             style={btnStyle}
           &gt;
-            Continue with {selectedUniversity?.shortName ?? 'your campus'}
+            Continue with {effectiveSelectedUniversity?.shortName ?? 'your campus'}
             &lt;ChevronRight className="w-5 h-5" /&gt;
           &lt;/button&gt;
 
@@ -5674,37 +5785,37 @@ function SignupForm() {
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 1 — Google first, email form secondary
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 1 â€” Google first, email form secondary
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 1) {
     return (
-      &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupAllowed &amp;&amp; (
-          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
-            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
-            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
-            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+      &lt;PageShell selectedUniversity={effectiveSelectedUniversity}&gt;
+        {countdown &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;â±ï¸&lt;/p&gt;
+            &lt;h3 className="font-black text-blue-900 text-lg mb-1"&gt;Signup Timer&lt;/h3&gt;
+            &lt;p className="text-sm text-blue-700 mb-2"&gt;Signups are open now. This timer is just a visual reminder.&lt;/p&gt;
             &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
-              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
-              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
-              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+              &lt;p className="text-xs text-blue-600 font-semibold mb-1"&gt;Countdown&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-blue-600 font-mono"&gt;{countdown}&lt;/p&gt;
+              &lt;p className="text-xs text-blue-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
         )}
         &lt;div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl"&gt;
           &lt;StepDots current={1} /&gt;
           &lt;h2 className="text-xl font-black text-gray-900 mb-1"&gt;Create account&lt;/h2&gt;
-          &lt;p className="text-sm text-gray-500 mb-6"&gt;Join the {selectedUniversity?.shortName} marketplace&lt;/p&gt;
+          &lt;p className="text-sm text-gray-500 mb-6"&gt;Join the {effectiveSelectedUniversity?.shortName} marketplace&lt;/p&gt;
 
           &lt;ErrorBox error={error} /&gt;
 
-          {/* ── PRIMARY: Google Sign-Up ── */}
+          {/* â”€â”€ PRIMARY: Google Sign-Up â”€â”€ */}
           &lt;div className="mb-2"&gt;
             &lt;GoogleAuthButton
               mode="signup"
               payload={{
-                universityId: selectedUniversity?.id,
+                universityId: effectiveSelectedUniversity?.id,
                 referralCode: referralCode || undefined,
                 signupAccessCode: activeSignupAccessCode || undefined,
               }}
@@ -5720,6 +5831,7 @@ function SignupForm() {
                 }
 
                 if (data?.token &amp;&amp; data?.user) {
+                  clearSignupDraft()
                   localStorage.setItem('token', data.token)
                   localStorage.setItem('userName', data.user.name)
                   localStorage.setItem('userRole', data.user.role || '')
@@ -5733,7 +5845,7 @@ function SignupForm() {
           &lt;/div&gt;
 
           &lt;p className="text-center text-xs text-gray-400 mb-5"&gt;
-            Recommended · No password needed · Fast setup
+            Recommended Â· No password needed Â· Fast setup
           &lt;/p&gt;
 
           {/* Divider */}
@@ -5743,7 +5855,7 @@ function SignupForm() {
             &lt;div className="h-px bg-gray-200 flex-1" /&gt;
           &lt;/div&gt;
 
-          {/* ── SECONDARY: Email form (collapsed by default) ── */}
+          {/* â”€â”€ SECONDARY: Email form (collapsed by default) â”€â”€ */}
           {!showEmailForm ? (
             &lt;button
               onClick={() =&gt; setShowEmailForm(true)}
@@ -5790,7 +5902,7 @@ function SignupForm() {
                 /&gt;
               &lt;/div&gt;
 
-              {/* ── REMOVED: "I also want to sell" checkbox ── */}
+              {/* â”€â”€ REMOVED: "I also want to sell" checkbox â”€â”€ */}
               {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                   which redirects them to /become-seller to upgrade their account. */}
 
@@ -5812,7 +5924,7 @@ function SignupForm() {
                 className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
                 style={btnStyle}
               &gt;
-                {loading ? 'Sending OTP…' : 'Continue →'}
+                {loading ? 'Sending OTPâ€¦' : 'Continue â†’'}
               &lt;/button&gt;
 
               &lt;button
@@ -5820,13 +5932,21 @@ function SignupForm() {
                 onClick={() =&gt; setShowEmailForm(false)}
                 className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
               &gt;
-                ← Back to Google Sign-Up
+                â† Back to Google Sign-Up
               &lt;/button&gt;
             &lt;/form&gt;
           )}
 
-          &lt;button onClick={() =&gt; setStep(0)} className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"&gt;
-            ← Change campus
+          &lt;button
+            onClick={() =&gt; {
+              clearSignupDraft()
+              setSelectedUniversity(null)
+              setSelectedUniversityId('')
+              setStep(0)
+            }}
+            className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"
+          &gt;
+            â† Change campus
           &lt;/button&gt;
           &lt;p className="text-center text-sm text-gray-500 mt-4"&gt;
             Already have an account?{' '}
@@ -5837,21 +5957,21 @@ function SignupForm() {
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 2 — OTP verification
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 2 â€” OTP verification
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 2) {
     return (
-      &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupAllowed &amp;&amp; (
-          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
-            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
-            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
-            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+        &lt;PageShell selectedUniversity={effectiveSelectedUniversity}&gt;
+        {countdown &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;â±ï¸&lt;/p&gt;
+            &lt;h3 className="font-black text-blue-900 text-lg mb-1"&gt;Signup Timer&lt;/h3&gt;
+            &lt;p className="text-sm text-blue-700 mb-2"&gt;Signups are open now. This timer is just a visual reminder.&lt;/p&gt;
             &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
-              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
-              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
-              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+              &lt;p className="text-xs text-blue-600 font-semibold mb-1"&gt;Countdown&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-blue-600 font-mono"&gt;{countdown}&lt;/p&gt;
+              &lt;p className="text-xs text-blue-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
         )}
@@ -5871,9 +5991,11 @@ function SignupForm() {
                 id={`otp-${i}`}
                 type="text"
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 maxLength={1}
                 value={digit}
                 onChange={e =&gt; handleOtpChange(i, e.target.value)}
+                onPaste={e =&gt; handleOtpPaste(i, e)}
                 onKeyDown={e =&gt; handleKeyDown(i, e)}
                 className="w-12 h-12 text-center text-xl font-bold border-2 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
               /&gt;
@@ -5886,36 +6008,36 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           &gt;
-            {loading ? 'Verifying…' : 'Verify Code'}
+            {loading ? 'Verifyingâ€¦' : 'Verify Code'}
           &lt;/button&gt;
 
           &lt;button onClick={() =&gt; setStep(1)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600"&gt;
-            ← Back
+            â† Back
           &lt;/button&gt;
         &lt;/div&gt;
       &lt;/PageShell&gt;
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 3 — Delivery location
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 3 â€” Delivery location
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   if (step === 3) {
-    const areas: string[] = Array.isArray(selectedUniversity?.deliveryAreas)
-      ? selectedUniversity!.deliveryAreas
+    const areas: string[] = Array.isArray(effectiveSelectedUniversity?.deliveryAreas)
+      ? effectiveSelectedUniversity!.deliveryAreas
       : ['Aroma', 'Tempsite', 'Express Gate', 'Ifite', 'Bus Stand', 'School Hostel']
 
     return (
-      &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-        {!signupAllowed &amp;&amp; (
-          &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
-            &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
-            &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
-            &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+      &lt;PageShell selectedUniversity={effectiveSelectedUniversity}&gt;
+        {countdown &amp;&amp; (
+          &lt;div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center"&gt;
+            &lt;p className="text-2xl mb-2"&gt;â±ï¸&lt;/p&gt;
+            &lt;h3 className="font-black text-blue-900 text-lg mb-1"&gt;Signup Timer&lt;/h3&gt;
+            &lt;p className="text-sm text-blue-700 mb-2"&gt;Signups are open now. This timer is just a visual reminder.&lt;/p&gt;
             &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
-              &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
-              &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
-              &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+              &lt;p className="text-xs text-blue-600 font-semibold mb-1"&gt;Countdown&lt;/p&gt;
+              &lt;p className="text-2xl font-black text-blue-600 font-mono"&gt;{countdown}&lt;/p&gt;
+              &lt;p className="text-xs text-blue-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
             &lt;/div&gt;
           &lt;/div&gt;
         )}
@@ -5934,7 +6056,7 @@ function SignupForm() {
 
           {referralCode &amp;&amp; (
             &lt;div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700"&gt;
-              🎁 Referral code &lt;strong&gt;{referralCode}&lt;/strong&gt; applied
+              ðŸŽ Referral code &lt;strong&gt;{referralCode}&lt;/strong&gt; applied
             &lt;/div&gt;
           )}
 
@@ -5953,7 +6075,7 @@ function SignupForm() {
                         : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
                     }`}
                   &gt;
-                    &lt;span className="text-base"&gt;📍&lt;/span&gt;
+                    &lt;span className="text-base"&gt;ðŸ“&lt;/span&gt;
                     {area}
                   &lt;/button&gt;
                 ))}
@@ -6008,37 +6130,37 @@ function SignupForm() {
 
             &lt;div className="p-3 bg-blue-50 rounded-xl border border-blue-100"&gt;
               &lt;p className="text-xs text-blue-700"&gt;
-                💡 You can update your delivery location anytime from your profile settings.
+                ðŸ’¡ You can update your delivery location anytime from your profile settings.
               &lt;/p&gt;
             &lt;/div&gt;
 
             &lt;button type="submit" className="w-full py-4 rounded-2xl text-white font-bold text-base" style={btnStyle}&gt;
-              Continue →
+              Continue â†’
             &lt;/button&gt;
           &lt;/form&gt;
 
           &lt;button onClick={() =&gt; setStep(2)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600"&gt;
-            ← Back
+            â† Back
           &lt;/button&gt;
         &lt;/div&gt;
       &lt;/PageShell&gt;
     )
   }
 
-  // ════════════════════════════════════════════════════════
-  // STEP 4 — Password + terms
-  // ════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 4 â€” Password + terms
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   return (
-    &lt;PageShell selectedUniversity={selectedUniversity}&gt;
-      {!signupAllowed &amp;&amp; (
-        &lt;div className="mb-6 p-4 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center"&gt;
-          &lt;p className="text-2xl mb-2"&gt;🔒&lt;/p&gt;
-          &lt;h3 className="font-black text-amber-900 text-lg mb-1"&gt;Signups Temporarily Closed&lt;/h3&gt;
-          &lt;p className="text-sm text-amber-700 mb-2"&gt;We're upgrading our platform for you!&lt;/p&gt;
+      &lt;PageShell selectedUniversity={effectiveSelectedUniversity}&gt;
+      {countdown &amp;&amp; (
+        &lt;div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center"&gt;
+          &lt;p className="text-2xl mb-2"&gt;â±ï¸&lt;/p&gt;
+          &lt;h3 className="font-black text-blue-900 text-lg mb-1"&gt;Signup Timer&lt;/h3&gt;
+          &lt;p className="text-sm text-blue-700 mb-2"&gt;Signups are open now. This timer is just a visual reminder.&lt;/p&gt;
           &lt;div className="bg-white rounded-xl px-4 py-3 inline-block"&gt;
-            &lt;p className="text-xs text-amber-600 font-semibold mb-1"&gt;Reopens in&lt;/p&gt;
-            &lt;p className="text-2xl font-black text-amber-600 font-mono"&gt;{countdown || 'Loading...'}&lt;/p&gt;
-            &lt;p className="text-xs text-amber-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
+            &lt;p className="text-xs text-blue-600 font-semibold mb-1"&gt;Countdown&lt;/p&gt;
+            &lt;p className="text-2xl font-black text-blue-600 font-mono"&gt;{countdown}&lt;/p&gt;
+            &lt;p className="text-xs text-blue-500 mt-1"&gt;June 22, 2026&lt;/p&gt;
           &lt;/div&gt;
         &lt;/div&gt;
       )}
@@ -6075,7 +6197,7 @@ function SignupForm() {
 
           {referralCode &amp;&amp; (
             &lt;div className="p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700"&gt;
-              🎁 Referral code &lt;strong&gt;{referralCode}&lt;/strong&gt; applied
+              ðŸŽ Referral code &lt;strong&gt;{referralCode}&lt;/strong&gt; applied
             &lt;/div&gt;
           )}
 
@@ -6101,12 +6223,12 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           &gt;
-            {loading ? 'Creating account…' : `Join ${selectedUniversity?.shortName} 🎉`}
+            {loading ? 'Creating accountâ€¦' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} ðŸŽ‰`}
           &lt;/button&gt;
         &lt;/form&gt;
 
         &lt;button onClick={() =&gt; setStep(3)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600"&gt;
-          ← Back
+          â† Back
         &lt;/button&gt;
       &lt;/div&gt;
     &lt;/PageShell&gt;
@@ -6118,13 +6240,15 @@ export default function SignupPage() {
     &lt;Suspense fallback={
       &lt;div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}&gt;
-        &lt;div className="text-white text-xl font-bold"&gt;Loading…&lt;/div&gt;
+        &lt;div className="text-white text-xl font-bold"&gt;Loadingâ€¦&lt;/div&gt;
       &lt;/div&gt;
     }&gt;
       &lt;SignupForm /&gt;
     &lt;/Suspense&gt;
   )
 }
+
+
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(auth)/verify/page.tsx</div><pre>'use client'
 
@@ -6804,6 +6928,7 @@ export default function CheckoutPage() {
   const [user, setUser] = useState&lt;any&gt;(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const paymentsPaused = true
 
   // Delivery fee and totals come from the server, not hardcoded
   const [serverDeliveryFee, setServerDeliveryFee] = useState&lt;number | null&gt;(null)
@@ -6885,6 +7010,10 @@ export default function CheckoutPage() {
   }
 
   const handlePayment = async () =&gt; {
+    if (paymentsPaused) {
+      setError('Payments are temporarily disabled while we update checkout. Please try again later.')
+      return
+    }
     if (!deliverySuitabilityConfirmed) {
       setError('Please confirm rider-delivery suitability before payment.')
       return
@@ -7248,18 +7377,22 @@ export default function CheckoutPage() {
 
               &lt;button
                 onClick={handlePayment}
-                disabled={loading || !deliverySuitabilityConfirmed}
+                disabled={loading || paymentsPaused || !deliverySuitabilityConfirmed}
                 className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
               &gt;
                 {loading ? (
                   &lt;&gt;&lt;Loader2 className="w-5 h-5 animate-spin" /&gt; Processing...&lt;/&gt;
+                ) : paymentsPaused ? (
+                  &lt;&gt;Payments Temporarily Disabled&lt;/&gt;
                 ) : (
                   &lt;&gt;&lt;Lock className="w-4 h-4" /&gt; Pay Securely · {formatPrice(totalAmount)}&lt;/&gt;
                 )}
               &lt;/button&gt;
 
               &lt;p className="text-[11px] text-center text-gray-400 mt-3 leading-relaxed"&gt;
-                By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack.
+                {paymentsPaused
+                  ? 'Payments are temporarily disabled. Please try again later.'
+                  : "By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack."}
               &lt;/p&gt;
 
               &lt;div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-center gap-4"&gt;
@@ -7284,8 +7417,10 @@ export default function CheckoutPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/dispute/select-order/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, AlertTriangle, Package, ChevronRight, ShoppingBag } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
@@ -7307,21 +7442,21 @@ const DISPUTE_ELIGIBLE = ['DELIVERED', 'COMPLETED']
 
 export default function SelectOrderForDisputePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const isApp = searchParams.get('app') === 'true'
+  const [isApp, setIsApp] = useState(false)
 
   const [orders, setOrders] = useState&lt;Order[]&gt;([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() =&gt; {
+    setIsApp(new URLSearchParams(window.location.search).get('app') === 'true')
     const token = localStorage.getItem('token')
     if (!token) {
       router.push('/login?returnTo=/dispute/select-order')
       return
     }
     fetchOrders()
-  }, [])
+  }, [router])
 
   const fetchOrders = async () =&gt; {
     try {
@@ -7501,6 +7636,8 @@ export default function SelectOrderForDisputePage() {
 }
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/marketplace/page.tsx</div><pre>'use client'
+
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
@@ -12543,8 +12680,10 @@ export default function NotificationsPage() {
 // ── UPGRADED: Parses variant selection from orderNote and displays it ─────────
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Star, CheckCircle, Loader2, Package, MapPin, User,
@@ -12636,7 +12775,6 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function OrdersPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [orders, setOrders] = useState&lt;Order[]&gt;([])
   const [loading, setLoading] = useState(true)
   const [checkingAuth, setCheckingAuth] = useState(true)
@@ -12647,13 +12785,14 @@ export default function OrdersPage() {
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState&lt;PeopleLikeYouItem[]&gt;([])
 
   useEffect(() =&gt; {
+    const query = new URLSearchParams(window.location.search)
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
     setCheckingAuth(false)
 
-    const paymentStatus = searchParams.get('payment')
-    const orderNumber = searchParams.get('order')
-    const orderCount = searchParams.get('count')
+    const paymentStatus = query.get('payment')
+    const orderNumber = query.get('order')
+    const orderCount = query.get('count')
 
     if (paymentStatus === 'success') {
       setPostPayment(true)
@@ -12672,7 +12811,7 @@ export default function OrdersPage() {
 
     fetchOrders()
     fetchPeopleLikeYouBought()
-  }, [searchParams])
+  }, [router])
 
   const fetchOrders = async () =&gt; {
     try {
@@ -13033,7 +13172,8 @@ export default function OrdersPage() {
       &lt;/div&gt;
     &lt;/div&gt;
   )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/orders/[id]/page.tsx</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/orders/[id]/dispute/page.tsx</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/orders/[id]/review-product/page.tsx</div><pre>Could not read file.</pre></div>
@@ -13340,14 +13480,18 @@ export default function ReferralsPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/report/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { AlertCircle, Upload, X, Link, User, Package, Shield, Clock, MessageSquare, CheckCircle } from 'lucide-react'
 
 // Separate the component that uses useSearchParams
 function ReportFormContent() {
     const router = useRouter()
-    const searchParams = useSearchParams()
+    const searchParams = typeof window === 'undefined'
+        ? new URLSearchParams()
+        : new URLSearchParams(window.location.search)
 
     // Get pre-filled data from URL params
     const type = searchParams.get('type') || ''
@@ -13789,7 +13933,8 @@ export default function ReportPage() {
             &lt;ReportFormContent /&gt;
         &lt;/Suspense&gt;
     )
-}</pre></div>
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/rider-dashboard/page.tsx</div><pre>// app/(marketplace)/rider-dashboard/page.tsx
 // ── Batch delivery model:
 //    • Rider sees DeliveryBatches, not individual orders in the available section.
@@ -14729,8 +14874,10 @@ export default function RiderDashboardPage() {
 </pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/search/page.tsx</div><pre>'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ChevronLeft, Filter, Loader2, Search, X } from 'lucide-react'
 import { CATEGORY_TREE } from '@/lib/variants'
 import FilterGroup from '@/components/FilterGroup'
@@ -14769,8 +14916,9 @@ const fmt = (n: number) =&gt; new Intl.NumberFormat('en-NG', { style: 'currency'
 
 function SearchPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const initialQ = searchParams.get('q') || ''
+  const initialQ = typeof window === 'undefined'
+    ? ''
+    : (new URLSearchParams(window.location.search).get('q') || '')
 
   const [products, setProducts] = useState&lt;Product[]&gt;([])
   const [filters, setFilters] = useState&lt;Record&lt;string, string&gt;&gt;({})
@@ -16684,7 +16832,482 @@ export default function SellPage() {
   )
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>app/(marketplace)/seller/page.tsx</div><pre>import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
+import {
+  ArrowRight,
+  BadgeCheck,
+  Crown,
+  MapPin,
+  Package,
+  Search,
+  Shield,
+  ShoppingBag,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
+
+const TRUST_CONFIG: Record&lt;string, { label: string; text: string; bg: string; border: string }&gt; = {
+  VERIFIED: { label: 'Verified', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  GOLD: { label: 'Gold', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+  SILVER: { label: 'Silver', text: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' },
+  BRONZE: { label: 'Bronze', text: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
+}
+
+function TrustPill({ level }: { level: string }) {
+  const config = TRUST_CONFIG[level] || TRUST_CONFIG.BRONZE
+  const icon = level === 'VERIFIED' ? &lt;Shield className="w-3 h-3" /&gt; : level === 'GOLD' ? &lt;Crown className="w-3 h-3" /&gt; : null
+  return (
+    &lt;span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border ${config.text} ${config.bg} ${config.border}`}&gt;
+      {icon}
+      {config.label}
+    &lt;/span&gt;
+  )
+}
+
+function StatCard({
+  label,
+  value,
+  icon,
+  sub,
+}: {
+  label: string
+  value: string
+  icon: React.ReactNode
+  sub: string
+}) {
+  return (
+    &lt;div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"&gt;
+      &lt;div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-3 text-indigo-600"&gt;
+        {icon}
+      &lt;/div&gt;
+      &lt;p className="text-2xl font-black text-gray-900 tabular-nums"&gt;{value}&lt;/p&gt;
+      &lt;p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-0.5"&gt;{label}&lt;/p&gt;
+      &lt;p className="text-xs text-gray-400 mt-0.5"&gt;{sub}&lt;/p&gt;
+    &lt;/div&gt;
+  )
+}
+
+export default async function SellerLandingPage({
+  searchParams,
+}: {
+  searchParams?: Promise&lt;{ q?: string }&gt;
+}) {
+  const resolved = (await searchParams) || {}
+  const q = (resolved.q || '').trim().toLowerCase()
+
+  const sellers = await prisma.user.findMany({
+    where: {
+      isDeleted: false,
+      isSuspended: false,
+      isSellerMode: true,
+      products: {
+        some: {
+          isDeleted: false,
+          isActive: true,
+        },
+      },
+    },
+    select: {
+      id: true,
+      name: true,
+      profilePhoto: true,
+      bio: true,
+      trustLevel: true,
+      avgRating: true,
+      totalReviews: true,
+      completedOrders: true,
+      hostelName: true,
+      landmark: true,
+      createdAt: true,
+      university: {
+        select: {
+          shortName: true,
+        },
+      },
+      products: {
+        where: {
+          isDeleted: false,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          images: true,
+          category: true,
+          quantity: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 3,
+      },
+    },
+    orderBy: [
+      { completedOrders: 'desc' },
+      { avgRating: 'desc' },
+      { createdAt: 'desc' },
+    ],
+    take: 24,
+  })
+
+  const sellersWithCounts = await Promise.all(
+    sellers.map(async (seller) =&gt; {
+      const activeProducts = await prisma.product.count({
+        where: {
+          sellerId: seller.id,
+          isDeleted: false,
+          isActive: true,
+        },
+      })
+
+      const totalProducts = await prisma.product.count({
+        where: {
+          sellerId: seller.id,
+          isDeleted: false,
+        },
+      })
+
+      return {
+        ...seller,
+        activeProducts,
+        totalProducts,
+      }
+    })
+  )
+
+  const filteredSellers = sellersWithCounts.filter((seller) =&gt; {
+    if (!q) return true
+    const terms = [
+      seller.name,
+      seller.bio || '',
+      seller.hostelName || '',
+      seller.landmark || '',
+      seller.university?.shortName || '',
+      ...seller.products.map((product) =&gt; product.name),
+      ...seller.products.map((product) =&gt; product.category),
+    ]
+      .join(' ')
+      .toLowerCase()
+    return terms.includes(q)
+  })
+
+  const totalActiveListings = sellersWithCounts.reduce((sum, seller) =&gt; sum + seller.activeProducts, 0)
+  const topRatedCount = sellersWithCounts.filter((seller) =&gt; seller.avgRating &gt;= 4.5 &amp;&amp; seller.totalReviews &gt;= 3).length
+
+  const spotlight = filteredSellers[0]
+
+  return (
+    &lt;div className="min-h-screen bg-[#f0f2f5]"&gt;
+      &lt;div className="relative overflow-hidden bg-[linear-gradient(135deg,#1e1b4b_0%,#312e81_50%,#4c1d95_100%)]"&gt;
+        &lt;div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/5 blur-3xl" /&gt;
+        &lt;div className="absolute -bottom-20 -left-16 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" /&gt;
+
+        &lt;div className="relative mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-16"&gt;
+          &lt;div className="flex flex-wrap items-center gap-2 text-sm text-white/45"&gt;
+            &lt;Link href="/marketplace" className="font-semibold hover:text-white/80 transition"&gt;
+              Marketplace
+            &lt;/Link&gt;
+            &lt;span&gt;/&lt;/span&gt;
+            &lt;span className="font-semibold text-white/75"&gt;Sellers&lt;/span&gt;
+          &lt;/div&gt;
+
+          &lt;div className="mt-6 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end"&gt;
+            &lt;div&gt;
+              &lt;div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-black text-white/90 backdrop-blur-sm"&gt;
+                &lt;Sparkles className="h-3.5 w-3.5" /&gt;
+                Trusted campus sellers, ready to ship
+              &lt;/div&gt;
+              &lt;h1 className="mt-4 max-w-3xl text-3xl font-black leading-tight text-white sm:text-5xl"&gt;
+                Discover the sellers behind the best campus listings.
+              &lt;/h1&gt;
+              &lt;p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base"&gt;
+                Browse trusted sellers, compare ratings, and jump straight into their full catalog.
+              &lt;/p&gt;
+
+              &lt;form action="/seller" method="get" className="mt-6 max-w-2xl"&gt;
+                &lt;div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/12 p-2 shadow-2xl shadow-black/10 backdrop-blur"&gt;
+                  &lt;Search className="ml-2 h-4 w-4 text-white/55" /&gt;
+                  &lt;input
+                    name="q"
+                    defaultValue={resolved.q || ''}
+                    placeholder="Search sellers, hostels, products, or categories"
+                    className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm font-medium text-white placeholder:text-white/45 focus:outline-none"
+                  /&gt;
+                  &lt;button
+                    type="submit"
+                    className="rounded-xl bg-white px-4 py-2 text-sm font-black text-indigo-700 transition hover:scale-[1.02]"
+                  &gt;
+                    Search
+                  &lt;/button&gt;
+                &lt;/div&gt;
+              &lt;/form&gt;
+
+              &lt;div className="mt-6 flex flex-wrap gap-3"&gt;
+                &lt;div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm"&gt;
+                  &lt;p className="text-2xl font-black tabular-nums"&gt;{filteredSellers.length}&lt;/p&gt;
+                  &lt;p className="text-[11px] font-bold uppercase tracking-wider text-white/55"&gt;Sellers shown&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm"&gt;
+                  &lt;p className="text-2xl font-black tabular-nums"&gt;{totalActiveListings}&lt;/p&gt;
+                  &lt;p className="text-[11px] font-bold uppercase tracking-wider text-white/55"&gt;Live listings&lt;/p&gt;
+                &lt;/div&gt;
+                &lt;div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-white/90 backdrop-blur-sm"&gt;
+                  &lt;p className="text-2xl font-black tabular-nums"&gt;{topRatedCount}&lt;/p&gt;
+                  &lt;p className="text-[11px] font-bold uppercase tracking-wider text-white/55"&gt;Top rated&lt;/p&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1"&gt;
+              &lt;StatCard
+                label="Campus trust"
+                value="Built in"
+                sub="Ratings, reviews, and seller history"
+                icon={&lt;BadgeCheck className="h-5 w-5" /&gt;}
+              /&gt;
+              &lt;StatCard
+                label="Fast browsing"
+                value="Instant"
+                sub="Jump from seller to product catalog"
+                icon={&lt;ShoppingBag className="h-5 w-5" /&gt;}
+              /&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6"&gt;
+        &lt;div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"&gt;
+          &lt;StatCard
+            label="Active sellers"
+            value={String(filteredSellers.length)}
+            sub="Sellers with live products"
+            icon={&lt;Users className="h-5 w-5" /&gt;}
+          /&gt;
+          &lt;StatCard
+            label="Listings"
+            value={String(totalActiveListings)}
+            sub="Current active products"
+            icon={&lt;Package className="h-5 w-5" /&gt;}
+          /&gt;
+          &lt;StatCard
+            label="Trusted"
+            value={String(topRatedCount)}
+            sub="4.5+ rating with real reviews"
+            icon={&lt;Star className="h-5 w-5" /&gt;}
+          /&gt;
+          &lt;StatCard
+            label="Marketplace"
+            value="Live"
+            sub="Ready for browsing and buying"
+            icon={&lt;TrendingUp className="h-5 w-5" /&gt;}
+          /&gt;
+        &lt;/div&gt;
+
+        &lt;div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]"&gt;
+          &lt;div className="space-y-4"&gt;
+            &lt;div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"&gt;
+              &lt;div className="flex items-end justify-between gap-4"&gt;
+                &lt;div&gt;
+                  &lt;h2 className="text-lg font-black text-gray-900"&gt;Featured sellers&lt;/h2&gt;
+                  &lt;p className="mt-1 text-sm text-gray-500"&gt;
+                    {q ? `Results for "${resolved.q}"` : 'The best active sellers on BataMart right now'}
+                  &lt;/p&gt;
+                &lt;/div&gt;
+                &lt;Link href="/marketplace" className="inline-flex items-center gap-1 text-sm font-black text-indigo-600 hover:underline"&gt;
+                  Browse products &lt;ArrowRight className="h-4 w-4" /&gt;
+                &lt;/Link&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            {filteredSellers.length &gt; 0 ? (
+              &lt;div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2"&gt;
+                {filteredSellers.map((seller, index) =&gt; (
+                  &lt;article
+                    key={seller.id}
+                    className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                    style={{ animationDelay: `${index * 40}ms` }}
+                  &gt;
+                    &lt;div className="relative bg-[linear-gradient(135deg,#312e81_0%,#4c1d95_100%)] px-5 py-5"&gt;
+                      &lt;div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" /&gt;
+                      &lt;div className="flex items-start gap-4"&gt;
+                        &lt;div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/15 bg-white/10"&gt;
+                          {seller.profilePhoto ? (
+                            &lt;img src={seller.profilePhoto} alt={seller.name} className="h-full w-full object-cover" /&gt;
+                          ) : (
+                            &lt;div className="flex h-full w-full items-center justify-center text-xl font-black text-white/80"&gt;
+                              {seller.name?.[0]?.toUpperCase() || '?'}
+                            &lt;/div&gt;
+                          )}
+                        &lt;/div&gt;
+                        &lt;div className="min-w-0 flex-1"&gt;
+                          &lt;div className="flex flex-wrap items-center gap-2"&gt;
+                            &lt;h3 className="text-lg font-black text-white"&gt;{seller.name}&lt;/h3&gt;
+                            &lt;TrustPill level={seller.trustLevel} /&gt;
+                          &lt;/div&gt;
+                          &lt;div className="mt-1 flex items-center gap-3 text-xs text-white/65"&gt;
+                            {seller.university?.shortName &amp;&amp; (
+                              &lt;span className="inline-flex items-center gap-1"&gt;
+                                &lt;MapPin className="h-3 w-3" /&gt;
+                                {seller.university.shortName}
+                              &lt;/span&gt;
+                            )}
+                            &lt;span className="inline-flex items-center gap-1"&gt;
+                              &lt;Star className="h-3 w-3 fill-amber-400 text-amber-400" /&gt;
+                              {Number(seller.avgRating || 0).toFixed(1)} · {seller.totalReviews || 0} reviews
+                            &lt;/span&gt;
+                          &lt;/div&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+
+                      {seller.bio &amp;&amp; &lt;p className="mt-4 text-sm leading-relaxed text-white/75 line-clamp-3"&gt;{seller.bio}&lt;/p&gt;}
+                    &lt;/div&gt;
+
+                    &lt;div className="p-5"&gt;
+                      &lt;div className="grid grid-cols-3 gap-2"&gt;
+                        &lt;div className="rounded-2xl bg-gray-50 p-3 text-center"&gt;
+                          &lt;p className="text-lg font-black text-gray-900"&gt;{seller.activeProducts}&lt;/p&gt;
+                          &lt;p className="text-[10px] font-black uppercase tracking-wider text-gray-500"&gt;Live&lt;/p&gt;
+                        &lt;/div&gt;
+                        &lt;div className="rounded-2xl bg-gray-50 p-3 text-center"&gt;
+                          &lt;p className="text-lg font-black text-gray-900"&gt;{seller.totalProducts}&lt;/p&gt;
+                          &lt;p className="text-[10px] font-black uppercase tracking-wider text-gray-500"&gt;Total&lt;/p&gt;
+                        &lt;/div&gt;
+                        &lt;div className="rounded-2xl bg-gray-50 p-3 text-center"&gt;
+                          &lt;p className="text-lg font-black text-gray-900"&gt;{seller.completedOrders || 0}&lt;/p&gt;
+                          &lt;p className="text-[10px] font-black uppercase tracking-wider text-gray-500"&gt;Orders&lt;/p&gt;
+                        &lt;/div&gt;
+                      &lt;/div&gt;
+
+                      &lt;div className="mt-4 flex gap-2"&gt;
+                        &lt;Link
+                          href={`/seller/${seller.id}`}
+                          className="flex-1 rounded-2xl bg-indigo-50 px-4 py-3 text-center text-sm font-black text-indigo-700 transition hover:bg-indigo-100"
+                        &gt;
+                          View profile
+                        &lt;/Link&gt;
+                        &lt;Link
+                          href={`/seller/${seller.id}/products`}
+                          className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3 text-center text-sm font-black text-white shadow-lg shadow-indigo-600/20 transition hover:scale-[1.01]"
+                        &gt;
+                          Products
+                        &lt;/Link&gt;
+                      &lt;/div&gt;
+
+                      {seller.products.length &gt; 0 &amp;&amp; (
+                        &lt;div className="mt-4 flex gap-2"&gt;
+                          {seller.products.map((product) =&gt; (
+                            &lt;Link
+                              key={product.id}
+                              href={`/product/${product.id}`}
+                              className="group h-14 w-14 overflow-hidden rounded-2xl border border-gray-100 bg-gray-50"
+                            &gt;
+                              &lt;img
+                                src={product.images[0] || '/placeholder.png'}
+                                alt={product.name}
+                                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                              /&gt;
+                            &lt;/Link&gt;
+                          ))}
+                        &lt;/div&gt;
+                      )}
+                    &lt;/div&gt;
+                  &lt;/article&gt;
+                ))}
+              &lt;/div&gt;
+            ) : (
+              &lt;div className="rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm"&gt;
+                &lt;div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50"&gt;
+                  &lt;ShoppingBag className="h-8 w-8 text-gray-300" /&gt;
+                &lt;/div&gt;
+                &lt;h3 className="text-xl font-black text-gray-900"&gt;No sellers matched your search&lt;/h3&gt;
+                &lt;p className="mx-auto mt-2 max-w-md text-sm text-gray-500"&gt;
+                  Try a different keyword, or clear the search to see all active sellers.
+                &lt;/p&gt;
+                &lt;div className="mt-6"&gt;
+                  &lt;Link href="/seller" className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-indigo-600/20"&gt;
+                    View all sellers &lt;ArrowRight className="h-4 w-4" /&gt;
+                  &lt;/Link&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            )}
+          &lt;/div&gt;
+
+          &lt;aside className="space-y-4"&gt;
+            &lt;div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"&gt;
+              &lt;div className="flex items-center gap-2"&gt;
+                &lt;div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"&gt;
+                  &lt;BadgeCheck className="h-5 w-5" /&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;h2 className="text-base font-black text-gray-900"&gt;Why this page exists&lt;/h2&gt;
+                  &lt;p className="text-xs text-gray-400"&gt;A better seller discovery entry point&lt;/p&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div className="mt-4 space-y-3 text-sm text-gray-600"&gt;
+                &lt;p&gt;• Find trusted sellers faster, without bouncing through the marketplace feed.&lt;/p&gt;
+                &lt;p&gt;• Compare ratings, completed orders, and live listings in one place.&lt;/p&gt;
+                &lt;p&gt;• Jump straight into each seller’s catalog or profile with a single tap.&lt;/p&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm"&gt;
+              &lt;h2 className="text-base font-black text-gray-900"&gt;Spotlight seller&lt;/h2&gt;
+              &lt;p className="mt-1 text-xs text-gray-400"&gt;Top result from the current list&lt;/p&gt;
+              {spotlight ? (
+                &lt;div className="mt-4 rounded-2xl bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] p-4"&gt;
+                  &lt;div className="flex items-center gap-3"&gt;
+                    &lt;div className="h-14 w-14 overflow-hidden rounded-2xl bg-white shadow-sm"&gt;
+                      {spotlight.profilePhoto ? (
+                        &lt;img src={spotlight.profilePhoto} alt={spotlight.name} className="h-full w-full object-cover" /&gt;
+                      ) : (
+                        &lt;div className="flex h-full w-full items-center justify-center text-lg font-black text-indigo-700"&gt;
+                          {spotlight.name?.[0]?.toUpperCase() || '?'}
+                        &lt;/div&gt;
+                      )}
+                    &lt;/div&gt;
+                    &lt;div&gt;
+                      &lt;p className="text-sm font-black text-gray-900"&gt;{spotlight.name}&lt;/p&gt;
+                      &lt;p className="text-xs text-gray-500"&gt;{spotlight.activeProducts} active listings&lt;/p&gt;
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                  &lt;div className="mt-4 grid grid-cols-2 gap-2"&gt;
+                    &lt;Link href={`/seller/${spotlight.id}`} className="rounded-2xl bg-white px-4 py-3 text-center text-sm font-black text-indigo-700 shadow-sm"&gt;
+                      Open profile
+                    &lt;/Link&gt;
+                    &lt;Link href={`/seller/${spotlight.id}/products`} className="rounded-2xl bg-indigo-600 px-4 py-3 text-center text-sm font-black text-white shadow-lg shadow-indigo-600/20"&gt;
+                      View products
+                    &lt;/Link&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              ) : (
+                &lt;div className="mt-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 text-center text-sm text-gray-500"&gt;
+                  No spotlight available.
+                &lt;/div&gt;
+              )}
+            &lt;/div&gt;
+          &lt;/aside&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  )
+}
+</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/seller/[id]/page.tsx</div><pre>Could not read file.</pre></div>
+<div class='file-block'><div class='file-header'>app/(marketplace)/seller/[id]/products/page.tsx</div><pre>Could not read file.</pre></div>
+<div class='file-block'><div class='file-header'>app/(marketplace)/sellers/page.tsx</div><pre>import { redirect } from 'next/navigation'
+
+export default function SellersRedirectPage() {
+  redirect('/seller')
+}
+</pre></div>
+<div class='file-block'><div class='file-header'>app/(marketplace)/sellers/[sellerId]/page.tsx</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/sellers/[sellerId]/reviews/page.tsx</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/(marketplace)/wallet/page.tsx</div><pre>// app/(marketplace)/wallet/page.tsx
 'use client'
@@ -25871,6 +26494,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/signup',
     '/login',
     '/marketplace',
+    '/seller',
     '/sell',
     '/wallet',
     '/referrals',
@@ -25883,6 +26507,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '/' ? 1 : route === '/marketplace' ? 0.9 : 0.7,
   }))
 }
+
 
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/admin/analytics/route.ts</div><pre>export const dynamic = 'force-dynamic'
@@ -26474,10 +27099,19 @@ export async function GET(request: NextRequest) {
 // Protected: Admin only
 
 import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { verifyAdminToken } from '@/lib/auth-client'
 
 export const dynamic = 'force-dynamic'
+
+async function verifyAdminToken(token: string) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { role?: string }
+    return decoded.role === 'ADMIN' ? decoded : null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -26634,10 +27268,19 @@ export async function GET(request: NextRequest) {
 // WARNING: This performs destructive operations - logs all changes for audit trail
 
 import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { verifyAdminToken } from '@/lib/auth-client'
 
 export const dynamic = 'force-dynamic'
+
+async function verifyAdminToken(token: string) {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { role?: string }
+    return decoded.role === 'ADMIN' ? decoded : null
+  } catch {
+    return null
+  }
+}
 
 interface CleanupResult {
   removedRewards: {
@@ -28645,32 +29288,10 @@ import { prisma } from '@/lib/prisma'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
 import { generateToken } from '@/lib/auth/auth'
 import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now &gt;= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 function googleAudience() {
   return process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 }
@@ -28700,7 +29321,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Google account has no email' }, { status: 400 })
     }
 
-    let user = await prisma.user.findUnique({ where: { email } })
+    const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
       if (mode !== 'signup') {
@@ -28708,19 +29329,6 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Block new signups until June 22 ────────────────────────────────────
-      const signupStatus = getSignupStatus(signupAccessCode)
-      if (!signupStatus.isOpen) {
-        return NextResponse.json(
-          {
-            error: 'Signups are temporarily closed for maintenance',
-            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-            countdown: signupStatus.countdown,
-            reopensAt: signupStatus.reopensAt,
-          },
-          { status: 503 }
-        )
-      }
-
       const signupToken = issueGoogleSignupToken({
         email,
         name,
@@ -29134,33 +29742,11 @@ import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now &gt;= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const jsonErr = enforceJsonRequest(request)
@@ -29187,7 +29773,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin, signupAccessCode } = body
+    const { email, isLogin } = body
 
     if (!email) {
       return NextResponse.json(
@@ -29197,21 +29783,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Block new signups until June 22 ────────────────────────────────────
-    if (!isLogin) {
-      const signupStatus = getSignupStatus(signupAccessCode)
-      if (!signupStatus.isOpen) {
-        return NextResponse.json(
-          {
-            error: 'Signups are temporarily closed for maintenance',
-            message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-            countdown: signupStatus.countdown,
-            reopensAt: signupStatus.reopensAt,
-          },
-          { status: 503 }
-        )
-      }
-    }
-
     if (isLogin) {
       const user = await prisma.user.findUnique({ where: { email } })
       if (!user) {
@@ -29262,33 +29833,11 @@ import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { getSignupStatus } from '@/lib/signup-access'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
 const SIGNUP_MAX_REQUESTS = 5
 
 // ── Signups closed until June 22, 2026 ──────────────────────────────────────
-const SIGNUP_REOPENS_AT = new Date('2026-06-22T00:00:00Z').getTime()
-
-function checkSignupsOpen() {
-  const now = Date.now()
-  if (now &gt;= SIGNUP_REOPENS_AT) {
-    return { isOpen: true }
-  }
-  
-  const msRemaining = SIGNUP_REOPENS_AT - now
-  const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
-  const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  const minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60))
-  const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
-  
-  return {
-    isOpen: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
-    reopensAt: '2026-06-22'
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     // ── Block new signups until June 22 ────────────────────────────────────
@@ -29319,7 +29868,6 @@ export async function POST(request: NextRequest) {
       // only via the /become-seller flow (POST /api/auth/become-seller).
       phone,
       referralCode,
-      signupAccessCode,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
       hostelName,
@@ -29376,20 +29924,6 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Validate university exists ─────────────────────────────────────────
-    const effectiveSignupAccessCode = signupAccessCode || googleSignup?.signupAccessCode
-    const signupStatus = getSignupStatus(effectiveSignupAccessCode)
-    if (!signupStatus.isOpen) {
-      return NextResponse.json(
-        {
-          error: 'Signups are temporarily closed for maintenance',
-          message: `We're upgrading our platform! New signups reopen on ${signupStatus.reopensAt}`,
-          countdown: signupStatus.countdown,
-          reopensAt: signupStatus.reopensAt,
-        },
-        { status: 503 }
-      )
-    }
-
     const university = await prisma.university.findUnique({
       where:  { id: universityId },
       select: { id: true, isActive: true, name: true, shortName: true },
@@ -31162,6 +31696,14 @@ export function calculateFees(subtotal: number, deliveryFee: number = 800) {
 
 export async function POST(request: NextRequest) {
   try {
+    const paymentsPaused = true
+    if (paymentsPaused) {
+      return NextResponse.json(
+        { error: 'Payments are temporarily disabled. Please try again later.' },
+        { status: 503 }
+      )
+    }
+
     const jsonErr = enforceJsonRequest(request)
     if (jsonErr) return jsonErr
     const originErr = enforceSameOrigin(request)
@@ -33061,6 +33603,7 @@ export async function POST(request: NextRequest) {
 }
 </pre></div>
 <div class='file-block'><div class='file-header'>app/api/products/feed/route.ts</div><pre>export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -35556,6 +36099,7 @@ export async function GET(req: NextRequest) {
   }
 }
 </pre></div>
+<div class='file-block'><div class='file-header'>app/api/sellers/[sellerId]/reviews/route.ts</div><pre>Could not read file.</pre></div>
 <div class='file-block'><div class='file-header'>app/api/session-event/route.ts</div><pre>export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -39110,16 +39654,8 @@ export function hasSignupAccessCode(code: unknown) {
 }
 
 export function getSignupStatus(accessCode?: unknown) {
-  if (hasSignupAccessCode(accessCode)) {
-    return { isOpen: true, bypassed: true }
-  }
-
   const reopensAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
   const now = Date.now()
-  if (now &gt;= reopensAt) {
-    return { isOpen: true, bypassed: false }
-  }
-
   const msRemaining = reopensAt - now
   const daysRemaining = Math.floor(msRemaining / (1000 * 60 * 60 * 24))
   const hoursRemaining = Math.floor((msRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
@@ -39127,9 +39663,9 @@ export function getSignupStatus(accessCode?: unknown) {
   const secondsRemaining = Math.floor((msRemaining % (1000 * 60)) / 1000)
 
   return {
-    isOpen: false,
-    bypassed: false,
-    countdown: `${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m ${secondsRemaining}s`,
+    isOpen: true,
+    bypassed: hasSignupAccessCode(accessCode),
+    countdown: `${Math.max(0, daysRemaining)}d ${Math.max(0, hoursRemaining)}h ${Math.max(0, minutesRemaining)}m ${Math.max(0, secondsRemaining)}s`,
     reopensAt: SIGNUP_REOPENS_DATE,
   }
 }
@@ -39967,7 +40503,7 @@ function getJwtSecret(): string {
   return secret
 }
 
-// ── FIXED: added optional `role` param so rider tokens carry the role claim ──
+// â”€â”€ FIXED: added optional `role` param so rider tokens carry the role claim â”€â”€
 export function generateToken(userId: string, phone: string | null, role?: string): string {
   return jwt.sign({ userId, phone, ...(role ? { role } : {}) }, getJwtSecret(), { expiresIn: '30d' })
 }
@@ -40046,7 +40582,8 @@ export async function sendEmailOTP(email: string, code: string): Promise&lt;bool
         body: JSON.stringify({
           from: process.env.RESEND_FROM_EMAIL || 'BATAMART &lt;noreply@batamart.com&gt;',
           to: [email],
-          subject: 'Your BATAMART Verification Code',
+          subject: `Your BATAMART code is ${code}`,
+          text: `Your BATAMART verification code is ${code}. It expires in 10 minutes.`, 
           html: `
             &lt;div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"&gt;
               &lt;div style="background: linear-gradient(135deg, #3D95E8, #4DABFF); padding: 20px; text-align: center;"&gt;
@@ -40074,7 +40611,7 @@ export async function sendEmailOTP(email: string, code: string): Promise&lt;bool
       return true
     } else {
       console.log('=====================================')
-      console.log('📧 EMAIL OTP (dev mode - no RESEND_API_KEY set)')
+      console.log('ðŸ“§ EMAIL OTP (dev mode - no RESEND_API_KEY set)')
       console.log(`To: ${email}`)
       console.log(`Code: ${code}`)
       console.log('=====================================')
@@ -40086,7 +40623,7 @@ export async function sendEmailOTP(email: string, code: string): Promise&lt;bool
   }
 }
 
-// ─── Suspension check helper ──────────────────────────────────────────────────
+// â”€â”€â”€ Suspension check helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export async function checkSuspension(userId: string): Promise&lt;{ suspended: boolean; reason?: string; until?: Date | null }&gt; {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -40115,7 +40652,7 @@ export async function checkSuspension(userId: string): Promise&lt;{ suspended: b
   return { suspended: false }
 }
 
-// ─── getUserFromRequest ────────────────────────────────────────────────────────
+// â”€â”€â”€ getUserFromRequest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Used by every API route to get the current authenticated user.
 export const getUserFromRequest = async (request: Request) =&gt; {
   const authHeader = request.headers.get('authorization')
@@ -42382,6 +42919,98 @@ function run() {
 }
 
 run()
+</pre></div>
+<div class='file-block'><div class='file-header'>scripts/purge-noncore-data.ts</div><pre>import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+const PRESERVE_TABLES = new Set([
+  'University',
+  'User',
+  'Product',
+  'ProductVariant',
+  'ProductAttributeValue',
+  'CategoryAttribute',
+  'AttributeSuggestion',
+  'AttributeValueStats',
+])
+
+async function main() {
+  if (!process.argv.includes('--confirm')) {
+    console.error('Refusing to run without --confirm')
+    process.exit(1)
+  }
+
+  const preserveList = Array.from(PRESERVE_TABLES)
+    .map(name =&gt; `'${name.replace(/'/g, "''")}'`)
+    .join(', ')
+
+  const tables = await prisma.$queryRawUnsafe&lt;Array&lt;{ schemaname: string; tablename: string }&gt;&gt;(
+    `SELECT schemaname, tablename
+     FROM pg_tables
+     WHERE schemaname = 'public'
+       AND tablename NOT IN (${preserveList})
+     ORDER BY tablename`
+  )
+
+  const tableNames = tables.map(t =&gt; `${t.schemaname}.${t.tablename}`)
+
+  if (tableNames.length === 0) {
+    console.log('Nothing to purge.')
+    return
+  }
+
+  console.log('Purging tables:')
+  for (const name of tableNames) {
+    console.log(`- ${name}`)
+  }
+
+  const quotedTables = tables
+    .map(t =&gt; `"${t.schemaname}"."${t.tablename.replace(/"/g, '""')}"`)
+    .join(', ')
+
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${quotedTables} RESTART IDENTITY CASCADE`)
+
+  console.log('Cleanup complete. Core product and user tables were preserved.')
+}
+
+main()
+  .catch(error =&gt; {
+    console.error('Database purge failed:', error)
+    process.exit(1)
+  })
+  .finally(async () =&gt; {
+    await prisma.$disconnect()
+  })
+</pre></div>
+<div class='file-block'><div class='file-header'>scripts/zero-wallet-balances.ts</div><pre>import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function main() {
+  if (!process.argv.includes('--confirm')) {
+    console.error('Refusing to run without --confirm')
+    process.exit(1)
+  }
+
+  const result = await prisma.user.updateMany({
+    data: {
+      availableBalance: 0,
+      pendingBalance: 0,
+    },
+  })
+
+  console.log(`Reset wallet balances for ${result.count} user(s).`)
+}
+
+main()
+  .catch(error =&gt; {
+    console.error('Wallet reset failed:', error)
+    process.exit(1)
+  })
+  .finally(async () =&gt; {
+    await prisma.$disconnect()
+  })
 </pre></div>
 <div class='file-block'><div class='file-header'>prisma/schema.prisma</div><pre>generator client {
   provider        = "prisma-client-js"
