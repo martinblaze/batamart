@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -48,9 +48,10 @@ const SellerReviewsPage: React.FC = () => {
       {reviews.map((review: any, index) => (
         <DummyReview key={index} review={review} />
       ))}
-      <Link href={`/sellers/${sellerId}`}>Back to Seller Details</Link>
+      <Link href={`/seller/${sellerId}`}>Back to Seller Details</Link>
     </div>
   );
 };
 
 export default SellerReviewsPage;
+

@@ -1,4 +1,4 @@
-import type { MetadataRoute } from 'next'
+﻿import type { MetadataRoute } from 'next'
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
 
@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/signup',
     '/login',
     '/marketplace',
+    '/seller',
     '/sell',
     '/wallet',
     '/referrals',
@@ -26,4 +27,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: route === '/' ? 1 : route === '/marketplace' ? 0.9 : 0.7,
   }))
 }
+
 

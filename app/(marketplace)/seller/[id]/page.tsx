@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import RatingBadge from '@/components/reviews/RatingBadge'
 import ReviewList from '@/components/reviews/ReviewList'
@@ -68,7 +68,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
   return (
     <div className="min-h-screen bg-[#f0f2f5]">
 
-      {/* ── Header banner ── */}
+      {/* â”€â”€ Header banner â”€â”€ */}
       <div className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)' }}>
         {/* Decorative circles */}
         <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
@@ -79,7 +79,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
           <div className="flex items-center gap-2 text-sm text-white/40 mb-6">
             <Link href="/marketplace" className="hover:text-white/70 transition font-medium">Marketplace</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <Link href="/sellers" className="hover:text-white/70 transition font-medium">Sellers</Link>
+            <Link href="/seller" className="hover:text-white/70 transition font-medium">Sellers</Link>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-white/70 font-semibold">{seller.name}</span>
           </div>
@@ -119,7 +119,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
                 {[
                   { icon: <ShoppingBag className="w-3.5 h-3.5" />, value: totalSales, label: 'sales' },
                   { icon: <Package className="w-3.5 h-3.5" />, value: totalProducts, label: 'products' },
-                  { icon: <Star className="w-3.5 h-3.5" />, value: seller.avgRating?.toFixed(1) || '—', label: `(${seller.totalReviews || 0} reviews)` },
+                  { icon: <Star className="w-3.5 h-3.5" />, value: seller.avgRating?.toFixed(1) || 'â€”', label: `(${seller.totalReviews || 0} reviews)` },
                   { icon: <Calendar className="w-3.5 h-3.5" />, value: joinDate, label: '' },
                 ].map(({ icon, value, label }, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-sm text-white/70">
@@ -145,7 +145,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* ── Stats cards (overlap the header) ── */}
+      {/* â”€â”€ Stats cards (overlap the header) â”€â”€ */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 mt-4 sm:-mt-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {[
@@ -164,11 +164,11 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* ── Products + Reviews ── */}
+      {/* â”€â”€ Products + Reviews â”€â”€ */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* Products — 2 cols */}
+          {/* Products â€” 2 cols */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
@@ -196,7 +196,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
                       <h3 className="text-xs sm:text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                         {product.name}
                       </h3>
-                      <p className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' · ')}</p>
+                      <p className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 line-clamp-1">{product.description?.split(' | ').slice(0, 2).join(' Â· ')}</p>
                       <div className="flex items-center justify-between mt-1.5 sm:mt-2.5">
                         <span className="text-xs sm:text-sm font-black text-indigo-600">{fmt(product.price)}</span>
                         <span className={`text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-black ${
@@ -222,7 +222,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Reviews — 1 col */}
+          {/* Reviews â€” 1 col */}
           <div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sticky top-6">
               <div className="px-5 py-4 border-b border-gray-50">
@@ -280,3 +280,4 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
     </div>
   )
 }
+
