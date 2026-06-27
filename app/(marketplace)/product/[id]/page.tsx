@@ -964,45 +964,9 @@ export default function ProductDetailPage() {
         </div>
       )}
 
-      {/* ── Recently viewed (client-side only) ─────── */}
-      {recentlyViewed.length > 0 && (
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Recently viewed</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Items you recently looked at</p>
-            </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('batamart_recently_viewed')
-                setRecentlyViewed([])
-              }}
-              className="text-xs text-gray-500 hover:underline"
-            >
-              Clear
-            </button>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-3">
-            {recentlyViewed.map(item => (
-              <div key={item.id} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden bg-white border" style={{ borderColor: '#f0f0f0' }}>
-                <div className="aspect-square bg-gray-50">
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">No image</div>
-                  )}
-                </div>
-                <div className="p-2">
-                  <p className="text-xs font-semibold line-clamp-2">{item.name}</p>
-                  <p className="text-sm font-bold text-indigo-600 mt-1">{fmt(item.price)}</p>
-                  <button onClick={() => navigateRelatedTracked(item.id)} className="mt-2 text-xs text-indigo-600">View</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recently viewed was previously rendered at the top of the page.
+          Move it further down so it doesn't push the main product content.
+          Render client-side only and keep existing behavior. */}
 
       {/* ── Sticky bottom bar (mobile only) ──────────────── */}
       {!isApp && <div
@@ -1618,6 +1582,46 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
+
+        {/* ── Recently viewed (moved below main content) ─────── */}
+        {recentlyViewed.length > 0 && (
+          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Recently viewed</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Items you recently looked at</p>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('batamart_recently_viewed')
+                  setRecentlyViewed([])
+                }}
+                className="text-xs text-gray-500 hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+
+            <div className="flex gap-3 overflow-x-auto pb-3">
+              {recentlyViewed.map(item => (
+                <div key={item.id} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden bg-white border" style={{ borderColor: '#f0f0f0' }}>
+                  <div className="aspect-square bg-gray-50">
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300">No image</div>
+                    )}
+                  </div>
+                  <div className="p-2">
+                    <p className="text-xs font-semibold line-clamp-2">{item.name}</p>
+                    <p className="text-sm font-bold text-indigo-600 mt-1">{fmt(item.price)}</p>
+                    <button onClick={() => navigateRelatedTracked(item.id)} className="mt-2 text-xs text-indigo-600">View</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Related products: multiple sections ──────── */}
         {((relatedSections && relatedSections.length > 0) || hasRelated) && (
