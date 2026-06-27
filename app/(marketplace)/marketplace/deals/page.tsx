@@ -252,7 +252,10 @@ function DealCard({ product, onClick, delay = 0 }: { product: any; onClick: () =
       {/* Info */}
       <div className="p-3 flex flex-col flex-1">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
-          {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
+          {(() => {
+            const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
+            return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
+          })()}
         </p>
         <h3 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
 

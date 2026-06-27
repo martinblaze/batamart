@@ -12,7 +12,7 @@ import {
   BadgeCheck, Timer,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
-import { decodeProductData } from '@/lib/variants'
+import { decodeProductData, getCategoryDisplayInfo } from '@/lib/variants'
 
 const SHOP_CSS = `
   @keyframes fadeUp {
@@ -428,7 +428,10 @@ export default function MyShopPage() {
                     </div>
                     <div className="p-4">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">
-                        {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
+                        {(() => {
+                          const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
+                          return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
+                        })()}
                       </p>
                       <h3 className="font-black text-gray-900 text-base line-clamp-1 mb-0.5">{product.name}</h3>
                       {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) && (
@@ -500,7 +503,10 @@ export default function MyShopPage() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                              {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
+                              {(() => {
+                                const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
+                                return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
+                              })()}
                             </p>
                             <h3 className="font-black text-gray-900 text-base leading-tight mt-0.5 line-clamp-1">{product.name}</h3>
                             {getModerationStatusBadge(product.moderationStatus, product.rejectionReason) && (

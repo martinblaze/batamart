@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { getCategoryDisplayInfo } from '@/lib/variants'
 import {
   ArrowLeft,
   BadgeCheck,
@@ -115,7 +116,10 @@ function ProductCard({
       <div className="p-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 line-clamp-1">
-            {product.subcategory ? `${product.category} · ${product.subcategory}` : product.category}
+            {(() => {
+              const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
+              return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
+            })()}
           </p>
           <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
             <Star className="h-3 w-3 fill-amber-400 text-amber-400" />

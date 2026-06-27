@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useCartStore } from '@/lib/cart-store'
+import { getCategoryDisplayInfo } from '@/lib/variants'
 import { BadgeCheck, Flame, ShoppingCart, Star } from 'lucide-react'
 
 type ProductCardProduct = {
@@ -21,6 +22,8 @@ type ProductCardProduct = {
   quantity?: number
   category?: string
   subcategory?: string | null
+  categoryKey?: string | null
+  subcategoryKey?: string | null
   variantId?: string
   selectedVariants?: Record<string, string>
 }

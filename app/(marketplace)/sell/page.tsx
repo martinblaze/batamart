@@ -9,7 +9,7 @@ import {
   Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2,
 } from 'lucide-react'
 import {
-  CATEGORY_TREE, getCategoryList, getSubcategoryList,
+  CATEGORY_TREE, getCategoryDisplayInfo, getCategoryList, getSubcategoryList,
   getVariantFields, encodeProductData, VariantField,
 } from '@/lib/variants'
 
@@ -467,6 +467,7 @@ export default function SellPage() {
   const categories    = getCategoryList()
   const subcategories = categoryKey ? getSubcategoryList(categoryKey) : []
   const variantFields = (categoryKey && subcategoryKey) ? getVariantFields(categoryKey, subcategoryKey) : []
+  const selectedCategoryDisplay = getCategoryDisplayInfo(categoryKey, subcategoryKey, '', '')
 
   // Restore draft after refresh/network issues
   useEffect(() => {
@@ -1188,6 +1189,16 @@ export default function SellPage() {
         {categoryKey && (
           <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <StepHeader num="3" title="Subcategory *" subtitle="Get more specific" />
+            <div className="mb-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-700">
+              <span className="mr-2">Selected:</span>
+              <span>{selectedCategoryDisplay.category || 'Choose a category'}</span>
+              {selectedCategoryDisplay.subcategory ? (
+                <>
+                  <span className="mx-2 text-indigo-400">•</span>
+                  <span>{selectedCategoryDisplay.subcategory}</span>
+                </>
+              ) : null}
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {subcategories.map(sub => (
                 <button

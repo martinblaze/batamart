@@ -15,7 +15,7 @@ import {
   CheckCircle2, Flag, X,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/cart-store'
-import { decodeProductData } from '@/lib/variants'
+import { decodeProductData, getCategoryDisplayInfo } from '@/lib/variants'
 import { useToast } from '@/components/ui/Toast'
 import RelatedProductCard from '@/components/marketplace/RelatedProductCard'
 
@@ -1035,21 +1035,26 @@ export default function ProductDetailPage() {
       </div>
 
       {/* ── Breadcrumb (tablet+) ───────────────────────────── */}
-      <div className="hidden sm:block max-w-5xl mx-auto px-4 py-2">
-        <div className="flex items-center gap-1 text-[11px] text-gray-400">
-          <Link href="/marketplace" className="hover:text-indigo-600 transition-colors">Marketplace</Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="hover:text-indigo-600 cursor-pointer transition-colors">{product.category}</span>
-          {product.subcategory && (
-            <>
+      {(() => {
+        const categoryDisplay = getCategoryDisplayInfo((product as any).categoryKey, (product as any).subcategoryKey, product.category, product.subcategory)
+        return (
+          <div className="hidden sm:block max-w-5xl mx-auto px-4 py-2">
+            <div className="flex items-center gap-1 text-[11px] text-gray-400">
+              <Link href="/marketplace" className="hover:text-indigo-600 transition-colors">Marketplace</Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="hover:text-indigo-600 cursor-pointer transition-colors">{product.subcategory}</span>
-            </>
-          )}
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-gray-600 font-medium truncate max-w-[200px]">{product.name}</span>
-        </div>
-      </div>
+              <span className="hover:text-indigo-600 cursor-pointer transition-colors">{categoryDisplay.category}</span>
+              {categoryDisplay.subcategory && (
+                <>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="hover:text-indigo-600 cursor-pointer transition-colors">{categoryDisplay.subcategory}</span>
+                </>
+              )}
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-gray-600 font-medium truncate max-w-[200px]">{product.name}</span>
+            </div>
+          </div>
+        )
+      })()}
 
       <div className="max-w-5xl mx-auto px-3 sm:px-4 pb-24 sm:pb-8 space-y-4">
 
@@ -1149,7 +1154,10 @@ export default function ProductDetailPage() {
 
             <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-indigo-50 text-indigo-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                {product.category}{product.subcategory ? ` › ${product.subcategory}` : ''}
+                {(() => {
+                  const categoryDisplay = getCategoryDisplayInfo((product as any).categoryKey, (product as any).subcategoryKey, product.category, product.subcategory)
+                  return categoryDisplay.subcategory ? `${categoryDisplay.category} › ${categoryDisplay.subcategory}` : categoryDisplay.category
+                })()}
               </span>
               <TrustBadge level={product.seller.trustLevel} />
               {(product._count?.orders || 0) >= 5 && (
