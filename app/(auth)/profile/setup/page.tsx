@@ -172,7 +172,7 @@ export default function ProfileSetupPage() {
 
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>📍 Why we need this:</strong> Your location and phone help riders deliver directly to you.
+              <strong>Why we need this:</strong> Your location and phone help riders deliver directly to you.
             </p>
           </div>
         </div>

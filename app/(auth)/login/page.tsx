@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,7 +111,7 @@ function LoginForm() {
           {suspensionMessage && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <span className="text-red-500 text-xl flex-shrink-0">ðŸš«</span>
+                <span className="text-red-500 text-xl flex-shrink-0">Warning</span>
                 <div>
                   <p className="font-semibold text-red-800 text-sm">Account Suspended</p>
                   <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{suspensionMessage}</p>
@@ -124,7 +124,7 @@ function LoginForm() {
           {error === '__RIDER__' ? (
             <div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">ðŸš´</span>
+                <span className="text-2xl flex-shrink-0">Rider</span>
                 <div>
                   <p className="font-semibold text-purple-900 text-sm">Rider Account Detected</p>
                   <p className="text-purple-700 text-sm mt-1">
@@ -153,7 +153,7 @@ function LoginForm() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended Â· Fast Â· Secure
+            Recommended | Fast | Secure
           </p>
 
           {/* Divider */}
@@ -221,7 +221,7 @@ function LoginForm() {
                 onClick={() => setShowEmailForm(false)}
                 className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                â† Back to Google Sign-In
+                Back to Google Sign-In
               </button>
             </form>
           )}

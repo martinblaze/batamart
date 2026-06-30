@@ -175,7 +175,7 @@ export default function VerifyPage() {
           {/* Back Link */}
           <div className="mt-4 text-center">
             <Link href="/signup" className="text-gray-500 text-sm hover:underline">
-              ← Back to signup
+              Back to signup
             </Link>
           </div>
         </div>

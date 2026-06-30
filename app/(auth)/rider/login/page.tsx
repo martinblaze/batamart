@@ -14,19 +14,15 @@ function RiderLoginForm() {
   const [wasForceLoggedOut, setWasForceLoggedOut] = useState(false)
 
   useEffect(() => {
-    // â”€â”€ If middleware bounced rider here after accessing a forbidden page â”€â”€
-    // Clear ALL local auth state so they're fully logged out client-side too.
     const reason = new URLSearchParams(window.location.search).get('reason')
     if (reason === 'no_access') {
       localStorage.clear()
       sessionStorage.removeItem('batamart_rider_mode')
-      // Cookie is already cleared by middleware â€” just notify UI
       window.dispatchEvent(new Event('auth-change'))
       setWasForceLoggedOut(true)
-      return // Don't auto-redirect to dashboard even if stale role is in storage
+      return
     }
 
-    // â”€â”€ If already properly logged in as a rider, go straight to dashboard â”€â”€
     const role = localStorage.getItem('userRole')
     if (role === 'RIDER') {
       router.replace('/rider-dashboard')
@@ -48,13 +44,12 @@ function RiderLoginForm() {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('token',    data.token)
+        localStorage.setItem('token', data.token)
         localStorage.setItem('userRole', data.user.role)
-        localStorage.setItem('userId',   data.user.id)
+        localStorage.setItem('userId', data.user.id)
         localStorage.setItem('userName', data.user.name)
 
         document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-
         router.push('/rider-dashboard')
       } else {
         setError(data.error || 'Login failed')
@@ -69,8 +64,6 @@ function RiderLoginForm() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2 mb-4">
             <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg">
@@ -90,33 +83,28 @@ function RiderLoginForm() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
-
-          {/* â”€â”€ Force-logout notice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           {wasForceLoggedOut && (
             <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-amber-500 text-xl flex-shrink-0">âš ï¸</span>
+              <span className="text-amber-500 text-xl flex-shrink-0">Warning</span>
               <div>
                 <p className="font-semibold text-amber-900 text-sm">Access Denied</p>
                 <p className="text-amber-700 text-sm mt-1">
                   Rider accounts can only access the Rider Dashboard, Wallet, and Notifications.
-                  You have been logged out. Please log in with a regular account to use the marketplace.
+                  You have been logged out. Please use a regular account to access the marketplace.
                 </p>
                 <Link
                   href="/login"
                   className="inline-block mt-2 text-sm text-amber-800 font-semibold underline hover:no-underline"
                 >
-                  Use a regular account â†’
+                  Use a regular account
                 </Link>
               </div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <input
                 type="email"
                 value={formData.email}
@@ -129,9 +117,7 @@ function RiderLoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
               <input
                 type="password"
                 value={formData.password}
@@ -160,13 +146,11 @@ function RiderLoginForm() {
                   Logging in...
                 </span>
               ) : (
-                'ðŸš´ Log In'
+                'Log In as Rider'
               )}
             </button>
-
           </form>
 
-          {/* No signup link â€” riders are created by admin only */}
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               Not a rider?{' '}
@@ -176,7 +160,6 @@ function RiderLoginForm() {
             </p>
           </div>
         </div>
-
       </div>
     </div>
   )
@@ -193,4 +176,3 @@ export default function RiderLoginPage() {
     </Suspense>
   )
 }
-

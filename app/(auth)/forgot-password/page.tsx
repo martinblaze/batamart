@@ -197,7 +197,7 @@ export default function ForgotPasswordPage() {
                   onClick={() => { setStep(1); setOtp(['', '', '', '', '', '']); setError('') }}
                   className="text-sm text-gray-500 hover:text-BATAMART-primary"
                 >
-                  ← Use different email
+              Use different email
                 </button>
               </div>
 
@@ -250,7 +250,7 @@ export default function ForgotPasswordPage() {
 
           <div className="mt-6 text-center">
             <Link href="/login" className="text-sm text-gray-500 hover:text-BATAMART-primary">
-              ← Back to Login
+              Back to Login
             </Link>
           </div>
         </div>
