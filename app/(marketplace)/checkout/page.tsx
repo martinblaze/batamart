@@ -99,6 +99,21 @@ export default function CheckoutPage() {
     }
   }
 
+  const fetchPaymentSettings = async () => {
+    try {
+      const response = await fetch('/api/payment-availability')
+      const data = await response.json()
+      if (response.ok) {
+        setPaymentsEnabled(data.enabled !== false)
+      }
+    } catch (error) {
+      console.error('Error fetching payment settings:', error)
+    } finally {
+      setPaymentsStatusLoaded(true)
+    }
+  }
+
+
   // Build note = auto variant summary + user's extra note
   const buildOrderNote = (item: any): string => {
     const variantNote = formatVariantSelection(item.selectedVariants || {})
