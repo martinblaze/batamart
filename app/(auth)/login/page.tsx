@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,7 +111,7 @@ function LoginForm() {
           {suspensionMessage && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <span className="text-red-500 text-xl flex-shrink-0">🚫</span>
+                <span className="text-red-500 text-xl flex-shrink-0">ðŸš«</span>
                 <div>
                   <p className="font-semibold text-red-800 text-sm">Account Suspended</p>
                   <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{suspensionMessage}</p>
@@ -124,7 +124,7 @@ function LoginForm() {
           {error === '__RIDER__' ? (
             <div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">🚴</span>
+                <span className="text-2xl flex-shrink-0">ðŸš´</span>
                 <div>
                   <p className="font-semibold text-purple-900 text-sm">Rider Account Detected</p>
                   <p className="text-purple-700 text-sm mt-1">
@@ -134,7 +134,7 @@ function LoginForm() {
                     href="/rider/login"
                     className="inline-block mt-3 px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded-lg hover:bg-purple-700 transition-colors"
                   >
-                    Go to Rider Login →
+                    Go to Rider Login
                   </Link>
                 </div>
               </div>
@@ -143,7 +143,7 @@ function LoginForm() {
             <p className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>
           ) : null}
 
-          {/* ── PRIMARY: Google Sign-In ── */}
+          {/* â”€â”€ PRIMARY: Google Sign-In â”€â”€ */}
           <div className="mb-2">
             <GoogleAuthButton
               mode="login"
@@ -153,7 +153,7 @@ function LoginForm() {
           </div>
 
           <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended · Fast · Secure
+            Recommended Â· Fast Â· Secure
           </p>
 
           {/* Divider */}
@@ -163,7 +163,7 @@ function LoginForm() {
             <div className="h-px bg-gray-200 flex-1" />
           </div>
 
-          {/* ── SECONDARY: Email/Password (collapsed by default) ── */}
+          {/* â”€â”€ SECONDARY: Email/Password (collapsed by default) â”€â”€ */}
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
@@ -221,7 +221,7 @@ function LoginForm() {
                 onClick={() => setShowEmailForm(false)}
                 className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
               >
-                ← Back to Google Sign-In
+                â† Back to Google Sign-In
               </button>
             </form>
           )}
@@ -250,7 +250,7 @@ export default function LoginPage() {
   )
 }
 
-// ── Helper ────────────────────────────────────────────────────────────────────
+// â”€â”€ Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildSuspensionMessage(reason: string | null, until: string | null): string {
   const reasonText = reason ?? 'Violation of platform terms'
   if (!until) {

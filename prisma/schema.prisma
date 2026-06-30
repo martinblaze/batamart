@@ -499,6 +499,16 @@ model SearchLog {
   @@index([query])
   @@schema("public")
 }
+
+model AppSetting {
+  key       String   @id
+  value     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("public")
+}
+
 model OTP {
   id        String   @id @default(cuid())
   phone     String?

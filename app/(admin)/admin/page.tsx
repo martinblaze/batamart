@@ -1,4 +1,4 @@
-// app/(admin)/admin/page.tsx
+﻿// app/(admin)/admin/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -25,7 +25,6 @@ interface University {
   isActive: boolean
 }
 
-// ── University Switcher ───────────────────────────────────────────────────────
 function UniversitySwitcher({
   universities,
   value,
@@ -45,37 +44,42 @@ function UniversitySwitcher({
       >
         <option value="all">All Universities</option>
         {universities.map(u => (
-          <option key={u.id} value={u.id}>{u.shortName} — {u.name}</option>
+          <option key={u.id} value={u.id}>{u.shortName} - {u.name}</option>
         ))}
       </select>
     </div>
   )
 }
 
+function getAdminToken() {
+  let token = localStorage.getItem('adminToken')
+
+  if (!token) {
+    const cookies = document.cookie.split(';')
+    const adminCookie = cookies.find(c => c.trim().startsWith('adminToken='))
+    if (adminCookie) {
+      token = adminCookie.split('=')[1]
+      localStorage.setItem('adminToken', token)
+    }
+  }
+
+  return token
+}
+
 export default function AdminDashboardPage() {
-  const [stats, setStats]             = useState<DashboardStats | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
   const [universities, setUniversities] = useState<University[]>([])
   const [selectedUni, setSelectedUni] = useState('all')
-  const [loading, setLoading]         = useState(true)
+  const [loading, setLoading] = useState(true)
   const [recentActivity, setRecentActivity] = useState<any[]>([])
-
-  useEffect(() => { fetchDashboardData(selectedUni) }, [selectedUni])
+  const [paymentsEnabled, setPaymentsEnabled] = useState(true)
+  const [paymentsLoading, setPaymentsLoading] = useState(true)
+  const [paymentsSaving, setPaymentsSaving] = useState(false)
 
   const fetchDashboardData = async (universityId: string) => {
     setLoading(true)
     try {
-      // Get token from localStorage with fallback to cookie parsing
-      let token = localStorage.getItem('adminToken')
-      
-      if (!token) {
-        // Try to get from cookie as fallback
-        const cookies = document.cookie.split(';')
-        const adminCookie = cookies.find(c => c.trim().startsWith('adminToken='))
-        if (adminCookie) {
-          token = adminCookie.split('=')[1]
-          localStorage.setItem('adminToken', token)
-        }
-      }
+      const token = getAdminToken()
 
       if (!token) {
         console.error('No admin token found. Redirecting to login...')
@@ -116,65 +120,118 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const fetchPaymentSetting = async () => {
+    setPaymentsLoading(true)
+    try {
+      const res = await fetch('/api/payment-availability')
+      const data = await res.json()
+      if (res.ok) {
+        setPaymentsEnabled(data.enabled !== false)
+      }
+    } catch (error) {
+      console.error('Failed to fetch payment availability:', error)
+    } finally {
+      setPaymentsLoading(false)
+    }
+  }
+
+  const togglePaymentSetting = async () => {
+    if (paymentsSaving) return
+    setPaymentsSaving(true)
+    try {
+      const token = getAdminToken()
+
+      if (!token) {
+        window.location.href = '/admin-login'
+        return
+      }
+
+      const res = await fetch('/api/payment-availability', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ enabled: !paymentsEnabled }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setPaymentsEnabled(Boolean(data.enabled))
+      }
+    } catch (error) {
+      console.error('Failed to toggle payment availability:', error)
+    } finally {
+      setPaymentsSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDashboardData(selectedUni)
+    fetchPaymentSetting()
+  }, [selectedUni])
+
+  const refreshAll = () => {
+    fetchDashboardData(selectedUni)
+    fetchPaymentSetting()
+  }
+
   const selectedUniName = selectedUni === 'all'
     ? 'All Universities'
     : universities.find(u => u.id === selectedUni)?.shortName ?? ''
 
   const statCards = [
     {
-      title:     'Total Users',
-      value:     stats?.totalUsers || 0,
-      change:    `+${stats?.newUsersToday || 0} today`,
-      icon:      Users,
-      bgColor:   'bg-blue-500/10',
+      title: 'Total Users',
+      value: stats?.totalUsers || 0,
+      change: `+${stats?.newUsersToday || 0} today`,
+      icon: Users,
+      bgColor: 'bg-blue-500/10',
       textColor: 'text-blue-400',
     },
     {
-      title:     'Total Products',
-      value:     stats?.totalProducts || 0,
-      change:    'Active listings',
-      icon:      Package,
-      bgColor:   'bg-green-500/10',
+      title: 'Total Products',
+      value: stats?.totalProducts || 0,
+      change: 'Active listings',
+      icon: Package,
+      bgColor: 'bg-green-500/10',
       textColor: 'text-green-400',
     },
     {
-      title:     'Total Orders',
-      value:     stats?.totalOrders || 0,
-      change:    `+${stats?.ordersToday || 0} today`,
-      icon:      ShoppingBag,
-      bgColor:   'bg-purple-500/10',
+      title: 'Total Orders',
+      value: stats?.totalOrders || 0,
+      change: `+${stats?.ordersToday || 0} today`,
+      icon: ShoppingBag,
+      bgColor: 'bg-purple-500/10',
       textColor: 'text-purple-400',
     },
     {
-      title:     'Total Revenue',
-      value:     `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
-      change:    'All time GMV',
-      icon:      DollarSign,
-      bgColor:   'bg-yellow-500/10',
+      title: 'Total Revenue',
+      value: `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
+      change: 'All time GMV',
+      icon: DollarSign,
+      bgColor: 'bg-yellow-500/10',
       textColor: 'text-yellow-400',
     },
     {
-      title:     'Pending Disputes',
-      value:     stats?.pendingDisputes || 0,
-      change:    'Needs attention',
-      icon:      AlertTriangle,
-      bgColor:   'bg-orange-500/10',
+      title: 'Pending Disputes',
+      value: stats?.pendingDisputes || 0,
+      change: 'Needs attention',
+      icon: AlertTriangle,
+      bgColor: 'bg-orange-500/10',
       textColor: 'text-orange-400',
     },
     {
-      title:     'Active Reports',
-      value:     stats?.activeReports || 0,
-      change:    'Awaiting review',
-      icon:      Flag,
-      bgColor:   'bg-red-500/10',
+      title: 'Active Reports',
+      value: stats?.activeReports || 0,
+      change: 'Awaiting review',
+      icon: Flag,
+      bgColor: 'bg-red-500/10',
       textColor: 'text-red-400',
     },
   ]
 
   return (
     <div className="space-y-6">
-
-      {/* ── Header row with university switcher ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
@@ -189,7 +246,7 @@ export default function AdminDashboardPage() {
             onChange={setSelectedUni}
           />
           <button
-            onClick={() => fetchDashboardData(selectedUni)}
+            onClick={refreshAll}
             className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 hover:text-white transition-colors"
             title="Refresh"
           >
@@ -198,7 +255,25 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* ── Stats Grid ── */}
+      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-white font-bold text-lg">Checkout Payments</p>
+          <p className="text-sm text-gray-400 mt-1">Turn the checkout payment button on or off for everyone.</p>
+          <p className={`text-xs font-semibold mt-2 ${paymentsEnabled ? 'text-emerald-400' : 'text-amber-400'}`}>
+            {paymentsLoading ? 'Loading status...' : paymentsEnabled ? 'Status: ON' : 'Status: OFF'}
+          </p>
+        </div>
+        <button
+          onClick={togglePaymentSetting}
+          disabled={paymentsLoading || paymentsSaving}
+          className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-60 ${
+            paymentsEnabled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+          }`}
+        >
+          {paymentsSaving ? 'Saving...' : paymentsEnabled ? 'Disable Payments' : 'Enable Payments'}
+        </button>
+      </div>
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -233,7 +308,6 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* ── Recent Activity ── */}
       <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-6">Recent Activity</h2>
         <div className="space-y-4">
@@ -246,15 +320,15 @@ export default function AdminDashboardPage() {
                 className="flex items-center gap-4 p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-colors"
               >
                 <div className={`p-2 rounded-lg ${
-                  activity.type === 'order'   ? 'bg-green-500/10' :
+                  activity.type === 'order' ? 'bg-green-500/10' :
                   activity.type === 'dispute' ? 'bg-orange-500/10' :
-                  activity.type === 'report'  ? 'bg-red-500/10' :
+                  activity.type === 'report' ? 'bg-red-500/10' :
                   'bg-blue-500/10'
                 }`}>
-                  {activity.type === 'order'   && <CheckCircle className="w-5 h-5 text-green-400" />}
+                  {activity.type === 'order' && <CheckCircle className="w-5 h-5 text-green-400" />}
                   {activity.type === 'dispute' && <AlertTriangle className="w-5 h-5 text-orange-400" />}
-                  {activity.type === 'report'  && <Flag className="w-5 h-5 text-red-400" />}
-                  {activity.type === 'user'    && <Users className="w-5 h-5 text-blue-400" />}
+                  {activity.type === 'report' && <Flag className="w-5 h-5 text-red-400" />}
+                  {activity.type === 'user' && <Users className="w-5 h-5 text-blue-400" />}
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">{activity.message}</p>

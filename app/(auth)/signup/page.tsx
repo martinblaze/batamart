@@ -101,7 +101,7 @@ const PageShell = ({
           <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30">
             <MapPin className="w-3.5 h-3.5 text-blue-300" />
             <span className="text-blue-300 text-xs font-semibold">
-              {selectedUniversity.shortName} â€” {selectedUniversity.location}
+              {selectedUniversity.shortName}
             </span>
           </div>
         )}
@@ -499,224 +499,6 @@ function SignupForm() {
           ) : (
             <div className="space-y-3">
               {universities.map(uni => (
-                <button
-                  key={uni.id}
-                  onClick={() => {
-                    setSelectedUniversity(uni)
-                    setSelectedUniversityId(uni.id)
-                  }}
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
-                    effectiveSelectedUniversity?.id === uni.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-gray-900 text-sm">{uni.shortName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{uni.name}</p>
-                      <p className="text-xs text-blue-500 mt-0.5">{uni.location}</p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      effectiveSelectedUniversity?.id === uni.id
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
-                    }`}>
-                      {effectiveSelectedUniversity?.id === uni.id && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))}
-              {universities.length === 0 && (
-                <p className="text-center text-gray-400 text-sm py-4">No campuses available yet.</p>
-              )}
-            </div>
-          )}
-
-          <button
-            onClick={() => { if (effectiveSelectedUniversity) setStep(1) }}
-            disabled={!effectiveSelectedUniversity}
-            className="w-full mt-6 py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-            style={btnStyle}
-          >
-            Continue with {effectiveSelectedUniversity?.shortName ?? 'your campus'}
-            <ChevronRight className="w-5 h-5" />
-          </button>
-
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-blue-600">Sign in</Link>
-          </p>
-        </div>
-      </PageShell>
-    )
-  }
-
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // STEP 1 â€” Google first, email form secondary
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  if (step === 1) {
-    return (
-      <PageShell selectedUniversity={effectiveSelectedUniversity}>
-        {countdown && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">â±ï¸</p>
-            <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
-            <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
-            <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
-            </div>
-          </div>
-        )}
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
-          <StepDots current={1} />
-          <h2 className="text-xl font-black text-gray-900 mb-1">Create account</h2>
-          <p className="text-sm text-gray-500 mb-6">Join the {effectiveSelectedUniversity?.shortName} marketplace</p>
-
-          <ErrorBox error={error} />
-
-          {/* â”€â”€ PRIMARY: Google Sign-Up â”€â”€ */}
-          <div className="mb-2">
-            <GoogleAuthButton
-              mode="signup"
-              payload={{
-                universityId: effectiveSelectedUniversity?.id,
-                referralCode: referralCode || undefined,
-                signupAccessCode: activeSignupAccessCode || undefined,
-              }}
-              onError={setError}
-              onLoading={setLoading}
-              onSuccess={(data) => {
-                if (data?.requiresProfile && data?.signupToken) {
-                  if (data?.profile?.email) setEmail(String(data.profile.email))
-                  if (data?.profile?.name) setName(String(data.profile.name))
-                  setOtpSessionToken(String(data.signupToken))
-                  setStep(3)
-                  return
-                }
-
-                if (data?.token && data?.user) {
-                  clearSignupDraft()
-                  localStorage.setItem('token', data.token)
-                  localStorage.setItem('userName', data.user.name)
-                  localStorage.setItem('userRole', data.user.role || '')
-                  localStorage.setItem('userId', data.user.id)
-                  document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-                  window.dispatchEvent(new Event('auth-change'))
-                  window.location.href = '/marketplace'
-                }
-              }}
-            />
-          </div>
-
-          <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended Â· No password needed Â· Fast setup
-          </p>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-xs text-gray-400 font-semibold">or sign up with email</span>
-            <div className="h-px bg-gray-200 flex-1" />
-          </div>
-
-          {/* â”€â”€ SECONDARY: Email form (collapsed by default) â”€â”€ */}
-          {!showEmailForm ? (
-            <button
-              onClick={() => setShowEmailForm(true)}
-              className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Use email &amp; password instead
-            </button>
-          ) : (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Full Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                  placeholder="Your full name"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  required
-                  placeholder="08012345678"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
-              {/* â”€â”€ REMOVED: "I also want to sell" checkbox â”€â”€ */}
-              {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
-                  which redirects them to /become-seller to upgrade their account. */}
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Referral Code (Optional)</label>
-                <input
-                  type="text"
-                  value={referralCode}
-                  onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
-                  placeholder="e.g. BATAMART-ABC123"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                />
-                <p className="text-xs text-gray-400 mt-1">Paste code from a friend or use their referral link.</p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
-                style={btnStyle}
-              >
-                {loading ? 'Sending OTPâ€¦' : 'Continue â†’'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowEmailForm(false)}
-                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                â† Back to Google Sign-Up
-              </button>
-            </form>
-          )}
-
-          <button
-            onClick={() => {
-              clearSignupDraft()
-              setSelectedUniversity(null)
-              setSelectedUniversityId('')
-              setStep(0)
-            }}
-            className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"
-          >
-            â† Change campus
-          </button>
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-blue-600">Sign in</Link>
@@ -781,7 +563,7 @@ function SignupForm() {
           </button>
 
           <button onClick={() => setStep(1)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-            â† Back
+            Back
           </button>
         </div>
       </PageShell>
@@ -904,12 +686,12 @@ function SignupForm() {
             </div>
 
             <button type="submit" className="w-full py-4 rounded-2xl text-white font-bold text-base" style={btnStyle}>
-              Continue â†’
+              Continue
             </button>
           </form>
 
           <button onClick={() => setStep(2)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-            â† Back
+            Back
           </button>
         </div>
       </PageShell>
@@ -997,7 +779,7 @@ function SignupForm() {
         </form>
 
         <button onClick={() => setStep(3)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
-          â† Back
+            Back
         </button>
       </div>
     </PageShell>

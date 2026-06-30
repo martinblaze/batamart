@@ -1,0 +1,9 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "import": true,
+        "from": true,
+        "path": true,
+        "path.read_text(encoding='utf-8',": true,
+        "lines": true
+    }
+}

@@ -124,7 +124,7 @@ function RiderLoginForm() {
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
-                placeholder="you@gmail.com"
+                placeholder="Email address"
               />
             </div>
 
@@ -139,7 +139,7 @@ function RiderLoginForm() {
                 required
                 autoComplete="current-password"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
-                placeholder="Enter your password"
+                placeholder="Password"
               />
             </div>
 
@@ -160,7 +160,7 @@ function RiderLoginForm() {
                   Logging in...
                 </span>
               ) : (
-                'ðŸš´ Log In as Rider'
+                'ðŸš´ Log In'
               )}
             </button>
 
@@ -171,15 +171,10 @@ function RiderLoginForm() {
             <p className="text-gray-500 text-sm">
               Not a rider?{' '}
               <Link href="/login" className="text-gray-500 hover:underline">
-                Regular login â†’
+                Regular login
               </Link>
             </p>
           </div>
-        </div>
-
-        <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-          <p className="text-green-800 text-sm font-semibold">ðŸ’° Earn â‚¦560 per delivery</p>
-          <p className="text-green-700 text-xs mt-1">Withdraw anytime to your bank account</p>
         </div>
 
       </div>
