@@ -437,17 +437,19 @@ const ANIM_CSS = `
 // ─────────────────────────────────────────────
 // ── UPGRADED: Category list now matches the full variant system ──────────────
 const CATEGORIES = [
-  { name: 'All',                      icon: '🛍️', color: '#6366f1' },
-  { name: 'Electronics',              icon: '📱', color: '#7c3aed' },
-  { name: 'Fashion',                  icon: '👔', color: '#ec4899' },
-  { name: 'Home & Kitchen',           icon: '🏠', color: '#0891b2' },
-  { name: 'Beauty & Personal Care',   icon: '💄', color: '#db2777' },
-  { name: 'Groceries / Food / Fast Food', icon: '🍔', color: '#f97316' },
-  { name: 'Computing',                icon: '💻', color: '#2563eb' },
-  { name: 'Gaming',                   icon: '🎮', color: '#16a34a' },
-  { name: 'Automotive',               icon: '🚗', color: '#d97706' },
-  { name: 'Baby Products',            icon: '👶', color: '#0d9488' },
-  { name: 'Pets',                     icon: '🐾', color: '#7c3aed' },
+  { name: 'All',                  icon: '🛍️', color: '#6366f1' },
+  { name: 'Electronics',          icon: '📱', color: '#7c3aed' },
+  { name: 'Computing',            icon: '💻', color: '#2563eb' },
+  { name: 'Fashion',              icon: '👔', color: '#ec4899' },
+  { name: 'Home & Kitchen',       icon: '🏠', color: '#0891b2' },
+  { name: 'Food & Groceries',     icon: '🍔', color: '#f97316' },
+  { name: 'Beauty & Health',      icon: '💄', color: '#db2777' },
+  { name: 'Sports & Fitness',     icon: '⚽', color: '#16a34a' },
+  { name: 'Vehicles & Transport', icon: '🚗', color: '#d97706' },
+  { name: 'Books & Stationery',   icon: '📚', color: '#9333ea' },
+  { name: 'Tickets & Events',     icon: '🎟️', color: '#f59e0b' },
+  { name: 'Kids & Baby',          icon: '🧸', color: '#0d9488' },
+  { name: 'Arts & Crafts',        icon: '🎨', color: '#8b5cf6' },
 ]
 
 const TRENDING_SEARCHES  = ['iPhone', 'Sneakers', 'Laptop', 'Jollof Rice', 'Textbooks', 'Earbuds', 'Braids', 'Power Bank']
@@ -459,12 +461,12 @@ const FEED_CACHE_TTL_MS = 90 * 1000
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
 const CATEGORY_SPOTLIGHTS = [
-  { title: 'Level up your Tech',  categories: ['Phones','Laptops','Earbuds','Power Banks'],   icon: '📱', bg: 'from-violet-50 to-indigo-50', accent: '#6366f1', catFilter: 'Electronics' },
-  { title: 'Campus Fashion',      categories: ['Sneakers','Bags','Watches','Accessories'],     icon: '👔', bg: 'from-pink-50 to-rose-50',    accent: '#ec4899', catFilter: 'Fashion' },
-  { title: 'Home & Kitchen',      categories: ['Furniture','Appliances','Bedding','Decor'],    icon: '🏠', bg: 'from-sky-50 to-blue-50',     accent: '#0891b2', catFilter: 'Home & Kitchen' },
-  { title: 'Food & Snacks',       categories: ['Jollof Rice','Snacks','Drinks','Fast Food'],   icon: '🍔', bg: 'from-orange-50 to-amber-50', accent: '#f97316', catFilter: 'Groceries / Food / Fast Food' },
-  { title: 'Gaming Zone',         categories: ['PS5','Xbox','Controllers','Games'],            icon: '🎮', bg: 'from-emerald-50 to-green-50', accent: '#16a34a', catFilter: 'Gaming' },
-  { title: 'Beauty & Care',       categories: ['Skincare','Makeup','Hair','Perfume'],          icon: '💄', bg: 'from-fuchsia-50 to-pink-50', accent: '#db2777', catFilter: 'Beauty & Personal Care' },
+  { title: 'Level up your Tech',  categories: ['Phones','Laptops','Earbuds','Power Banks'],          icon: '📱', bg: 'from-violet-50 to-indigo-50', accent: '#6366f1', catFilter: 'Electronics' },
+  { title: 'Campus Fashion',      categories: ['Sneakers','Bags','Watches','Accessories'],          icon: '👔', bg: 'from-pink-50 to-rose-50',    accent: '#ec4899', catFilter: 'Fashion' },
+  { title: 'Home & Kitchen',      categories: ['Furniture','Appliances','Bedding','Decor'],         icon: '🏠', bg: 'from-sky-50 to-blue-50',     accent: '#0891b2', catFilter: 'Home & Kitchen' },
+  { title: 'Food & Groceries',    categories: ['Jollof Rice','Snacks','Drinks','Fast Food'],       icon: '🍔', bg: 'from-orange-50 to-amber-50', accent: '#f97316', catFilter: 'Food & Groceries' },
+  { title: 'Fitness & Sport',     categories: ['Gym Gear','Footwear','Jerseys','Supplements'],     icon: '⚽', bg: 'from-emerald-50 to-green-50', accent: '#16a34a', catFilter: 'Sports & Fitness' },
+  { title: 'Beauty & Health',     categories: ['Skincare','Makeup','Hair','Wellness'],             icon: '💄', bg: 'from-fuchsia-50 to-pink-50', accent: '#db2777', catFilter: 'Beauty & Health' },
 ]
 
 const JUST_DROPPED_PAGE_SIZE = 12
@@ -817,8 +819,8 @@ const PRICE_PANELS = [
   },
   {
     title: 'Beauty Picks for Less',
-    category: 'Beauty & Personal Care',
-    catFilter: 'Beauty & Personal Care',
+    category: 'Beauty & Health',
+    catFilter: 'Beauty & Health',
     tiers: [
       { label: 'Under ₦5k',   max: 5000 },
       { label: 'Under ₦10k',  max: 10000 },
@@ -830,9 +832,9 @@ const PRICE_PANELS = [
     icon: '💄',
   },
   {
-    title: 'Food & Snacks Under Budget',
-    category: 'Groceries / Food / Fast Food',
-    catFilter: 'Groceries / Food / Fast Food',
+    title: 'Food & Groceries Under Budget',
+    category: 'Food & Groceries',
+    catFilter: 'Food & Groceries',
     tiers: [
       { label: 'Under ₦2k',   max: 2000 },
       { label: 'Under ₦5k',   max: 5000 },
@@ -861,12 +863,12 @@ const BRAND_CHIPS = [
   { label: 'Laptops',     icon: '💻', cat: 'Computing' },
   { label: 'Power Banks', icon: '🔋', cat: 'Electronics' },
   { label: 'Earbuds',     icon: '🎧', cat: 'Electronics' },
-  { label: 'Skincare',    icon: '✨', cat: 'Beauty & Personal Care' },
-  { label: 'Textbooks',   icon: '📚', cat: 'Computing' },
-  { label: 'Wigs',        icon: '💇', cat: 'Beauty & Personal Care' },
+  { label: 'Skincare',    icon: '✨', cat: 'Beauty & Health' },
+  { label: 'Textbooks',   icon: '📚', cat: 'Books & Stationery' },
+  { label: 'Wigs',        icon: '💇', cat: 'Beauty & Health' },
   { label: 'Watches',     icon: '⌚', cat: 'Fashion' },
-  { label: 'Gaming',      icon: '🎮', cat: 'Gaming' },
-  { label: 'Food',        icon: '🍔', cat: 'Groceries / Food / Fast Food' },
+  { label: 'Gaming',      icon: '🎮', cat: 'Electronics' },
+  { label: 'Food',        icon: '🍔', cat: 'Food & Groceries' },
 ]
 
 // ── Why BataMart trust points ──────────────────────────────────────────────
@@ -897,16 +899,18 @@ const STUDY_LINKS = [
 
 // ── Category mega grid ──────────────────────────────────────────────────────
 const MEGA_CATEGORIES = [
-  { name: 'Electronics',                  icon: '📱', bg: 'from-violet-500 to-indigo-600',   count: '450+' },
-  { name: 'Fashion',                      icon: '👔', bg: 'from-pink-500 to-rose-600',        count: '380+' },
-  { name: 'Computing',                    icon: '💻', bg: 'from-blue-500 to-cyan-600',        count: '210+' },
-  { name: 'Groceries / Food / Fast Food', icon: '🍔', bg: 'from-orange-500 to-amber-500',     count: '320+' },
-  { name: 'Beauty & Personal Care',       icon: '💄', bg: 'from-fuchsia-500 to-pink-500',     count: '290+' },
-  { name: 'Gaming',                       icon: '🎮', bg: 'from-green-500 to-emerald-600',    count: '160+' },
-  { name: 'Home & Kitchen',               icon: '🏠', bg: 'from-sky-500 to-blue-500',         count: '240+' },
-  { name: 'Baby Products',                icon: '👶', bg: 'from-teal-500 to-cyan-500',        count: '80+' },
-  { name: 'Automotive',                   icon: '🚗', bg: 'from-yellow-500 to-orange-500',    count: '70+' },
-  { name: 'Pets',                         icon: '🐾', bg: 'from-purple-500 to-violet-500',    count: '50+' },
+  { name: 'Electronics',          icon: '📱', bg: 'from-violet-500 to-indigo-600',     count: '450+' },
+  { name: 'Computing',            icon: '💻', bg: 'from-blue-500 to-cyan-600',         count: '210+' },
+  { name: 'Fashion',              icon: '👔', bg: 'from-pink-500 to-rose-600',          count: '380+' },
+  { name: 'Home & Kitchen',       icon: '🏠', bg: 'from-sky-500 to-blue-500',           count: '240+' },
+  { name: 'Food & Groceries',     icon: '🍔', bg: 'from-orange-500 to-amber-500',       count: '320+' },
+  { name: 'Beauty & Health',      icon: '💄', bg: 'from-fuchsia-500 to-pink-500',       count: '290+' },
+  { name: 'Sports & Fitness',     icon: '⚽', bg: 'from-emerald-500 to-lime-600',        count: '180+' },
+  { name: 'Vehicles & Transport', icon: '🚗', bg: 'from-yellow-500 to-orange-500',      count: '70+' },
+  { name: 'Books & Stationery',   icon: '📚', bg: 'from-indigo-500 to-violet-500',      count: '150+' },
+  { name: 'Tickets & Events',     icon: '🎟️', bg: 'from-amber-500 to-orange-600',        count: '90+' },
+  { name: 'Kids & Baby',          icon: '🧸', bg: 'from-teal-500 to-cyan-500',          count: '130+' },
+  { name: 'Arts & Crafts',        icon: '🎨', bg: 'from-purple-500 to-fuchsia-500',      count: '120+' },
 ]
 
 function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
@@ -994,8 +998,8 @@ const SHOWCASE_PANELS = [
     cta: 'Shop Home',
   },
   {
-    title: 'Food & Snacks',
-    catFilter: 'Groceries / Food / Fast Food',
+    title: 'Food & Groceries',
+    catFilter: 'Food & Groceries',
     subcats: ['Jollof Rice', 'Snacks', 'Drinks', 'Fast Food'],
     bg: 'from-orange-50 to-amber-50',
     accent: '#f97316',
@@ -1003,18 +1007,18 @@ const SHOWCASE_PANELS = [
     cta: 'Order Food',
   },
   {
-    title: 'Gaming Zone',
-    catFilter: 'Gaming',
-    subcats: ['PS5', 'Xbox', 'Controllers', 'Games'],
+    title: 'Fitness & Sport',
+    catFilter: 'Sports & Fitness',
+    subcats: ['Gym Gear', 'Sneakers', 'Jerseys', 'Supplements'],
     bg: 'from-emerald-50 to-green-50',
     accent: '#16a34a',
-    icon: '🎮',
-    cta: 'Game On',
+    icon: '⚽',
+    cta: 'Shop Fitness',
   },
   {
-    title: 'Beauty & Care',
-    catFilter: 'Beauty & Personal Care',
-    subcats: ['Skincare', 'Makeup', 'Hair', 'Perfume'],
+    title: 'Beauty & Health',
+    catFilter: 'Beauty & Health',
+    subcats: ['Skincare', 'Makeup', 'Hair', 'Wellness'],
     bg: 'from-fuchsia-50 to-pink-50',
     accent: '#db2777',
     icon: '💄',
@@ -2893,8 +2897,8 @@ export default function MarketplacePage() {
             )}
 
             {/* ── Best Sellers: Food ── */}
-            {(productsByCategory['Groceries / Food / Fast Food']?.length > 0) && (
-              <BestSellersRow products={productsByCategory['Groceries / Food / Fast Food']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Groceries / Food / Fast Food')} title="Best Sellers in Food & Snacks" subtitle="Eat well, study harder" />
+            {(productsByCategory['Food & Groceries']?.length > 0) && (
+              <BestSellersRow products={productsByCategory['Food & Groceries']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Food & Groceries')} title="Best Sellers in Food & Groceries" subtitle="Eat well, study harder" />
             )}
 
             {/* ── Top Campus Sellers ── */}
@@ -2928,18 +2932,18 @@ export default function MarketplacePage() {
               </div>
             )}
 
-            {/* ── Best Sellers: Beauty ── */}
-            {(productsByCategory['Beauty & Personal Care']?.length > 0) && (
-              <BestSellersRow products={productsByCategory['Beauty & Personal Care']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Beauty & Personal Care')} title="Best Sellers in Beauty & Care" subtitle="Top-rated by campus students" />
+            {/* ── Best Sellers: Beauty & Health ── */}
+            {(productsByCategory['Beauty & Health']?.length > 0) && (
+              <BestSellersRow products={productsByCategory['Beauty & Health']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Beauty & Health')} title="Best Sellers in Beauty & Health" subtitle="Top-rated by campus students" />
             )}
 
             {/* ── Trust Banner ── */}
             <TrustBanner />
 
             {/* ── Beauty Mosaic ── */}
-            {(productsByCategory['Beauty & Personal Care']?.length >= 3) && (
+            {(productsByCategory['Beauty & Health']?.length >= 3) && (
               <MosaicRow
-                products={productsByCategory['Beauty & Personal Care']}
+                products={productsByCategory['Beauty & Health']}
                 onProductClick={handleProductClick}
                 title="💄 Beauty & Glow"
                 subtitle="Top beauty picks from campus sellers"
@@ -2947,9 +2951,9 @@ export default function MarketplacePage() {
               />
             )}
 
-            {/* ── Best Sellers: Gaming ── */}
-            {(productsByCategory['Gaming']?.length > 0) && (
-              <BestSellersRow products={productsByCategory['Gaming']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Gaming')} title="Best Sellers in Gaming" subtitle="Level up your setup" />
+            {/* ── Best Sellers: Sports & Fitness ── */}
+            {(productsByCategory['Sports & Fitness']?.length > 0) && (
+              <BestSellersRow products={productsByCategory['Sports & Fitness']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Sports & Fitness')} title="Best Sellers in Sports & Fitness" subtitle="Stay active with top campus picks" />
             )}
 
             {/* ── Mega Category Grid ── */}

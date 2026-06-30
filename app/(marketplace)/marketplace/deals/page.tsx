@@ -140,14 +140,17 @@ function getDiscountTier(pct: number): { label: string; color: string; bg: strin
 }
 
 const CATEGORIES = [
-  'All', 'Electronics', 'Fashion', 'Home & Kitchen', 'Beauty & Personal Care',
-  'Groceries / Food / Fast Food', 'Computing', 'Gaming', 'Automotive', 'Baby Products', 'Pets',
+  'All', 'Electronics', 'Computing', 'Fashion', 'Home & Kitchen',
+  'Food & Groceries', 'Beauty & Health', 'Sports & Fitness',
+  'Vehicles & Transport', 'Books & Stationery', 'Tickets & Events',
+  'Kids & Baby', 'Arts & Crafts',
 ]
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'All': '🛍️', 'Electronics': '📱', 'Fashion': '👔', 'Home & Kitchen': '🏠',
-  'Beauty & Personal Care': '💄', 'Groceries / Food / Fast Food': '🍔',
-  'Computing': '💻', 'Gaming': '🎮', 'Automotive': '🚗', 'Baby Products': '👶', 'Pets': '🐾',
+  'All': '🛍️', 'Electronics': '📱', 'Computing': '💻', 'Fashion': '👔', 'Home & Kitchen': '🏠',
+  'Food & Groceries': '🍔', 'Beauty & Health': '💄', 'Sports & Fitness': '⚽',
+  'Vehicles & Transport': '🚗', 'Books & Stationery': '📚', 'Tickets & Events': '🎟️',
+  'Kids & Baby': '🧸', 'Arts & Crafts': '🎨',
 }
 
 // ─────────────────────────────────────────────
