@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,7 +81,7 @@ interface University {
   deliveryAreas: string[]
 }
 
-// â”€â”€ Shared UI helpers â€” defined OUTSIDE SignupForm so they don't remount â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Shared UI helpers Ã¢â‚¬â€ defined OUTSIDE SignupForm so they don't remount Ã¢â€â‚¬Ã¢â€â‚¬
 const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
 const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
 
@@ -133,7 +133,7 @@ const StepDots = ({ current }: { current: number }) => (
   </div>
 )
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 function SignupForm() {
   const router       = useRouter()
@@ -176,7 +176,7 @@ function SignupForm() {
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [draftRestored, setDraftRestored] = useState(false)
 
-  // â”€â”€ Signup timer state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Signup timer state Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const [countdown, setCountdown]               = useState('')
   const searchRef = normalizeSignupAccessCode(searchParams.get('ref'))
   const locationRef = typeof window === 'undefined'
@@ -190,7 +190,7 @@ function SignupForm() {
   const signupOpenAt = new Date(SIGNUP_REOPENS_AT_ISO).getTime()
   const effectiveSelectedUniversity = selectedUniversity ?? universities[0] ?? null
 
-  // â”€â”€ Update countdown display without blocking signup access â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Update countdown display without blocking signup access Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   useEffect(() => {
     const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
     if (hasSignupAccessCode(ref)) {
@@ -432,7 +432,7 @@ function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email, name, phone: accountPhone, password, otpSessionToken,
-          role:         'BUYER', // â† Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
+          role:         'BUYER', // Ã¢â€ Â Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
           signupAccessCode: activeSignupAccessCode || undefined,
           universityId: effectiveSelectedUniversity!.id,
@@ -460,15 +460,14 @@ function SignupForm() {
     }
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // STEP 0 â€” University selector
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+  // STEP 0 — University selector
   if (step === 0) {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">â±ï¸</p>
+            <p className="text-2xl mb-2">⏱️</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -478,27 +477,56 @@ function SignupForm() {
             </div>
           </div>
         )}
+
         <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}>
               <MapPin className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-xl font-black text-gray-900">Select Your Campus</h2>
-              <p className="text-sm text-gray-500 mt-1">
-              You will only see buyers, sellers, and riders from your campus.
-            </p>
+            <p className="text-sm text-gray-500 mt-1">You will only see buyers, sellers, and riders from your campus.</p>
           </div>
 
           {uniLoading ? (
             <div className="flex justify-center py-8">
               <svg className="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             </div>
           ) : (
             <div className="space-y-3">
               {universities.map(uni => (
+                <button
+                  key={uni.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedUniversity(uni)
+                    setSelectedUniversityId(uni.id)
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-2xl border-2 transition-all ${
+                    selectedUniversity?.id === uni.id
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                  }`}
+                >
+                  <p className="font-bold">{uni.shortName}</p>
+                  <p className="text-sm opacity-80">{uni.name}</p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            disabled={!effectiveSelectedUniversity}
+            className="w-full mt-5 py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
+            style={btnStyle}
+          >
+            Continue
+          </button>
+
           <p className="text-center text-sm text-gray-500 mt-4">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-blue-600">Sign in</Link>
@@ -508,15 +536,13 @@ function SignupForm() {
     )
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // STEP 2 â€” OTP verification
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 2 — OTP verification
   if (step === 2) {
     return (
-        <PageShell selectedUniversity={effectiveSelectedUniversity}>
+      <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">â±ï¸</p>
+            <p className="text-2xl mb-2">⏱️</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -559,20 +585,18 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           >
-            {loading ? 'Verifyingâ€¦' : 'Verify Code'}
+            {loading ? 'Verifying...' : 'Verify Code'}
           </button>
 
-          <button onClick={() => setStep(1)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
+          <button onClick={() => setStep(0)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
             Back
           </button>
         </div>
       </PageShell>
     )
   }
-
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // STEP 3 â€” Delivery location
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // STEP 3 Ã¢â‚¬â€ Delivery location
+  // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
   if (step === 3) {
     const areas: string[] = Array.isArray(effectiveSelectedUniversity?.deliveryAreas)
       ? effectiveSelectedUniversity!.deliveryAreas
@@ -582,7 +606,7 @@ function SignupForm() {
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
           <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-            <p className="text-2xl mb-2">â±ï¸</p>
+            <p className="text-2xl mb-2">Ã¢ÂÂ±Ã¯Â¸Â</p>
             <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
             <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -607,7 +631,7 @@ function SignupForm() {
 
           {referralCode && (
             <div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              ðŸŽ Referral code <strong>{referralCode}</strong> applied
+              Ã°Å¸Å½Â Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
@@ -626,7 +650,7 @@ function SignupForm() {
                         : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
                     }`}
                   >
-                    <span className="text-base">ðŸ“</span>
+                    <span className="text-base">Ã°Å¸â€œÂ</span>
                     {area}
                   </button>
                 ))}
@@ -681,7 +705,7 @@ function SignupForm() {
 
             <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
               <p className="text-xs text-blue-700">
-                ðŸ’¡ You can update your delivery location anytime from your profile settings.
+                Ã°Å¸â€™Â¡ You can update your delivery location anytime from your profile settings.
               </p>
             </div>
 
@@ -698,14 +722,14 @@ function SignupForm() {
     )
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // STEP 4 â€” Password + terms
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+  // STEP 4 Ã¢â‚¬â€ Password + terms
+  // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
   return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
       {countdown && (
         <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
-          <p className="text-2xl mb-2">â±ï¸</p>
+          <p className="text-2xl mb-2">Ã¢ÂÂ±Ã¯Â¸Â</p>
           <h3 className="font-black text-blue-900 text-lg mb-1">Signup Timer</h3>
           <p className="text-sm text-blue-700 mb-2">Signups are open now. This timer is just a visual reminder.</p>
           <div className="bg-white rounded-xl px-4 py-3 inline-block">
@@ -748,7 +772,7 @@ function SignupForm() {
 
           {referralCode && (
             <div className="p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              ðŸŽ Referral code <strong>{referralCode}</strong> applied
+              Ã°Å¸Å½Â Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
@@ -774,7 +798,7 @@ function SignupForm() {
             className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
             style={btnStyle}
           >
-            {loading ? 'Creating accountâ€¦' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} ðŸŽ‰`}
+            {loading ? 'Creating accountÃ¢â‚¬Â¦' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} Ã°Å¸Å½â€°`}
           </button>
         </form>
 
@@ -791,7 +815,7 @@ export default function SignupPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center"
         style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}>
-        <div className="text-white text-xl font-bold">Loadingâ€¦</div>
+        <div className="text-white text-xl font-bold">LoadingÃ¢â‚¬Â¦</div>
       </div>
     }>
       <SignupForm />
