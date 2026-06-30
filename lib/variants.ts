@@ -730,6 +730,18 @@ export function getCategoryList() {
   }))
 }
 
+export function resolveCategoryKey(input?: string | null) {
+  const value = input?.trim()
+  if (!value) return ''
+
+  if (CATEGORY_TREE[value]) return value
+  const normalized = value.toLowerCase()
+  const match = Object.entries(CATEGORY_TREE).find(([key, category]) => {
+    return key.toLowerCase() === normalized || category.label.toLowerCase() === normalized
+  })
+  return match?.[0] || ''
+}
+
 export function getCategoryDisplayInfo(categoryKey?: string | null, subcategoryKey?: string | null, fallbackCategory?: string | null, fallbackSubcategory?: string | null) {
   const categoryLabel = categoryKey && CATEGORY_TREE[categoryKey]?.label
     ? CATEGORY_TREE[categoryKey].label

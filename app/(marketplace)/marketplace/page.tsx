@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 
-import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter } from '@/lib/variants'
+import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
 
 // ─────────────────────────────────────────────
@@ -1787,6 +1787,7 @@ export default function MarketplacePage() {
   const [allProducts,       setAllProducts]       = useState<any[]>([])
   const [loading,           setLoading]           = useState(true)
   const [selectedCategory,  setSelectedCategory]  = useState('All')
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string | null>(null)
   const [viewMode,          setViewMode]          = useState<'feed' | 'grid'>('feed')
   const [recentlyViewed,    setRecentlyViewed]    = useState<any[]>([])
   const [interestCategories,setInterestCategories]= useState<string[]>([])
@@ -2169,13 +2170,9 @@ export default function MarketplacePage() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const matchedCategory = getCategoryList().find((cat) => {
-        const normalizedCategory = category.trim().toLowerCase()
-        return cat.label.toLowerCase() === normalizedCategory || cat.key.toLowerCase() === normalizedCategory
-      })
-
+      const categoryKey = resolveCategoryKey(category)
       const params = new URLSearchParams()
-      if (matchedCategory?.key) params.set('categoryKey', matchedCategory.key)
+      if (categoryKey) params.set('categoryKey', categoryKey)
       if (category && category !== 'All') params.set('category', category)
 
       const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
@@ -2216,7 +2213,10 @@ export default function MarketplacePage() {
   }
 
   const handleCategorySelect = (cat: string, maxPrice?: number) => {
-    setSelectedCategory(cat)
+    const normalizedCategory = cat.trim()
+    const categoryKey = normalizedCategory === 'All' ? null : resolveCategoryKey(normalizedCategory)
+    setSelectedCategory(normalizedCategory)
+    setSelectedCategoryKey(categoryKey || null)
     if (maxPrice !== undefined) {
       setMaxPriceFilter(maxPrice)
     } else {
@@ -2300,10 +2300,11 @@ export default function MarketplacePage() {
   }, [allProducts, forYouProducts, trendingProducts, newListings])
 
   const filteredByCategory = useMemo(() => {
-    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, selectedCategory))
+    const categoryFilter = selectedCategoryKey || selectedCategory
+    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, categoryFilter))
     if (maxPriceFilter !== null) prods = prods.filter(p => p.price <= maxPriceFilter)
     return prods
-  }, [allProducts, selectedCategory, maxPriceFilter])
+  }, [allProducts, selectedCategory, selectedCategoryKey, maxPriceFilter])
 
   const sortProducts = useCallback((products: any[]) => {
     const next = [...products]

@@ -604,7 +604,7 @@ export default function SellPage() {
         SELL_DRAFT_KEY,
         JSON.stringify({
           formData,
-          description: finalDescription,
+          description,
           descriptionEdited,
           categoryKey,
           subcategoryKey,

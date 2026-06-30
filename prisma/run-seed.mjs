@@ -6,12 +6,12 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// ── Inline CATEGORY_TREE (copied from lib/variants.ts) ───────────────────────
+// -- Inline CATEGORY_TREE (copied from lib/variants.ts) -----------------------
 // We inline it here to avoid TypeScript/ESM import issues when running directly
 
 const CATEGORY_TREE = {
   electronics: {
-    label: 'Electronics', icon: '📱',
+    label: 'Electronics', icon: '[Electronics]',
     subcategories: {
       phones_tablets: { label: 'Phones & Tablets', variants: [
         { key: 'brand',          label: 'Brand',          suggestions: ['Apple','Samsung','Tecno','Infinix','Xiaomi','OnePlus','Google','Nokia','Huawei','Oppo','Vivo','Realme','Itel'] },
@@ -94,7 +94,7 @@ const CATEGORY_TREE = {
   },
 
   computing: {
-    label: 'Computing', icon: '💻',
+    label: 'Computing', icon: '[Computing]',
     subcategories: {
       laptops_computing: { label: 'Laptops', variants: [
         { key: 'brand',     label: 'Brand',     suggestions: ['Apple','Dell','HP','Lenovo','Asus','Acer','Microsoft'] },
@@ -126,7 +126,7 @@ const CATEGORY_TREE = {
   },
 
   fashion: {
-    label: 'Fashion', icon: '👔',
+    label: 'Fashion', icon: '[Fashion]',
     subcategories: {
       mens_wear: { label: "Men's Clothing", variants: [
         { key: 'type',      label: 'Type',      suggestions: ['T-Shirt','Polo Shirt','Casual Shirt','Formal Shirt','Trousers','Jeans','Shorts','Joggers','Suit','Blazer','Jacket','Hoodie','Sweater','Agbada','Senator/Kaftan','Native Wear','Track Suit','Singlet','Boxer Shorts'] },
@@ -203,7 +203,7 @@ const CATEGORY_TREE = {
   },
 
   home_kitchen: {
-    label: 'Home & Kitchen', icon: '🏠',
+    label: 'Home & Kitchen', icon: '[Home]',
     subcategories: {
       furniture: { label: 'Furniture', variants: [
         { key: 'type',      label: 'Type',     suggestions: ['Bed Frame','Mattress','Chair','Study Desk','Dining Table','Wardrobe','Sofa','Shelf/Bookcase','TV Stand','Chest of Drawers','Ottoman','Bunk Bed','Baby Crib'] },
@@ -255,7 +255,7 @@ const CATEGORY_TREE = {
   },
 
   groceries: {
-    label: 'Food & Groceries', icon: '🍔',
+    label: 'Food & Groceries', icon: '[Food]',
     subcategories: {
       cooked_food: { label: 'Cooked Food & Meals', variants: [
         { key: 'meal_type',   label: 'Meal Type',   suggestions: ['Rice','Jollof Rice','Fried Rice','Beans','Porridge Yam','Amala','Eba/Garri','Semovita','Pounded Yam','Egusi Soup','Okro Soup','Pepper Soup','Pasta/Spaghetti','Noodles','Salad','Sandwich','Shawarma','Chicken','Grilled Fish','Small Chops','Pizza','Burger'] },
@@ -290,7 +290,7 @@ const CATEGORY_TREE = {
   },
 
   beauty: {
-    label: 'Beauty & Health', icon: '💄',
+    label: 'Beauty & Health', icon: '[Beauty]',
     subcategories: {
       skincare: { label: 'Skincare', variants: [
         { key: 'type',      label: 'Type',         suggestions: ['Moisturizer','Toner','Face Wash/Cleanser','Serum','Sunscreen (SPF)','Face Mask','Exfoliator/Scrub','Eye Cream','Lip Balm','Toning Lotion','Body Lotion','Body Oil','Stretch Mark Cream'] },
@@ -335,7 +335,7 @@ const CATEGORY_TREE = {
   },
 
   sports: {
-    label: 'Sports & Fitness', icon: '⚽',
+    label: 'Sports & Fitness', icon: '[Sports]',
     subcategories: {
       gym_fitness: { label: 'Gym & Fitness Equipment', variants: [
         { key: 'type',      label: 'Type',        suggestions: ['Dumbbell (pair)','Barbell','Weight Plates','Resistance Bands','Jump Rope','Yoga Mat','Pull-up Bar','Bench Press','Treadmill','Exercise Bike','Rowing Machine','Kettlebell','Foam Roller','Ab Wheel','Push-up Handles'] },
@@ -365,7 +365,7 @@ const CATEGORY_TREE = {
   },
 
   vehicles: {
-    label: 'Vehicles & Transport', icon: '🚗',
+    label: 'Vehicles & Transport', icon: '[Vehicles]',
     subcategories: {
       bicycles: { label: 'Bicycles', variants: [
         { key: 'type',      label: 'Type',       suggestions: ['Mountain Bike','Road Bike','BMX','Folding Bike','City/Commuter Bike','Kids Bike','Electric Bike'] },
@@ -390,7 +390,7 @@ const CATEGORY_TREE = {
   },
 
   books: {
-    label: 'Books & Stationery', icon: '📚',
+    label: 'Books & Stationery', icon: '[Books]',
     subcategories: {
       academic_books: { label: 'Academic Books', variants: [
         { key: 'department', label: 'Department',       suggestions: ['Engineering','Medicine','Law','Science','Arts','Business','Education','Agriculture','Pharmacy','Architecture','Social Sciences','Mass Communication','Nursing','Accounting','Economics'] },
@@ -422,7 +422,7 @@ const CATEGORY_TREE = {
   },
 
   tickets: {
-    label: 'Tickets & Events', icon: '🎟️',
+    label: 'Tickets & Events', icon: '[Tickets]',
     subcategories: {
       concert_show: { label: 'Concert & Show Tickets', variants: [
         { key: 'event',       label: 'Event Name',  suggestions: [] },
@@ -447,7 +447,7 @@ const CATEGORY_TREE = {
   },
 
   kids: {
-    label: 'Kids & Baby', icon: '🧸',
+    label: 'Kids & Baby', icon: '[Kids]',
     subcategories: {
       toys_games: { label: 'Toys & Games', variants: [
         { key: 'type',      label: 'Type',      suggestions: ['Action Figure','Doll','Building Blocks (LEGO)','Board Game','Puzzle','Remote Control Car','Stuffed Animal','Educational Toy','Outdoor Toy','Art & Craft Kit','Musical Toy','Baby Rattle','Video Game'] },
@@ -470,7 +470,7 @@ const CATEGORY_TREE = {
   },
 
   arts_crafts: {
-    label: 'Arts & Crafts', icon: '🎨',
+    label: 'Arts & Crafts', icon: '[Arts]',
     subcategories: {
       art_supplies: { label: 'Art Supplies', variants: [
         { key: 'type',      label: 'Type',      suggestions: ['Canvas','Acrylic Paint Set','Oil Paint Set','Watercolor Set','Brushes Set','Easel','Sketch Pad','Charcoal/Graphite Set','Palette','Spray Paint','Fabric Paint','Epoxy Resin Kit','Airbrush Kit'] },
@@ -490,10 +490,10 @@ const CATEGORY_TREE = {
   },
 }
 
-// ── Seeding logic ─────────────────────────────────────────────────────────────
+// -- Seeding logic -------------------------------------------------------------
 
 async function main() {
-  console.log('🌱 Seeding category attributes...\n')
+  console.log('[SEED] Seeding category attributes...\n')
 
   let totalSeeded = 0
   let totalSubcategories = 0
@@ -552,20 +552,20 @@ async function main() {
           count++
           totalSeeded++
         } catch (err) {
-          console.error(`  ❌ Error seeding ${categoryKey}/${subcategoryKey}/${v.key}:`, err.message)
+          console.error(`  [ERROR] Error seeding ${categoryKey}/${subcategoryKey}/${v.key}:`, err.message)
         }
       }
 
-      console.log(`  ✅ ${categoryKey}/${subcategoryKey} — ${count} attributes`)
+      console.log(`  [OK] ${categoryKey}/${subcategoryKey} - ${count} attributes`)
     }
   }
 
-  console.log(`\n🎉 Done! Seeded ${totalSeeded} attributes across ${totalSubcategories} subcategories.`)
+  console.log(`\n[DONE] Done! Seeded ${totalSeeded} attributes across ${totalSubcategories} subcategories.`)
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e)
+    console.error('[ERROR] Seed failed:', e)
     process.exit(1)
   })
   .finally(async () => {
