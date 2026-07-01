@@ -730,6 +730,47 @@ export function getCategoryList() {
   }))
 }
 
+const CATEGORY_ALIASES: Record<string, string[]> = {
+  electronics: ["gadgets", "tech gadgets", "gaming"],
+  computing: ["computing", "laptops", "pcs", "pc", "computer"],
+  fashion: ["fashion", "fashion & clothing", "clothing", "apparel"],
+  home_kitchen: ["home", "home & kitchen", "home and kitchen", "home & living", "household", "furniture & home"],
+  groceries: ["groceries / food / fast food", "food & groceries", "food and groceries", "food", "snacks", "snacks & drinks", "fast food"],
+  beauty: ["beauty & personal care", "beauty personal care", "personal care", "cosmetics"],
+  sports: ["sports & fitness", "sport & fitness", "fitness", "sports"],
+  vehicles: ["vehicles & transport", "cars & transport", "automotive", "cars", "transport"],
+  books: ["books & stationery", "books & office", "stationery", "books"],
+  tickets: ["tickets & events", "events & tickets", "events", "tickets"],
+  kids: ["kids & baby", "baby products", "kids", "baby"],
+  arts: ["arts & crafts", "crafts", "art supplies", "arts"],
+}
+
+const CATEGORY_KEY_VARIANTS: Record<string, string[]> = {
+  electronics: ["gaming", "tech_gadgets"],
+  groceries: ["snacks"],
+  beauty: ["cosmetics"],
+  vehicles: ["automotive"],
+  kids: ["baby_products"],
+}
+
+function normalizeCategoryInput(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function findLegacyCategoryKey(input: string) {
+  const normalized = normalizeCategoryInput(input)
+  const direct = Object.entries(CATEGORY_ALIASES).find(([key, aliases]) => {
+    if (normalizeCategoryInput(key) === normalized) return true
+    return aliases.some((alias) => normalizeCategoryInput(alias) === normalized)
+  })
+  return direct?.[0]
+}
+
 export function resolveCategoryKey(input?: string | null) {
   const value = input?.trim()
   if (!value) return ''
@@ -739,7 +780,30 @@ export function resolveCategoryKey(input?: string | null) {
   const match = Object.entries(CATEGORY_TREE).find(([key, category]) => {
     return key.toLowerCase() === normalized || category.label.toLowerCase() === normalized
   })
-  return match?.[0] || ''
+  if (match?.[0]) return match[0]
+
+  return findLegacyCategoryKey(value) || ''
+}
+
+export function getCategoryQueryValues(input?: string | null) {
+  const key = resolveCategoryKey(input)
+  if (!key) return []
+
+  const values = new Set<string>()
+  values.add(key)
+  if (CATEGORY_TREE[key]?.label) values.add(CATEGORY_TREE[key].label)
+  for (const alias of CATEGORY_ALIASES[key] || []) {
+    values.add(alias)
+  }
+
+  return [...values].filter(Boolean)
+}
+
+export function getCategoryKeyVariants(input?: string | null) {
+  const key = resolveCategoryKey(input)
+  if (!key) return []
+
+  return [...new Set([key, ...(CATEGORY_KEY_VARIANTS[key] || [])])]
 }
 
 export function getCategoryDisplayInfo(categoryKey?: string | null, subcategoryKey?: string | null, fallbackCategory?: string | null, fallbackSubcategory?: string | null) {
@@ -759,13 +823,12 @@ export function getCategoryDisplayInfo(categoryKey?: string | null, subcategoryK
 
 export function matchesCategoryFilter(product: { categoryKey?: string | null; category?: string | null }, selectedCategory?: string | null) {
   if (!selectedCategory || !product) return false
-  const normalizedSelection = selectedCategory.trim().toLowerCase()
-  if (!normalizedSelection || normalizedSelection === 'all') return true
+  const selectedKey = resolveCategoryKey(selectedCategory)
+  if (!selectedKey || selectedKey === 'all') return true
 
-  const categoryKey = (product.categoryKey || '').trim().toLowerCase()
-  const categoryLabel = (product.category || '').trim().toLowerCase()
-
-  return categoryKey === normalizedSelection || categoryLabel === normalizedSelection
+  const productCategory = product.categoryKey || product.category
+  const productKey = resolveCategoryKey(productCategory)
+  return productKey === selectedKey
 }
 
 export function getSubcategoryList(categoryKey: string) {

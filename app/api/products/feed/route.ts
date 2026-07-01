@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
       const recency = recencyScore(product.createdAt, now)
       const popularity = popularityScore(product.viewCount || 0, product._count?.orders || 0, maxPopularityLog)
       const tier = sellerTierScore(product.seller?.trustLevel)
-      const categoryToken = normalizeText(product.categoryKey || product.category || '')
+      const categoryToken = normalizeText(resolveCategoryKey(product.categoryKey || product.category || '') || product.categoryKey || product.category || '')
       const haystack = normalizeText(
         [product.name, product.category, product.subcategory || ''].join(' '),
       )
@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
       let categoryMatch = 0
       if (hasCategorySignals) {
         const score = categorySignals.reduce((best, signal) => {
-          const matchValue = normalizeText(signal.value)
+          const matchValue = normalizeText(resolveCategoryKey(signal.value) || signal.value)
           if (!matchValue) return best
           const isMatch = categoryToken === matchValue || haystack.includes(matchValue)
           if (!isMatch) return best

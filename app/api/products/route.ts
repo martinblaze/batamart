@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
-import { CATEGORY_TREE, getCategoryDisplayInfo } from '@/lib/variants'
+import { CATEGORY_TREE, getCategoryDisplayInfo, getCategoryKeyVariants, getCategoryQueryValues, resolveCategoryKey } from '@/lib/variants'
 import { normalizeText } from '@/lib/search-utils'
 
 const DEFAULT_PAGE_SIZE = 40
@@ -256,18 +256,6 @@ function normalizeLearnedKey(input: string) {
     .replace(/^_+|_+$/g, '')
 }
 
-function resolveCategoryKey(input: string) {
-  const value = input?.trim()
-  if (!value) return ''
-
-  if (CATEGORY_TREE[value]) return value
-  const normalized = value.toLowerCase()
-  const match = Object.entries(CATEGORY_TREE).find(([key, category]) => {
-    return key.toLowerCase() === normalized || category.label.toLowerCase() === normalized
-  })
-  return match?.[0] || ''
-}
-
 function resolveSubcategoryKey(categoryKey: string, input: string) {
   const value = input?.trim()
   if (!categoryKey || !value) return ''
@@ -468,23 +456,28 @@ export async function GET(request: NextRequest) {
     }
     if (sellerId) where.sellerId = sellerId
     if (categoryKey && categoryKey !== 'all') {
+      const categoryInput = requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || ''
+      const categoryValues = getCategoryQueryValues(categoryInput)
+      const categoryKeyValues = getCategoryKeyVariants(categoryInput)
       where.AND = [
         ...(where.AND || []),
         {
           OR: [
-            { categoryKey: categoryKey },
-            { category: { equals: requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || '' } },
+            ...categoryKeyValues.map((value) => ({ categoryKey: value })),
+            ...(categoryValues.length > 0 ? categoryValues.map((value) => ({ category: { equals: value } })) : []),
           ],
         },
       ]
     }
     if (subcategoryKey) {
+      const subcategoryLabel = requestedSubcategoryKey || CATEGORY_TREE[categoryKey]?.subcategories?.[subcategoryKey]?.label || ''
+      const subcategoryValues = [subcategoryKey, subcategoryLabel].filter(Boolean)
       where.AND = [
         ...(where.AND || []),
         {
           OR: [
             { subcategoryKey: subcategoryKey },
-            { subcategory: { equals: requestedSubcategoryKey || CATEGORY_TREE[categoryKey]?.subcategories?.[subcategoryKey]?.label || '' } },
+            ...(subcategoryValues.length > 0 ? subcategoryValues.map((value) => ({ subcategory: { equals: value } })) : []),
           ],
         },
       ]
