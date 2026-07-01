@@ -146,6 +146,10 @@ export default function RiderDashboardPage() {
     }
   }, [])
 
+  const openRiderInstallPage = () => {
+    router.push('/rider?app=true&rider=true')
+  }
+
   const installRiderApp = async () => {
     if (!deferredInstallPrompt) return
     deferredInstallPrompt.prompt()
@@ -492,7 +496,13 @@ export default function RiderDashboardPage() {
                 : isAvailable ? '🟢 Available' : '⚫ Unavailable'
               }
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <button
+                onClick={openRiderInstallPage}
+                className="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              >
+                Open Rider Install Page
+              </button>
               {!isInstalled && deferredInstallPrompt && (
                 <button
                   onClick={installRiderApp}
