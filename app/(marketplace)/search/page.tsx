@@ -244,10 +244,7 @@ function SearchPage() {
         setAvailableFilters(data.filters || [])
         const bounds = data.price || { min: 0, max: 0 }
         setPriceBounds(bounds)
-        if (!parsed.minPrice && !parsed.maxPrice && bounds.max > 0 && page === 1) {
-          setMinPrice(bounds.min)
-          setMaxPrice(bounds.max)
-        }
+
       } catch {
         setAvailableFilters([])
       }
@@ -311,8 +308,8 @@ function SearchPage() {
   }
   const clearAll = () => {
     setFilters({})
-    setMinPrice(priceBounds.min)
-    setMaxPrice(priceBounds.max)
+    setMinPrice(0)
+    setMaxPrice(0)
     setMinRating(0)
     setInStockOnly(false)
     setDeliveryFast(false)
@@ -452,3 +449,4 @@ function SearchPage() {
 export default function SearchPageWrapper() {
   return <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] dark:bg-[#090b10]"><Loader2 className="h-8 w-8 animate-spin text-indigo-600" /></div>}><SearchPage /></Suspense>
 }
+
