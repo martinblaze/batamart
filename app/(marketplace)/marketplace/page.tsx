@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import LoadedImage from '@/components/LoadedImage'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -570,7 +571,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative aspect-square bg-gray-50 overflow-hidden">
-        <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
+        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isTrending && (
             <span className="badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
@@ -666,7 +667,7 @@ function MiniProductCard({ product, onClick }: { product: any; onClick: () => vo
   return (
     <div onClick={onClick} className="mini-card cursor-pointer group">
       <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2">
-        <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
+        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
       </div>
       <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{product.name}</p>
       <p className="text-xs font-black text-BATAMART-primary mt-0.5">{fmt(product.price)}</p>
@@ -742,7 +743,7 @@ function CategorySpotlightGrid({ allProducts, onCategorySelect }: {
                     onClick={e => { e.stopPropagation(); onCategorySelect(spot.catFilter) }}
                     className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm"
                   >
-                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
                   </div>
                 ))}
                 {Array.from({ length: Math.max(0, 4 - catProducts.length) }).map((_, i) => (
@@ -940,7 +941,7 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
                   >
                     <div className="aspect-square rounded-xl overflow-hidden bg-white shadow-sm mb-1 relative">
                       {pick ? (
-                        <img src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <LoadedImage src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">{panel.icon}</div>
                       )}
@@ -1051,7 +1052,7 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
               <div className="grid grid-cols-2 gap-1 px-2 pb-1">
                 {picks.map((p, i) => (
                   <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm">
-                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" />
                   </div>
                 ))}
               </div>
@@ -1109,7 +1110,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
           {products.map(p => (
             <div key={p.id} onClick={() => onProductClick(p.id)} className="deal-card flex-shrink-0 w-36 sm:w-44 cursor-pointer group/card">
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2.5">
-                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" />
+                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
               </div>
               <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{p.name}</p>
               <p className="text-xs font-black text-BATAMART-primary mt-1">{fmt(p.price)}</p>
@@ -1574,7 +1575,7 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
                 className="flex-1 h-16 rounded-xl overflow-hidden cursor-pointer relative group"
                 onClick={() => onProductClick(p.id)}
               >
-                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="mosaic-img w-full h-full object-cover" />
+                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="mosaic-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
               </div>
             ))}
@@ -1627,7 +1628,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="relative mx-auto mb-2 w-16 h-16">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-100 to-indigo-100 border-2 border-violet-200">
                   {seller.profilePhoto ? (
-                    <img src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" />
+                    <LoadedImage src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl font-black text-violet-400">
                       {seller.name?.[0]?.toUpperCase() || '?'}
@@ -1650,7 +1651,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="flex gap-1 mt-2 justify-center">
                 {sellerProds.slice(0, 2).map(p => (
                   <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100">
-                    <img src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
                   </div>
                 ))}
               </div>
@@ -1724,7 +1725,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
               onClick={() => onProductClick(p.id)}
             >
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2 relative">
-                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
+                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
                 {p.discountPercent && (
                   <span className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg">
                     -{p.discountPercent}%
@@ -2373,7 +2374,7 @@ export default function MarketplacePage() {
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
             >
               {s.type === 'product' && s.image
-                ? <img src={s.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt="" />
+                ? <LoadedImage src={s.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" wrapperClassName="h-8 w-8" />
                 : s.type === 'recent'
                   ? <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   : <TrendingUp className="w-4 h-4 text-BATAMART-primary flex-shrink-0" />
