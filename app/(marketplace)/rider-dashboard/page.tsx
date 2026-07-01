@@ -78,6 +78,8 @@ export default function RiderDashboardPage() {
   const [trackingError, setTrackingError] = useState<string | null>(null)
   const [lastTrackingPing, setLastTrackingPing] = useState<Date | null>(null)
   const [oversizedProofByOrder, setOversizedProofByOrder] = useState<Record<string, string>>({})
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
 
   const watchIdRef = useRef<number | null>(null)
   const lastSentAtRef = useRef(0)
@@ -109,6 +111,7 @@ export default function RiderDashboardPage() {
     if (typeof window === 'undefined') return
 
     sessionStorage.setItem('batamart_rider_mode', 'true')
+    setIsInstalled(window.matchMedia('(display-mode: standalone)').matches)
 
     const existingManifest = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
     const previousHref = existingManifest?.getAttribute('href')
@@ -121,12 +124,39 @@ export default function RiderDashboardPage() {
 
     manifestLink.href = '/rider-manifest.json'
 
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      setDeferredInstallPrompt(event)
+    }
+
+    const onInstalled = () => {
+      setIsInstalled(true)
+      setDeferredInstallPrompt(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt as EventListener)
+    window.addEventListener('appinstalled', onInstalled)
+
     return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt as EventListener)
+      window.removeEventListener('appinstalled', onInstalled)
       if (previousHref) {
         manifestLink.setAttribute('href', previousHref)
       }
     }
   }, [])
+
+  const installRiderApp = async () => {
+    if (!deferredInstallPrompt) return
+    deferredInstallPrompt.prompt()
+    try {
+      const { outcome } = await deferredInstallPrompt.userChoice
+      if (outcome === 'accepted') {
+        setDeferredInstallPrompt(null)
+        setIsInstalled(true)
+      }
+    } catch {}
+  }
 
   const fetchRiderData = async () => {
     try {
@@ -462,6 +492,21 @@ export default function RiderDashboardPage() {
                 : isAvailable ? '🟢 Available' : '⚫ Unavailable'
               }
             </button>
+            <div className="flex items-center gap-2">
+              {!isInstalled && deferredInstallPrompt && (
+                <button
+                  onClick={installRiderApp}
+                  className="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                >
+                  Install Rider App
+                </button>
+              )}
+              {isInstalled && (
+                <div className="px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 border border-emerald-200 bg-emerald-50 text-emerald-700">
+                  Installed
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-5">
