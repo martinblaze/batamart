@@ -1348,6 +1348,23 @@ export default function SellPage() {
                             })}
                           </div>
                         )}
+                        {toStringArray(value).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {toStringArray(value).map((selected) => (
+                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">
+                                {selected}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDetailAttributeOption(attr.key, selected)}
+                                  className="text-indigo-500 hover:text-indigo-800"
+                                  aria-label={`Remove ${selected}`}
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         <div className="flex gap-2">
                           <input
                             type="text"
@@ -1375,22 +1392,41 @@ export default function SellPage() {
                       </div>
                     )}
                     {attr.type === 'multi_select' && (
-                      <div className="flex flex-wrap gap-2">
-                        {options.map((opt) => {
-                          const active = toStringArray(value).includes(opt)
-                          return (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => toggleDetailAttributeOption(attr.key, opt)}
-                              className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all ${
-                                active ? 'bg-indigo-600 text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          )
-                        })}
+                      <div className="space-y-2.5">
+                        <div className="flex flex-wrap gap-2">
+                          {options.map((opt) => {
+                            const active = toStringArray(value).includes(opt)
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => toggleDetailAttributeOption(attr.key, opt)}
+                                className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all ${
+                                  active ? 'bg-indigo-600 text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        {toStringArray(value).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {toStringArray(value).map((selected) => (
+                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">
+                                {selected}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDetailAttributeOption(attr.key, selected)}
+                                  className="text-indigo-500 hover:text-indigo-800"
+                                  aria-label={`Remove ${selected}`}
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     {attr.type === 'number' && (
