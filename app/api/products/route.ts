@@ -1,4 +1,4 @@
-﻿// app/api/products/route.ts
+// app/api/products/route.ts
 export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -198,11 +198,11 @@ function normalizeModerationText(value: unknown) {
   return String(value || '')
     .normalize('NFKD')
     .toLowerCase()
-    .replace(/[Ã¡Ã Ã¢Ã¤Ã£Ã¥]/g, 'a')
-    .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e')
-    .replace(/[Ã­Ã¬Ã®Ã¯]/g, 'i')
-    .replace(/[Ã³Ã²Ã´Ã¶Ãµ]/g, 'o')
-    .replace(/[ÃºÃ¹Ã»Ã¼]/g, 'u')
+    .replace(/[??????]/g, 'a')
+    .replace(/[????]/g, 'e')
+    .replace(/[????]/g, 'i')
+    .replace(/[?????]/g, 'o')
+    .replace(/[????]/g, 'u')
     .replace(/[$]/g, 's')
     .replace(/[!|]/g, 'i')
     .replace(/[@]/g, 'a')
@@ -729,7 +729,7 @@ export async function POST(request: NextRequest) {
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
-        // â”€â”€ Product review system: start in PENDING status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // -- Product review system: start in PENDING status ------------------
         moderationStatus: 'PENDING',
         isActive:     false, // Not visible in marketplace until approved
         seller:      { connect: { id: user.id } },

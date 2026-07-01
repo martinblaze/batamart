@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -110,7 +110,7 @@ const SELL_CSS = `
   }
 `
 
-// â”€â”€ Confirm Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Confirm Modal ─────────────────────────────────────────────────────────────
 function ConfirmListingModal({
   price,
   hasStructuredVariants,
@@ -156,7 +156,7 @@ function ConfirmListingModal({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Platform fee (5%)</span>
-                  <span className="font-bold text-red-500">âˆ’ {fmt(fee)}</span>
+                  <span className="font-bold text-red-500">− {fmt(fee)}</span>
                 </div>
                 <div className="border-t border-indigo-200 pt-2 flex justify-between">
                   <span className="font-bold text-gray-800">You receive</span>
@@ -164,7 +164,7 @@ function ConfirmListingModal({
                 </div>
               </div>
               <p className="text-[11px] text-indigo-500 mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed">
-                ðŸ’¡ To receive exactly <strong>{fmt(price)}</strong>, list at <strong>{fmt(Math.ceil(price / 0.95))}</strong>
+                💡 To receive exactly <strong>{fmt(price)}</strong>, list at <strong>{fmt(Math.ceil(price / 0.95))}</strong>
               </p>
             </>
           ) : (
@@ -181,12 +181,12 @@ function ConfirmListingModal({
                 <div className="border-t border-indigo-200 pt-2 flex justify-between">
                   <span className="font-bold text-gray-800">You receive (range)</span>
                   <span className="font-black text-emerald-600 text-base">
-                    {fmt(minVariantPrice * 0.95)} â€“ {fmt(maxVariantPrice * 0.95)}
+                    {fmt(minVariantPrice * 0.95)} – {fmt(maxVariantPrice * 0.95)}
                   </span>
                 </div>
               </div>
               <p className="text-[11px] text-indigo-500 mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed">
-                ðŸ’¡ Variant rows use their own prices and stock. Base price is fallback only.
+                💡 Variant rows use their own prices and stock. Base price is fallback only.
               </p>
             </>
           )}
@@ -194,7 +194,7 @@ function ConfirmListingModal({
 
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-5">
           <div className="flex items-start gap-2.5 mb-3">
-            <span className="text-xl flex-shrink-0">ðŸš«</span>
+            <span className="text-xl flex-shrink-0">🚫</span>
             <div>
               <p className="text-sm font-black text-red-700 mb-1">Product Availability Policy</p>
               <p className="text-xs text-red-600 leading-relaxed">
@@ -231,7 +231,7 @@ function ConfirmListingModal({
             className="flex-1 py-3 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             style={{ background: agreed ? 'linear-gradient(135deg, #6366f1, #4c1d95)' : '#9ca3af' }}
           >
-            List Product âœ¨
+            List Product ✨
           </button>
         </div>
       </div>
@@ -239,23 +239,23 @@ function ConfirmListingModal({
   )
 }
 
-// â”€â”€ Become Seller Gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Become Seller Gate ────────────────────────────────────────────────────────
 function BecomeSellerGate({ appMode }: { appMode: boolean }) {
   const router = useRouter()
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center px-4">
       <div className="fade-up bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full text-center border border-white/20 shadow-2xl">
-        <div className="text-6xl mb-5">ðŸ›ï¸</div>
+        <div className="text-6xl mb-5">🛍️</div>
         <h1 className="text-2xl font-black text-white mb-2">Want to sell on BataMart?</h1>
         <p className="text-white/60 text-sm mb-7 leading-relaxed">
-          You're signed in as a buyer. Upgrade to a seller account â€” it's free and takes 10 seconds.
+          You're signed in as a buyer. Upgrade to a seller account - it's free and takes 10 seconds.
         </p>
         <button
           onClick={() => router.push(appMode ? '/become-seller?app=true' : '/become-seller')}
           className="w-full py-4 rounded-2xl font-black text-white text-base shadow-xl mb-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
           style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)' }}
         >
-          Become a Seller â†’
+          Become a Seller →
         </button>
         <button
           onClick={() => router.push(appMode ? '/marketplace?app=true' : '/marketplace')}
@@ -268,7 +268,7 @@ function BecomeSellerGate({ appMode }: { appMode: boolean }) {
   )
 }
 
-// â”€â”€ Step Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Step Header ───────────────────────────────────────────────────────────────
 function StepHeader({ num, title, subtitle }: { num: string; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
@@ -283,7 +283,7 @@ function StepHeader({ num, title, subtitle }: { num: string; title: string; subt
   )
 }
 
-// â”€â”€ Variant Field Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Variant Field Row ─────────────────────────────────────────────────────────
 function VariantRow({
   field,
   values,
@@ -318,7 +318,7 @@ function VariantRow({
                 : 'bg-white text-gray-600 border-gray-200'
             }`}
           >
-            {values.includes(s) ? 'âœ“ ' : '+ '}{s}
+            {values.includes(s) ? '✓ ' : '+ '}{s}
           </button>
         ))}
       </div>
@@ -371,7 +371,7 @@ interface CategoryAttributeDef {
   sortOrder: number
 }
 
-// â”€â”€ Main Sell Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main Sell Page ────────────────────────────────────────────────────────────
 const MAX_PRICE = 10000000
 const MAX_STOCK = 100
 const SELL_LIMITS = {
@@ -518,7 +518,7 @@ export default function SellPage() {
   const [attributeCustomInput, setAttributeCustomInput] = useState<Record<string, string>>({})
   const [manuallyTouchedAttributes, setManuallyTouchedAttributes] = useState<Record<string, boolean>>({})
 
-  // Images â€” same structure as original: preview + url + uploading flag
+  // Images - same structure as original: preview + url + uploading flag
   const [images, setImages] = useState<{ preview: string; url: string; uploading: boolean }[]>([])
 
   // Tags
@@ -821,7 +821,7 @@ export default function SellPage() {
     return fuzzy || ''
   }
 
-  // â”€â”€ Image upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Image upload ────────────────────────────────────────────────────────────
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   const MAX_IMAGE_SIZE_MB = 8
 
@@ -999,7 +999,7 @@ export default function SellPage() {
     if (!formData.name.trim()) { setError('Product name is required'); return }
     if (formData.name.trim().length > SELL_LIMITS.productName) { setError(`Product name must be ${SELL_LIMITS.productName} characters or less`); return }
     if (!formData.price || parseFloat(formData.price) <= 0) { setError('Enter a valid price'); return }
-    if (parseFloat(formData.price) > MAX_PRICE) { setError('Price cannot exceed â‚¦10,000,000'); return }
+    if (parseFloat(formData.price) > MAX_PRICE) { setError('Price cannot exceed ₦10,000,000'); return }
     const stock = Number(formData.quantity)
     if (!Number.isInteger(stock) || stock < 1 || stock > MAX_STOCK) { setError(`Stock must be between 1 and ${MAX_STOCK}`); return }
     if (!categoryKey) { setError('Please select a category'); return }
@@ -1122,7 +1122,7 @@ export default function SellPage() {
         <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
         </div>
-        <p className="text-gray-500 font-semibold">Checking authenticationâ€¦</p>
+        <p className="text-gray-500 font-semibold">Checking authentication...</p>
       </div>
     </div>
   )
@@ -1142,7 +1142,7 @@ export default function SellPage() {
         />
       )}
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* ── Header ── */}
       <header className="header-gradient sticky top-0 z-40 shadow-xl">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-4">
@@ -1190,7 +1190,7 @@ export default function SellPage() {
                 <>
                   <span className="text-gray-500">Variant payout range </span>
                   <span className="font-black text-emerald-600">
-                    {minVariantPrice > 0 ? fmt(minVariantPrice * 0.95) : 'â€”'}{maxVariantPrice > 0 ? ` â€“ ${fmt(maxVariantPrice * 0.95)}` : ''}
+                    {minVariantPrice > 0 ? fmt(minVariantPrice * 0.95) : '—'}{maxVariantPrice > 0 ? ` - ${fmt(maxVariantPrice * 0.95)}` : ''}
                   </span>
                   <span className="text-gray-400 text-xs"> after 5% fee</span>
                 </>
@@ -1199,7 +1199,7 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* â”€â”€ STEP 1: Basic Info â”€â”€ */}
+        {/* ── STEP 1: Basic Info ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <div className="mb-4">
             <button
@@ -1228,7 +1228,7 @@ export default function SellPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                  {hasStructuredVariants ? 'Base Price (Fallback) (â‚¦) *' : 'Price (â‚¦) *'}
+                  {hasStructuredVariants ? 'Base Price (Fallback) (₦) *' : 'Price (₦) *'}
                 </label>
                 <input
                   type="number"
@@ -1259,7 +1259,7 @@ export default function SellPage() {
           </div>
         </div>
 
-        {/* â”€â”€ STEP 2: Category â”€â”€ */}
+        {/* ── STEP 2: Category ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <StepHeader num="2" title="Category *" subtitle="Select the most relevant category" />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1279,7 +1279,7 @@ export default function SellPage() {
           </div>
         </div>
 
-        {/* â”€â”€ STEP 3: Subcategory â”€â”€ */}
+        {/* ── STEP 3: Subcategory ── */}
         {categoryKey && (
           <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <StepHeader num="3" title="Subcategory *" subtitle="Get more specific" />
@@ -1288,7 +1288,7 @@ export default function SellPage() {
               <span>{selectedCategoryDisplay.category || 'Choose a category'}</span>
               {selectedCategoryDisplay.subcategory ? (
                 <>
-                  <span className="mx-2 text-indigo-400">â€¢</span>
+                  <span className="mx-2 text-indigo-400">•</span>
                   <span>{selectedCategoryDisplay.subcategory}</span>
                 </>
               ) : null}
@@ -1312,7 +1312,7 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* â”€â”€ STEP 4: Category Attributes â”€â”€ */}
+        {/* ── STEP 4: Category Attributes ── */}
         {categoryAttributes.length > 0 && (
           <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <StepHeader num="4" title="Category Details" subtitle="Structured attributes for smarter search and filters" />
@@ -1342,7 +1342,7 @@ export default function SellPage() {
                                       : 'bg-white text-gray-600 border-gray-200'
                                   }`}
                                 >
-                                  {active ? 'âœ“ ' : '+ '}{opt}
+                                  {active ? '✓ ' : '+ '}{opt}
                                 </button>
                               )
                             })}
@@ -1433,7 +1433,7 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* â”€â”€ STEP 5: Variants â”€â”€ */}
+        {/* ── STEP 5: Variants ── */}
         {variantFields.length > 0 && (
           <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <StepHeader num="5" title="Product Variants" subtitle="Turn on if this product has options like color, size or storage" />
@@ -1528,7 +1528,7 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* â”€â”€ STEP 5: Description â”€â”€ */}
+        {/* ── STEP 5: Description ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <StepHeader
             num="5"
@@ -1577,12 +1577,12 @@ export default function SellPage() {
           </div>
         </div>
 
-        {/* â”€â”€ STEP 6: Images â”€â”€ */}
+        {/* ── STEP 6: Images ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <StepHeader
             num="6"
             title="Product Photos"
-            subtitle="Up to 3 images Â· JPG, PNG, WEBP Â· Max 8MB each"
+            subtitle="Up to 3 images · JPG, PNG, WEBP · Max 8MB each"
           />
           <div className="grid grid-cols-3 gap-3">
             {images.map((img, i) => (
@@ -1635,17 +1635,17 @@ export default function SellPage() {
           </div>
           {images.some(img => img.uploading) && (
             <div className="flex items-center gap-2 mt-3 text-xs text-indigo-500 font-semibold">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading images, please waitâ€¦
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading images, please wait...
             </div>
           )}
         </div>
 
-        {/* â”€â”€ STEP 6: Tags â”€â”€ */}
+        {/* ── STEP 6: Tags ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <StepHeader
             num="7"
             title="Product Tags"
-            subtitle="Auto-generated Â· helps buyers find your product"
+            subtitle="Auto-generated · helps buyers find your product"
           />
           <div className="p-3 bg-gray-50 border-2 border-gray-100 rounded-xl">
             {tags.length > 0 ? (
@@ -1663,7 +1663,7 @@ export default function SellPage() {
           {tags.length > 0 && <p className="text-xs text-gray-400 mt-2">{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated</p>}
         </div>
 
-        {/* â”€â”€ STEP 7: Location â”€â”€ */}
+        {/* ── STEP 7: Location ── */}
         <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <StepHeader
             num="8"
@@ -1748,7 +1748,7 @@ export default function SellPage() {
           </label>
         </div>
 
-        {/* â”€â”€ Error â”€â”€ */}
+        {/* ── Error ── */}
         {error && (
           <div className="fade-up flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3.5 rounded-2xl text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -1756,7 +1756,7 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* â”€â”€ Submit â”€â”€ */}
+        {/* ── Submit ── */}
         <button
           type="submit"
           disabled={loading || (!allUploaded && images.length > 0)}
@@ -1764,11 +1764,11 @@ export default function SellPage() {
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" /> Listing Productâ€¦
+              <Loader2 className="w-5 h-5 animate-spin" /> Listing Product...
             </span>
           ) : !allUploaded && images.length > 0 ? (
             <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" /> Uploading imagesâ€¦
+              <Loader2 className="w-5 h-5 animate-spin" /> Uploading images...
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">

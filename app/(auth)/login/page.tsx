@@ -143,7 +143,7 @@ function LoginForm() {
             <p className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>
           ) : null}
 
-          {/* â”€â”€ PRIMARY: Google Sign-In â”€â”€ */}
+          {/* -- PRIMARY: Google Sign-In -- */}
           <div className="mb-2">
             <GoogleAuthButton
               mode="login"
@@ -163,7 +163,7 @@ function LoginForm() {
             <div className="h-px bg-gray-200 flex-1" />
           </div>
 
-          {/* â”€â”€ SECONDARY: Email/Password (collapsed by default) â”€â”€ */}
+          {/* -- SECONDARY: Email/Password (collapsed by default) -- */}
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
@@ -250,7 +250,7 @@ export default function LoginPage() {
   )
 }
 
-// â”€â”€ Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Helper --------------------------------------------------------------------
 function buildSuspensionMessage(reason: string | null, until: string | null): string {
   const reasonText = reason ?? 'Violation of platform terms'
   if (!until) {

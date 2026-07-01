@@ -1,4 +1,4 @@
-﻿// lib/auth/auth.ts
+// lib/auth/auth.ts
 
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
@@ -12,7 +12,7 @@ function getJwtSecret(): string {
   return secret
 }
 
-// â”€â”€ FIXED: added optional `role` param so rider tokens carry the role claim â”€â”€
+// -- FIXED: added optional `role` param so rider tokens carry the role claim --
 export function generateToken(userId: string, phone: string | null, role?: string): string {
   return jwt.sign({ userId, phone, ...(role ? { role } : {}) }, getJwtSecret(), { expiresIn: '30d' })
 }
@@ -120,7 +120,7 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
       return true
     } else {
       console.log('=====================================')
-      console.log('ðŸ“§ EMAIL OTP (dev mode - no RESEND_API_KEY set)')
+      console.log('?? EMAIL OTP (dev mode - no RESEND_API_KEY set)')
       console.log(`To: ${email}`)
       console.log(`Code: ${code}`)
       console.log('=====================================')
@@ -132,7 +132,7 @@ export async function sendEmailOTP(email: string, code: string): Promise<boolean
   }
 }
 
-// â”€â”€â”€ Suspension check helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- Suspension check helper --------------------------------------------------
 export async function checkSuspension(userId: string): Promise<{ suspended: boolean; reason?: string; until?: Date | null }> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -161,7 +161,7 @@ export async function checkSuspension(userId: string): Promise<{ suspended: bool
   return { suspended: false }
 }
 
-// â”€â”€â”€ getUserFromRequest â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- getUserFromRequest --------------------------------------------------------
 // Used by every API route to get the current authenticated user.
 export const getUserFromRequest = async (request: Request) => {
   const authHeader = request.headers.get('authorization')
