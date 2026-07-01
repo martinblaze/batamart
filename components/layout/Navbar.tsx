@@ -722,13 +722,31 @@ export function Navbar() {
 
   const [isRider, setIsRider] = useState(false)
   useEffect(() => {
-    if (isRiderParam) {
+    const onRiderRoute =
+      pathname?.startsWith('/rider-dashboard') ||
+      pathname?.startsWith('/rider/login')
+
+    if (isRiderParam || onRiderRoute || sessionStorage.getItem('batamart_rider_mode') === 'true') {
       sessionStorage.setItem('batamart_rider_mode', 'true')
       setIsRider(true)
     } else {
-      setIsRider(sessionStorage.getItem('batamart_rider_mode') === 'true')
+      setIsRider(false)
     }
-  }, [isRiderParam])
+  }, [isRiderParam, pathname])
+
+  const riderRouteAllowed =
+    pathname?.startsWith('/rider-dashboard') ||
+    pathname?.startsWith('/wallet') ||
+    pathname?.startsWith('/notifications') ||
+    pathname?.startsWith('/rider/login') ||
+    pathname?.startsWith('/login')
+
+  useEffect(() => {
+    if (!isApp || !isRider) return
+    if (!riderRouteAllowed) {
+      router.replace('/rider-dashboard?app=true&rider=true')
+    }
+  }, [isApp, isRider, riderRouteAllowed, router])
 
   const [splashDone, setSplashDone] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true
@@ -864,7 +882,7 @@ export function Navbar() {
 
   if (isAndroid) return null
   if (!splashDone) return null
-  if (pathname === '/') return null
+  if (pathname === '/' || pathname?.startsWith('/rider/login')) return null
 
   if (isApp) {
     if (isRider) {

@@ -57,7 +57,7 @@ function checkDisputeEligibility(order: any) {
     }
   }
 
-  // For delivered/completed orders, check 72-hour window.
+  // For delivered/completed orders, check 48-hour window.
   if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.COMPLETED) {
     // Use completedAt if deliveredAt is not available
     const deliveryDate = order.deliveredAt || order.completedAt;
@@ -75,7 +75,7 @@ function checkDisputeEligibility(order: any) {
       }
     }
 
-    // Check if within 72 hours of delivery/completion
+    // Check if within 48 hours of delivery/completion
     const deliveredDate = new Date(deliveryDate)
     const deadline = new Date(deliveredDate.getTime() + DISPUTE_WINDOW_MS)
     
@@ -94,7 +94,7 @@ function checkDisputeEligibility(order: any) {
     }
   }
 
-  // All checks passed for delivered/completed within 72 hours
+  // All checks passed for delivered/completed within 48 hours
   return {
     canDispute: true,
     reason: 'Eligible for dispute',

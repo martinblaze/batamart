@@ -33,7 +33,7 @@ const faqs = [
   },
   {
     question: 'What if I have an issue with my order?',
-    answer: 'Dispute flow: order must be delivered/completed, you must open within 72 hours, and you must attach at least one evidence image. Support then reviews both parties.'
+    answer: 'Dispute flow: order must be delivered/completed, you must open within 48 hours, and you must attach at least one evidence image. Support then reviews both parties.'
   },
   {
     question: 'How exactly does referral earning work?',

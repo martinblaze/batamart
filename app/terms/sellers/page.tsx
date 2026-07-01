@@ -78,7 +78,7 @@ const sections = [
     title: 'Disputes & Returns',
     icon: '⚖️',
     content: [
-      'Buyers may raise a dispute within 72 hours of delivery if a product does not match its listing description.',
+      'Buyers may raise a dispute within 48 hours of delivery if a product does not match its listing description.',
       "BATAMART's support team will review all disputes fairly, considering evidence from both parties.",
       "If a dispute is resolved in the buyer's favour, the funds will be refunded from escrow and the seller will bear the cost.",
       'Sellers found to have acted in bad faith (e.g. knowingly shipping wrong or damaged items) may face account suspension and forfeiture of escrow funds.',

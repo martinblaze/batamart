@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +12,7 @@ import SearchAutocomplete from '@/components/SearchAutocomplete'
 import FilterGroup from '@/components/FilterGroup'
 import PriceRangeSlider from '@/components/PriceRangeSlider'
 import ProductCard from '@/components/ProductCard'
+import { primeImageBatch } from '@/lib/image-cache'
 
 type Product = {
   id: string
@@ -257,7 +258,9 @@ function SearchPage() {
       try {
         const res = await authFetch('/api/products/feed?mode=top&pageSize=4')
         const data = await res.json()
-        setTopProducts(data.products || [])
+        const top = data.products || []
+        setTopProducts(top)
+        primeImageBatch(top.map((product: Product) => product.images?.[0]), 4)
       } catch {
         setTopProducts([])
       }
@@ -275,6 +278,7 @@ function SearchPage() {
         const next = data.products || []
         if (page === 1) setProducts(next)
         else setProducts((prev) => [...prev, ...next])
+        primeImageBatch(next.map((product: Product) => product.images?.[0]), 10)
       } catch {
         if (page === 1) setProducts([])
         setHasMore(false)
@@ -427,11 +431,11 @@ function SearchPage() {
             ) : products.length === 0 ? (
               <div className="mt-4 space-y-4">
                 <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center shadow-sm dark:border-[#272b33] dark:bg-[#0f1115]"><div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 dark:bg-[#1a1f2a]"><Search className="h-8 w-8 text-gray-300" /></div><h2 className="text-xl font-black text-gray-900 dark:text-[#e5e7eb]">No results for &quot;{query || 'your search'}&quot;</h2><p className="mx-auto mt-2 max-w-lg text-sm text-gray-500 dark:text-[#94a3b8]">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-4"><button onClick={() => { setQuery(suggestion); setPage(1) }} className="rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-indigo-600/20">Did you mean {suggestion}?</button></div>}<div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="rounded-2xl bg-gray-100 px-4 py-2.5 text-sm font-black text-gray-700 dark:bg-[#1a1f2a] dark:text-[#e5e7eb]">Broaden search</button><Link href="/marketplace" className="rounded-2xl bg-indigo-50 px-4 py-2.5 text-sm font-black text-indigo-700">Browse marketplace</Link></div></div>
-                {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-black text-gray-900 dark:text-[#e5e7eb]"><Sparkles className="h-4 w-4 text-indigo-600" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} />))}</div></div>}
+                {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-black text-gray-900 dark:text-[#e5e7eb]"><Sparkles className="h-4 w-4 text-indigo-600" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={index < 2} />))}</div></div>}
               </div>
             ) : (
               <>
-                <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{products.map((product) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} />))}</div>
+                <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{products.map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={page === 1 && index < 4} />))}</div>
                 {loadingMore && <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}</div>}
                 {hasMore && <div className="mt-6 flex justify-center"><button onClick={() => setPage((current) => current + 1)} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-gray-800 shadow-sm ring-1 ring-gray-200 transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#0f1115] dark:text-[#e5e7eb] dark:ring-[#272b33]">{loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpDown className="h-4 w-4" />} Load more</button></div>}
               </>

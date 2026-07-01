@@ -151,10 +151,10 @@ export async function PATCH(
     }
 
     const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
-      PENDING:        ['RIDER_ASSIGNED', 'CANCELLED'],
-      RIDER_ASSIGNED: ['PICKED_UP', 'CANCELLED'],
-      PICKED_UP:      ['ON_THE_WAY', 'CANCELLED'],
-      ON_THE_WAY:     ['DELIVERED', 'CANCELLED'],
+      PENDING:        ['RIDER_ASSIGNED'],
+      RIDER_ASSIGNED: ['PICKED_UP'],
+      PICKED_UP:      ['ON_THE_WAY'],
+      ON_THE_WAY:     ['DELIVERED'],
       DELIVERED:      ['COMPLETED'],
       COMPLETED:      [],
       CANCELLED:      [],
@@ -180,11 +180,7 @@ export async function PATCH(
           (currentStatus === 'ON_THE_WAY' && nextStatus === 'DELIVERED')
         )) ||
         (isBuyer && (
-          (currentStatus === 'PENDING' && nextStatus === 'CANCELLED') ||
-          (currentStatus === 'DELIVERED' && nextStatus === 'COMPLETED')
-        )) ||
-        (isSeller && (
-          currentStatus === 'PENDING' && nextStatus === 'CANCELLED'
+          currentStatus === 'DELIVERED' && nextStatus === 'COMPLETED'
         ))
       );
 

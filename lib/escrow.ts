@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma'
 
-export const DISPUTE_WINDOW_HOURS = 72
+export const DISPUTE_WINDOW_HOURS = 48
 export const DISPUTE_WINDOW_MS = DISPUTE_WINDOW_HOURS * 60 * 60 * 1000
 
 function getSellerShareFromOrder(order: {
@@ -49,7 +49,7 @@ export async function releaseMaturedSellerEscrowForUser(sellerId: string) {
     const sellerShare = getSellerShareFromOrder(order)
     if (sellerShare <= 0) continue
 
-    const releaseRef = `${order.orderNumber}-SELLER-RELEASE-72H`
+    const releaseRef = `${order.orderNumber}-SELLER-RELEASE-${DISPUTE_WINDOW_HOURS}H`
 
     await prisma.$transaction(async (tx) => {
       const already = await tx.transaction.findFirst({
@@ -79,7 +79,7 @@ export async function releaseMaturedSellerEscrowForUser(sellerId: string) {
           userId: sellerId,
           type: 'CREDIT',
           amount: sellerShare,
-          description: `Escrow release after 72-hour dispute window (Order: ${order.orderNumber})`,
+          description: `Escrow release after ${DISPUTE_WINDOW_HOURS}-hour dispute window (Order: ${order.orderNumber})`,
           reference: releaseRef,
           balanceBefore: before,
           balanceAfter: before + sellerShare,

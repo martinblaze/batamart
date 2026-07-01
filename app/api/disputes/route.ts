@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     const ageMs = Date.now() - new Date(deliveredAt).getTime()
     if (ageMs > DISPUTE_WINDOW_MS) {
       return NextResponse.json({
-        error: 'Dispute window expired. You can only open disputes within 72 hours of delivery.',
+        error: 'Dispute window expired. You can only open disputes within 48 hours of delivery.',
       }, { status: 400 })
     }
 

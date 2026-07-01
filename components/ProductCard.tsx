@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useState } from 'react'
@@ -56,12 +56,14 @@ export default function ProductCard({
   onOpen,
   showSeller = true,
   className = '',
+  priority = false,
 }: {
   product: ProductCardProduct
   layout?: 'grid' | 'list'
   onOpen?: () => void
   showSeller?: boolean
   className?: string
+  priority?: boolean
 }) {
   const addItem = useCartStore((state) => state.addItem)
   const [loading, setLoading] = useState(false)
@@ -114,7 +116,7 @@ export default function ProductCard({
       <article className={`group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl dark:border-[#272b33] dark:bg-[#0f1115] ${className}`}>
         <div className="flex flex-col sm:flex-row">
           <button type="button" onClick={onOpen} className="relative aspect-square w-full sm:w-52 flex-shrink-0 bg-gray-50 text-left">
-            <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" />
+            <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
             <div className="absolute left-3 top-3 flex flex-wrap gap-2">
               {product.isHot && <span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2.5 py-1 text-[10px] font-black text-white shadow-lg"><Flame className="h-3 w-3" />Hot</span>}
               {product.isNew && <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-black text-white shadow-lg">NEW</span>}
@@ -167,7 +169,7 @@ export default function ProductCard({
   return (
     <article className={`group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl dark:border-[#272b33] dark:bg-[#0f1115] ${className}`}>
       <button type="button" onClick={onOpen} className="relative aspect-square w-full bg-gray-50 text-left">
-        <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" />
+        <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           {product.isHot && <span className="inline-flex items-center gap-1 rounded-full bg-orange-500 px-2.5 py-1 text-[10px] font-black text-white shadow-lg"><Flame className="h-3 w-3" />Hot</span>}
           {product.isNew && <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-black text-white shadow-lg">NEW</span>}

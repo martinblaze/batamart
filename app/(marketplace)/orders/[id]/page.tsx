@@ -231,7 +231,6 @@ export default function OrderDetailPage() {
     if (userRole === 'SELLER') {
       if (order.status === 'PENDING') {
         actions.push({ label: 'Process Order', status: 'PROCESSING', variant: 'primary' });
-        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'danger' });
       }
       if (order.status === 'PROCESSING') {
         actions.push({ label: 'Mark as Shipped', status: 'SHIPPED', variant: 'primary' });
@@ -245,9 +244,7 @@ export default function OrderDetailPage() {
     }
 
     if (userRole === 'BUYER') {
-      if (order.status === 'PENDING') {
-        actions.push({ label: 'Cancel Order', status: 'CANCELLED', variant: 'danger' });
-      }
+      // Buyers can no longer cancel after payment.
     }
 
     return actions;
@@ -949,7 +946,7 @@ export default function OrderDetailPage() {
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">
                   If there's an issue with this order, you can open a dispute
-                  within 72 hours of delivery.
+                  within 48 hours of delivery.
                 </p>
                 <Button
                   variant="outline"

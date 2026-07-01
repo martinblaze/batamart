@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +23,8 @@ import { isSplashPending } from '@/components/SplashScreen'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
+import { primeImageBatch } from '@/lib/image-cache'
+import { IMAGE_SIZES } from '@/lib/cloudinary'
 
 // ─────────────────────────────────────────────
 // Pull-to-refresh constants
@@ -458,6 +460,8 @@ const RECENT_SEARCHES_KEY  = 'BATAMART-recent-searches'
 const RECENTLY_VIEWED_KEY  = 'BATAMART-recently-viewed'
 const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
 const FEED_CACHE_TTL_MS = 90 * 1000
+const CATEGORY_PAGE_SIZE = 24
+const FEED_PAGE_SIZE = 40
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
@@ -571,7 +575,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative aspect-square bg-gray-50 overflow-hidden">
-        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
+        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.card} />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isTrending && (
             <span className="badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
@@ -667,7 +671,7 @@ function MiniProductCard({ product, onClick }: { product: any; onClick: () => vo
   return (
     <div onClick={onClick} className="mini-card cursor-pointer group">
       <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2">
-        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
+        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.card} />
       </div>
       <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{product.name}</p>
       <p className="text-xs font-black text-BATAMART-primary mt-0.5">{fmt(product.price)}</p>
@@ -743,7 +747,7 @@ function CategorySpotlightGrid({ allProducts, onCategorySelect }: {
                     onClick={e => { e.stopPropagation(); onCategorySelect(spot.catFilter) }}
                     className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm"
                   >
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
                   </div>
                 ))}
                 {Array.from({ length: Math.max(0, 4 - catProducts.length) }).map((_, i) => (
@@ -941,7 +945,7 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
                   >
                     <div className="aspect-square rounded-xl overflow-hidden bg-white shadow-sm mb-1 relative">
                       {pick ? (
-                        <LoadedImage src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" />
+                        <LoadedImage src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">{panel.icon}</div>
                       )}
@@ -1052,7 +1056,7 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
               <div className="grid grid-cols-2 gap-1 px-2 pb-1">
                 {picks.map((p, i) => (
                   <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm">
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
                   </div>
                 ))}
               </div>
@@ -1537,10 +1541,12 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
             className="col-span-2 row-span-2 rounded-xl overflow-hidden cursor-pointer relative group"
             onClick={() => picks[0] && onProductClick(picks[0].id)}
           >
-            <img
+            <LoadedImage
               src={picks[0]?.images[0] || '/placeholder.png'}
-              alt={picks[0]?.name}
+              alt={picks[0]?.name || ""}
               className="mosaic-img w-full h-full object-cover"
+              wrapperClassName="h-full w-full"
+              width={IMAGE_SIZES.detail}
             />
             {picks[0] && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
@@ -1558,10 +1564,12 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
               className="rounded-xl overflow-hidden cursor-pointer relative group"
               onClick={() => onProductClick(p.id)}
             >
-              <img
+              <LoadedImage
                 src={p.images[0] || '/placeholder.png'}
                 alt={p.name}
                 className="mosaic-img w-full h-full object-cover"
+                wrapperClassName="h-full w-full"
+                width={IMAGE_SIZES.card}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
             </div>
@@ -1628,7 +1636,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="relative mx-auto mb-2 w-16 h-16">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-100 to-indigo-100 border-2 border-violet-200">
                   {seller.profilePhoto ? (
-                    <LoadedImage src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                    <LoadedImage src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl font-black text-violet-400">
                       {seller.name?.[0]?.toUpperCase() || '?'}
@@ -1651,7 +1659,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="flex gap-1 mt-2 justify-center">
                 {sellerProds.slice(0, 2).map(p => (
                   <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100">
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
                   </div>
                 ))}
               </div>
@@ -1807,6 +1815,38 @@ export default function MarketplacePage() {
   const [renderSeed,          setRenderSeed]          = useState(() => Date.now())
   const [maxPriceFilter,      setMaxPriceFilter]      = useState<number | null>(null)
   const [sortMode,            setSortMode]            = useState<'relevance' | 'price_asc' | 'price_desc' | 'newest'>('relevance')
+  const [categoryPage, setCategoryPage] = useState(1)
+  const [categoryHasMore, setCategoryHasMore] = useState(false)
+  const [loadingMoreCategory, setLoadingMoreCategory] = useState(false)
+
+  const [feedPage, setFeedPage] = useState(1)
+  const [feedHasMore, setFeedHasMore] = useState(false)
+  const [loadingMoreFeed, setLoadingMoreFeed] = useState(false)
+
+  const didInitAllViewRef = useRef(false)
+  const categoryRequestId = useRef(0)
+  const categoryAbortRef  = useRef<AbortController | null>(null)
+  const feedRequestId     = useRef(0)
+  const feedAbortRef      = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    const handleRestore = () => {
+      if (document.visibilityState !== 'visible') return
+      if (loading || allProducts.length > 0) return
+      loadAllView(universityId || undefined)
+      fetchPeopleLikeYouBought()
+    }
+
+    window.addEventListener('pageshow', handleRestore)
+    window.addEventListener('focus', handleRestore)
+    document.addEventListener('visibilitychange', handleRestore)
+
+    return () => {
+      window.removeEventListener('pageshow', handleRestore)
+      window.removeEventListener('focus', handleRestore)
+      document.removeEventListener('visibilitychange', handleRestore)
+    }
+  }, [allProducts.length, loading, universityId])
 
   // ── Referral popup — shows once per app session, only on first marketplace visit ──
   const [showReferralPopup, setShowReferralPopup] = useState(false)
@@ -1864,11 +1904,11 @@ export default function MarketplacePage() {
           const userUniversityId = d.user?.universityId || ''
           if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName)
           if (userUniversityId) setUniversityId(userUniversityId)
-          return fetchFeed(userUniversityId)
+          return loadAllView(userUniversityId)
         })
-        .catch(() => fetchFeed())
+        .catch(() => loadAllView())
     } else {
-      fetchFeed()
+      loadAllView()
     }
   }, [])
 
@@ -1908,9 +1948,17 @@ export default function MarketplacePage() {
   // ── Category change ──
   useEffect(() => {
     if (!mounted) return
-    if (selectedCategory === 'All' && !universityId) return
-    if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
-  }, [selectedCategory, mounted, universityId])
+    if (selectedCategory === 'All') {
+      setMaxPriceFilter(null)
+      if (!didInitAllViewRef.current) {
+        didInitAllViewRef.current = true
+        return
+      }
+      loadAllView(universityId || undefined)
+      return
+    }
+    fetchByCategory(selectedCategory, { page: 1, append: false })
+  }, [selectedCategory, selectedCategoryKey, maxPriceFilter, sortMode, mounted, universityId])
 
   // ── Filter recently viewed to remove suspended/deleted products ──
   useEffect(() => {
@@ -1979,7 +2027,7 @@ export default function MarketplacePage() {
       if (triggered) {
         setIsRefreshing(true)
         setPullDistance(PULL_THRESHOLD)
-        await fetchFeed()
+        await loadAllView()
         setIsRefreshing(false)
       }
       // Animate indicator back to hidden
@@ -2103,24 +2151,62 @@ export default function MarketplacePage() {
     return { categories, keywords }
   }
 
-  const fetchFeed = async (universityIdOverride?: string, page = 1) => {
-    setLoading(true)
+  type ProductQuery = {
+    category?: string
+    categoryKey?: string | null
+    maxPrice?: number | null
+    sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest'
+    page?: number
+    limit?: number
+  }
+
+  function buildProductParams(q: ProductQuery) {
+    const params = new URLSearchParams()
+    if (q.categoryKey) params.set('categoryKey', q.categoryKey)
+    if (q.category && q.category !== 'All') params.set('category', q.category)
+    if (q.maxPrice != null) params.set('maxPrice', String(q.maxPrice))
+    if (q.sort && q.sort !== 'relevance') params.set('sort', q.sort)
+    params.set('limit', String(q.limit ?? 24))
+    params.set('page', String(q.page ?? 1))
+    return params
+  }
+
+  const fetchFeed = async (
+    universityIdOverride?: string,
+    opts: { page?: number; append?: boolean } = {}
+  ) => {
+    const { page = 1, append = false } = opts
+    const requestId = ++feedRequestId.current
+    feedAbortRef.current?.abort()
+    const controller = new AbortController()
+    feedAbortRef.current = controller
+
+    if (append) setLoadingMoreFeed(true)
+    else setLoading(true)
+
     try {
       const token = localStorage.getItem('token')
-      if (!token) return
+      if (!token) return [] as any[]
       const feedUniversityId = universityIdOverride || universityId || 'unknown'
-      const feedCacheKey = `feed:${feedUniversityId}:${page}`
-      const cached = getClientCache<any>(feedCacheKey)
-      if (cached) {
-        const products = cached.value?.products || []
-        setAllProducts(products)
-        setRenderSeed(Date.now())
-        const cats = Array.from(new Set(
-          products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
-        )) as string[]
-        setInterestCategories(cats.slice(0, 4))
-        setLoading(false)
+      const feedCacheKey = `feed:${feedUniversityId}:1`
+
+      if (page === 1 && !append) {
+        const cached = getClientCache<any>(feedCacheKey)
+        if (cached) {
+          const products = cached.value?.products || []
+          setAllProducts(products)
+          setFeedHasMore(Boolean(cached.value?.hasMore ?? products.length === FEED_PAGE_SIZE))
+          setFeedPage(1)
+          primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
+          setRenderSeed(Date.now())
+          const cats = Array.from(new Set(
+            products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
+          )) as string[]
+          setInterestCategories(cats.slice(0, 4))
+          return products
+        }
       }
+
       const { categories, keywords } = buildFeedSignals()
       const params = new URLSearchParams()
       if (categories.length) {
@@ -2131,22 +2217,85 @@ export default function MarketplacePage() {
         params.set('keywords', keywords.map((k) => k.value).join(','))
         params.set('keywordSignals', JSON.stringify(keywords))
       }
-      params.set('limit', '100')
+      params.set('limit', String(FEED_PAGE_SIZE))
+      params.set('page', String(page))
       if (feedUniversityId !== 'unknown') params.set('universityId', feedUniversityId)
-      const res  = await fetch(`/api/products/feed?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+
+      const res = await fetch(`/api/products/feed?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      })
+      const data = await res.json()
+
+      if (requestId !== feedRequestId.current) return [] as any[]
+
+      if (res.ok) {
+        const products = data.products || []
+        if (page === 1 && !append) {
+          setClientCache(feedCacheKey, { products, hasMore: Boolean(data.hasMore) }, FEED_CACHE_TTL_MS)
+        }
+        setAllProducts((prev) => (append ? [...prev, ...products] : products))
+        setFeedHasMore(Boolean(data.hasMore ?? products.length === FEED_PAGE_SIZE))
+        setFeedPage(page)
+        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
+        setRenderSeed(Date.now())
+        if (!append) {
+          const cats = Array.from(new Set(
+            products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
+          )) as string[]
+          setInterestCategories(cats.slice(0, 4))
+        }
+        return products
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        // silent fail
+      }
+    } finally {
+      if (requestId === feedRequestId.current) {
+        setLoading(false)
+        setLoadingMoreFeed(false)
+      }
+    }
+    return [] as any[]
+  }
+
+  const fetchAllProducts = async () => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return [] as any[]
+      const params = new URLSearchParams()
+      params.set('limit', '100')
+      const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (res.ok) {
         const products = data.products || []
-        setClientCache(feedCacheKey, { products }, FEED_CACHE_TTL_MS)
         setAllProducts(products)
+        setFeedHasMore(false)
+        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
         setRenderSeed(Date.now())
         const cats = Array.from(new Set(
           products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
         )) as string[]
         setInterestCategories(cats.slice(0, 4))
+        return products
       }
     } catch { /* silent fail */ }
     finally { setLoading(false) }
+    return [] as any[]
+  }
+
+  const loadAllView = async (universityIdOverride?: string) => {
+    const feedProducts = await fetchFeed(universityIdOverride, { page: 1, append: false })
+    if (!feedProducts.length) {
+      await fetchAllProducts()
+    }
+  }
+
+  const loadMoreFeedProducts = () => {
+    if (!feedHasMore || loadingMoreFeed) return
+    fetchFeed(universityId || undefined, { page: feedPage + 1, append: true })
   }
 
   const fetchPeopleLikeYouBought = async () => {
@@ -2166,31 +2315,68 @@ export default function MarketplacePage() {
         }))
         .filter((p: any) => p?.id)
       setPeopleLikeYouBought(items)
+      primeImageBatch(items.map((p: any) => p?.images?.[0]), 10)
     } catch { /* silent fail */ }
   }
 
-  const fetchByCategory = async (category: string) => {
-    setLoading(true)
+  const fetchByCategory = async (
+    category: string,
+    opts: { page?: number; append?: boolean } = {}
+  ) => {
+    const { page = 1, append = false } = opts
+    const requestId = ++categoryRequestId.current
+    categoryAbortRef.current?.abort()
+    const controller = new AbortController()
+    categoryAbortRef.current = controller
+
+    if (append) setLoadingMoreCategory(true)
+    else setLoading(true)
+
     try {
       const token = localStorage.getItem('token')
       if (!token) return
 
       const categoryKey = resolveCategoryKey(category)
-      const params = new URLSearchParams()
-      if (categoryKey) params.set('categoryKey', categoryKey)
-      if (category && category !== 'All') params.set('category', category)
+      const params = buildProductParams({
+        category,
+        categoryKey,
+        maxPrice: maxPriceFilter,
+        sort: sortMode,
+        page,
+        limit: CATEGORY_PAGE_SIZE,
+      })
 
-      const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/products?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      })
       const data = await res.json()
+
+      if (requestId !== categoryRequestId.current) return
+
       if (res.ok) {
         const products = data.products || []
-        setAllProducts(products)
+        setAllProducts((prev) => (append ? [...prev, ...products] : products))
+        setCategoryHasMore(Boolean(data.hasMore ?? products.length === CATEGORY_PAGE_SIZE))
+        setCategoryPage(page)
+        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
       }
-    } catch { /* silent fail */ }
-    finally { setLoading(false) }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        // silent fail
+      }
+    } finally {
+      if (requestId === categoryRequestId.current) {
+        setLoading(false)
+        setLoadingMoreCategory(false)
+      }
+    }
   }
 
-  // ── Interaction handlers ──
+  const loadMoreCategoryProducts = () => {
+    if (!categoryHasMore || loadingMoreCategory) return
+    fetchByCategory(selectedCategory, { page: categoryPage + 1, append: true })
+  }
   const copyReferralCode = async () => {
     const textToCopy = referralLink || referralCode
     if (!textToCopy) return
@@ -2304,13 +2490,6 @@ export default function MarketplacePage() {
     return (remaining.length > 0 ? remaining : allProducts).slice(0, 16)
   }, [allProducts, forYouProducts, trendingProducts, newListings])
 
-  const filteredByCategory = useMemo(() => {
-    const categoryFilter = selectedCategoryKey || selectedCategory
-    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, categoryFilter))
-    if (maxPriceFilter !== null) prods = prods.filter(p => p.price <= maxPriceFilter)
-    return prods
-  }, [allProducts, selectedCategory, selectedCategoryKey, maxPriceFilter])
-
   const sortProducts = useCallback((products: any[]) => {
     const next = [...products]
     if (sortMode === 'price_asc') return next.sort((a, b) => (a.price || 0) - (b.price || 0))
@@ -2319,9 +2498,7 @@ export default function MarketplacePage() {
     return next
   }, [sortMode])
 
-  const sortedFilteredByCategory = useMemo(() => sortProducts(filteredByCategory), [filteredByCategory, sortProducts])
   const sortedAllProducts = useMemo(() => sortProducts(allProducts), [allProducts, sortProducts])
-
   const productsByCategory = useMemo(() => {
     const map: Record<string, any[]> = {}
     for (const cat of CATEGORIES.slice(1)) {
@@ -2374,7 +2551,7 @@ export default function MarketplacePage() {
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
             >
               {s.type === 'product' && s.image
-                ? <LoadedImage src={s.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" wrapperClassName="h-8 w-8" />
+                ? <LoadedImage src={s.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" wrapperClassName="h-8 w-8" width={IMAGE_SIZES.thumb} />
                 : s.type === 'recent'
                   ? <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   : <TrendingUp className="w-4 h-4 text-BATAMART-primary flex-shrink-0" />
@@ -2693,10 +2870,10 @@ export default function MarketplacePage() {
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
                 </select>
-                <span className="text-[11px] text-gray-400 font-medium">{sortedFilteredByCategory.length} items</span>
+                <span className="text-[11px] text-gray-400 font-medium">{allProducts.length} items</span>
               </div>
             </div>
-            {sortedFilteredByCategory.length === 0 ? (
+            {allProducts.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                 <ShoppingBag className="w-12 h-12 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-400 font-semibold mb-4">Nothing here yet</p>
@@ -2705,14 +2882,28 @@ export default function MarketplacePage() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {sortedFilteredByCategory.map((p, i) => (
-                  <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 40} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {allProducts.map((p, i) => (
+                    <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 40} />
+                  ))}
+                </div>
+                {categoryHasMore && (
+                  <div className="pt-4 flex justify-center">
+                    <button
+                      onClick={loadMoreCategoryProducts}
+                      disabled={loadingMoreCategory}
+                      className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm disabled:opacity-60"
+                    >
+                      {loadingMoreCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                      Load more
+                    </button>
+                  </div>
+                )}
+              </>
             )}
-          </div>
 
+          </div>
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
           <div>
@@ -2745,6 +2936,18 @@ export default function MarketplacePage() {
                 <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 30} />
               ))}
             </div>
+            {feedHasMore && (
+              <div className="pt-4 flex justify-center">
+                <button
+                  onClick={loadMoreFeedProducts}
+                  disabled={loadingMoreFeed}
+                  className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm disabled:opacity-60"
+                >
+                  {loadingMoreFeed ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+                  Load more
+                </button>
+              </div>
+            )}
           </div>
 
         ) : (

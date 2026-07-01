@@ -105,6 +105,29 @@ export default function RiderDashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    sessionStorage.setItem('batamart_rider_mode', 'true')
+
+    const existingManifest = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
+    const previousHref = existingManifest?.getAttribute('href')
+    const manifestLink = existingManifest ?? document.createElement('link')
+
+    if (!existingManifest) {
+      manifestLink.rel = 'manifest'
+      document.head.appendChild(manifestLink)
+    }
+
+    manifestLink.href = '/rider-manifest.json'
+
+    return () => {
+      if (previousHref) {
+        manifestLink.setAttribute('href', previousHref)
+      }
+    }
+  }, [])
+
   const fetchRiderData = async () => {
     try {
       const [profileRes, batchesRes, myBatchesRes] = await Promise.all([

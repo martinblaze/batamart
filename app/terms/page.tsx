@@ -62,7 +62,7 @@ export default function TermsPage() {
         "Pay for items promptly after purchase",
         "Provide accurate delivery information",
         "Inspect items upon delivery",
-        "Report issues within 72 hours of delivery",
+        "Report issues within 48 hours of delivery",
         "Treat sellers and riders with respect"
       ]
     }
@@ -103,10 +103,10 @@ export default function TermsPage() {
 
   const disputeFlow = [
     "Buyer can open a dispute only after order is DELIVERED or COMPLETED.",
-    "Dispute must be opened within 72 hours of delivery/completion timestamp.",
+    "Dispute must be opened within 48 hours of delivery/completion timestamp.",
     "At least one evidence image is required when submitting a dispute.",
     "When dispute opens, order status is marked DISPUTED and support reviews both sides.",
-    "If no dispute is raised in the 72-hour window, seller escrow can be released by the platform flow."
+    "If no dispute is raised in the 48-hour window, seller escrow can be released by the platform flow."
   ]
 
   const referralFlow = [

@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: '🎉 Delivery confirmed. Seller funds stay in escrow for 72 hours; rider payment released.',
+      message: '🎉 Delivery confirmed. Seller funds stay in escrow for 48 hours; rider payment released.',
       order: result,
     })
   } catch (error) {

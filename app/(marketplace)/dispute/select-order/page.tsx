@@ -77,7 +77,7 @@ export default function SelectOrderForDisputePage() {
             <h1 className="text-2xl font-bold text-gray-900">Open a Dispute</h1>
           </div>
           <p className="text-gray-500 text-sm">
-            Select the delivered order you want to dispute. Disputes must be opened within 72 hours of delivery.
+            Select the delivered order you want to dispute. Disputes must be opened within 48 hours of delivery.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export default function SelectOrderForDisputePage() {
             <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-medium">No eligible orders</p>
             <p className="text-gray-400 text-sm mt-1">
-              Only delivered or completed orders within 72 hours can be disputed.
+              Only delivered or completed orders within 48 hours can be disputed.
             </p>
             <Link
               href="/orders"
