@@ -13,7 +13,14 @@ function appRedirect(path: string) {
     console.error('❌ CRITICAL: NEXT_PUBLIC_APP_URL is not set in environment variables!')
     return NextResponse.redirect(`https://batamart.com${path}`)
   }
-  return NextResponse.redirect(`${base.replace(/\/$/, '')}${path}`)
+
+  try {
+    const url = new URL(path, base)
+    return NextResponse.redirect(url.toString())
+  } catch (redirectError) {
+    console.error('❌ Invalid NEXT_PUBLIC_APP_URL:', base, redirectError)
+    return NextResponse.redirect(`https://batamart.com${path}`)
+  }
 }
 
 export async function GET(request: NextRequest) {
