@@ -9,6 +9,15 @@ import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
+const PAYMENT_SETTING_KEY = 'checkout_payments_enabled'
+
+async function arePaymentsEnabled() {
+  const setting = await prisma.appSetting.findUnique({
+    where: { key: PAYMENT_SETTING_KEY },
+  })
+  return setting?.value ?? true
+}
+
 // ============================================================
 // STANDARDIZED FEE STRUCTURE
 // calculateFees is imported by the verify route — both sides
@@ -50,18 +59,18 @@ export function calculateFees(subtotal: number, deliveryFee: number = 800) {
 
 export async function POST(request: NextRequest) {
   try {
-    const paymentsPaused = true
-    if (paymentsPaused) {
+    const jsonErr = enforceJsonRequest(request)
+    if (jsonErr) return jsonErr
+    const originErr = enforceSameOrigin(request)
+    if (originErr) return originErr
+
+    const paymentsEnabled = await arePaymentsEnabled()
+    if (!paymentsEnabled) {
       return NextResponse.json(
         { error: 'Payments are temporarily disabled. Please try again later.' },
         { status: 503 }
       )
     }
-
-    const jsonErr = enforceJsonRequest(request)
-    if (jsonErr) return jsonErr
-    const originErr = enforceSameOrigin(request)
-    if (originErr) return originErr
 
     const user = await getUserFromRequest(request)
     if (!user) {
@@ -71,7 +80,7 @@ export async function POST(request: NextRequest) {
     const rate = await checkRateLimitDistributed(
       `payments:init:${user.id}:${ip}`,
       20,
-      15 * 60 * 1000,
+      15 * 60 * 60 * 1000,
       { requireDistributedInProduction: true },
     )
     if (!rate.allowed) {
