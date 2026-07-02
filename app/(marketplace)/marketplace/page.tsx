@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import LoadedImage from '@/components/LoadedImage'
 import { createPortal } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +10,7 @@ import {
   Search, Star, Shield, ShoppingBag, Sparkles, Flame,
   AlertCircle, Clock, TrendingUp, X, ChevronRight,
   Package, Zap, Award, ArrowRight, Tag, Eye, Heart, Flag,
-  CheckCircle, Users, Truck, ChevronLeft,
+  RefreshCw, CheckCircle, Users, Truck, ChevronLeft,
   BadgeCheck, Timer, Percent, MapPin, Bell, Menu,
   ChevronDown, Grid3X3, List, Sliders, Loader2, Copy,
   Gift, Crown, Coffee, BookOpen, Cpu, Shirt, Home,
@@ -23,8 +22,14 @@ import { isSplashPending } from '@/components/SplashScreen'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
-import { primeImageBatch } from '@/lib/image-cache'
-import { IMAGE_SIZES } from '@/lib/cloudinary'
+
+// ─────────────────────────────────────────────
+// Pull-to-refresh constants
+// ─────────────────────────────────────────────
+const PULL_THRESHOLD = 80        // visual distance to trigger refresh
+const PULL_MAX = 110             // cap how far indicator travels
+const PULL_DEAD_ZONE = 8        // ignore tiny jitters
+const PULL_RESIST = 0.4         // rubber-band resistance (< 1 = softer)
 
 // ─────────────────────────────────────────────
 // CSS – all animations injected once
@@ -452,8 +457,6 @@ const RECENT_SEARCHES_KEY  = 'BATAMART-recent-searches'
 const RECENTLY_VIEWED_KEY  = 'BATAMART-recently-viewed'
 const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
 const FEED_CACHE_TTL_MS = 90 * 1000
-const CATEGORY_PAGE_SIZE = 24
-const FEED_PAGE_SIZE = 40
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
 
@@ -567,7 +570,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative aspect-square bg-gray-50 overflow-hidden">
-        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.card} />
+        <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isTrending && (
             <span className="badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
@@ -663,7 +666,7 @@ function MiniProductCard({ product, onClick }: { product: any; onClick: () => vo
   return (
     <div onClick={onClick} className="mini-card cursor-pointer group">
       <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2">
-        <LoadedImage src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.card} />
+        <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
       </div>
       <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{product.name}</p>
       <p className="text-xs font-black text-BATAMART-primary mt-0.5">{fmt(product.price)}</p>
@@ -739,7 +742,7 @@ function CategorySpotlightGrid({ allProducts, onCategorySelect }: {
                     onClick={e => { e.stopPropagation(); onCategorySelect(spot.catFilter) }}
                     className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm"
                   >
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
+                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
                   </div>
                 ))}
                 {Array.from({ length: Math.max(0, 4 - catProducts.length) }).map((_, i) => (
@@ -937,7 +940,7 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
                   >
                     <div className="aspect-square rounded-xl overflow-hidden bg-white shadow-sm mb-1 relative">
                       {pick ? (
-                        <LoadedImage src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
+                        <img src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">{panel.icon}</div>
                       )}
@@ -1048,7 +1051,7 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
               <div className="grid grid-cols-2 gap-1 px-2 pb-1">
                 {picks.map((p, i) => (
                   <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm">
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
+                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 ))}
               </div>
@@ -1106,7 +1109,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
           {products.map(p => (
             <div key={p.id} onClick={() => onProductClick(p.id)} className="deal-card flex-shrink-0 w-36 sm:w-44 cursor-pointer group/card">
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2.5">
-                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" />
               </div>
               <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{p.name}</p>
               <p className="text-xs font-black text-BATAMART-primary mt-1">{fmt(p.price)}</p>
@@ -1179,6 +1182,38 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
   )
 }
 
+// ─────────────────────────────────────────────
+// Pull-to-Refresh Indicator
+// ─────────────────────────────────────────────
+function PullIndicator({ pullDistance, isRefreshing }: { pullDistance: number; isRefreshing: boolean }) {
+  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1)
+  const ready    = pullDistance >= PULL_THRESHOLD
+  return (
+    <div
+      className="ptr-indicator fixed top-0 left-0 right-0 z-50 flex justify-center"
+      style={{
+        transform: `translateY(${Math.min(pullDistance, PULL_MAX) - 60}px)`,
+        transition: isRefreshing || pullDistance === 0
+          ? 'transform 0.35s cubic-bezier(0.22,1,0.36,1)'
+          : 'none',
+        opacity: isRefreshing ? 1 : progress,
+      }}
+    >
+      <div
+        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-lg border border-gray-100"
+        style={{ transform: `scale(${0.85 + progress * 0.15})` }}
+      >
+        <RefreshCw
+          className={`w-4 h-4 text-BATAMART-primary ${isRefreshing ? 'ptr-spinning' : ''}`}
+          style={{ transform: isRefreshing ? undefined : `rotate(${progress * 220}deg)` }}
+        />
+        <span className="text-xs font-bold text-gray-600">
+          {isRefreshing ? 'Refreshing…' : ready ? 'Release to refresh' : 'Pull to refresh'}
+        </span>
+      </div>
+    </div>
+  )
+}
 
 // ─────────────────────────────────────────────
 // Live Stats Bar
@@ -1501,12 +1536,10 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
             className="col-span-2 row-span-2 rounded-xl overflow-hidden cursor-pointer relative group"
             onClick={() => picks[0] && onProductClick(picks[0].id)}
           >
-            <LoadedImage
+            <img
               src={picks[0]?.images[0] || '/placeholder.png'}
-              alt={picks[0]?.name || ""}
+              alt={picks[0]?.name}
               className="mosaic-img w-full h-full object-cover"
-              wrapperClassName="h-full w-full"
-              width={IMAGE_SIZES.detail}
             />
             {picks[0] && (
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
@@ -1524,12 +1557,10 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
               className="rounded-xl overflow-hidden cursor-pointer relative group"
               onClick={() => onProductClick(p.id)}
             >
-              <LoadedImage
+              <img
                 src={p.images[0] || '/placeholder.png'}
                 alt={p.name}
                 className="mosaic-img w-full h-full object-cover"
-                wrapperClassName="h-full w-full"
-                width={IMAGE_SIZES.card}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
             </div>
@@ -1543,7 +1574,7 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
                 className="flex-1 h-16 rounded-xl overflow-hidden cursor-pointer relative group"
                 onClick={() => onProductClick(p.id)}
               >
-                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="mosaic-img w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="mosaic-img w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
               </div>
             ))}
@@ -1596,7 +1627,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="relative mx-auto mb-2 w-16 h-16">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-100 to-indigo-100 border-2 border-violet-200">
                   {seller.profilePhoto ? (
-                    <LoadedImage src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
+                    <img src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-2xl font-black text-violet-400">
                       {seller.name?.[0]?.toUpperCase() || '?'}
@@ -1619,7 +1650,7 @@ function TopSellersRow({ products, onProductClick }: {
               <div className="flex gap-1 mt-2 justify-center">
                 {sellerProds.slice(0, 2).map(p => (
                   <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100">
-                    <LoadedImage src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" wrapperClassName="h-full w-full" width={IMAGE_SIZES.thumb} />
+                    <img src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -1693,7 +1724,7 @@ function FlashSaleCountdown({ products, onProductClick }: {
               onClick={() => onProductClick(p.id)}
             >
               <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2 relative">
-                <LoadedImage src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" wrapperClassName="h-full w-full" />
+                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
                 {p.discountPercent && (
                   <span className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg">
                     -{p.discountPercent}%
@@ -1775,38 +1806,6 @@ export default function MarketplacePage() {
   const [renderSeed,          setRenderSeed]          = useState(() => Date.now())
   const [maxPriceFilter,      setMaxPriceFilter]      = useState<number | null>(null)
   const [sortMode,            setSortMode]            = useState<'relevance' | 'price_asc' | 'price_desc' | 'newest'>('relevance')
-  const [categoryPage, setCategoryPage] = useState(1)
-  const [categoryHasMore, setCategoryHasMore] = useState(false)
-  const [loadingMoreCategory, setLoadingMoreCategory] = useState(false)
-
-  const [feedPage, setFeedPage] = useState(1)
-  const [feedHasMore, setFeedHasMore] = useState(false)
-  const [loadingMoreFeed, setLoadingMoreFeed] = useState(false)
-
-  const didInitAllViewRef = useRef(false)
-  const categoryRequestId = useRef(0)
-  const categoryAbortRef  = useRef<AbortController | null>(null)
-  const feedRequestId     = useRef(0)
-  const feedAbortRef      = useRef<AbortController | null>(null)
-
-  useEffect(() => {
-    const handleRestore = () => {
-      if (document.visibilityState !== 'visible') return
-      if (loading || allProducts.length > 0) return
-      loadAllView(universityId || undefined)
-      fetchPeopleLikeYouBought()
-    }
-
-    window.addEventListener('pageshow', handleRestore)
-    window.addEventListener('focus', handleRestore)
-    document.addEventListener('visibilitychange', handleRestore)
-
-    return () => {
-      window.removeEventListener('pageshow', handleRestore)
-      window.removeEventListener('focus', handleRestore)
-      document.removeEventListener('visibilitychange', handleRestore)
-    }
-  }, [allProducts.length, loading, universityId])
 
   // ── Referral popup — shows once per app session, only on first marketplace visit ──
   const [showReferralPopup, setShowReferralPopup] = useState(false)
@@ -1814,9 +1813,19 @@ export default function MarketplacePage() {
   const [referralLink, setReferralLink]           = useState('')
   const [referralCopied, setReferralCopied]       = useState(false)
 
+  // Pull-to-refresh state
+  const [pullDistance,  setPullDistance]  = useState(0)
+  const [isRefreshing,  setIsRefreshing]  = useState(false)
+
   const inputRef    = useRef<HTMLInputElement>(null)
   const searchRef   = useRef<HTMLDivElement>(null)
   const isClickingSuggestionRef = useRef(false)
+
+  // Pull-to-refresh touch tracking (refs avoid stale closure issues)
+  const ptrStartY     = useRef(0)
+  const ptrDelta      = useRef(0)
+  const ptrActive     = useRef(false)
+  const ptrLocked     = useRef(false)   // locked = decided this is a vertical pull gesture
 
   // ── Splash ──
   useEffect(() => {
@@ -1854,11 +1863,11 @@ export default function MarketplacePage() {
           const userUniversityId = d.user?.universityId || ''
           if (d.user?.university?.shortName) setUniversityShortName(d.user.university.shortName)
           if (userUniversityId) setUniversityId(userUniversityId)
-          return loadAllView(userUniversityId)
+          return fetchFeed(userUniversityId)
         })
-        .catch(() => loadAllView())
+        .catch(() => fetchFeed())
     } else {
-      loadAllView()
+      fetchFeed()
     }
   }, [])
 
@@ -1898,17 +1907,9 @@ export default function MarketplacePage() {
   // ── Category change ──
   useEffect(() => {
     if (!mounted) return
-    if (selectedCategory === 'All') {
-      setMaxPriceFilter(null)
-      if (!didInitAllViewRef.current) {
-        didInitAllViewRef.current = true
-        return
-      }
-      loadAllView(universityId || undefined)
-      return
-    }
-    fetchByCategory(selectedCategory, { page: 1, append: false })
-  }, [selectedCategory, selectedCategoryKey, maxPriceFilter, sortMode, mounted, universityId])
+    if (selectedCategory === 'All' && !universityId) return
+    if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
+  }, [selectedCategory, mounted, universityId])
 
   // ── Filter recently viewed to remove suspended/deleted products ──
   useEffect(() => {
@@ -1921,6 +1922,81 @@ export default function MarketplacePage() {
     }
   }, [allProducts])
 
+  // ─────────────────────────────────────────────
+  // Pull-to-Refresh — iOS-safe implementation
+  //
+  // KEY RULES:
+  //   1. Never call preventDefault() on touchmove — that kills iOS momentum.
+  //   2. Only show the PTR indicator; let the page scroll freely underneath.
+  //   3. Track touch deltas with refs (not state) to avoid re-renders mid-gesture.
+  //   4. Only trigger refresh when the user releases at the top of the page.
+  // ─────────────────────────────────────────────
+  useEffect(() => {
+    if (isRefreshing) return   // don't re-attach during active refresh
+
+    function onTouchStart(e: TouchEvent) {
+      ptrStartY.current  = e.touches[0].clientY
+      ptrDelta.current   = 0
+      ptrActive.current  = false
+      ptrLocked.current  = false
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      // Only consider PTR when page is scrolled to the very top
+      if (window.scrollY > 0) {
+        ptrStartY.current = 0
+        ptrActive.current = false
+        return
+      }
+
+      const delta = e.touches[0].clientY - ptrStartY.current
+      if (delta <= 0) return            // scrolling up — ignore
+      if (delta < PULL_DEAD_ZONE) return // tiny jitter — ignore
+
+      // First time we cross the dead zone, decide this is a downward pull
+      if (!ptrLocked.current) {
+        ptrLocked.current = true
+        ptrActive.current = true
+      }
+
+      ptrDelta.current = delta
+      // Rubber-band: visual distance grows slower than finger travel
+      const visual = Math.min(delta * PULL_RESIST, PULL_MAX)
+      setPullDistance(visual)
+      // NOTE: We do NOT call e.preventDefault() here.
+      //       iOS will handle the native overscroll; we just overlay our indicator.
+    }
+
+    async function onTouchEnd() {
+      if (!ptrActive.current) return
+
+      const triggered = ptrDelta.current * PULL_RESIST >= PULL_THRESHOLD
+      ptrActive.current  = false
+      ptrLocked.current  = false
+      ptrStartY.current  = 0
+
+      if (triggered) {
+        setIsRefreshing(true)
+        setPullDistance(PULL_THRESHOLD)
+        await fetchFeed()
+        setIsRefreshing(false)
+      }
+      // Animate indicator back to hidden
+      setPullDistance(0)
+    }
+
+    // All listeners passive — never block iOS touch handling
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchmove',  onTouchMove,  { passive: true })
+    document.addEventListener('touchend',   onTouchEnd,   { passive: true })
+
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove',  onTouchMove)
+      document.removeEventListener('touchend',   onTouchEnd)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRefreshing])
 
   // ── Search dropdown position ──
   const updateDropdownPos = useCallback(() => {
@@ -2026,62 +2102,24 @@ export default function MarketplacePage() {
     return { categories, keywords }
   }
 
-  type ProductQuery = {
-    category?: string
-    categoryKey?: string | null
-    maxPrice?: number | null
-    sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest'
-    page?: number
-    limit?: number
-  }
-
-  function buildProductParams(q: ProductQuery) {
-    const params = new URLSearchParams()
-    if (q.categoryKey) params.set('categoryKey', q.categoryKey)
-    if (q.category && q.category !== 'All') params.set('category', q.category)
-    if (q.maxPrice != null) params.set('maxPrice', String(q.maxPrice))
-    if (q.sort && q.sort !== 'relevance') params.set('sort', q.sort)
-    params.set('limit', String(q.limit ?? 24))
-    params.set('page', String(q.page ?? 1))
-    return params
-  }
-
-  const fetchFeed = async (
-    universityIdOverride?: string,
-    opts: { page?: number; append?: boolean } = {}
-  ) => {
-    const { page = 1, append = false } = opts
-    const requestId = ++feedRequestId.current
-    feedAbortRef.current?.abort()
-    const controller = new AbortController()
-    feedAbortRef.current = controller
-
-    if (append) setLoadingMoreFeed(true)
-    else setLoading(true)
-
+  const fetchFeed = async (universityIdOverride?: string, page = 1) => {
+    setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      if (!token) return [] as any[]
+      if (!token) return
       const feedUniversityId = universityIdOverride || universityId || 'unknown'
-      const feedCacheKey = `feed:${feedUniversityId}:1`
-
-      if (page === 1 && !append) {
-        const cached = getClientCache<any>(feedCacheKey)
-        if (cached) {
-          const products = cached.value?.products || []
-          setAllProducts(products)
-          setFeedHasMore(Boolean(cached.value?.hasMore ?? products.length === FEED_PAGE_SIZE))
-          setFeedPage(1)
-          primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
-          setRenderSeed(Date.now())
-          const cats = Array.from(new Set(
-            products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
-          )) as string[]
-          setInterestCategories(cats.slice(0, 4))
-          return products
-        }
+      const feedCacheKey = `feed:${feedUniversityId}:${page}`
+      const cached = getClientCache<any>(feedCacheKey)
+      if (cached) {
+        const products = cached.value?.products || []
+        setAllProducts(products)
+        setRenderSeed(Date.now())
+        const cats = Array.from(new Set(
+          products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
+        )) as string[]
+        setInterestCategories(cats.slice(0, 4))
+        setLoading(false)
       }
-
       const { categories, keywords } = buildFeedSignals()
       const params = new URLSearchParams()
       if (categories.length) {
@@ -2092,85 +2130,22 @@ export default function MarketplacePage() {
         params.set('keywords', keywords.map((k) => k.value).join(','))
         params.set('keywordSignals', JSON.stringify(keywords))
       }
-      params.set('limit', String(FEED_PAGE_SIZE))
-      params.set('page', String(page))
-      if (feedUniversityId !== 'unknown') params.set('universityId', feedUniversityId)
-
-      const res = await fetch(`/api/products/feed?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
-      })
-      const data = await res.json()
-
-      if (requestId !== feedRequestId.current) return [] as any[]
-
-      if (res.ok) {
-        const products = data.products || []
-        if (page === 1 && !append) {
-          setClientCache(feedCacheKey, { products, hasMore: Boolean(data.hasMore) }, FEED_CACHE_TTL_MS)
-        }
-        setAllProducts((prev) => (append ? [...prev, ...products] : products))
-        setFeedHasMore(Boolean(data.hasMore ?? products.length === FEED_PAGE_SIZE))
-        setFeedPage(page)
-        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
-        setRenderSeed(Date.now())
-        if (!append) {
-          const cats = Array.from(new Set(
-            products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
-          )) as string[]
-          setInterestCategories(cats.slice(0, 4))
-        }
-        return products
-      }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        // silent fail
-      }
-    } finally {
-      if (requestId === feedRequestId.current) {
-        setLoading(false)
-        setLoadingMoreFeed(false)
-      }
-    }
-    return [] as any[]
-  }
-
-  const fetchAllProducts = async () => {
-    setLoading(true)
-    try {
-      const token = localStorage.getItem('token')
-      if (!token) return [] as any[]
-      const params = new URLSearchParams()
       params.set('limit', '100')
-      const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
+      if (feedUniversityId !== 'unknown') params.set('universityId', feedUniversityId)
+      const res  = await fetch(`/api/products/feed?${params}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
       if (res.ok) {
         const products = data.products || []
+        setClientCache(feedCacheKey, { products }, FEED_CACHE_TTL_MS)
         setAllProducts(products)
-        setFeedHasMore(false)
-        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
         setRenderSeed(Date.now())
         const cats = Array.from(new Set(
           products.filter((p: any) => p.isPersonalised).map((p: any) => p.category)
         )) as string[]
         setInterestCategories(cats.slice(0, 4))
-        return products
       }
     } catch { /* silent fail */ }
     finally { setLoading(false) }
-    return [] as any[]
-  }
-
-  const loadAllView = async (universityIdOverride?: string) => {
-    const feedProducts = await fetchFeed(universityIdOverride, { page: 1, append: false })
-    if (!feedProducts.length) {
-      await fetchAllProducts()
-    }
-  }
-
-  const loadMoreFeedProducts = () => {
-    if (!feedHasMore || loadingMoreFeed) return
-    fetchFeed(universityId || undefined, { page: feedPage + 1, append: true })
   }
 
   const fetchPeopleLikeYouBought = async () => {
@@ -2190,68 +2165,31 @@ export default function MarketplacePage() {
         }))
         .filter((p: any) => p?.id)
       setPeopleLikeYouBought(items)
-      primeImageBatch(items.map((p: any) => p?.images?.[0]), 10)
     } catch { /* silent fail */ }
   }
 
-  const fetchByCategory = async (
-    category: string,
-    opts: { page?: number; append?: boolean } = {}
-  ) => {
-    const { page = 1, append = false } = opts
-    const requestId = ++categoryRequestId.current
-    categoryAbortRef.current?.abort()
-    const controller = new AbortController()
-    categoryAbortRef.current = controller
-
-    if (append) setLoadingMoreCategory(true)
-    else setLoading(true)
-
+  const fetchByCategory = async (category: string) => {
+    setLoading(true)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
 
       const categoryKey = resolveCategoryKey(category)
-      const params = buildProductParams({
-        category,
-        categoryKey,
-        maxPrice: maxPriceFilter,
-        sort: sortMode,
-        page,
-        limit: CATEGORY_PAGE_SIZE,
-      })
+      const params = new URLSearchParams()
+      if (categoryKey) params.set('categoryKey', categoryKey)
+      if (category && category !== 'All') params.set('category', category)
 
-      const res = await fetch(`/api/products?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
-      })
+      const res = await fetch(`/api/products?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
-
-      if (requestId !== categoryRequestId.current) return
-
       if (res.ok) {
         const products = data.products || []
-        setAllProducts((prev) => (append ? [...prev, ...products] : products))
-        setCategoryHasMore(Boolean(data.hasMore ?? products.length === CATEGORY_PAGE_SIZE))
-        setCategoryPage(page)
-        primeImageBatch(products.map((p: any) => p?.images?.[0]), 12)
+        setAllProducts(products)
       }
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
-        // silent fail
-      }
-    } finally {
-      if (requestId === categoryRequestId.current) {
-        setLoading(false)
-        setLoadingMoreCategory(false)
-      }
-    }
+    } catch { /* silent fail */ }
+    finally { setLoading(false) }
   }
 
-  const loadMoreCategoryProducts = () => {
-    if (!categoryHasMore || loadingMoreCategory) return
-    fetchByCategory(selectedCategory, { page: categoryPage + 1, append: true })
-  }
+  // ── Interaction handlers ──
   const copyReferralCode = async () => {
     const textToCopy = referralLink || referralCode
     if (!textToCopy) return
@@ -2365,6 +2303,13 @@ export default function MarketplacePage() {
     return (remaining.length > 0 ? remaining : allProducts).slice(0, 16)
   }, [allProducts, forYouProducts, trendingProducts, newListings])
 
+  const filteredByCategory = useMemo(() => {
+    const categoryFilter = selectedCategoryKey || selectedCategory
+    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, categoryFilter))
+    if (maxPriceFilter !== null) prods = prods.filter(p => p.price <= maxPriceFilter)
+    return prods
+  }, [allProducts, selectedCategory, selectedCategoryKey, maxPriceFilter])
+
   const sortProducts = useCallback((products: any[]) => {
     const next = [...products]
     if (sortMode === 'price_asc') return next.sort((a, b) => (a.price || 0) - (b.price || 0))
@@ -2373,7 +2318,9 @@ export default function MarketplacePage() {
     return next
   }, [sortMode])
 
+  const sortedFilteredByCategory = useMemo(() => sortProducts(filteredByCategory), [filteredByCategory, sortProducts])
   const sortedAllProducts = useMemo(() => sortProducts(allProducts), [allProducts, sortProducts])
+
   const productsByCategory = useMemo(() => {
     const map: Record<string, any[]> = {}
     for (const cat of CATEGORIES.slice(1)) {
@@ -2426,7 +2373,7 @@ export default function MarketplacePage() {
               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
             >
               {s.type === 'product' && s.image
-                ? <LoadedImage src={s.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" wrapperClassName="h-8 w-8" width={IMAGE_SIZES.thumb} />
+                ? <img src={s.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt="" />
                 : s.type === 'recent'
                   ? <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   : <TrendingUp className="w-4 h-4 text-BATAMART-primary flex-shrink-0" />
@@ -2566,13 +2513,23 @@ export default function MarketplacePage() {
         document.body
       )}
 
+      {/* Pull-to-refresh indicator */}
+      {(pullDistance > 0 || isRefreshing) && (
+        <PullIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />
+      )}
+
       {/* Promo ticker */}
       <PromoTicker />
 
       {/* ══ HEADER ══ */}
       <header
         className={`batamart-header marketplace-header sticky top-0 z-40 ${isApp ? 'shadow-[0_8px_24px_rgba(15,23,42,0.16)]' : 'shadow-lg'}`}
-        >
+        style={{
+          // Subtle push-down effect during PTR — keeps header anchored-feeling
+          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance * 0.15, 16)}px)` : undefined,
+          transition: isRefreshing || pullDistance === 0 ? 'transform 0.35s cubic-bezier(0.22,1,0.36,1)' : 'none',
+        }}
+      >
         <div className={`marketplace-header-inner ${isApp ? 'max-w-5xl' : 'max-w-7xl'} mx-auto px-3 sm:px-6`}>
 
           {/* Top row */}
@@ -2735,10 +2692,10 @@ export default function MarketplacePage() {
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
                 </select>
-                <span className="text-[11px] text-gray-400 font-medium">{allProducts.length} items</span>
+                <span className="text-[11px] text-gray-400 font-medium">{sortedFilteredByCategory.length} items</span>
               </div>
             </div>
-            {allProducts.length === 0 ? (
+            {sortedFilteredByCategory.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
                 <ShoppingBag className="w-12 h-12 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-400 font-semibold mb-4">Nothing here yet</p>
@@ -2747,28 +2704,14 @@ export default function MarketplacePage() {
                 </Link>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {allProducts.map((p, i) => (
-                    <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 40} />
-                  ))}
-                </div>
-                {categoryHasMore && (
-                  <div className="pt-4 flex justify-center">
-                    <button
-                      onClick={loadMoreCategoryProducts}
-                      disabled={loadingMoreCategory}
-                      className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm disabled:opacity-60"
-                    >
-                      {loadingMoreCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
-                      Load more
-                    </button>
-                  </div>
-                )}
-              </>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {sortedFilteredByCategory.map((p, i) => (
+                  <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 40} />
+                ))}
+              </div>
             )}
-
           </div>
+
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
           <div>
@@ -2801,18 +2744,6 @@ export default function MarketplacePage() {
                 <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 30} />
               ))}
             </div>
-            {feedHasMore && (
-              <div className="pt-4 flex justify-center">
-                <button
-                  onClick={loadMoreFeedProducts}
-                  disabled={loadingMoreFeed}
-                  className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm disabled:opacity-60"
-                >
-                  {loadingMoreFeed ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
-                  Load more
-                </button>
-              </div>
-            )}
           </div>
 
         ) : (

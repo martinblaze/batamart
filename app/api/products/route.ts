@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
-import { CATEGORY_TREE, getCategoryDisplayInfo, getCategoryKeyVariants, getCategoryQueryValues, resolveCategoryKey } from '@/lib/variants'
+import { CATEGORY_TREE, getCategoryDisplayInfo, getCategoryQueryValues } from '@/lib/variants'
 import { normalizeText } from '@/lib/search-utils'
 
 const DEFAULT_PAGE_SIZE = 40
@@ -198,11 +198,11 @@ function normalizeModerationText(value: unknown) {
   return String(value || '')
     .normalize('NFKD')
     .toLowerCase()
-    .replace(/[??????]/g, 'a')
-    .replace(/[????]/g, 'e')
-    .replace(/[????]/g, 'i')
-    .replace(/[?????]/g, 'o')
-    .replace(/[????]/g, 'u')
+    .replace(/[Ã¡Ã Ã¢Ã¤Ã£Ã¥]/g, 'a')
+    .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e')
+    .replace(/[Ã­Ã¬Ã®Ã¯]/g, 'i')
+    .replace(/[Ã³Ã²Ã´Ã¶Ãµ]/g, 'o')
+    .replace(/[ÃºÃ¹Ã»Ã¼]/g, 'u')
     .replace(/[$]/g, 's')
     .replace(/[!|]/g, 'i')
     .replace(/[@]/g, 'a')
@@ -254,6 +254,18 @@ function normalizeLearnedKey(input: string) {
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '')
+}
+
+function resolveCategoryKey(input: string) {
+  const value = input?.trim()
+  if (!value) return ''
+
+  if (CATEGORY_TREE[value]) return value
+  const normalized = value.toLowerCase()
+  const match = Object.entries(CATEGORY_TREE).find(([key, category]) => {
+    return key.toLowerCase() === normalized || category.label.toLowerCase() === normalized
+  })
+  return match?.[0] || ''
 }
 
 function resolveSubcategoryKey(categoryKey: string, input: string) {
@@ -456,14 +468,12 @@ export async function GET(request: NextRequest) {
     }
     if (sellerId) where.sellerId = sellerId
     if (categoryKey && categoryKey !== 'all') {
-      const categoryInput = requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || ''
-      const categoryValues = getCategoryQueryValues(categoryInput)
-      const categoryKeyValues = getCategoryKeyVariants(categoryInput)
+      const categoryValues = getCategoryQueryValues(requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || '')
       where.AND = [
         ...(where.AND || []),
         {
           OR: [
-            ...categoryKeyValues.map((value) => ({ categoryKey: value })),
+            { categoryKey: categoryKey },
             ...(categoryValues.length > 0 ? categoryValues.map((value) => ({ category: { equals: value } })) : []),
           ],
         },
@@ -729,7 +739,7 @@ export async function POST(request: NextRequest) {
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],
-        // -- Product review system: start in PENDING status ------------------
+        // â”€â”€ Product review system: start in PENDING status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         moderationStatus: 'PENDING',
         isActive:     false, // Not visible in marketplace until approved
         seller:      { connect: { id: user.id } },
