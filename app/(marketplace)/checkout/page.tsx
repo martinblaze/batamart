@@ -80,8 +80,10 @@ export default function CheckoutPage() {
           selectedVariants: product.selectedVariants || {},
         }])
       } else {
-        router.push('/marketplace')
-        return
+        if (!urlError) {
+          router.push('/marketplace')
+          return
+        }
       }
     }
 
@@ -175,9 +177,6 @@ export default function CheckoutPage() {
       }
 
       if (data.authorization_url) {
-        sessionStorage.removeItem('checkout_product')
-        sessionStorage.removeItem('checkout_cart')
-        clearCart()
         window.location.href = data.authorization_url
         return
       }
@@ -298,6 +297,7 @@ export default function CheckoutPage() {
               <div className="divide-y divide-gray-50">
                 {cartItems.map((item, index) => {
                   const variantSummary = formatVariantSelection(item.selectedVariants || {})
+                  const variantEntries = Object.entries(item.selectedVariants || {})
 
                   return (
                     <div key={index} className="p-5">
