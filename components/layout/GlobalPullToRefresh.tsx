@@ -19,8 +19,6 @@ export function GlobalPullToRefresh() {
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    if (isMarketplace(pathname)) return
-
     let startY = 0
     let deltaY = 0
     let active = false
@@ -32,6 +30,14 @@ export function GlobalPullToRefresh() {
     }
 
     const onTouchStart = (event: TouchEvent) => {
+      if (getScrollTop() > 0) {
+        startY = 0
+        deltaY = 0
+        active = false
+        locked = false
+        return
+      }
+
       startY = event.touches[0]?.clientY || 0
       deltaY = 0
       active = false
@@ -39,11 +45,7 @@ export function GlobalPullToRefresh() {
     }
 
     const onTouchMove = (event: TouchEvent) => {
-      if (getScrollTop() > 0) {
-        startY = 0
-        active = false
-        return
-      }
+      if (startY === 0) return
 
       const currentY = event.touches[0]?.clientY || 0
       const delta = currentY - startY
@@ -91,7 +93,7 @@ export function GlobalPullToRefresh() {
     }
   }, [pathname])
 
-  if (isMarketplace(pathname) || pullDistance <= 0) return null
+  if (pullDistance <= 0) return null
 
   return (
     <div

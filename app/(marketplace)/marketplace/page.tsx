@@ -11,7 +11,7 @@ import {
   Search, Star, Shield, ShoppingBag, Sparkles, Flame,
   AlertCircle, Clock, TrendingUp, X, ChevronRight,
   Package, Zap, Award, ArrowRight, Tag, Eye, Heart, Flag,
-  RefreshCw, CheckCircle, Users, Truck, ChevronLeft,
+  CheckCircle, Users, Truck, ChevronLeft,
   BadgeCheck, Timer, Percent, MapPin, Bell, Menu,
   ChevronDown, Grid3X3, List, Sliders, Loader2, Copy,
   Gift, Crown, Coffee, BookOpen, Cpu, Shirt, Home,
@@ -25,14 +25,6 @@ import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCate
 import { getClientCache, setClientCache } from '@/lib/client-cache'
 import { primeImageBatch } from '@/lib/image-cache'
 import { IMAGE_SIZES } from '@/lib/cloudinary'
-
-// ─────────────────────────────────────────────
-// Pull-to-refresh constants
-// ─────────────────────────────────────────────
-const PULL_THRESHOLD = 80        // visual distance to trigger refresh
-const PULL_MAX = 110             // cap how far indicator travels
-const PULL_DEAD_ZONE = 8        // ignore tiny jitters
-const PULL_RESIST = 0.4         // rubber-band resistance (< 1 = softer)
 
 // ─────────────────────────────────────────────
 // CSS – all animations injected once
@@ -1187,38 +1179,6 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
   )
 }
 
-// ─────────────────────────────────────────────
-// Pull-to-Refresh Indicator
-// ─────────────────────────────────────────────
-function PullIndicator({ pullDistance, isRefreshing }: { pullDistance: number; isRefreshing: boolean }) {
-  const progress = Math.min(pullDistance / PULL_THRESHOLD, 1)
-  const ready    = pullDistance >= PULL_THRESHOLD
-  return (
-    <div
-      className="ptr-indicator fixed top-0 left-0 right-0 z-50 flex justify-center"
-      style={{
-        transform: `translateY(${Math.min(pullDistance, PULL_MAX) - 60}px)`,
-        transition: isRefreshing || pullDistance === 0
-          ? 'transform 0.35s cubic-bezier(0.22,1,0.36,1)'
-          : 'none',
-        opacity: isRefreshing ? 1 : progress,
-      }}
-    >
-      <div
-        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-lg border border-gray-100"
-        style={{ transform: `scale(${0.85 + progress * 0.15})` }}
-      >
-        <RefreshCw
-          className={`w-4 h-4 text-BATAMART-primary ${isRefreshing ? 'ptr-spinning' : ''}`}
-          style={{ transform: isRefreshing ? undefined : `rotate(${progress * 220}deg)` }}
-        />
-        <span className="text-xs font-bold text-gray-600">
-          {isRefreshing ? 'Refreshing…' : ready ? 'Release to refresh' : 'Pull to refresh'}
-        </span>
-      </div>
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────────
 // Live Stats Bar
@@ -1854,19 +1814,9 @@ export default function MarketplacePage() {
   const [referralLink, setReferralLink]           = useState('')
   const [referralCopied, setReferralCopied]       = useState(false)
 
-  // Pull-to-refresh state
-  const [pullDistance,  setPullDistance]  = useState(0)
-  const [isRefreshing,  setIsRefreshing]  = useState(false)
-
   const inputRef    = useRef<HTMLInputElement>(null)
   const searchRef   = useRef<HTMLDivElement>(null)
   const isClickingSuggestionRef = useRef(false)
-
-  // Pull-to-refresh touch tracking (refs avoid stale closure issues)
-  const ptrStartY     = useRef(0)
-  const ptrDelta      = useRef(0)
-  const ptrActive     = useRef(false)
-  const ptrLocked     = useRef(false)   // locked = decided this is a vertical pull gesture
 
   // ── Splash ──
   useEffect(() => {
@@ -1971,81 +1921,6 @@ export default function MarketplacePage() {
     }
   }, [allProducts])
 
-  // ─────────────────────────────────────────────
-  // Pull-to-Refresh — iOS-safe implementation
-  //
-  // KEY RULES:
-  //   1. Never call preventDefault() on touchmove — that kills iOS momentum.
-  //   2. Only show the PTR indicator; let the page scroll freely underneath.
-  //   3. Track touch deltas with refs (not state) to avoid re-renders mid-gesture.
-  //   4. Only trigger refresh when the user releases at the top of the page.
-  // ─────────────────────────────────────────────
-  useEffect(() => {
-    if (isRefreshing) return   // don't re-attach during active refresh
-
-    function onTouchStart(e: TouchEvent) {
-      ptrStartY.current  = e.touches[0].clientY
-      ptrDelta.current   = 0
-      ptrActive.current  = false
-      ptrLocked.current  = false
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      // Only consider PTR when page is scrolled to the very top
-      if (window.scrollY > 0) {
-        ptrStartY.current = 0
-        ptrActive.current = false
-        return
-      }
-
-      const delta = e.touches[0].clientY - ptrStartY.current
-      if (delta <= 0) return            // scrolling up — ignore
-      if (delta < PULL_DEAD_ZONE) return // tiny jitter — ignore
-
-      // First time we cross the dead zone, decide this is a downward pull
-      if (!ptrLocked.current) {
-        ptrLocked.current = true
-        ptrActive.current = true
-      }
-
-      ptrDelta.current = delta
-      // Rubber-band: visual distance grows slower than finger travel
-      const visual = Math.min(delta * PULL_RESIST, PULL_MAX)
-      setPullDistance(visual)
-      // NOTE: We do NOT call e.preventDefault() here.
-      //       iOS will handle the native overscroll; we just overlay our indicator.
-    }
-
-    async function onTouchEnd() {
-      if (!ptrActive.current) return
-
-      const triggered = ptrDelta.current * PULL_RESIST >= PULL_THRESHOLD
-      ptrActive.current  = false
-      ptrLocked.current  = false
-      ptrStartY.current  = 0
-
-      if (triggered) {
-        setIsRefreshing(true)
-        setPullDistance(PULL_THRESHOLD)
-        await loadAllView()
-        setIsRefreshing(false)
-      }
-      // Animate indicator back to hidden
-      setPullDistance(0)
-    }
-
-    // All listeners passive — never block iOS touch handling
-    document.addEventListener('touchstart', onTouchStart, { passive: true })
-    document.addEventListener('touchmove',  onTouchMove,  { passive: true })
-    document.addEventListener('touchend',   onTouchEnd,   { passive: true })
-
-    return () => {
-      document.removeEventListener('touchstart', onTouchStart)
-      document.removeEventListener('touchmove',  onTouchMove)
-      document.removeEventListener('touchend',   onTouchEnd)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRefreshing])
 
   // ── Search dropdown position ──
   const updateDropdownPos = useCallback(() => {
@@ -2691,23 +2566,13 @@ export default function MarketplacePage() {
         document.body
       )}
 
-      {/* Pull-to-refresh indicator */}
-      {(pullDistance > 0 || isRefreshing) && (
-        <PullIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />
-      )}
-
       {/* Promo ticker */}
       <PromoTicker />
 
       {/* ══ HEADER ══ */}
       <header
         className={`batamart-header marketplace-header sticky top-0 z-40 ${isApp ? 'shadow-[0_8px_24px_rgba(15,23,42,0.16)]' : 'shadow-lg'}`}
-        style={{
-          // Subtle push-down effect during PTR — keeps header anchored-feeling
-          transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance * 0.15, 16)}px)` : undefined,
-          transition: isRefreshing || pullDistance === 0 ? 'transform 0.35s cubic-bezier(0.22,1,0.36,1)' : 'none',
-        }}
-      >
+        >
         <div className={`marketplace-header-inner ${isApp ? 'max-w-5xl' : 'max-w-7xl'} mx-auto px-3 sm:px-6`}>
 
           {/* Top row */}
