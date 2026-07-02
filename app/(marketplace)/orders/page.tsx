@@ -19,7 +19,7 @@ import { OrderNotificationBanner } from '@/components/layout/OrderNotificationBa
 // Format stored by checkout: "[Order: 128GB · Black · UK Used] — extra note"
 function parseVariantNote(orderNote?: string | null): { variantSummary: string; extraNote: string } {
   if (!orderNote) return { variantSummary: '', extraNote: '' }
-  const match = orderNote.match(/^\[Order:\s*([^\]]+)\](?:\s*—\s*(.*))?$/s)
+  const match = orderNote.match(/^\[Order:\s*([^\]]+)\](?:\s*(?:—|–|-|\|)\s*(.*))?$/s)
   if (match) return { variantSummary: match[1]?.trim() || '', extraNote: match[2]?.trim() || '' }
   return { variantSummary: '', extraNote: orderNote }
 }
@@ -27,7 +27,7 @@ function parseVariantNote(orderNote?: string | null): { variantSummary: string; 
 function VariantBadges({ orderNote }: { orderNote?: string | null }) {
   const { variantSummary, extraNote } = parseVariantNote(orderNote)
   if (!variantSummary && !extraNote) return null
-  const chips = variantSummary ? variantSummary.split(' · ').filter(Boolean) : []
+  const chips = variantSummary ? variantSummary.split(/\s*\/\s*|\s*·\s*/).filter(Boolean) : []
   return (
     <div className="mt-1.5 space-y-1">
       {chips.length > 0 && (

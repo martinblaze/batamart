@@ -888,7 +888,7 @@ export function formatVariantSelection(selected: Record<string, string>): string
   return Object.entries(selected)
     .filter(([, v]) => v)
     .map(([k, v]) => `${v}`)
-    .join(' · ')
+    .join(' / ')
 }
 
 // ── Build search text from product for full-text matching ──────────────────

@@ -119,9 +119,9 @@ export default function CheckoutPage() {
     const variantNote = formatVariantSelection(item.selectedVariants || {})
     const extra = orderNotes[item.productId]?.trim() || ''
     const parts = []
-    if (!item.variantId && variantNote) parts.push(`[Order: ${variantNote}]`)
+    if (variantNote) parts.push(`[Order: ${variantNote}]`)
     if (extra) parts.push(extra)
-    return parts.join(' · ')
+    return parts.join(' | ')
   }
 
   const handlePayment = async () => {
@@ -297,8 +297,7 @@ export default function CheckoutPage() {
 
               <div className="divide-y divide-gray-50">
                 {cartItems.map((item, index) => {
-                  const variantEntries = Object.entries(item.selectedVariants || {}).filter(([, v]) => v)
-                  const variantSummary = variantEntries.map(([, v]) => String(v)).join(' · ')
+                  const variantSummary = formatVariantSelection(item.selectedVariants || {})
 
                   return (
                     <div key={index} className="p-5">
