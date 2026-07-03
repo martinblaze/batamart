@@ -20,23 +20,23 @@ async function arePaymentsEnabled() {
 
 // ============================================================
 // STANDARDIZED FEE STRUCTURE
-// calculateFees is imported by the verify route — both sides
+// calculateFees is imported by the verify route Ã¢â‚¬â€ both sides
 // must always compute fees identically from the same function.
 //
 // DELIVERY MODEL (batch):
-//   Each order in the cart gets its own full ₦800 delivery fee.
-//   Buyer pays ₦800 × number_of_orders (one per seller).
-//   Rider gets ₦560 per order = ₦560 × N total.
-//   Platform keeps ₦240 per order from delivery.
-//   Referral reward (₦120) fires ONCE per batch (not per order).
-//   The remaining ₦120 per order stays with the platform.
+//   Each order in the cart gets its own full Ã¢â€šÂ¦800 delivery fee.
+//   Buyer pays Ã¢â€šÂ¦800 Ãƒâ€” number_of_orders (one per seller).
+//   Rider gets Ã¢â€šÂ¦560 per order = Ã¢â€šÂ¦560 Ãƒâ€” N total.
+//   Platform keeps Ã¢â€šÂ¦240 per order from delivery.
+//   Referral reward (Ã¢â€šÂ¦120) fires ONCE per batch (not per order).
+//   The remaining Ã¢â€šÂ¦120 per order stays with the platform.
 // ============================================================
 export function calculateFees(subtotal: number, deliveryFee: number = 800) {
   const PLATFORM_RATE         = 0.05
   const RIDER_SHARE           = 560
-  // Platform keeps full ₦240 delivery cut per order.
-  // Referral (₦120) is deducted at batch level in processReferralReward,
-  // not here — so platformTotal here reflects the gross delivery cut.
+  // Platform keeps full Ã¢â€šÂ¦240 delivery cut per order.
+  // Referral (Ã¢â€šÂ¦120) is deducted at batch level in processReferralReward,
+  // not here Ã¢â‚¬â€ so platformTotal here reflects the gross delivery cut.
   const PLATFORM_DELIVERY_CUT = 240
 
   const platformFeeFromProducts = subtotal * PLATFORM_RATE
@@ -112,12 +112,9 @@ export async function POST(request: NextRequest) {
       productId:  string
       variantId?: string | null
       variantData?: Record<string, string> | null
-      name:       string
       price:      number
       quantity:   number
-      category:   string
       sellerId:   string
-      sellerName: string
       orderNote?: string
       buyerDeliveryAcknowledged?: boolean
     }
@@ -128,7 +125,7 @@ export async function POST(request: NextRequest) {
       if (cartItems.length > 50) {
         return NextResponse.json({ error: 'Too many items in one checkout' }, { status: 400 })
       }
-      // Server always re-fetches price from DB — client-supplied price is IGNORED
+      // Server always re-fetches price from DB Ã¢â‚¬â€ client-supplied price is IGNORED
       for (const item of cartItems) {
         const safeQuantity = Number(item?.quantity)
         if (!Number.isInteger(safeQuantity) || safeQuantity < 1 || safeQuantity > 50) {
@@ -167,12 +164,9 @@ export async function POST(request: NextRequest) {
           productId:  product.id,
           variantId:  item.variantId || null,
           variantData: item.variantData || null,
-          name:       product.name,
-          price:      resolvedPrice, // ← always from DB, never from client
+          price:      resolvedPrice, // ? always from DB, never from client
           quantity:   safeQuantity,
-          category:   product.category,
           sellerId:   product.sellerId,
-          sellerName: product.seller.name,
           orderNote:  item.orderNote,
           buyerDeliveryAcknowledged: item.buyerDeliveryAcknowledged === true,
         })
@@ -205,13 +199,11 @@ export async function POST(request: NextRequest) {
         productId:  product.id,
         variantId:  variantId,
         variantData: body.variantData || null,
-        name:       product.name,
         price:      resolvedPrice,
         quantity:   1,
-        category:   product.category,
         sellerId:   product.sellerId,
-        sellerName: product.seller.name,
         orderNote:  body.orderNote,
+        buyerDeliveryAcknowledged: false,
       }]
     } else {
       return NextResponse.json({ error: 'No products provided' }, { status: 400 })
@@ -223,8 +215,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You cannot buy your own product' }, { status: 400 })
     }
 
-    // ── Calculate totals ──────────────────────────────────────────────────────
-    // Count distinct sellers = number of orders = number of ₦800 delivery fees
+    // Ã¢â€â‚¬Ã¢â€â‚¬ Calculate totals Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // Count distinct sellers = number of orders = number of Ã¢â€šÂ¦800 delivery fees
     const distinctSellers  = new Set(items.map(i => i.sellerId)).size
     const perOrderDelivery = 800
     const totalDelivery    = perOrderDelivery * distinctSellers
@@ -237,7 +229,7 @@ export async function POST(request: NextRequest) {
     // APP_URL required
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL
     if (!APP_URL) {
-      console.error('❌ NEXT_PUBLIC_APP_URL is not set!')
+      console.error('Ã¢ÂÅ’ NEXT_PUBLIC_APP_URL is not set!')
       return NextResponse.json(
         { error: 'Server misconfiguration: NEXT_PUBLIC_APP_URL is not set.' },
         { status: 500 }
@@ -247,8 +239,8 @@ export async function POST(request: NextRequest) {
     const reference   = `BATAMART-${Date.now()}-${user.id.substring(0, 8)}`
     const callbackUrl = `${APP_URL.replace(/\/$/, '')}/api/payments/verify`
 
-    console.log('💳 Initializing Paystack — reference:', reference, '| callback:', callbackUrl)
-    console.log(`🛒 Cart: ${items.length} item(s), ${distinctSellers} seller(s), total delivery ₦${totalDelivery}`)
+    console.log('Ã°Å¸â€™Â³ Initializing Paystack Ã¢â‚¬â€ reference:', reference, '| callback:', callbackUrl)
+    console.log(`Ã°Å¸â€ºâ€™ Cart: ${items.length} item(s), ${distinctSellers} seller(s), total delivery Ã¢â€šÂ¦${totalDelivery}`)
 
     const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method:  'POST',
@@ -264,7 +256,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           userId:            user.id,
           cartItems:         items,
-          perOrderDelivery,  // ← ₦800 per order, createOrders uses this per seller group
+          perOrderDelivery,  // Ã¢â€ Â Ã¢â€šÂ¦800 per order, createOrders uses this per seller group
           distinctSellers,
         },
       }),
@@ -280,7 +272,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('✅ Paystack initialized — reference:', reference)
+    console.log('Ã¢Å“â€¦ Paystack initialized Ã¢â‚¬â€ reference:', reference)
 
     return NextResponse.json({
       success:           true,
@@ -298,11 +290,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// createOrders — called ONLY from the verify route after Paystack confirms.
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+// createOrders Ã¢â‚¬â€ called ONLY from the verify route after Paystack confirms.
 // Creates ONE DeliveryBatch then one Order per seller group.
-// Each order carries a full ₦800 delivery fee — NOT split.
-// ══════════════════════════════════════════════════════════════════════════════
+// Each order carries a full Ã¢â€šÂ¦800 delivery fee Ã¢â‚¬â€ NOT split.
+// Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
 export async function createOrders(
   items: {
     productId:  string
@@ -327,9 +319,9 @@ export async function createOrders(
   },
   paymentReference: string
 ) {
-  console.log('📝 createOrders called — reference:', paymentReference)
+  console.log('Ã°Å¸â€œÂ createOrders called Ã¢â‚¬â€ reference:', paymentReference)
 
-  // ── STEP 1: Create the DeliveryBatch FIRST ──────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ STEP 1: Create the DeliveryBatch FIRST Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   // One batch per checkout session. All orders in this cart link to it.
   const batchNumber = `BATCH-${crypto.randomUUID().replace(/-/g, '').substring(0, 12).toUpperCase()}`
 
@@ -343,9 +335,9 @@ export async function createOrders(
     },
   })
 
-  console.log('📦 DeliveryBatch created:', batchNumber)
+  console.log('Ã°Å¸â€œÂ¦ DeliveryBatch created:', batchNumber)
 
-  // ── STEP 2: Group items by seller ───────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ STEP 2: Group items by seller Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const sellerGroups = items.reduce<Record<string, typeof items>>((acc, item) => {
     if (!acc[item.sellerId]) acc[item.sellerId] = []
     acc[item.sellerId].push(item)
@@ -368,7 +360,7 @@ export async function createOrders(
     productName: string
   }> = []
 
-  // Each order gets a FULL ₦800 delivery fee (not split, not proportional)
+  // Each order gets a FULL Ã¢â€šÂ¦800 delivery fee (not split, not proportional)
   const perOrderDelivery = 800
 
   for (const [sellerId, sellerItems] of Object.entries(sellerGroups)) {
@@ -378,7 +370,7 @@ export async function createOrders(
     const orderNumber = `BATAMART-${crypto.randomUUID().replace(/-/g, '').substring(0, 16).toUpperCase()}`
     const itemsList   = sellerItems.map(i => `${i.name} (x${i.quantity})`).join(', ')
 
-    console.log('🔨 Creating order:', orderNumber, 'for seller:', sellerId)
+    console.log('Ã°Å¸â€Â¨ Creating order:', orderNumber, 'for seller:', sellerId)
 
     try {
       const order = await prisma.$transaction(async (tx) => {
@@ -398,7 +390,7 @@ export async function createOrders(
             orderNumber,
             buyerId:            user.id,
             sellerId,
-            batchId:            batch.id,   // ← link to the batch
+            batchId:            batch.id,   // Ã¢â€ Â link to the batch
             productId:          sellerItems[0].productId,
             productPrice:       Number(orderSubtotal),
             deliveryFee:        Number(orderFees.deliveryFee),
@@ -536,17 +528,17 @@ export async function createOrders(
         itemsList,
       })
 
-      console.log('✅ Order created:', orderNumber)
+      console.log('Ã¢Å“â€¦ Order created:', orderNumber)
     } catch (orderError) {
-      console.error('❌ Failed to create order for seller', sellerId, orderError)
+      console.error('Ã¢ÂÅ’ Failed to create order for seller', sellerId, orderError)
       throw orderError
     }
   }
 
-  // Fire in-app notifications — non-blocking
+  // Fire in-app notifications Ã¢â‚¬â€ non-blocking
   for (const n of notificationQueue) {
     notifyOrderPlaced(n.orderId, n.buyerId, n.sellerId, n.orderNumber, n.itemsList)
-      .catch(err => console.error(`⚠️  Notification failed for ${n.orderNumber}:`, err))
+      .catch(err => console.error(`Ã¢Å¡Â Ã¯Â¸Â  Notification failed for ${n.orderNumber}:`, err))
   }
 
   if (outOfStockAlerts.length > 0) {
@@ -557,13 +549,13 @@ export async function createOrders(
     ).catch(() => { })
   }
 
-  console.log('🎉 All orders created:', createdOrders.length, '| Batch:', batchNumber)
+  console.log('Ã°Å¸Å½â€° All orders created:', createdOrders.length, '| Batch:', batchNumber)
   return createdOrders
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Out-of-stock seller notification (fire-and-forget, all imports dynamic)
-// ─────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 async function notifySellerOutOfStock(sellerId: string, productId: string, productName: string) {
   const [notifMod, emailMod, prismaMod] = await Promise.all([
     import('@/lib/notification').catch(() => null),
@@ -585,7 +577,7 @@ async function notifySellerOutOfStock(sellerId: string, productId: string, produ
       notifMod.createNotification({
         userId:   sellerId,
         type:     'ORDER_PLACED',
-        title:    '⚠️ Product Out of Stock',
+        title:    'Ã¢Å¡Â Ã¯Â¸Â Product Out of Stock',
         message:  `"${productName}" has sold out and been hidden from the marketplace. Restock it to make it visible again.`,
         metadata: { productId, productName },
       })
@@ -597,7 +589,7 @@ async function notifySellerOutOfStock(sellerId: string, productId: string, produ
     tasks.push(
       emailMod.sendEmail({
         to:      seller.email,
-        subject: `⚠️ "${productName}" is out of stock — BATAMART`,
+        subject: `Ã¢Å¡Â Ã¯Â¸Â "${productName}" is out of stock Ã¢â‚¬â€ BATAMART`,
         html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -615,7 +607,7 @@ async function notifySellerOutOfStock(sellerId: string, productId: string, produ
           </tr>
           <tr>
             <td style="background:#ffffff;border-radius:16px;padding:40px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-              <p style="font-size:32px;margin:0 0 8px;">⚠️</p>
+              <p style="font-size:32px;margin:0 0 8px;">Ã¢Å¡Â Ã¯Â¸Â</p>
               <h2 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px;">Product Out of Stock</h2>
               <p style="font-size:15px;color:#6b7280;margin:0 0 16px;">
                 Hi ${seller.name ?? 'Seller'}, your product <strong style="color:#111827;">"${productName}"</strong> has just sold out.
@@ -630,13 +622,13 @@ async function notifySellerOutOfStock(sellerId: string, productId: string, produ
               </p>
               <a href="${APP_URL}/my-shop"
                  style="display:inline-block;padding:14px 28px;background:#2563eb;color:#ffffff;font-size:15px;font-weight:600;border-radius:10px;text-decoration:none;">
-                Restock Now →
+                Restock Now Ã¢â€ â€™
               </a>
             </td>
           </tr>
           <tr>
             <td align="center" style="padding-top:24px;">
-              <p style="font-size:12px;color:#9ca3af;margin:0;">BATAMART — Campus Marketplace</p>
+              <p style="font-size:12px;color:#9ca3af;margin:0;">BATAMART Ã¢â‚¬â€ Campus Marketplace</p>
             </td>
           </tr>
         </table>

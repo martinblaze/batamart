@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 function appRedirect(path: string) {
   const base = process.env.NEXT_PUBLIC_APP_URL
   if (!base) {
-    console.error('❌ CRITICAL: NEXT_PUBLIC_APP_URL is not set in environment variables!')
+    console.error('âŒ CRITICAL: NEXT_PUBLIC_APP_URL is not set in environment variables!')
     return NextResponse.redirect(`https://batamart.com${path}`)
   }
 
@@ -18,7 +18,7 @@ function appRedirect(path: string) {
     const url = new URL(path, base)
     return NextResponse.redirect(url.toString())
   } catch (redirectError) {
-    console.error('❌ Invalid NEXT_PUBLIC_APP_URL:', base, redirectError)
+    console.error('âŒ Invalid NEXT_PUBLIC_APP_URL:', base, redirectError)
     return NextResponse.redirect(`https://batamart.com${path}`)
   }
 }
@@ -28,15 +28,15 @@ export async function GET(request: NextRequest) {
   const reference = searchParams.get('reference')
   const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
 
-  console.log('═'.repeat(70))
-  console.log('🔥 PAYMENT VERIFICATION STARTED')
-  console.log('═'.repeat(70))
-  console.log('📍 Reference:', reference)
-  console.log('📍 Timestamp:', new Date().toISOString())
-  console.log('📍 APP_URL:', process.env.NEXT_PUBLIC_APP_URL ?? '⚠️  NOT SET')
+  console.log('â•'.repeat(70))
+  console.log('ðŸ”¥ PAYMENT VERIFICATION STARTED')
+  console.log('â•'.repeat(70))
+  console.log('ðŸ“ Reference:', reference)
+  console.log('ðŸ“ Timestamp:', new Date().toISOString())
+  console.log('ðŸ“ APP_URL:', process.env.NEXT_PUBLIC_APP_URL ?? 'âš ï¸  NOT SET')
 
   if (!reference) {
-    console.error('❌ ERROR: No reference in URL')
+    console.error('âŒ ERROR: No reference in URL')
     return appRedirect('/checkout?error=no_reference')
   }
   if (!/^BATAMART-[0-9]{10,}-[A-Za-z0-9_-]{4,20}$/.test(reference)) {
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // STEP 1: Verify with Paystack
-    console.log('\n📞 STEP 1: Verifying with Paystack')
+    console.log('\nðŸ“ž STEP 1: Verifying with Paystack')
 
     let verifyData: any
     try {
@@ -65,29 +65,29 @@ export async function GET(request: NextRequest) {
       console.log('HTTP Status:', verifyRes.status)
       verifyData = await verifyRes.json()
     } catch (fetchErr) {
-      console.error('❌ Network error calling Paystack:', fetchErr)
+      console.error('âŒ Network error calling Paystack:', fetchErr)
       return appRedirect('/checkout?error=payment_failed')
     }
 
-    console.log('📦 Paystack status:', verifyData?.status, '| tx status:', verifyData?.data?.status)
+    console.log('ðŸ“¦ Paystack status:', verifyData?.status, '| tx status:', verifyData?.data?.status)
 
     if (!verifyData?.status) {
-      console.error('❌ Paystack returned status=false:', verifyData?.message)
+      console.error('âŒ Paystack returned status=false:', verifyData?.message)
       return appRedirect('/checkout?error=payment_failed')
     }
 
     if (verifyData.data?.status !== 'success') {
-      console.error('❌ Payment not successful. Status:', verifyData.data?.status)
+      console.error('âŒ Payment not successful. Status:', verifyData.data?.status)
       return appRedirect('/checkout?error=payment_failed')
     }
 
-    console.log('✅ Payment verified with Paystack')
+    console.log('âœ… Payment verified with Paystack')
 
     // STEP 2: Idempotency guard
     // If Paystack fires the callback twice or the user hits reload, we must
     // NOT create a second order. We look up by Payment.transactionId (the
     // Paystack reference stored when createOrders creates the Payment record).
-    console.log('\n🔄 STEP 2: Idempotency check')
+    console.log('\nðŸ”„ STEP 2: Idempotency check')
 
     const existingPayment = await prisma.payment.findFirst({
       where:   { transactionId: reference },
@@ -95,71 +95,82 @@ export async function GET(request: NextRequest) {
     })
 
     if (existingPayment?.order) {
-      console.log('⚠️  Already processed — idempotent redirect to:', existingPayment.order.orderNumber)
+      console.log('âš ï¸  Already processed â€” idempotent redirect to:', existingPayment.order.orderNumber)
       return appRedirect(`/orders?payment=success&order=${existingPayment.order.orderNumber}`)
     }
 
-    console.log('✅ No duplicate — safe to proceed')
+    console.log('âœ… No duplicate â€” safe to proceed')
 
     // STEP 3: Extract metadata
-    console.log('\n📋 STEP 3: Extracting Metadata')
+    console.log('\n?? STEP 3: Extracting Metadata')
 
-    type CartItem = {
+    type VerifiedCartItem = {
       productId:  string
       variantId?: string | null
       variantData?: Record<string, string> | null
-      name:       string
       price:      number
       quantity:   number
-      category:   string
       sellerId:   string
-      sellerName: string
       orderNote?: string
+      buyerDeliveryAcknowledged?: boolean
     }
 
-    const meta = verifyData.data.metadata as {
+    type MetadataShape = {
       userId:           string
-      cartItems:        CartItem[]
+      cartItems:        VerifiedCartItem[]
       perOrderDelivery: number
       distinctSellers:  number
     }
 
-    if (!meta?.userId || !Array.isArray(meta?.cartItems) || meta.cartItems.length === 0) {
-      console.error('❌ Invalid/missing metadata:', JSON.stringify(meta))
+    const rawMetadata = verifyData.data.metadata
+    const meta: MetadataShape | null = typeof rawMetadata === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(rawMetadata) as MetadataShape
+          } catch {
+            return null
+          }
+        })()
+      : (rawMetadata as MetadataShape)
+
+    console.error('? Raw Paystack metadata:', JSON.stringify(verifyData.data.metadata))
+
+    if (!meta || !meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
+      console.error('? Invalid/missing metadata:', JSON.stringify(meta))
       return appRedirect('/checkout?error=invalid_metadata')
     }
     if (verifyData?.data?.currency && verifyData.data.currency !== 'NGN') {
       return appRedirect('/checkout?error=payment_failed')
     }
     if (!Number.isInteger(meta.perOrderDelivery) || meta.perOrderDelivery < 0 || meta.perOrderDelivery > 5000) {
-      console.error('❌ Invalid perOrderDelivery in metadata:', meta.perOrderDelivery)
+      console.error('? Invalid perOrderDelivery in metadata:', meta.perOrderDelivery)
       return appRedirect('/checkout?error=invalid_metadata')
     }
     if (!Number.isInteger(meta.distinctSellers) || meta.distinctSellers < 1 || meta.distinctSellers > 100) {
-      console.error('❌ Invalid distinctSellers in metadata:', meta.distinctSellers)
+      console.error('? Invalid distinctSellers in metadata:', meta.distinctSellers)
       return appRedirect('/checkout?error=invalid_metadata')
     }
 
     for (const item of meta.cartItems) {
       if (!item?.productId || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 50) {
-        console.error('❌ Invalid cart item in metadata:', item)
+        console.error('? Invalid cart item in metadata:', item)
         return appRedirect('/checkout?error=invalid_metadata')
       }
     }
 
-    console.log('✅ Metadata OK — User:', meta.userId, '| Items:', meta.cartItems.length)
+    console.log('? Metadata OK ? User:', meta.userId, '| Items:', meta.cartItems.length)
 
     const distinctSellerCount = new Set(meta.cartItems.map(i => i.sellerId)).size
     const recomputedSubtotal = meta.cartItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
     const expectedAmountKobo = Math.round((recomputedSubtotal + (distinctSellerCount * meta.perOrderDelivery)) * 100)
     const paidAmountKobo = Number(verifyData?.data?.amount ?? 0)
     if (!Number.isFinite(paidAmountKobo) || paidAmountKobo !== expectedAmountKobo) {
-      console.error('❌ Paid amount mismatch', { expectedAmountKobo, paidAmountKobo })
+      console.error('? Paid amount mismatch', { expectedAmountKobo, paidAmountKobo })
       return appRedirect('/checkout?error=amount_mismatch')
     }
 
     // STEP 4: Fetch buyer (include universityId for batch campus-scoping)
-    console.log('\n👤 STEP 4: Fetching Buyer')
+    console.log('\nðŸ‘¤ STEP 4: Fetching Buyer')
 
     const buyer = await prisma.user.findUnique({
       where:  { id: meta.userId },
@@ -172,73 +183,89 @@ export async function GET(request: NextRequest) {
     })
 
     if (!buyer) {
-      console.error('❌ Buyer not found for userId:', meta.userId)
+      console.error('âŒ Buyer not found for userId:', meta.userId)
       return appRedirect('/checkout?error=user_not_found')
     }
 
-    console.log('✅ Buyer found:', buyer.name)
+    console.log('âœ… Buyer found:', buyer.name)
 
-    // STEP 5: Optimistic stock check (fast path — catches obvious failures early)
+    // STEP 5: Optimistic stock check (fast path ? catches obvious failures early)
     // NOTE: This is NOT the authoritative stock gate. The real atomic guard is
     // the updateMany(...where quantity >= item.quantity) inside createOrders.
     // This pre-check is just a cheap early-exit that saves us from entering the
     // transaction when stock is clearly exhausted.
-    console.log('\n📦 STEP 5: Pre-flight Stock Check')
+    console.log('\n?? STEP 5: Pre-flight Stock Check')
+
+    const enrichedCartItems: Array<VerifiedCartItem & {
+      name: string
+      category: string
+      sellerName: string
+    }> = []
 
     for (const item of meta.cartItems) {
       const product = await prisma.product.findUnique({
         where:  { id: item.productId },
-        include: { variants: true },
+        include: {
+          variants: true,
+          seller: { select: { name: true } },
+        },
       })
 
       if (!product) {
-        return appRedirect(`/checkout?error=product_not_found&product=${encodeURIComponent(item.name)}`)
+        return appRedirect(`/checkout?error=product_not_found&product=${encodeURIComponent(item.productId)}`)
       }
       if (!product.isActive) {
-        return appRedirect(`/checkout?error=product_inactive&product=${encodeURIComponent(item.name)}`)
+        return appRedirect(`/checkout?error=product_inactive&product=${encodeURIComponent(product.name)}`)
       }
       const variant = item.variantId
         ? product.variants.find(v => v.id === item.variantId)
         : null
       if (item.variantId && !variant) {
-        return appRedirect(`/checkout?error=product_inactive&product=${encodeURIComponent(item.name)}`)
+        return appRedirect(`/checkout?error=product_inactive&product=${encodeURIComponent(product.name)}`)
       }
       const availableStock = variant ? variant.stock : product.quantity
       if (availableStock < item.quantity) {
-        return appRedirect(`/checkout?error=out_of_stock&product=${encodeURIComponent(item.name)}`)
+        return appRedirect(`/checkout?error=out_of_stock&product=${encodeURIComponent(product.name)}`)
       }
-      console.log(`✅ ${item.name}: OK (stock: ${availableStock})`)
+
+      enrichedCartItems.push({
+        ...item,
+        name: product.name,
+        category: product.category,
+        sellerName: product.seller.name,
+      })
+      console.log(`? ${product.name}: OK (stock: ${availableStock})`)
     }
 
     // STEP 6: Create orders + DeliveryBatch
     // createOrders creates ONE DeliveryBatch then one Order per seller group.
-    // Each order carries a full ₦800 delivery fee.
+    // Each order carries a full ?800 delivery fee.
     // updateMany with quantity >= guard atomically claims stock.
     // If two buyers race for the last unit, the second gets STOCK_GONE thrown.
-    console.log('\n💰 STEP 6: Creating Orders + DeliveryBatch')
+    console.log('\n?? STEP 6: Creating Orders + DeliveryBatch')
 
     let orders: Awaited<ReturnType<typeof createOrders>>
     try {
-      orders = await createOrders(meta.cartItems, buyer, reference)
+      orders = await createOrders(enrichedCartItems, buyer, reference)
     } catch (createErr) {
       // Handle the STOCK_GONE error thrown by the TOCTOU-safe updateMany guard.
       if (createErr instanceof Error && createErr.message.startsWith('STOCK_GONE:')) {
         const [, , productName] = createErr.message.split(':')
-        console.error('❌ Stock claimed by concurrent buyer for:', productName)
+        console.error('? Stock claimed by concurrent buyer for:', productName)
         return appRedirect(`/checkout?error=out_of_stock&product=${encodeURIComponent(productName ?? 'item')}`)
       }
       throw createErr // re-throw anything else so the outer catch handles it
     }
 
     if (!orders || orders.length === 0) {
-      console.error('❌ createOrders returned empty result')
+      console.error('? createOrders returned empty result')
       return appRedirect('/checkout?error=order_creation_failed')
     }
 
-    console.log('✅ Orders created:', orders.map(o => o.orderNumber).join(', '))
+    console.log('? Orders created:', orders.map(o => o.orderNumber).join(', '))
 
-    // STEP 7: Fire notifications (non-blocking — NEVER delays the redirect)
-    console.log('\n🔔 STEP 7: Queueing Notifications')
+    // STEP 7: Fire notifications (non-blocking ? NEVER delays the redirect)
+    console.log('\nðŸ”” STEP 7: Queueing Notifications')
 
     const sellerMap = new Map<string, {
       orderId:     string
@@ -249,7 +276,7 @@ export async function GET(request: NextRequest) {
 
     for (const order of orders) {
       if (order.sellerId && !sellerMap.has(order.sellerId)) {
-        const sellerItems = meta.cartItems.filter(i => i.sellerId === order.sellerId)
+        const sellerItems = enrichedCartItems.filter(i => i.sellerId === order.sellerId)
         sellerMap.set(order.sellerId, {
           orderId:     order.id,
           orderNumber: order.orderNumber,
@@ -259,7 +286,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // All notification work is fire-and-forget — never blocks the redirect
+    // All notification work is fire-and-forget â€” never blocks the redirect
     Promise.allSettled([
       import('@/lib/notification')
         .then(({ notifyOrderPlaced }) =>
@@ -268,14 +295,14 @@ export async function GET(request: NextRequest) {
             buyer.id,
             orders[0].sellerId,
             orders[0].orderNumber,
-            meta.cartItems.map(i => i.name).join(', ')
+            enrichedCartItems.map(i => i.name).join(', ')
           )
         )
-        .catch(err => console.error('⚠️  Buyer bell notification failed:', err)),
+        .catch(err => console.error('âš ï¸  Buyer bell notification failed:', err)),
 
       import('@/lib/push/sendPushNotification')
         .then(({ notifyOrderPlaced: pushBuyer }) => pushBuyer(buyer.id, orders[0].orderNumber))
-        .catch(err => console.error('⚠️  Buyer push failed:', err)),
+        .catch(err => console.error('âš ï¸  Buyer push failed:', err)),
 
       ...Array.from(sellerMap.entries()).map(([sellerId, info]) =>
         notifySellerOfNewOrder(
@@ -285,13 +312,13 @@ export async function GET(request: NextRequest) {
           info.orderNote,
           buyer.name ?? 'A buyer',
           info.itemsList,
-        ).catch(err => console.error(`⚠️  Seller notification failed for ${sellerId}:`, err))
+        ).catch(err => console.error(`âš ï¸  Seller notification failed for ${sellerId}:`, err))
       ),
 
       ...orders.map(order =>
         import('@/lib/push/sendPushNotification')
           .then(({ notifyAvailableRiders }) => notifyAvailableRiders(order.orderNumber))
-          .catch(err => console.error(`⚠️  Rider push failed for ${order.orderNumber}:`, err))
+          .catch(err => console.error(`âš ï¸  Rider push failed for ${order.orderNumber}:`, err))
       ),
     ]).then(results => {
       results.forEach((r, i) => {
@@ -301,25 +328,25 @@ export async function GET(request: NextRequest) {
 
     // SUCCESS
     const redirectUrl = `/orders?payment=success&order=${orders[0]?.orderNumber}&count=${orders.length}`
-    console.log('\n🎉 SUCCESS — Redirecting to:', redirectUrl)
-    console.log('═'.repeat(70))
+    console.log('\nðŸŽ‰ SUCCESS â€” Redirecting to:', redirectUrl)
+    console.log('â•'.repeat(70))
 
     return appRedirect(redirectUrl)
 
   } catch (error) {
-    console.error('\n💥 FATAL ERROR in payment verification:')
+    console.error('\nðŸ’¥ FATAL ERROR in payment verification:')
     console.error(error instanceof Error ? error.message : error)
     if (error instanceof Error) console.error(error.stack)
     return appRedirect('/checkout?error=verification_failed&reason=exception')
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Seller notification helper — all imports are dynamic so a missing module
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Seller notification helper â€” all imports are dynamic so a missing module
 // never crashes the verify route.
 // Restored exactly from original: in-app bell, note notification, push,
 // and full email template (only when buyer left a note).
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function notifySellerOfNewOrder(
   sellerId:    string,
   orderId:     string,
@@ -351,7 +378,7 @@ async function notifySellerOfNewOrder(
       notifMod.createNotification({
         userId:  sellerId,
         type:    'ORDER_PLACED',
-        title:   '🛒 New Order Received!',
+        title:   'ðŸ›’ New Order Received!',
         message: `You have a new order (#${orderNumber}) for ${itemsList}`,
         orderId,
         metadata: { orderNumber, buyerName, itemsList },
@@ -364,7 +391,7 @@ async function notifySellerOfNewOrder(
         notifMod.createNotification({
           userId:  sellerId,
           type:    'ORDER_PLACED',
-          title:   '📝 Note from Buyer',
+          title:   'ðŸ“ Note from Buyer',
           message: `For order #${orderNumber}: "${orderNote}"`,
           orderId,
           metadata: { orderNumber, orderNote },
@@ -383,7 +410,7 @@ async function notifySellerOfNewOrder(
     tasks.push(
       emailMod.sendEmail({
         to:      seller.email,
-        subject: `🎉 New Order #${orderNumber} — BATAMART`,
+        subject: `ðŸŽ‰ New Order #${orderNumber} â€” BATAMART`,
         html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -401,7 +428,7 @@ async function notifySellerOfNewOrder(
           </tr>
           <tr>
             <td style="background:#ffffff;border-radius:16px;padding:40px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-              <p style="font-size:32px;margin:0 0 8px;">🎉</p>
+              <p style="font-size:32px;margin:0 0 8px;">ðŸŽ‰</p>
               <h2 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 8px;">New Order Received!</h2>
               <p style="font-size:15px;color:#6b7280;margin:0 0 4px;">
                 <strong style="color:#111827;">${buyerName}</strong> just placed order
@@ -412,7 +439,7 @@ async function notifySellerOfNewOrder(
               </p>
               <div style="margin:20px 0;padding:16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px;">
                 <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">
-                  📝 Customer's Note to You
+                  ðŸ“ Customer's Note to You
                 </p>
                 <p style="margin:0;font-size:15px;color:#78350f;line-height:1.6;font-style:italic;">
                   "${orderNote}"
@@ -420,18 +447,18 @@ async function notifySellerOfNewOrder(
               </div>
               <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0;"/>
               <p style="font-size:13px;color:#9ca3af;margin:0 0 20px;">
-                ⚠️ Orders not confirmed within 30 minutes may be auto-cancelled.
+                âš ï¸ Orders not confirmed within 30 minutes may be auto-cancelled.
               </p>
               <a href="${APP_URL}/orders/sales"
                  style="display:inline-block;padding:14px 28px;background:#2563eb;color:#ffffff;font-size:15px;font-weight:600;border-radius:10px;text-decoration:none;">
-                Confirm Order Now →
+                Confirm Order Now â†’
               </a>
             </td>
           </tr>
           <tr>
             <td align="center" style="padding-top:24px;">
               <p style="font-size:12px;color:#9ca3af;margin:0;">
-                BATAMART — Campus Marketplace · Awka, Anambra State
+                BATAMART â€” Campus Marketplace Â· Awka, Anambra State
               </p>
             </td>
           </tr>
