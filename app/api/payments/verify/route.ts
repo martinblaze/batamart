@@ -432,7 +432,7 @@ async function notifySellerOfNewOrder(
         title:   'ðŸ›’ New Order Received!',
         message: `You have a new order (#${orderNumber}) for ${itemsList}`,
         orderId,
-        metadata: { orderNumber, buyerName, itemsList },
+        metadata: { orderNumber, buyerName, itemsList, sellerId, orderUrl: `/orders/sales?highlight=${orderId}` },
       })
     )
 
@@ -445,14 +445,14 @@ async function notifySellerOfNewOrder(
           title:   'ðŸ“ Note from Buyer',
           message: `For order #${orderNumber}: "${orderNote}"`,
           orderId,
-          metadata: { orderNumber, orderNote },
+          metadata: { orderNumber, orderNote, sellerId, orderUrl: `/orders/sales?highlight=${orderId}` },
         })
       )
     }
   }
 
   if (pushMod?.notifyNewOrder) {
-    tasks.push(pushMod.notifyNewOrder(sellerId, orderNumber))
+    tasks.push(pushMod.notifyNewOrder(sellerId, orderNumber, orderId))
   }
 
   // Email only fires when the buyer left a note (same as original)

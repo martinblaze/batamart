@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "migrate:referrals": "tsx scripts/migrate-referral-codes.ts",
-    "test:oversized": "tsx scripts/oversized-protection.test.ts"
+    "test:oversized": "tsx scripts/oversized-protection.test.ts",
+    "fix:encoding": "node fix-encoding.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

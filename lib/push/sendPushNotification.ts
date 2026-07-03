@@ -162,13 +162,13 @@ export async function notifyOrderPlaced(buyerId: string, orderNumber: string) {
   )
 }
 
-export async function notifyNewOrder(sellerId: string, orderNumber: string) {
+export async function notifyNewOrder(sellerId: string, orderNumber: string, orderId?: string) {
   await notify(
     sellerId,
     {
       title: '🎉 New Order!',
       message: `You have a new order #${orderNumber}. Check your dashboard to confirm it now.`,
-      url: `/my-shop`,
+      url: orderId ? `/orders/sales?highlight=${orderId}` : `/orders/sales`,
       tag: 'new-order',
       requireInteraction: true,
     },

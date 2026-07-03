@@ -702,7 +702,7 @@ export default function ProductDetailPage() {
   const variantKeys = Object.keys(variants)
   const requiredVariants = variantKeys.filter(k => variants[k].length > 0)
   const allVariantsSelected = requiredVariants.length === 0 || requiredVariants.every(k => selected[k])
-  const variantSummary = Object.entries(selected).filter(([, v]) => v).map(([, v]) => v).join(' · ')
+  const variantSummary = Object.entries(selected).filter(([, v]) => v).map(([, v]) => v).join(' | ')
   const matchedVariant = structuredVariants.find(v =>
     requiredVariants.every(k => (v.combination || {})[k] === selected[k])
   )

@@ -13,39 +13,7 @@ import {
   X, BadgeCheck, AlertCircle, Tag,
 } from 'lucide-react'
 import { OrderNotificationBanner } from '@/components/layout/OrderNotificationBanner'
-
-
-// ── Parse variant summary out of orderNote ────────────────────────────────────
-// Format stored by checkout: "[Order: 128GB · Black · UK Used] — extra note"
-function parseVariantNote(orderNote?: string | null): { variantSummary: string; extraNote: string } {
-  if (!orderNote) return { variantSummary: '', extraNote: '' }
-  const match = orderNote.match(/^\[Order:\s*([^\]]+)\](?:\s*(?:—|–|-|\|)\s*(.*))?$/s)
-  if (match) return { variantSummary: match[1]?.trim() || '', extraNote: match[2]?.trim() || '' }
-  return { variantSummary: '', extraNote: orderNote }
-}
-
-function VariantBadges({ orderNote }: { orderNote?: string | null }) {
-  const { variantSummary, extraNote } = parseVariantNote(orderNote)
-  if (!variantSummary && !extraNote) return null
-  const chips = variantSummary ? variantSummary.split(/\s*\/\s*|\s*·\s*/).filter(Boolean) : []
-  return (
-    <div className="mt-1.5 space-y-1">
-      {chips.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {chips.map(chip => (
-            <span key={chip} className="inline-flex items-center gap-1 text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-0.5 rounded-full">
-              <Tag className="w-2.5 h-2.5" />
-              {chip}
-            </span>
-          ))}
-        </div>
-      )}
-      {extraNote && (
-        <p className="text-[10px] text-gray-400 italic">Note: {extraNote}</p>
-      )}
-    </div>
-  )
-}
+import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
 
 interface ProductReview { id: string; rating: number; comment: string; createdAt: string }
 interface Review { id: string; type: string; rating: number; comment: string | null; createdAt: string }
@@ -70,8 +38,6 @@ interface Order {
   seller: Seller; product: Product; rider?: Rider; reviews?: Review[]; productReviews?: ProductReview[]
 }
 
-
-
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; ring: string; dot: string }> = {
   PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50', ring: 'ring-amber-200', dot: 'bg-amber-400' },
   PROCESSING: { label: 'Processing', color: 'text-orange-700', bg: 'bg-orange-50', ring: 'ring-orange-200', dot: 'bg-orange-400' },
@@ -85,11 +51,34 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   DISPUTED: { label: 'Disputed', color: 'text-red-700', bg: 'bg-red-50', ring: 'ring-red-200', dot: 'bg-red-400' },
 }
 
+function VariantBadges({ orderNote }: { orderNote?: string | null }) {
+  const { variantSummary, extraNote } = parseVariantNote(orderNote)
+  if (!variantSummary && !extraNote) return null
+  const chips = getVariantChips(orderNote)
+  return (
+    <div className="mt-1.5 space-y-1">
+      {chips.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {chips.map(chip => (
+            <span key={chip} className="inline-flex items-center gap-1 text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-0.5 rounded-full">
+              <Tag className="w-2.5 h-2.5" />
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
+      {extraNote && (
+        <p className="text-[10px] text-gray-400 italic">Note: {extraNote}</p>
+      )}
+    </div>
+  )
+}
+
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_CONFIG[status] ?? { label: status, color: 'text-gray-700', bg: 'bg-gray-100', ring: 'ring-gray-200', dot: 'bg-gray-400' }
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ring-1 ${cfg.bg} ${cfg.color} ${cfg.ring}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+    <span className={'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ring-1 ' + cfg.bg + ' ' + cfg.color + ' ' + cfg.ring}>
+      <span className={'w-1.5 h-1.5 rounded-full ' + cfg.dot} />
       {cfg.label}
     </span>
   )
@@ -245,6 +234,12 @@ export default function OrdersPage() {
             >
               <ShoppingBag className="w-4 h-4" /> Shop More
             </Link>
+            <Link
+              href="/orders/sales"
+              className="hidden sm:flex items-center gap-1.5 text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
+              <Package className="w-4 h-4" /> Selling
+            </Link>
           </div>
         </div>
       </div>
@@ -392,7 +387,7 @@ export default function OrdersPage() {
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Bike className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className="font-medium">{order.rider.name}</span>
-                        {order.rider.phone && <span className="text-gray-400">· {order.rider.phone}</span>}
+                        {order.rider.phone && <span className="text-gray-400">{'\u00b7'} {order.rider.phone}</span>}
                       </div>
                     )}
                   </div>

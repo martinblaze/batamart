@@ -5,11 +5,21 @@ import { getUserFromRequest } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 
+function jsonResponse(body: unknown, init?: ResponseInit) {
+  return NextResponse.json(body, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      ...(init?.headers ?? {}),
+    },
+  })
+}
+
 export async function GET(req: NextRequest) {
   try {
     const user = await getUserFromRequest(req)
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonResponse({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const orders = await prisma.order.findMany({
@@ -52,14 +62,14 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       orders,
       count: orders.length,
     })
   } catch (error) {
     console.error('Error fetching seller orders:', error)
-    return NextResponse.json(
+    return jsonResponse(
       { error: 'Failed to fetch orders', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )

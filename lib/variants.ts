@@ -1,5 +1,5 @@
 // lib/variants.ts
-// Central source of truth for BataMart category → subcategory → variant system
+// Central source of truth for BataMart category Ã¢â€ â€™ subcategory Ã¢â€ â€™ variant system
 // Used across: sell page, product page, search, cart, checkout, orders
 
 export interface VariantField {
@@ -19,22 +19,22 @@ export interface CategoryConfig {
   subcategories: Record<string, SubcategoryConfig>
 }
 
-// ────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // MASTER CATEGORY TREE
-// ────────────────────────────────────────────────────────────────────────────
-// ────────────────────────────────────────────────────────────────────────────
-// MASTER CATEGORY TREE — Full replacement for lib/variants.ts
-// 13 categories · 60+ subcategories
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// MASTER CATEGORY TREE Ã¢â‚¬â€ Full replacement for lib/variants.ts
+// 13 categories Ã‚Â· 60+ subcategories
 // Keep all existing interfaces and helper functions above this unchanged.
 // ONLY replace the CATEGORY_TREE constant below.
-// ────────────────────────────────────────────────────────────────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
 export const CATEGORY_TREE: Record<string, CategoryConfig> = {
 
-  // ── ELECTRONICS ──────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ ELECTRONICS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   electronics: {
     label: 'Electronics',
-    icon: '📱',
+    icon: 'Ã°Å¸â€œÂ±',
     subcategories: {
       phones_tablets: {
         label: 'Phones & Tablets',
@@ -148,10 +148,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── COMPUTING ────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ COMPUTING Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   computing: {
     label: 'Computing',
-    icon: '💻',
+    icon: 'Ã°Å¸â€™Â»',
     subcategories: {
       laptops_computing: {
         label: 'Laptops',
@@ -194,10 +194,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── FASHION ──────────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ FASHION Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   fashion: {
     label: 'Fashion',
-    icon: '👔',
+    icon: 'Ã°Å¸â€˜â€',
     subcategories: {
       mens_wear: {
         label: "Men's Clothing",
@@ -300,10 +300,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── HOME & KITCHEN ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ HOME & KITCHEN Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   home_kitchen: {
     label: 'Home & Kitchen',
-    icon: '🏠',
+    icon: 'Ã°Å¸ÂÂ ',
     subcategories: {
       furniture: {
         label: 'Furniture',
@@ -375,10 +375,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── FOOD & GROCERIES ─────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ FOOD & GROCERIES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   groceries: {
     label: 'Food & Groceries',
-    icon: '🍔',
+    icon: 'Ã°Å¸Ââ€',
     subcategories: {
       cooked_food: {
         label: 'Cooked Food & Meals',
@@ -427,10 +427,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── BEAUTY & HEALTH ──────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ BEAUTY & HEALTH Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   beauty: {
     label: 'Beauty & Health',
-    icon: '💄',
+    icon: 'Ã°Å¸â€™â€ž',
     subcategories: {
       skincare: {
         label: 'Skincare',
@@ -438,7 +438,7 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
           { key: 'type',      label: 'Type',         suggestions: ['Moisturizer','Toner','Face Wash/Cleanser','Serum','Sunscreen (SPF)','Face Mask','Exfoliator/Scrub','Eye Cream','Lip Balm','Toning Lotion','Body Lotion','Body Oil','Stretch Mark Cream'] },
           { key: 'skin_type', label: 'Skin Type',    suggestions: ['All Skin Types','Oily Skin','Dry Skin','Combination Skin','Sensitive Skin','Dark Skin'] },
           { key: 'concern',   label: 'Skin Concern', suggestions: ['Brightening','Anti-aging','Acne/Pimples','Hyperpigmentation','Dark Spots','Moisturizing','Firming'] },
-          { key: 'brand',     label: 'Brand',        suggestions: ["CeraVe","Neutrogena","L'Oréal","Olay","Nivea","Vaseline","Fair & White","Caro White","Ebony","Bio Claire","Victoria Secret","Local Brand"] },
+          { key: 'brand',     label: 'Brand',        suggestions: ["CeraVe","Neutrogena","L'OrÃƒÂ©al","Olay","Nivea","Vaseline","Fair & White","Caro White","Ebony","Bio Claire","Victoria Secret","Local Brand"] },
           { key: 'size',      label: 'Size',         suggestions: ['50ml','100ml','150ml','200ml','250ml','500ml','1 Litre'] },
           { key: 'condition', label: 'Condition',    suggestions: ['Brand New (Sealed)','Brand New (Opened Box)'] },
           { key: 'organic',   label: 'Organic',      suggestions: ['Yes','No','Partially'] },
@@ -450,7 +450,7 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
           { key: 'type',      label: 'Type',      suggestions: ['Foundation','Concealer','BB Cream','Powder','Blush','Highlighter','Contour','Eyeshadow Palette','Eyeliner','Mascara','Eyebrow Pencil','Lipstick','Lip Gloss','Lip Liner','Setting Spray','Primer','Makeup Brush Set','Beauty Blender'] },
           { key: 'shade',     label: 'Shade',     suggestions: ['Light/Fair','Medium','Tan','Deep/Dark','Ebony','Universal/Buildable'] },
           { key: 'finish',    label: 'Finish',    suggestions: ['Matte','Glossy','Satin','Dewy','Natural'] },
-          { key: 'brand',     label: 'Brand',     suggestions: ["MAC","Fenty Beauty","NYX","L'Oréal","Maybelline","Revlon","e.l.f.","Huda Beauty","Charlotte Tilbury","Local Brand"] },
+          { key: 'brand',     label: 'Brand',     suggestions: ["MAC","Fenty Beauty","NYX","L'OrÃƒÂ©al","Maybelline","Revlon","e.l.f.","Huda Beauty","Charlotte Tilbury","Local Brand"] },
           { key: 'condition', label: 'Condition', suggestions: ['Brand New (Sealed)'] },
         ],
       },
@@ -459,7 +459,7 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
         variants: [
           { key: 'type',      label: 'Type',      suggestions: ['Shampoo','Conditioner','Deep Conditioner','Hair Mask','Hair Oil','Leave-in Conditioner','Edge Control','Hair Relaxer','Hair Color/Dye','Hair Growth Serum','Scalp Treatment','Dry Shampoo','Hair Mousse','Hair Gel','Texturizer'] },
           { key: 'hair_type', label: 'Hair Type', suggestions: ['All Hair Types','Natural Hair','Relaxed Hair','Dry Hair','Oily Scalp','4C Hair','Curly Hair','Colored/Treated Hair'] },
-          { key: 'brand',     label: 'Brand',     suggestions: ['Dark & Lovely','ORS','Cantu','Shea Moisture','Dove','Pantene','Head & Shoulders','Tresemmé','SoftSheen-Carson','Local Brand'] },
+          { key: 'brand',     label: 'Brand',     suggestions: ['Dark & Lovely','ORS','Cantu','Shea Moisture','Dove','Pantene','Head & Shoulders','TresemmÃƒÂ©','SoftSheen-Carson','Local Brand'] },
           { key: 'condition', label: 'Condition', suggestions: ['Brand New (Sealed)'] },
         ],
       },
@@ -493,10 +493,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── SPORTS & FITNESS ─────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ SPORTS & FITNESS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   sports: {
     label: 'Sports & Fitness',
-    icon: '⚽',
+    icon: 'Ã¢Å¡Â½',
     subcategories: {
       gym_fitness: {
         label: 'Gym & Fitness Equipment',
@@ -537,10 +537,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── VEHICLES & TRANSPORT ─────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ VEHICLES & TRANSPORT Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   vehicles: {
     label: 'Vehicles & Transport',
-    icon: '🚗',
+    icon: 'Ã°Å¸Å¡â€”',
     subcategories: {
       bicycles: {
         label: 'Bicycles',
@@ -573,10 +573,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── BOOKS & STATIONERY ───────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ BOOKS & STATIONERY Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   books: {
     label: 'Books & Stationery',
-    icon: '📚',
+    icon: 'Ã°Å¸â€œÅ¡',
     subcategories: {
       academic_books: {
         label: 'Academic Books',
@@ -619,10 +619,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── TICKETS & EVENTS ─────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ TICKETS & EVENTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   tickets: {
     label: 'Tickets & Events',
-    icon: '🎟️',
+    icon: 'Ã°Å¸Å½Å¸Ã¯Â¸Â',
     subcategories: {
       concert_show: {
         label: 'Concert & Show Tickets',
@@ -655,10 +655,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── KIDS & BABY ──────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ KIDS & BABY Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   kids: {
     label: 'Kids & Baby',
-    icon: '🧸',
+    icon: 'Ã°Å¸Â§Â¸',
     subcategories: {
       toys_games: {
         label: 'Toys & Games',
@@ -689,10 +689,10 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
     },
   },
 
-  // ── ARTS & CRAFTS ────────────────────────────────────────────────────────
+  // Ã¢â€â‚¬Ã¢â€â‚¬ ARTS & CRAFTS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   arts_crafts: {
     label: 'Arts & Crafts',
-    icon: '🎨',
+    icon: 'Ã°Å¸Å½Â¨',
     subcategories: {
       art_supplies: {
         label: 'Art Supplies',
@@ -705,7 +705,7 @@ export const CATEGORY_TREE: Record<string, CategoryConfig> = {
       handmade_crafts: {
         label: 'Handmade & Custom Items',
         variants: [
-          { key: 'type',     label: 'Type',     suggestions: ['Handmade Jewelry','Beaded Accessories','Macramé','Scented Candle','Embroidery','Crochet/Knit Items','Custom Portrait','Clay Art','Tie-dye Clothing','Custom T-shirt (print)','Decorated Shoes','Resin Art','Gift Hamper'] },
+          { key: 'type',     label: 'Type',     suggestions: ['Handmade Jewelry','Beaded Accessories','MacramÃƒÂ©','Scented Candle','Embroidery','Crochet/Knit Items','Custom Portrait','Clay Art','Tie-dye Clothing','Custom T-shirt (print)','Decorated Shoes','Resin Art','Gift Hamper'] },
           { key: 'material', label: 'Material', suggestions: ['Beads','Clay','Resin','Cotton','Wax','Leather','Wood'] },
         ],
       },
@@ -844,9 +844,9 @@ export function getVariantFields(categoryKey: string, subcategoryKey: string): V
   return CATEGORY_TREE[categoryKey]?.subcategories[subcategoryKey]?.variants ?? []
 }
 
-// ── Encode variant map → JSON string stored in description ──────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Encode variant map Ã¢â€ â€™ JSON string stored in description Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // Format: "VARIANTS_V2::<base64-json>"
-// Falls back gracefully — products without this prefix are treated as legacy.
+// Falls back gracefully Ã¢â‚¬â€ products without this prefix are treated as legacy.
 export function encodeProductData(variants: Record<string, string[]>, tags: string[]): string {
   const payload = { variants, tags }
   return 'VARIANTS_V2::' + btoa(JSON.stringify(payload))
@@ -883,15 +883,15 @@ export function decodeProductDataServer(description: string): { variants: Record
   return { variants: {}, tags }
 }
 
-// ── Format selected variant combo → human-readable string ──────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Format selected variant combo Ã¢â€ â€™ human-readable string Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 export function formatVariantSelection(selected: Record<string, string>): string {
   return Object.entries(selected)
     .filter(([, v]) => v)
     .map(([k, v]) => `${v}`)
-    .join(' / ')
+    .join(' | ')
 }
 
-// ── Build search text from product for full-text matching ──────────────────
+// Ã¢â€â‚¬Ã¢â€â‚¬ Build search text from product for full-text matching Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 export function buildProductSearchText(product: {
   name: string
   category: string

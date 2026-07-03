@@ -94,31 +94,27 @@ export async function notifyOrderPlaced(
   orderNumber: string,
   productName: string
 ) {
-  // ✅ DB notification → updates bell for buyer
   await createNotification({
     userId: buyerId,
     type: 'ORDER_PLACED',
-    title: '🛒 Order Placed!',
+    title: '???? Order Placed!',
     message: `Your order (#${orderNumber}) for ${productName} was placed successfully.`,
     orderId,
     metadata: { orderNumber, productName },
   })
 
-  // ✅ DB notification → updates bell for seller
   await createNotification({
     userId: sellerId,
     type: 'ORDER_PLACED',
-    title: '🛒 New Order Received!',
+    title: '???? New Order Received!',
     message: `You have a new order (#${orderNumber}) for ${productName}`,
     orderId,
-    metadata: { orderNumber, productName },
+    metadata: { orderNumber, productName, sellerId, orderUrl: `/orders/sales?highlight=${orderId}` },
   })
 
-  // ✅ PUSH → buyer gets push that their order was placed
   await pushOrderPlaced(buyerId, orderNumber)
 
-  // ✅ PUSH → seller gets push about new order (this was missing before!)
-  await pushNewOrder(sellerId, orderNumber)
+  await pushNewOrder(sellerId, orderNumber, orderId)
 }
 
 export async function notifyRiderAssigned(

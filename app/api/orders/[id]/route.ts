@@ -5,6 +5,16 @@ import jwt from 'jsonwebtoken';
 import { OrderStatus } from '@prisma/client';
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request';
 
+function jsonResponse(body: unknown, init?: ResponseInit) {
+  return NextResponse.json(body, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      ...(init?.headers ?? {}),
+    },
+  })
+}
+
 const ORDER_STATUS_VALUES: OrderStatus[] = [
   'PENDING',
   'RIDER_ASSIGNED',
@@ -38,7 +48,7 @@ export async function GET(
   try {
     const user = await getUserFromToken(req);
     if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const order = await prisma.order.findUnique({
@@ -92,7 +102,7 @@ export async function GET(
     });
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return jsonResponse({ error: 'Order not found' }, { status: 404 });
     }
 
     const isBuyer  = order.buyerId  === user.id;
@@ -101,13 +111,13 @@ export async function GET(
     const isAdmin  = user.role === 'ADMIN';
 
     if (!isBuyer && !isSeller && !isRider && !isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return jsonResponse({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    return NextResponse.json(order);
+    return jsonResponse(order);
   } catch (error) {
     console.error('Error fetching order:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return jsonResponse({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -123,13 +133,13 @@ export async function PATCH(
 
     const user = await getUserFromToken(req);
     if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
     const { status } = body;
     if (!ORDER_STATUS_VALUES.includes(status as OrderStatus)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      return jsonResponse({ error: 'Invalid status' }, { status: 400 });
     }
 
     const existingOrder = await prisma.order.findUnique({
@@ -138,7 +148,7 @@ export async function PATCH(
     });
 
     if (!existingOrder) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return jsonResponse({ error: 'Order not found' }, { status: 404 });
     }
 
     const isBuyer  = existingOrder.buyerId  === user.id;
@@ -147,7 +157,7 @@ export async function PATCH(
     const isAdmin  = user.role === 'ADMIN';
 
     if (!isBuyer && !isSeller && !isRider && !isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return jsonResponse({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
@@ -164,7 +174,7 @@ export async function PATCH(
     const allowedTransitions = validTransitions[currentStatus] || [];
 
     if (!allowedTransitions.includes(status as OrderStatus)) {
-      return NextResponse.json(
+      return jsonResponse(
         { error: `Cannot transition from ${currentStatus} to ${status}` },
         { status: 400 }
       );
@@ -185,7 +195,7 @@ export async function PATCH(
       );
 
       if (!actorAllowed) {
-        return NextResponse.json(
+        return jsonResponse(
           { error: `You are not allowed to set status to ${nextStatus} from ${currentStatus}` },
           { status: 403 }
         );
@@ -219,9 +229,9 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(updatedOrder);
+    return jsonResponse(updatedOrder);
   } catch (error) {
     console.error('Error updating order:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return jsonResponse({ error: 'Internal server error' }, { status: 500 });
   }
 }

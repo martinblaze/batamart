@@ -18,6 +18,7 @@ interface Notification {
   productId?: string | null
   disputeId?: string | null
   reportId?: string | null
+  url?: string | null
   metadata?: any
 }
 
@@ -44,7 +45,12 @@ const NOTIFICATION_ICONS: Record<string, string> = {
   REFERRAL_REWARD: '🎁',
 }
 
-function getNotificationLink(notification: Notification): string {
+function getNotificationLink(notification: Notification, currentUserId: string | null): string {
+  const sellerOrderUrl = notification.metadata?.orderUrl as string | undefined
+  const sellerId = notification.metadata?.sellerId as string | undefined
+  if (notification.type === 'ORDER_PLACED' && sellerOrderUrl && sellerId && currentUserId && sellerId === currentUserId) {
+    return sellerOrderUrl
+  }
   if (notification.orderId) return `/orders/${notification.orderId}`
   if (notification.disputeId) return `/disputes/${notification.disputeId}`
   if (notification.productId) return `/product/${notification.productId}`
@@ -70,6 +76,11 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [lastFetched, setLastFetched] = useState(0)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCurrentUserId(localStorage.getItem('userId'))
+  }, [])
 
   // ── Fetch notifications ──────────────────────────────────────────────────
   const fetchNotifications = useCallback(async (force = false) => {
@@ -243,7 +254,7 @@ export default function NotificationBell() {
                   {notifications.map((notification) => (
                     <Link
                       key={notification.id}
-                      href={getNotificationLink(notification)}
+                      href={getNotificationLink(notification, currentUserId)}
                       onClick={() => handleClick(notification)}
                       className={`flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 group ${
                         !notification.isRead ? 'bg-blue-50/60' : ''

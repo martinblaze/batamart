@@ -946,9 +946,27 @@ export function Navbar() {
                 >
                   <div className="flex flex-col items-end">
                     <span className="text-sm font-medium text-gray-700 dark:text-[#D7D7D7]">Hi, {userName || 'User'}</span>
-                    <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
-                      {userRole === 'ADMIN' ? 'Admin' : userRole === 'SELLER' ? (isSellerMode ? 'Selling' : 'Buying') : userRole === 'RIDER' ? 'Rider' : 'Buyer'}
-                    </span>
+                    {userRole === 'SELLER' || userRole === 'ADMIN' ? (
+                      isSellerMode ? (
+                        <span
+                          role="link"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); router.push('/orders/sales') }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); router.push('/orders/sales') } }}
+                          className="text-xs text-gray-500 dark:text-[#A0A0A0] hover:text-blue-600 hover:underline cursor-pointer"
+                        >
+                          Selling
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                          {userRole === 'ADMIN' ? 'Admin' : 'Buying'}
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                        {userRole === 'ADMIN' ? 'Admin' : userRole === 'RIDER' ? 'Rider' : 'Buyer'}
+                      </span>
+                    )}
                   </div>
                   <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-[#A0A0A0] transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
