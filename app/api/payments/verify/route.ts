@@ -107,7 +107,6 @@ export async function GET(request: NextRequest) {
     type VerifiedCartItem = {
       productId:  string
       variantId?: string | null
-      variantData?: Record<string, string> | null
       price:      number
       quantity:   number
       sellerId:   string
@@ -116,53 +115,105 @@ export async function GET(request: NextRequest) {
     }
 
     type MetadataShape = {
-      userId:           string
-      cartItems:        VerifiedCartItem[]
-      perOrderDelivery: number
-      distinctSellers:  number
+      userId: string
+      cartItems: VerifiedCartItem[]
+    }
+
+    const parseMetadata = (value: unknown): MetadataShape | null => {
+      const normalizeItem = (item: unknown): VerifiedCartItem | null => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return null
+        const obj = item as Record<string, unknown>
+
+        const productId = typeof obj.productId === 'string' ? obj.productId : ''
+        const sellerId = typeof obj.sellerId === 'string' ? obj.sellerId : ''
+        const quantity = Number(obj.quantity)
+        const price = Number(obj.price)
+        const variantId = typeof obj.variantId === 'string' && obj.variantId.trim().length > 0
+          ? obj.variantId
+          : null
+        const orderNote = typeof obj.orderNote === 'string' ? obj.orderNote : undefined
+        const buyerDeliveryAcknowledged =
+          obj.buyerDeliveryAcknowledged === true ||
+          obj.buyerDeliveryAcknowledged === 'true' ||
+          obj.buyerDeliveryAcknowledged === 1 ||
+          obj.buyerDeliveryAcknowledged === '1'
+
+        if (!productId || !sellerId || !Number.isFinite(quantity) || !Number.isFinite(price)) return null
+
+        return {
+          productId,
+          variantId,
+          price,
+          quantity: Math.trunc(quantity),
+          sellerId,
+          orderNote,
+          buyerDeliveryAcknowledged,
+        }
+      }
+
+      const normalizeRoot = (input: unknown): MetadataShape | null => {
+        if (!input || typeof input !== 'object' || Array.isArray(input)) return null
+        const obj = input as Record<string, unknown>
+        if (typeof obj.userId !== 'string' || !Array.isArray(obj.cartItems)) return null
+
+        const cartItems = obj.cartItems.map(normalizeItem).filter((item): item is VerifiedCartItem => Boolean(item))
+        if (cartItems.length === 0) return null
+
+        return {
+          userId: obj.userId,
+          cartItems,
+        }
+      }
+
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value)
+          if (typeof parsed === 'string') {
+            try {
+              return normalizeRoot(JSON.parse(parsed))
+            } catch {
+              return null
+            }
+          }
+          return normalizeRoot(parsed)
+        } catch {
+          return null
+        }
+      }
+
+      return normalizeRoot(value)
     }
 
     const rawMetadata = verifyData.data.metadata
-    const meta: MetadataShape | null = typeof rawMetadata === 'string'
-      ? (() => {
-          try {
-            return JSON.parse(rawMetadata) as MetadataShape
-          } catch {
-            return null
-          }
-        })()
-      : (rawMetadata as MetadataShape)
+    const meta = parseMetadata(rawMetadata)
+    const perOrderDelivery = 800
 
-    console.error('? Raw Paystack metadata:', JSON.stringify(verifyData.data.metadata))
+    console.error('Raw Paystack metadata:', JSON.stringify(verifyData.data.metadata))
 
     if (!meta || !meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
-      console.error('? Invalid/missing metadata:', JSON.stringify(meta))
+      console.error('Invalid/missing metadata:', JSON.stringify(meta))
       return appRedirect('/checkout?error=invalid_metadata')
     }
     if (verifyData?.data?.currency && verifyData.data.currency !== 'NGN') {
       return appRedirect('/checkout?error=payment_failed')
     }
-    if (!Number.isInteger(meta.perOrderDelivery) || meta.perOrderDelivery < 0 || meta.perOrderDelivery > 5000) {
-      console.error('? Invalid perOrderDelivery in metadata:', meta.perOrderDelivery)
-      return appRedirect('/checkout?error=invalid_metadata')
-    }
-    if (!Number.isInteger(meta.distinctSellers) || meta.distinctSellers < 1 || meta.distinctSellers > 100) {
-      console.error('? Invalid distinctSellers in metadata:', meta.distinctSellers)
-      return appRedirect('/checkout?error=invalid_metadata')
-    }
 
     for (const item of meta.cartItems) {
-      if (!item?.productId || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 50) {
-        console.error('? Invalid cart item in metadata:', item)
+      if (!item?.productId || !item.sellerId || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 50) {
+        console.error('Invalid cart item in metadata:', item)
+        return appRedirect('/checkout?error=invalid_metadata')
+      }
+      if (!Number.isFinite(item.price) || item.price < 0) {
+        console.error('Invalid cart item price in metadata:', item)
         return appRedirect('/checkout?error=invalid_metadata')
       }
     }
 
-    console.log('? Metadata OK ? User:', meta.userId, '| Items:', meta.cartItems.length)
+    console.log('Metadata OK - User:', meta.userId, '| Items:', meta.cartItems.length)
 
     const distinctSellerCount = new Set(meta.cartItems.map(i => i.sellerId)).size
     const recomputedSubtotal = meta.cartItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
-    const expectedAmountKobo = Math.round((recomputedSubtotal + (distinctSellerCount * meta.perOrderDelivery)) * 100)
+    const expectedAmountKobo = Math.round((recomputedSubtotal + (distinctSellerCount * perOrderDelivery)) * 100)
     const paidAmountKobo = Number(verifyData?.data?.amount ?? 0)
     if (!Number.isFinite(paidAmountKobo) || paidAmountKobo !== expectedAmountKobo) {
       console.error('? Paid amount mismatch', { expectedAmountKobo, paidAmountKobo })

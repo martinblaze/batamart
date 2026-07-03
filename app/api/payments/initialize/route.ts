@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
     type CartItem = {
       productId:  string
       variantId?: string | null
-      variantData?: Record<string, string> | null
       price:      number
       quantity:   number
       sellerId:   string
@@ -163,7 +162,6 @@ export async function POST(request: NextRequest) {
         items.push({
           productId:  product.id,
           variantId:  item.variantId || null,
-          variantData: item.variantData || null,
           price:      resolvedPrice, // ? always from DB, never from client
           quantity:   safeQuantity,
           sellerId:   product.sellerId,
@@ -198,7 +196,6 @@ export async function POST(request: NextRequest) {
       items = [{
         productId:  product.id,
         variantId:  variantId,
-        variantData: body.variantData || null,
         price:      resolvedPrice,
         quantity:   1,
         sellerId:   product.sellerId,
@@ -254,10 +251,8 @@ export async function POST(request: NextRequest) {
         reference,
         callback_url: callbackUrl,
         metadata: {
-          userId:            user.id,
-          cartItems:         items,
-          perOrderDelivery,  // Ã¢â€ Â Ã¢â€šÂ¦800 per order, createOrders uses this per seller group
-          distinctSellers,
+          userId:    user.id,
+          cartItems: items,
         },
       }),
     })
