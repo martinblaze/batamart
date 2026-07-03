@@ -41,8 +41,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Update dispute return state
-    await prisma.$transaction(async (tx) => {
-      await tx.order.update({
+    const updatedOrder = await prisma.$transaction(async (tx) => {
+      const nextOrder = await tx.order.update({
         where: { id: orderId },
         data: { status: 'PICKED_UP', pickedUpAt: new Date() },
       })
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         where: { id: order.dispute!.id },
         data: { status: 'UNDER_REVIEW', resolution: '__RETURN_PICKED_UP__' },
       })
+      return nextOrder
     })
 
     // Notify admin via notification (admin can poll or see in dashboard)
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Marked as collected. Return the item to complete and earn your ₦560.',
+      order: updatedOrder,
     })
   } catch (error) {
     console.error('Dispute picked up error:', error)

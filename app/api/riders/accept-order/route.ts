@@ -166,6 +166,31 @@ export async function POST(request: NextRequest) {
     }, { timeout: 15000, maxWait: 20000 })
 
     // ── Notify buyer + sellers (fire-and-forget) ──────────────────────────
+    const refreshedBatch = await prisma.deliveryBatch.findUnique({
+      where: { id: batchId },
+      include: {
+        buyer: {
+          select: {
+            name: true,
+            phone: true,
+            hostelName: true,
+            roomNumber: true,
+            landmark: true,
+          },
+        },
+        orders: {
+          include: {
+            product: {
+              select: { name: true, images: true, hostelName: true, estimatedWeightKg: true, dimensionsCm: true },
+            },
+            seller: {
+              select: { name: true, phone: true },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    })
     Promise.allSettled(
       batch.orders.map(order =>
         import('@/lib/notification')
@@ -188,7 +213,8 @@ export async function POST(request: NextRequest) {
       message:   `Batch accepted! ${batch.orders.length} order${batch.orders.length > 1 ? 's' : ''} to pick up.`,
       riderFee:  totalRiderEscrow,
       batchNumber: batch.batchNumber,
-      orderCount:  batch.orders.length,
+      orderCount: batch.orders.length,
+      batch: refreshedBatch,
     })
   } catch (error) {
     if (error instanceof Error && error.message === 'BATCH_ALREADY_CLAIMED') {

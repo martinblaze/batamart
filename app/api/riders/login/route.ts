@@ -19,7 +19,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Find rider by email
-    const rider = await prisma.user.findUnique({ where: { email } })
+    const rider = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        password: true,
+        isRiderVerified: true,
+        isAvailable: true,
+        availableBalance: true,
+        pendingBalance: true,
+        isSuspended: true,
+      },
+    })
 
     if (!rider) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })

@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Order cancelled and buyer refunded (delivery fee retained).',
       strikeCount: result.strikeCount,
+      order: result.order,
     })
   } catch (error: any) {
     const msg = error?.message || 'Failed to process oversized decline'

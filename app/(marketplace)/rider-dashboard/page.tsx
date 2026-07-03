@@ -215,54 +215,84 @@ export default function RiderDashboardPage() {
     setActionLoading(prev => ({ ...prev, [`accept-${batchId}`]: true }))
 
     try {
-      const res  = await authFetch('/api/riders/accept-order', {
+      const res = await authFetch('/api/riders/accept-order', {
         method: 'POST',
-        body:   JSON.stringify({ batchId }),
+        body: JSON.stringify({ batchId }),
       })
       const data = await res.json()
 
-      if (res.ok) {
+      if (res.ok && data.batch) {
+        const acceptedBatch = data.batch
+        setAvailableBatches((prev) => prev.filter((batch: any) => batch.id !== acceptedBatch.id))
+        setMyBatches((prev) => [acceptedBatch, ...prev.filter((batch: any) => batch.id !== acceptedBatch.id)])
         showToast(
-          `Batch accepted! ${data.orderCount} order${data.orderCount > 1 ? 's' : ''} to pick up. You'll earn ₦${data.riderFee.toLocaleString()}.`,
+          `Batch accepted! ${data.orderCount} order${data.orderCount > 1 ? 's' : ''} to pick up. You'll earn NGN ${data.riderFee.toLocaleString()}.`,
+          'success'
+        )
+      } else if (res.ok) {
+        showToast(
+          `Batch accepted! ${data.orderCount} order${data.orderCount > 1 ? 's' : ''} to pick up. You'll earn NGN ${data.riderFee.toLocaleString()}.`,
           'success'
         )
         await fetchRiderData()
       } else if (res.status === 409) {
-        showToast('Another rider just accepted this batch. Refreshing…', 'info')
+        showToast('Another rider just accepted this batch. Refreshing...', 'info')
         await fetchRiderData()
       } else {
         showToast(data.error || 'Failed to accept batch. Please try again.', 'error')
+        await fetchRiderData()
       }
     } catch {
       showToast('Network error. Please check your connection.', 'error')
+      await fetchRiderData()
     } finally {
       setActionLoading(prev => ({ ...prev, [`accept-${batchId}`]: false }))
     }
   }
-
-  // ── Update individual order status ────────────────────────────────────────
   const updateStatus = async (orderId: string, status: string) => {
     if (actionLoading[`status-${orderId}`]) return
     setActionLoading(prev => ({ ...prev, [`status-${orderId}`]: true }))
 
     try {
-      const res  = await authFetch('/api/riders/update-status', {
+      const res = await authFetch('/api/riders/update-status', {
         method: 'POST',
-        body:   JSON.stringify({ orderId, status }),
+        body: JSON.stringify({ orderId, status }),
       })
       const data = await res.json()
-      if (res.ok) {
+      if (res.ok && data.order) {
+        const updatedOrder = data.order
+        setMyBatches((prev) =>
+          prev
+            .map((batch: any) => {
+              const matchesOrder = batch.orders?.some((order: any) => order.id === updatedOrder.id)
+              if (!matchesOrder) return batch
+
+              const orders = batch.orders.map((order: any) =>
+                order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
+              )
+              return { ...batch, orders }
+            })
+            .filter((batch: any) => {
+              if (updatedOrder.status !== 'DELIVERED') return true
+              return !(batch.orders?.length > 0 && batch.orders.every((order: any) => order.status === 'DELIVERED'))
+            })
+        )
+        setDisputePickups((prev) =>
+          prev.map((order: any) => (order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order))
+        )
+      } else if (res.ok) {
         await fetchRiderData()
       } else {
         showToast(data.error || 'Failed to update status.', 'error')
+        await fetchRiderData()
       }
     } catch {
       showToast('Network error updating status.', 'error')
+      await fetchRiderData()
     } finally {
       setActionLoading(prev => ({ ...prev, [`status-${orderId}`]: false }))
     }
   }
-
   const declineOversized = async (orderId: string) => {
     if (actionLoading[`oversized-${orderId}`]) return
     const proofImageUrl = oversizedProofByOrder[orderId] || ''
@@ -277,19 +307,35 @@ export default function RiderDashboardPage() {
         }),
       })
       const data = await res.json()
-      if (res.ok) {
+      if (res.ok && data.order) {
+        const updatedOrder = data.order
+        setMyBatches((prev) =>
+          prev
+            .map((batch: any) => {
+              const matchesOrder = batch.orders?.some((order: any) => order.id === updatedOrder.id)
+              if (!matchesOrder) return batch
+
+              const orders = batch.orders.filter((order: any) => order.id !== updatedOrder.id)
+              return orders.length > 0 ? { ...batch, orders } : null
+            })
+            .filter((batch: any): batch is any => Boolean(batch))
+        )
+        setDisputePickups((prev) => prev.filter((order: any) => order.id !== updatedOrder.id))
+        showToast('Oversized decline submitted. Order cancelled safely.', 'success')
+      } else if (res.ok) {
         showToast('Oversized decline submitted. Order cancelled safely.', 'success')
         await fetchRiderData()
       } else {
         showToast(data.error || 'Failed to decline oversized order.', 'error')
+        await fetchRiderData()
       }
     } catch {
       showToast('Network error while declining order.', 'error')
+      await fetchRiderData()
     } finally {
       setActionLoading(prev => ({ ...prev, [`oversized-${orderId}`]: false }))
     }
   }
-
   const uploadOversizedProof = async (orderId: string, file: File | null) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
@@ -329,24 +375,42 @@ export default function RiderDashboardPage() {
     setActionLoading(prev => ({ ...prev, [`dispute-pickup-${orderId}`]: true }))
 
     try {
-      const res  = await authFetch('/api/riders/dispute-picked-up', {
+      const res = await authFetch('/api/riders/dispute-picked-up', {
         method: 'POST',
-        body:   JSON.stringify({ orderId }),
+        body: JSON.stringify({ orderId }),
       })
       const data = await res.json()
-      if (res.ok) {
+      if (res.ok && data.order) {
+        const updatedOrder = data.order
+        setDisputePickups((prev) =>
+          prev.map((order: any) => (order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order))
+        )
+        setMyBatches((prev) =>
+          prev.map((batch: any) => {
+            const matchesOrder = batch.orders?.some((order: any) => order.id === updatedOrder.id)
+            if (!matchesOrder) return batch
+
+            const orders = batch.orders.map((order: any) =>
+              order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
+            )
+            return { ...batch, orders }
+          })
+        )
+        showToast('Marked as collected. Return the item to complete this job.', 'success')
+      } else if (res.ok) {
         showToast('Marked as collected. Return the item to complete this job.', 'success')
         await fetchRiderData()
       } else {
         showToast(data.error || 'Failed to update.', 'error')
+        await fetchRiderData()
       }
     } catch {
       showToast('Network error.', 'error')
+      await fetchRiderData()
     } finally {
       setActionLoading(prev => ({ ...prev, [`dispute-pickup-${orderId}`]: false }))
     }
   }
-
   const getDisputeReturnStage = (status: string) => {
     if (status === 'RIDER_ASSIGNED') return { label: 'Awaiting Pickup', tone: 'bg-yellow-100 text-yellow-700' }
     if (status === 'PICKED_UP') return { label: 'Picked Up - Head to Seller', tone: 'bg-blue-100 text-blue-700' }

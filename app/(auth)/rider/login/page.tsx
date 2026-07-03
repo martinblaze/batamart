@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +50,7 @@ function RiderLoginForm() {
         localStorage.setItem('userName', data.user.name)
 
         document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
-        router.push('/rider-dashboard')
+        router.replace('/rider-dashboard')
       } else {
         setError(data.error || 'Login failed')
       }

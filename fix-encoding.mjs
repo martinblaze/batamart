@@ -1,55 +1,66 @@
 #!/usr/bin/env node
-import fs from "fs"
-import path from "path"
-import { PrismaClient } from "@prisma/client"
+import fs from 'fs'
+import path from 'path'
+import { PrismaClient } from '@prisma/client'
 
 const MAX_PASSES = 5
-const dryRun = process.argv.includes("--dry-run")
+const dryRun = process.argv.includes('--dry-run')
+const SUSPECT_RE = /(?:Ã|Â|â€|ðŸ|ï¿½|�)/u
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return
-  const content = fs.readFileSync(filePath, "utf8")
+  const content = fs.readFileSync(filePath, 'utf8')
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim()
-    if (!line || line.startsWith("#")) continue
-    const eq = line.indexOf("=")
+    if (!line || line.startsWith('#')) continue
+    const eq = line.indexOf('=')
     if (eq === -1) continue
     const key = line.slice(0, eq).trim()
     if (!key || process.env[key] !== undefined) continue
     let value = line.slice(eq + 1).trim()
-    if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1)
     }
     process.env[key] = value
   }
 }
 
-loadEnvFile(path.resolve(process.cwd(), ".env.local"))
-loadEnvFile(path.resolve(process.cwd(), ".env"))
+loadEnvFile(path.resolve(process.cwd(), '.env.local'))
+loadEnvFile(path.resolve(process.cwd(), '.env'))
 
 const prisma = new PrismaClient()
 
-function hasResidualMojibake(value) {
-  return typeof value === "string" && /(?:Ã|Â|â€|ðŸ|ï¿½)/u.test(value)
+function mojibakeScore(value) {
+  if (typeof value !== 'string' || value.length === 0) return 0
+  const matches = value.match(/(?:Ã|Â|â€|ðŸ|ï¿½|�)/gu)
+  return matches ? matches.length : 0
+}
+
+function looksCorrupted(value) {
+  return typeof value === 'string' && SUSPECT_RE.test(value)
 }
 
 function repairString(input) {
-  if (typeof input !== "string" || input.length === 0) return null
+  if (typeof input !== 'string' || input.length === 0) return null
+  if (!looksCorrupted(input)) return null
 
   let current = input
+  const initialScore = mojibakeScore(input)
+
   for (let i = 0; i < MAX_PASSES; i += 1) {
-    const next = Buffer.from(current, "latin1").toString("utf8")
+    const next = Buffer.from(current, 'latin1').toString('utf8')
     if (next === current) break
     current = next
   }
 
   if (current === input) return null
-  if (hasResidualMojibake(current)) return null
+  if (mojibakeScore(current) >= initialScore) return null
+  if (looksCorrupted(current)) return null
   return current
 }
 
 function repairJsonValue(value) {
-  if (typeof value === "string") {
+  if (typeof value === 'string') {
     return repairString(value) ?? value
   }
 
@@ -63,7 +74,7 @@ function repairJsonValue(value) {
     return changed ? next : value
   }
 
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     let changed = false
     const next = {}
     for (const [key, item] of Object.entries(value)) {
@@ -78,15 +89,15 @@ function repairJsonValue(value) {
 }
 
 function maybeRepairField(value) {
-  if (typeof value !== "string") return { changed: false, value }
+  if (typeof value !== 'string') return { changed: false, value }
   const repaired = repairString(value)
   return repaired ? { changed: true, value: repaired } : { changed: false, value }
 }
 
 function logChange(table, id, before, after) {
-  console.log("[" + table + "] " + id)
-  console.log("before:", JSON.stringify(before))
-  console.log("after :", JSON.stringify(after))
+  console.log('[' + table + '] ' + id)
+  console.log('before:', JSON.stringify(before))
+  console.log('after :', JSON.stringify(after))
 }
 
 async function main() {
@@ -111,7 +122,7 @@ async function main() {
       subcategory: nextSubcategory.changed ? nextSubcategory.value : row.subcategory,
     }
 
-    logChange("Product", row.id, before, after)
+    logChange('Product', row.id, before, after)
     summary.product += 1
     if (!dryRun) await prisma.product.update({ where: { id: row.id }, data: after })
   }
@@ -121,7 +132,7 @@ async function main() {
     const repaired = repairJsonValue(row.combination)
     if (JSON.stringify(repaired) === JSON.stringify(row.combination)) continue
 
-    logChange("ProductVariant", row.id, row.combination, repaired)
+    logChange('ProductVariant', row.id, row.combination, repaired)
     summary.productVariant += 1
     if (!dryRun) await prisma.productVariant.update({ where: { id: row.id }, data: { combination: repaired } })
   }
@@ -136,7 +147,7 @@ async function main() {
     const before = { label: row.label, options: row.options }
     const after = { label: nextLabel.changed ? nextLabel.value : row.label, options: nextOptions }
 
-    logChange("CategoryAttribute", row.id, before, after)
+    logChange('CategoryAttribute', row.id, before, after)
     summary.categoryAttribute += 1
     if (!dryRun) await prisma.categoryAttribute.update({ where: { id: row.id }, data: after })
   }
@@ -151,7 +162,7 @@ async function main() {
     const before = { label: row.label, value: row.value }
     const after = { label: nextLabel.changed ? nextLabel.value : row.label, value: nextValue }
 
-    logChange("ProductAttributeValue", row.id, before, after)
+    logChange('ProductAttributeValue', row.id, before, after)
     summary.productAttributeValue += 1
     if (!dryRun) await prisma.productAttributeValue.update({ where: { id: row.id }, data: after })
   }
@@ -161,7 +172,7 @@ async function main() {
     const nextNote = maybeRepairField(row.orderNote)
     if (!nextNote.changed) continue
 
-    logChange("Order", row.id, row.orderNote, nextNote.value)
+    logChange('Order', row.id, row.orderNote, nextNote.value)
     summary.order += 1
     if (!dryRun) await prisma.order.update({ where: { id: row.id }, data: { orderNote: nextNote.value } })
   }
@@ -171,13 +182,13 @@ async function main() {
     const repaired = repairJsonValue(row.variantData)
     if (JSON.stringify(repaired) === JSON.stringify(row.variantData)) continue
 
-    logChange("OrderItem", row.id, row.variantData, repaired)
+    logChange('OrderItem', row.id, row.variantData, repaired)
     summary.orderItem += 1
     if (!dryRun) await prisma.orderItem.update({ where: { id: row.id }, data: { variantData: repaired } })
   }
 
   const total = Object.values(summary).reduce((sum, count) => sum + count, 0)
-  console.log((dryRun ? "DRY RUN" : "UPDATED") + ": " + total + " row(s)")
+  console.log((dryRun ? 'DRY RUN' : 'UPDATED') + ': ' + total + ' row(s)')
   console.log(summary)
 }
 
