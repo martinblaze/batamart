@@ -13,6 +13,7 @@ import {
   sellerTierScore,
 } from '@/lib/feed-ranking'
 import { keywordMatchScore, normalizeText } from '@/lib/search-utils'
+import { resolveCategoryKey } from '@/lib/variants'
 
 type ActivitySignal = { value: string; timestamp?: number }
 
