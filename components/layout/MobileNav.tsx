@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { X, Menu, Home, ShoppingBag, Package, Wallet, User, Settings, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useScrollLock } from '@/hooks/use-responsive';
+import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider';
 
 interface NavItem {
   icon: any;
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const { isKeyboardOpen } = useKeyboardVisibility();
 
   useScrollLock(isOpen);
 
@@ -109,11 +111,12 @@ export function MobileNav() {
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { isKeyboardOpen } = useKeyboardVisibility();
 
   const bottomNavItems = navItems.slice(0, 5);
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-inset-bottom">
+    <nav className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-inset-bottom transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
       <div className="flex items-center justify-around px-2 py-2">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
@@ -138,3 +141,6 @@ export function MobileBottomNav() {
     </nav>
   );
 }
+
+
+

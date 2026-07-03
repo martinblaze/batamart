@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next'
+﻿import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 
@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { NotificationPrompt } from '@/hooks/usePushSubscription'
 import { SuspensionGuard } from '@/components/layout/SuspensionGuard'
 
-// 🔥 PWA + UX
+// ðŸ”¥ PWA + UX
 import PWARegister from '@/components/PWARegister'
 import SplashScreen from '@/components/SplashScreen'
 import InstallPrompt from '@/components/InstallPrompt'
@@ -17,6 +17,7 @@ import { RoutePrefetcher } from '@/components/layout/RoutePrefetcher'
 import { AppNavigationCache } from '@/components/layout/AppNavigationCache'
 import { GlobalPullToRefresh } from '@/components/layout/GlobalPullToRefresh'
 import { ToastContainer } from '@/components/ui/Toast'
+import { KeyboardVisibilityProvider } from '@/components/layout/KeyboardVisibilityProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
@@ -155,7 +156,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* ── BULLETPROOF ZOOM KILLER ── */}
+        {/* â”€â”€ BULLETPROOF ZOOM KILLER â”€â”€ */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -179,41 +180,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* ── iOS PWA KEYBOARD FIX ── */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                // Only run on iOS
-                if (!(/iPad|iPhone|iPod/.test(navigator.userAgent))) return;
-
-                var lastScrollY = 0;
-
-                // Save scroll position when keyboard opens
-                window.addEventListener('focusin', function(e) {
-                  lastScrollY = window.scrollY;
-                });
-
-                // Restore everything when keyboard closes
-                window.addEventListener('focusout', function(e) {
-                  setTimeout(function() {
-                    // Restore scroll position
-                    window.scrollTo({ top: lastScrollY, behavior: 'instant' });
-
-                    // Force all navs to repaint — fixes floating bottom nav
-                    document.querySelectorAll('nav').forEach(function(nav) {
-                      nav.style.display = 'none';
-                      nav.offsetHeight; // trigger reflow
-                      nav.style.display = '';
-                    });
-                  }, 100);
-                });
-              })();
-            `,
-          }}
-        />
-
-        {/* ── BULLETPROOF SPLASH BLOCKER ── */}
+        {/* â”€â”€ BULLETPROOF SPLASH BLOCKER â”€â”€ */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -246,7 +213,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* ── INSTANT BODY HIDE ── */}
+        {/* â”€â”€ INSTANT BODY HIDE â”€â”€ */}
         <style dangerouslySetInnerHTML={{
           __html: `
             html.splash-pending body > * {
@@ -262,22 +229,24 @@ export default function RootLayout({
       </head>
 
       <body className={inter.className}>
-        <ThemeProvider>
-          <RoutePrefetcher />
-          <AppNavigationCache />
-          <GlobalPullToRefresh />
-          <PWARegister />
-          <SplashScreen />
-          <InstallPrompt />
-          <IosInstallPrompt />
-          <SuspensionGuard />
-          <NavbarWrapper />
-          <NotificationPrompt />
-          <IOSAppShell>
-            {children}
-          </IOSAppShell>
-          <ToastContainer />
-        </ThemeProvider>
+        <KeyboardVisibilityProvider>
+          <ThemeProvider>
+            <RoutePrefetcher />
+            <AppNavigationCache />
+            <GlobalPullToRefresh />
+            <PWARegister />
+            <SplashScreen />
+            <InstallPrompt />
+            <IosInstallPrompt />
+            <SuspensionGuard />
+            <NavbarWrapper />
+            <NotificationPrompt />
+            <IOSAppShell>
+              {children}
+            </IOSAppShell>
+            <ToastContainer />
+          </ThemeProvider>
+        </KeyboardVisibilityProvider>
       </body>
     </html>
   )

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 
 import { isSplashPending } from '@/components/SplashScreen'
+import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider'
 
 function BATAMARTLogo({ appMode = false }: { appMode?: boolean }) {
   const href = appMode ? '/marketplace?app=true' : '/'
@@ -114,6 +115,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [toggling, setToggling] = useState(false)
+  const { isKeyboardOpen } = useKeyboardVisibility()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -198,13 +200,11 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 border-t"
+        className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           background: '#121212',
           borderColor: '#343434',
           boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
-          transform: 'translate3d(0,0,0)',
-          WebkitTransform: 'translate3d(0,0,0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
@@ -273,7 +273,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 className="text-[10px] font-semibold mt-1 leading-none"
                 style={{ color: isAvailable ? '#10b981' : '#6b7280' }}
               >
-                {isAvailable === null ? '…' : isAvailable ? 'Online' : 'Offline'}
+                {isAvailable === null ? 'â€¦' : isAvailable ? 'Online' : 'Offline'}
               </span>
             </button>
           </div>
@@ -392,37 +392,7 @@ function AppBottomNav({
   const router = useRouter()
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
-
-  // ── iOS PWA keyboard fix ──────────────────────────────────────────────────
-  useEffect(() => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-    if (!isIOS) return
-
-    let lastScrollY = 0
-
-    const onFocusIn = () => { lastScrollY = window.scrollY }
-
-    const onFocusOut = () => {
-      setTimeout(() => {
-        window.scrollTo({ top: lastScrollY, behavior: 'instant' })
-        const navs = document.querySelectorAll('nav')
-        navs.forEach(nav => {
-          nav.style.display = 'none'
-          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-          nav.offsetHeight
-          nav.style.display = ''
-        })
-      }, 300)
-    }
-
-    window.addEventListener('focusin', onFocusIn)
-    window.addEventListener('focusout', onFocusOut)
-    return () => {
-      window.removeEventListener('focusin', onFocusIn)
-      window.removeEventListener('focusout', onFocusOut)
-    }
-  }, [])
-  // ─────────────────────────────────────────────────────────────────────────
+  const { isKeyboardOpen } = useKeyboardVisibility()
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + '/')
@@ -487,11 +457,9 @@ function AppBottomNav({
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-white/80"
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-white/80 transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           boxShadow: '0 -8px 28px rgba(15,23,42,0.10)',
-          transform: 'translate3d(0,0,0)',
-          WebkitTransform: 'translate3d(0,0,0)',
           willChange: 'transform',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
@@ -864,10 +832,10 @@ export function Navbar() {
     window.dispatchEvent(new Event('auth-change'))
   }
 
-  // ── FIXED: clear cookie on logout + send riders to /rider/login ──────────
+  // â”€â”€ FIXED: clear cookie on logout + send riders to /rider/login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleLogout = () => {
     localStorage.clear()
-    document.cookie = 'token=; path=/; max-age=0'          // ← clears the cookie middleware reads
+    document.cookie = 'token=; path=/; max-age=0'          // â† clears the cookie middleware reads
     sessionStorage.removeItem('batamart_rider_mode')
     setIsLoggedIn(false)
     setUserName('')
@@ -875,7 +843,7 @@ export function Navbar() {
     setUserRole('')
     setIsSellerMode(true)
     setIsUserDropdownOpen(false)
-    router.push(isRider ? '/rider/login' : isApp ? '/marketplace?app=true' : '/')  // ← riders go to /rider/login
+    router.push(isRider ? '/rider/login' : isApp ? '/marketplace?app=true' : '/')  // â† riders go to /rider/login
   }
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
@@ -985,7 +953,7 @@ export function Navbar() {
                           <Wallet className="w-5 h-5 mr-3 text-gray-400" />
                           <div className="flex items-center justify-between flex-1">
                             <span>Earnings</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
                         <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/notifications') ? 'bg-blue-50 text-blue-600' : ''}`}>
@@ -1019,7 +987,7 @@ export function Navbar() {
                           <Wallet className="w-5 h-5 mr-3 text-gray-400" />
                           <div className="flex items-center justify-between flex-1">
                             <span>Wallet</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
                         <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/dispute') ? 'bg-red-50 text-red-600' : ''}`}>
@@ -1070,7 +1038,7 @@ export function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-[#343434] bg-white dark:bg-[#1E1E1E] max-h-[calc(100vh-4rem)] overflow-y-auto">
+        <div className="md:hidden border-t border-gray-200 dark:border-[#343434] bg-white dark:bg-[#1E1E1E] max-h-[calc(100dvh-4rem)] overflow-y-auto">
           <div className="px-4 py-4">
             <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-gray-200">
               {isLoggedIn && userRole !== 'RIDER' && (
@@ -1130,7 +1098,7 @@ export function Navbar() {
                       <Wallet className="w-5 h-5 mr-3" />
                       <div className="flex items-center justify-between flex-1">
                         <span>Wallet</span>
-                        {userBalance > 0 && <span className="text-sm text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                        {userBalance > 0 && <span className="text-sm text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
                       </div>
                     </Link>
                     <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/dispute') ? 'bg-red-50 text-red-600' : 'text-gray-600 hover:bg-gray-50'}`}>
@@ -1174,3 +1142,8 @@ export function Navbar() {
     </nav>
   )
 }
+
+
+
+
+
