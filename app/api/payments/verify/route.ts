@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     try {
       const verifyRes = await fetch(
         `https://api.paystack.co/transaction/verify/${reference}`,
-        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+        { headers: { Authorization: `Bearer ${process.env.CREDO_SECRET_KEY ?? process.env.PAYSTACK_SECRET_KEY}` } }
       )
       console.log('HTTP Status:', verifyRes.status)
       verifyData = await verifyRes.json()
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
     const meta = parseMetadata(rawMetadata)
     const perOrderDelivery = 800
 
-    console.error('Raw Paystack metadata:', JSON.stringify(verifyData.data.metadata))
+    console.error('Raw payment metadata:', JSON.stringify(verifyData.data.metadata))
 
     if (!meta || !meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
       console.error('Invalid/missing metadata:', JSON.stringify(meta))

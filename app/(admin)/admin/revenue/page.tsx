@@ -56,7 +56,7 @@ export default function RevenuePage() {
   const p           = revenue?.platform      || {}
   const gross       = p.gross                || {}
   const net         = p.net                  || {}
-  const fees        = p.paystackFees         || {}
+  const fees        = p.credoFees            || {}
   const obligations = revenue?.obligations   || {}
   const withdrawal  = revenue?.withdrawal    || {}
   const referrals   = revenue?.referrals     || {}
@@ -101,7 +101,7 @@ export default function RevenuePage() {
             <ShieldCheck className="w-7 h-7 text-green-400" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white mb-1">Safe to Withdraw from Paystack</h2>
+            <h2 className="text-xl font-bold text-white mb-1">Safe to Withdraw from Credo</h2>
             <p className="text-gray-300 text-sm mb-4">
               Your actual profit after ALL deductions — including money still owed to sellers and riders.
               {selectedUni !== 'all' && ` Scoped to ${selectedUniName}.`}
@@ -112,8 +112,8 @@ export default function RevenuePage() {
                 <span className="text-white">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-300">
-                <span>Paystack fees (1.5% + ₦100, max ₦2k per order)</span>
-                <span className="text-red-400">− ₦{(breakdown.minusPaystackFees || 0).toLocaleString()}</span>
+                <span>Credo fees (1.5% + ₦100, waived under ₦2k, max ₦2.1k per order)</span>
+                <span className="text-red-400">− ₦{(breakdown.minusCredoFees || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Referral rewards paid to users</span>
@@ -139,15 +139,15 @@ export default function RevenuePage() {
               <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 mb-4 text-sm text-orange-300">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Paystack balance belongs to sellers/riders who haven't withdrawn yet.
-                  You must leave that amount in Paystack.
+                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Credo-managed balance belongs to sellers/riders who haven't withdrawn yet.
+                  You must leave that amount in Credo-managed balance.
                 </span>
               </div>
             )}
 
             <div className="flex items-center gap-2 text-green-300 font-bold text-lg">
               <DollarSign className="w-5 h-5" />
-              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Paystack
+              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Credo-managed balance
             </div>
           </div>
         </div>
@@ -156,7 +156,7 @@ export default function RevenuePage() {
       {/* ── Net Profit Cards ── */}
       <div>
         <h2 className="text-xl font-bold text-white mb-1">Net Platform Profit</h2>
-        <p className="text-gray-400 text-sm mb-4">After Paystack fees. Referral payouts + user obligations deducted from all-time.</p>
+        <p className="text-gray-400 text-sm mb-4">After Credo fees. Referral payouts + user obligations deducted from all-time.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'All Time NET',    value: withdrawal.safeToWithdraw || 0, sub: `Gross: ₦${(gross.allTime || 0).toLocaleString()}`,    color: 'from-green-500 to-green-600',   textLight: 'text-green-100' },
@@ -177,7 +177,7 @@ export default function RevenuePage() {
       <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-1">Money Owed to Users</h3>
         <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-          <Info className="w-3 h-3" /> Keep this amount in Paystack — it belongs to sellers and riders
+          <Info className="w-3 h-3" /> Keep this amount in Credo-managed balance — it belongs to sellers and riders
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-gray-700/50 rounded-xl p-4">

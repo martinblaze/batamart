@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
+import { credoFeePerOrder } from '@/lib/finance/fees'
 
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -17,12 +18,10 @@ async function verifyAdmin(req: NextRequest) {
   }
 }
 
-// Paystack charges 1.5% + ₦100 per transaction, capped at ₦2,000
-// This must be called PER ORDER, not on the aggregate sum
-function paystackFeePerOrder(orderAmount: number): number {
-  const fee = orderAmount * 0.015 + 100
-  return Math.min(fee, 2000)
-}
+// Credo charges 1.5% + 100 per transaction, capped at 2100.
+// The 100 flat fee is waived for transactions under 2000.
+// This must be called PER ORDER, not on the aggregate sum.
+const feeForOrder = credoFeePerOrder
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
@@ -107,7 +106,7 @@ export async function GET(req: NextRequest) {
       totalAmount: orders.reduce((s, o) => s + (o.totalAmount || 0), 0),
       platformCommission: orders.reduce((s, o) => s + (o.platformCommission || 0), 0),
       count: orders.length,
-      paystackFees: orders.reduce((s, o) => s + paystackFeePerOrder(o.totalAmount || 0), 0),
+      credoFees: orders.reduce((s, o) => s + feeForOrder(o.totalAmount || 0), 0),
     })
 
     const allTime   = sumOrders(allCompletedOrders)
@@ -118,11 +117,11 @@ export async function GET(req: NextRequest) {
 
     const referralPaidOut = Number(referralStats._sum.amount ?? 0)
 
-    const netAllTime   = allTime.platformCommission   - allTime.paystackFees   - referralPaidOut
-    const netThisMonth = thisMonth.platformCommission - thisMonth.paystackFees
-    const netLastMonth = lastMonth.platformCommission - lastMonth.paystackFees
-    const netToday     = today.platformCommission     - today.paystackFees
-    const netPending   = pending.platformCommission   - pending.paystackFees
+    const netAllTime   = allTime.platformCommission   - allTime.credoFees   - referralPaidOut
+    const netThisMonth = thisMonth.platformCommission - thisMonth.credoFees
+    const netLastMonth = lastMonth.platformCommission - lastMonth.credoFees
+    const netToday     = today.platformCommission     - today.credoFees
+    const netPending   = pending.platformCommission   - pending.credoFees
 
     // ── FIX: Use .toNumber() to safely convert Prisma Decimal fields ──
     const sellersAvailableNow = totalSellersBalance._sum.availableBalance?.toNumber() ?? 0
@@ -178,12 +177,12 @@ export async function GET(req: NextRequest) {
             today:     netToday,
             pending:   netPending,
           },
-          paystackFees: {
-            allTime:   allTime.paystackFees,
-            thisMonth: thisMonth.paystackFees,
-            lastMonth: lastMonth.paystackFees,
-            today:     today.paystackFees,
-            pending:   pending.paystackFees,
+          credoFees: {
+            allTime:   allTime.credoFees,
+            thisMonth: thisMonth.credoFees,
+            lastMonth: lastMonth.credoFees,
+            today:     today.credoFees,
+            pending:   pending.credoFees,
           },
         },
 
@@ -228,7 +227,7 @@ export async function GET(req: NextRequest) {
           paystackHoldsApprox,
           breakdown: {
             grossCommission:       allTime.platformCommission,
-            minusPaystackFees:     allTime.paystackFees,
+            minusCredoFees:        allTime.credoFees,
             minusReferralPayouts:  referralPaidOut,
             minusSellersAvailable: sellersAvailableNow,
             minusRidersAvailable:  ridersAvailableNow,

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
+import { credoFeePerOrder as calculateCredoFeePerOrder } from '@/lib/finance/fees'
 
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -18,10 +19,7 @@ async function verifyAdmin(req: NextRequest) {
   }
 }
 
-// Paystack fee per order — needed to compute true net revenue
-function paystackFeePerOrder(orderAmount: number): number {
-  return Math.min(orderAmount * 0.015 + 100, 2000)
-}
+
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
@@ -230,7 +228,7 @@ export async function GET(req: NextRequest) {
     // Previously: netRevenue = platformCommission - referralsPaidOut (missing Paystack fees)
     // Now:        netRevenue = platformCommission - paystackFees - referralsPaidOut
     const paystackFees = completedOrderAmounts.reduce(
-      (sum, o) => sum + paystackFeePerOrder(o.totalAmount || 0),
+      (sum, o) => sum + calculateCredoFeePerOrder(o.totalAmount || 0),
       0
     )
     const netRevenue = platformCommission - paystackFees - referralsPaidOut
@@ -293,8 +291,9 @@ export async function GET(req: NextRequest) {
       completionRate,
       revenue:          gmv,
       platformCommission,
-      paystackFees,       // now exposed so UI can show it if needed
-      netRevenue,         // FIX #6: now correctly deducts Paystack fees
+      paystackFees,       // legacy alias for compatibility
+      credoFees: paystackFees,
+      netRevenue,         // FIX #6: now correctly deducts Credo fees
       revenueTrend,       // FIX #9: null when range='all'
 
       dau: dauUsers,
