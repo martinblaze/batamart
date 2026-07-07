@@ -1,4 +1,4 @@
-// app/api/products/route.ts
+﻿// app/api/products/route.ts
 export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -198,11 +198,11 @@ function normalizeModerationText(value: unknown) {
   return String(value || '')
     .normalize('NFKD')
     .toLowerCase()
-    .replace(/[Ã¡Ã Ã¢Ã¤Ã£Ã¥]/g, 'a')
-    .replace(/[Ã©Ã¨ÃªÃ«]/g, 'e')
-    .replace(/[Ã­Ã¬Ã®Ã¯]/g, 'i')
-    .replace(/[Ã³Ã²Ã´Ã¶Ãµ]/g, 'o')
-    .replace(/[ÃºÃ¹Ã»Ã¼]/g, 'u')
+    .replace(/[áàâäãå]/g, 'a')
+    .replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i')
+    .replace(/[óòôöõ]/g, 'o')
+    .replace(/[úùûü]/g, 'u')
     .replace(/[$]/g, 's')
     .replace(/[!|]/g, 'i')
     .replace(/[@]/g, 'a')

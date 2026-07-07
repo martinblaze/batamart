@@ -1,10 +1,10 @@
 // app/(marketplace)/checkout/page.tsx
-// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ UPGRADED: Selected variants are auto-filled into "Note to Seller"
+// ── UPGRADED: Selected variants are auto-filled into "Note to Seller"
 //    The variant summary is prepended automatically; user can still add extra notes.
 //
-// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX #4: Delivery fee is not hardcoded on the client.
-// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX #5: Product prices are re-validated server-side.
-// ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX #6: Uses authFetch so a 401 auto-redirects to /login.
+// ── FIX #4: Delivery fee is not hardcoded on the client.
+// ── FIX #5: Product prices are re-validated server-side.
+// ── FIX #6: Uses authFetch so a 401 auto-redirects to /login.
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -40,7 +40,7 @@ export default function CheckoutPage() {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
 
-    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Show error messages from payment callback ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+    // ── Show error messages from payment callback ──
     const searchParams = new URLSearchParams(window.location.search)
     const urlError = searchParams.get('error')
     const productName = searchParams.get('product')
@@ -48,9 +48,9 @@ export default function CheckoutPage() {
     if (urlError === 'payment_failed') {
       setError('SAFE_TO_RETRY|Payment was not successful. Please try again.')
     } else if (urlError === 'out_of_stock' && productName) {
-      setError(`NOT_CHARGED|Sorry, "${decodeURIComponent(productName)}" went out of stock just before your payment was confirmed. You have NOT been charged ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â please try a different item.`)
+      setError(`NOT_CHARGED|Sorry, "${decodeURIComponent(productName)}" went out of stock just before your payment was confirmed. You have NOT been charged — please try a different item.`)
     } else if (urlError === 'verification_failed' || urlError === 'order_creation_failed') {
-      setError('CHECK_ORDERS|Your payment may have gone through but something went wrong on our end. DO NOT pay again ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â check your Orders page first to see if the order was created. If it was not there within 5 minutes, contact support.')
+      setError('CHECK_ORDERS|Your payment may have gone through but something went wrong on our end. DO NOT pay again — check your Orders page first to see if the order was created. If it was not there within 5 minutes, contact support.')
     } else if (urlError === 'invalid_metadata' || urlError === 'user_not_found') {
       setError('CHECK_ORDERS|There was a problem processing your payment. Check your Orders page first before trying again. If no order appears within 5 minutes, contact support.')
     } else if (urlError === 'product_not_found' || urlError === 'product_inactive') {
@@ -60,7 +60,7 @@ export default function CheckoutPage() {
       setError('SAFE_TO_RETRY|Payment session expired. Please try again.')
     }
 
-    // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Load cart items ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+    // ── Load cart items ──
     const cartData = sessionStorage.getItem('checkout_cart')
     if (cartData) {
       setCartItems(JSON.parse(cartData))
@@ -149,7 +149,7 @@ export default function CheckoutPage() {
 
     try {
       const cartItemsWithNotes = cartItems.map(item => ({
-        // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX #5: We send productId and quantity only.
+        // ── FIX #5: We send productId and quantity only.
         // The server MUST re-fetch the price from the DB.
         productId: item.productId,
         variantId: item.variantId || null,
@@ -159,7 +159,7 @@ export default function CheckoutPage() {
         buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
       }))
 
-      // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX #4: We do NOT send deliveryFee from the client.
+      // ── FIX #4: We do NOT send deliveryFee from the client.
       const response = await authFetch('/api/payments/initialize', {
         method: 'POST',
         body: JSON.stringify({ cartItems: cartItemsWithNotes }),
@@ -210,7 +210,7 @@ export default function CheckoutPage() {
     </div>
   )
 
-  // ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ FIX: Delivery fee is ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¦800 per unique seller (server remains source of truth). ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬
+  // ── FIX: Delivery fee is ₦800 per unique seller (server remains source of truth). ──
   const uniqueSellers = Math.max(1, new Set(cartItems.map(item => item.sellerId)).size)
   const fallbackDeliveryFee = uniqueSellers * 800
   const deliveryFee   = serverDeliveryFee ?? fallbackDeliveryFee
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-[#f7f8fa] pb-20">
 
-      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Sticky header ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+      {/* ── Sticky header ── */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
@@ -248,10 +248,10 @@ export default function CheckoutPage() {
 
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
 
-          {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ LEFT: Main sections ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+          {/* ── LEFT: Main sections ── */}
           <div className="lg:col-span-3 space-y-5">
 
-            {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Delivery address ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+            {/* ── Delivery address ── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
                   { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Name', value: user.name },
                   { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Phone', value: user.phone },
                   { icon: <Home className="w-4 h-4 text-gray-400" />, label: 'Location', value: `${user.hostelName}${user.roomNumber ? `, Room ${user.roomNumber}` : ''}` },
-                  { icon: <MapPin className="w-4 h-4 text-gray-400" />, label: 'Landmark', value: user.landmark || 'ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â' },
+                  { icon: <MapPin className="w-4 h-4 text-gray-400" />, label: 'Landmark', value: user.landmark || '—' },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3 bg-gray-50 rounded-xl p-3.5">
                     <div className="mt-0.5 flex-shrink-0">{icon}</div>
@@ -283,7 +283,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Order items + notes ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+            {/* ── Order items + notes ── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2.5">
                 <div className="w-8 h-8 bg-violet-50 rounded-lg flex items-center justify-center">
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
                           <p className="text-xs text-gray-400 mt-0.5">by <span className="font-semibold text-gray-600">{item.sellerName}</span></p>
                           {item.deliveryEstimate && <p className="text-[11px] text-orange-600 font-semibold mt-1">Estimated delivery: {item.deliveryEstimate}</p>}
 
-                          {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ NEW: Variant chips ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+                          {/* ── NEW: Variant chips ── */}
                           {variantEntries.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {variantEntries.map(([key, val]) => (
@@ -332,7 +332,7 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-                      {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Order note ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LOCKED: do not remove. Auto-fills variant selection. ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+                      {/* ── Order note — LOCKED: do not remove. Auto-fills variant selection. ── */}
                       <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
                         <div className="flex items-start gap-2.5 mb-3">
                           <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -383,7 +383,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Escrow info ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+            {/* ── Escrow info ── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
@@ -406,7 +406,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Error banner ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â context-aware messaging */}
+            {/* Error banner — context-aware messaging */}
             {error && (() => {
               const [type, msg] = error.includes('|') ? error.split('|') : ['GENERIC', error]
               const isCheckOrders = type === 'CHECK_ORDERS'
@@ -422,13 +422,13 @@ export default function CheckoutPage() {
                 }`}>
                   <div className="flex items-start gap-3">
                     <span className="text-xl flex-shrink-0 mt-0.5">
-                      {isCheckOrders ? 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â' : isNotCharged ? 'ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¹ÃƒÂ¯Ã‚Â¸Ã‚Â' : 'ÃƒÂ¢Ã‚ÂÃ…â€™'}
+                      {isCheckOrders ? '⚠️' : isNotCharged ? 'ℹ️' : '❌'}
                     </span>
                     <div className="flex-1">
                       <p className={`text-sm font-bold mb-1 ${
                         isCheckOrders ? 'text-amber-800' : isNotCharged ? 'text-blue-800' : 'text-red-800'
                       }`}>
-                        {isCheckOrders ? 'Before You Try Again ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Check Your Orders' : isNotCharged ? 'You Were Not Charged' : 'Payment Error'}
+                        {isCheckOrders ? 'Before You Try Again — Check Your Orders' : isNotCharged ? 'You Were Not Charged' : 'Payment Error'}
                       </p>
                       <p className={`text-sm leading-relaxed ${
                         isCheckOrders ? 'text-amber-700' : isNotCharged ? 'text-blue-700' : 'text-red-700'
@@ -440,7 +440,7 @@ export default function CheckoutPage() {
                           href="/orders"
                           className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-lg transition-colors"
                         >
-                          Check My Orders ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
+                          Check My Orders →
                         </a>
                       )}
                     </div>
@@ -450,7 +450,7 @@ export default function CheckoutPage() {
             })()}
           </div>
 
-          {/* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ RIGHT: Summary + CTA ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */}
+          {/* ── RIGHT: Summary + CTA ── */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Order Summary</p>

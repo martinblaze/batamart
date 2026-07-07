@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { NotificationPrompt } from '@/hooks/usePushSubscription'
 import { SuspensionGuard } from '@/components/layout/SuspensionGuard'
 
-// ðŸ”¥ PWA + UX
+// 🔥 PWA + UX
 import PWARegister from '@/components/PWARegister'
 import SplashScreen from '@/components/SplashScreen'
 import InstallPrompt from '@/components/InstallPrompt'
@@ -156,7 +156,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* â”€â”€ BULLETPROOF ZOOM KILLER â”€â”€ */}
+        {/* ── BULLETPROOF ZOOM KILLER ── */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -180,7 +180,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* â”€â”€ BULLETPROOF SPLASH BLOCKER â”€â”€ */}
+        {/* ── BULLETPROOF SPLASH BLOCKER ── */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -213,7 +213,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* â”€â”€ INSTANT BODY HIDE â”€â”€ */}
+        {/* ── INSTANT BODY HIDE ── */}
         <style dangerouslySetInnerHTML={{
           __html: `
             html.splash-pending body > * {

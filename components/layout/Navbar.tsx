@@ -273,7 +273,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 className="text-[10px] font-semibold mt-1 leading-none"
                 style={{ color: isAvailable ? '#10b981' : '#6b7280' }}
               >
-                {isAvailable === null ? 'â€¦' : isAvailable ? 'Online' : 'Offline'}
+                {isAvailable === null ? '…' : isAvailable ? 'Online' : 'Offline'}
               </span>
             </button>
           </div>
@@ -832,10 +832,10 @@ export function Navbar() {
     window.dispatchEvent(new Event('auth-change'))
   }
 
-  // â”€â”€ FIXED: clear cookie on logout + send riders to /rider/login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── FIXED: clear cookie on logout + send riders to /rider/login ──────────
   const handleLogout = () => {
     localStorage.clear()
-    document.cookie = 'token=; path=/; max-age=0'          // â† clears the cookie middleware reads
+    document.cookie = 'token=; path=/; max-age=0'          // ← clears the cookie middleware reads
     sessionStorage.removeItem('batamart_rider_mode')
     setIsLoggedIn(false)
     setUserName('')
@@ -843,7 +843,7 @@ export function Navbar() {
     setUserRole('')
     setIsSellerMode(true)
     setIsUserDropdownOpen(false)
-    router.push(isRider ? '/rider/login' : isApp ? '/marketplace?app=true' : '/')  // â† riders go to /rider/login
+    router.push(isRider ? '/rider/login' : isApp ? '/marketplace?app=true' : '/')  // ← riders go to /rider/login
   }
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
@@ -953,7 +953,7 @@ export function Navbar() {
                           <Wallet className="w-5 h-5 mr-3 text-gray-400" />
                           <div className="flex items-center justify-between flex-1">
                             <span>Earnings</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
                         <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/notifications') ? 'bg-blue-50 text-blue-600' : ''}`}>
@@ -987,7 +987,7 @@ export function Navbar() {
                           <Wallet className="w-5 h-5 mr-3 text-gray-400" />
                           <div className="flex items-center justify-between flex-1">
                             <span>Wallet</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
                         <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/dispute') ? 'bg-red-50 text-red-600' : ''}`}>
@@ -1098,7 +1098,7 @@ export function Navbar() {
                       <Wallet className="w-5 h-5 mr-3" />
                       <div className="flex items-center justify-between flex-1">
                         <span>Wallet</span>
-                        {userBalance > 0 && <span className="text-sm text-green-600 font-bold">â‚¦{userBalance.toLocaleString()}</span>}
+                        {userBalance > 0 && <span className="text-sm text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
                       </div>
                     </Link>
                     <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/dispute') ? 'bg-red-50 text-red-600' : 'text-gray-600 hover:bg-gray-50'}`}>
