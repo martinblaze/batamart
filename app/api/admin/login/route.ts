@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
+      {
         userId: user.id,
         role: user.role,
         isAdmin: true
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     // Log admin access
     console.log(`Admin login: ${user.email} at ${new Date().toISOString()}`)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       token,
       admin: {
@@ -91,6 +91,18 @@ export async function POST(req: NextRequest) {
         phone: user.phone
       }
     })
+
+    response.cookies.set({
+      name: 'adminToken',
+      value: token,
+      httpOnly: true,
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24,
+    })
+
+    return response
   } catch (error) {
     console.error('Admin login error:', error)
     return NextResponse.json(

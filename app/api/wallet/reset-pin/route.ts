@@ -1,7 +1,7 @@
-// app/api/wallet/reset-pin/route.ts
+﻿// app/api/wallet/reset-pin/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getUserFromRequest, createOTP, sendEmailOTP } from '@/lib/auth/auth'
+import { getUserFromRequest, createOTP, sendEmailOTP, checkSuspension } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +10,17 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const suspension = await checkSuspension(user.id)
+    if (suspension.suspended) {
+      return NextResponse.json(
+        {
+          error: suspension.reason || 'Your account is suspended. Wallet actions are disabled.',
+          suspendedUntil: suspension.until ?? null,
+        },
+        { status: 403 }
+      )
     }
 
     const dbUser = await prisma.user.findUnique({

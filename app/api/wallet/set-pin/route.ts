@@ -1,7 +1,7 @@
-// app/api/wallet/set-pin/route.ts
+﻿// app/api/wallet/set-pin/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getUserFromRequest, verifyOTP } from '@/lib/auth/auth'
+import { getUserFromRequest, verifyOTP, checkSuspension } from '@/lib/auth/auth'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
@@ -11,6 +11,17 @@ export async function POST(request: NextRequest) {
     const user = await getUserFromRequest(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const suspension = await checkSuspension(user.id)
+    if (suspension.suspended) {
+      return NextResponse.json(
+        {
+          error: suspension.reason || 'Your account is suspended. Wallet actions are disabled.',
+          suspendedUntil: suspension.until ?? null,
+        },
+        { status: 403 }
+      )
     }
 
     const { pin, currentPin, otpCode } = await request.json()
@@ -36,7 +47,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // ── CASE 1: First time setting PIN — no verification needed ───────────
+    // CASE 1: First time setting PIN - no verification needed
     if (!dbUser.withdrawalPin) {
       const hashed = await bcrypt.hash(pin, 10)
       await prisma.user.update({
@@ -50,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Withdrawal PIN set successfully' })
     }
 
-    // ── CASE 2: Changing PIN via current PIN ───────────────────────────────
+    // CASE 2: Changing PIN via current PIN
     if (currentPin) {
       if (dbUser.withdrawalPinLockedUntil && dbUser.withdrawalPinLockedUntil > new Date()) {
         const minutes = Math.ceil(
@@ -99,7 +110,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'PIN changed successfully' })
     }
 
-    // ── CASE 3: Forgot PIN — verify OTP then reset ─────────────────────────
+    // CASE 3: Forgot PIN - verify OTP then reset
     if (otpCode) {
       if (!dbUser.email) {
         return NextResponse.json(

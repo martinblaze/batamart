@@ -1,4 +1,4 @@
-// app/(marketplace)/wallet/page.tsx
+﻿// app/(marketplace)/wallet/page.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -148,7 +148,7 @@ const TX_META: Record<string, { label: string; color: string; bg: string; icon: 
   ESCROW:     { label: 'Escrow',     color: 'text-amber-700',   bg: 'bg-amber-50',    icon: <Lock className="w-3.5 h-3.5" /> },
 }
 
-// ── PIN Dots ─────────────────────────────────────────────────────────────────
+// â”€â”€ PIN Dots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PinDots({ value }: { value: string }) {
   return (
     <div className="flex justify-center gap-3 py-2">
@@ -159,7 +159,7 @@ function PinDots({ value }: { value: string }) {
   )
 }
 
-// ── Modal Shell ───────────────────────────────────────────────────────────────
+// â”€â”€ Modal Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ModalShell({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -192,6 +192,7 @@ export default function WalletPage() {
   const [showBankDropdown, setShowBankDropdown]   = useState(false)
   const bankRef = useRef<HTMLDivElement>(null)
   const [pendingWithdrawal, setPendingWithdrawal] = useState<any>(null)
+  const [withdrawalRequestKey, setWithdrawalRequestKey] = useState('')
 
   // PIN
   const [showPinEntry, setShowPinEntry]   = useState(false)
@@ -294,6 +295,8 @@ export default function WalletPage() {
         if (!data.user.hasWithdrawalPin) { setShowPinRequired(true); return }
       }
     } catch {}
+    const requestKey = crypto.randomUUID()
+    setWithdrawalRequestKey(requestKey)
     setWithdrawAmount(''); setAccountNumber(''); setAccountName('')
     setSelectedBank(NIGERIAN_BANKS[0]); setBankSearch(''); setPinError(''); setBiometricError('')
     setShowWithdrawModal(true)
@@ -320,11 +323,11 @@ export default function WalletPage() {
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = parseFloat(withdrawAmount)
-    if (!amount || amount < 1000) { alert('Minimum withdrawal is ₦1,000'); return }
+    if (!amount || amount < 1000) { alert('Minimum withdrawal is â‚¦1,000'); return }
     if (wallet && amount > wallet.availableBalance) { alert('Insufficient balance'); return }
     if (!accountNumber || !accountName) { alert('Please fill all fields'); return }
 
-    const payload = { amount, accountNumber, accountName, bankCode: selectedBank.code }
+    const payload = { amount, accountNumber, accountName, bankCode: selectedBank.code, idempotencyKey: withdrawalRequestKey || crypto.randomUUID() }
     setPendingWithdrawal(payload)
 
     if (biometricEnabled && biometricAvailable) {
@@ -368,11 +371,11 @@ export default function WalletPage() {
       })
       const d = await r.json()
       if (!r.ok) {
-        if (d.error === 'PIN_REQUIRED') { setShowWithdrawModal(false); setPendingWithdrawal(null); setShowPinRequired(true); return }
+        if (d.error === 'PIN_REQUIRED') { setShowWithdrawModal(false); setPendingWithdrawal(null); setWithdrawalRequestKey(''); setShowPinRequired(true); return }
         alert(d.error || 'Withdrawal failed'); setPendingWithdrawal(null); return
       }
-      setShowWithdrawModal(false); setPendingWithdrawal(null); fetchWalletData()
-      alert(`Withdrawal of ₦${payload.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
+      setShowWithdrawModal(false); setPendingWithdrawal(null); setWithdrawalRequestKey(''); fetchWalletData()
+      alert(`Withdrawal of â‚¦${payload.amount.toLocaleString()} initiated.\nRef: ${d.reference}`)
     } catch { alert('Network error.'); setPendingWithdrawal(null) }
     finally { setWithdrawing(false) }
   }
@@ -464,7 +467,7 @@ export default function WalletPage() {
         <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
           <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
         </div>
-        <p className="text-gray-500 font-semibold">Loading wallet…</p>
+        <p className="text-gray-500 font-semibold">Loading walletâ€¦</p>
       </div>
     </div>
   )
@@ -475,7 +478,7 @@ export default function WalletPage() {
   return (
     <div className="min-h-screen bg-[#f0f2f5] pb-24">
 
-      {/* ── Header ── */}
+      {/* â”€â”€ Header â”€â”€ */}
       <header className="header-gradient sticky top-0 z-40 shadow-xl">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3">
@@ -507,7 +510,7 @@ export default function WalletPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 space-y-4">
 
-        {/* ── Hero Balance Card ── */}
+        {/* â”€â”€ Hero Balance Card â”€â”€ */}
         <div className="fade-up balance-card rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
@@ -521,9 +524,9 @@ export default function WalletPage() {
               </button>
             </div>
             <p className="text-4xl sm:text-5xl font-black mb-1 tracking-tight">
-              {hideBalance ? '₦ ••••••' : fmt(wallet.availableBalance)}
+              {hideBalance ? 'â‚¦ â€¢â€¢â€¢â€¢â€¢â€¢' : fmt(wallet.availableBalance)}
             </p>
-            <p className="text-white/50 text-xs mb-6">Ready to withdraw · No fees</p>
+            <p className="text-white/50 text-xs mb-6">Ready to withdraw Â· No fees</p>
 
             <div className="flex flex-wrap gap-3">
               <button
@@ -540,7 +543,7 @@ export default function WalletPage() {
           </div>
         </div>
 
-        {/* ── Stats Row ── */}
+        {/* â”€â”€ Stats Row â”€â”€ */}
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: <TrendingUp className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Total Earned', value: fmtShort(totalEarned), color: 'text-emerald-700' },
@@ -555,7 +558,7 @@ export default function WalletPage() {
           ))}
         </div>
 
-        {/* ── PIN Status ── */}
+        {/* â”€â”€ PIN Status â”€â”€ */}
         {!user.hasWithdrawalPin && (
           <div className="fade-up flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
             <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -574,7 +577,7 @@ export default function WalletPage() {
           </div>
         )}
 
-        {/* ── Transaction History ── */}
+        {/* â”€â”€ Transaction History â”€â”€ */}
         <div className="fade-up bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
             <div>
@@ -613,7 +616,7 @@ export default function WalletPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className={`font-black text-sm ${isCredit ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {tx.type === 'ESCROW' ? '🔒 ' : isCredit ? '+' : '−'}
+                        {tx.type === 'ESCROW' ? 'ðŸ”’ ' : isCredit ? '+' : 'âˆ’'}
                         {fmtShort(tx.amount)}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-0.5">Bal: {fmtShort(tx.balanceAfter)}</p>
@@ -626,11 +629,11 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           MODALS
-      ═══════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
 
-      {/* ── Withdraw Modal ── */}
+      {/* â”€â”€ Withdraw Modal â”€â”€ */}
       {showBiometricPrompt && (
         <ModalShell onClose={handleDeclineBiometric}>
           <div className="p-6 space-y-4">
@@ -658,7 +661,7 @@ export default function WalletPage() {
         </ModalShell>
       )}
       {showWithdrawModal && (
-        <ModalShell onClose={() => { setShowWithdrawModal(false); setPendingWithdrawal(null); setPinError('') }}>
+        <ModalShell onClose={() => { setShowWithdrawModal(false); setPendingWithdrawal(null); setWithdrawalRequestKey(''); setPinError('') }}>
           <div className="p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -671,7 +674,7 @@ export default function WalletPage() {
                   {biometricEnabled ? 'Biometric verification enabled' : 'PIN verification required'}
                 </p>
               </div>
-              <button onClick={() => { setShowWithdrawModal(false); setPendingWithdrawal(null) }}
+              <button onClick={() => { setShowWithdrawModal(false); setPendingWithdrawal(null); setWithdrawalRequestKey('') }}
                 className="ml-auto w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100 transition-colors">
                 <X className="w-4 h-4" />
               </button>
@@ -687,14 +690,14 @@ export default function WalletPage() {
               <div>
                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Amount (NGN)</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-black text-sm">₦</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-black text-sm">â‚¦</span>
                   <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)}
                     placeholder="0.00" min="1000" max={wallet.availableBalance}
                     className="w-full pl-8 pr-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
                     required />
                 </div>
                 <div className="flex justify-between mt-1.5">
-                  <span className="text-xs text-gray-400">Min: ₦1,000</span>
+                  <span className="text-xs text-gray-400">Min: â‚¦1,000</span>
                   <button type="button" onClick={() => setWithdrawAmount(String(wallet.availableBalance))}
                     className="text-xs text-indigo-600 font-black hover:underline">
                     Max: {fmtShort(wallet.availableBalance)}
@@ -717,7 +720,7 @@ export default function WalletPage() {
                       <div className="relative border-b border-gray-100">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <input type="text" value={bankSearch} onChange={e => setBankSearch(e.target.value)}
-                          placeholder="Search bank…"
+                          placeholder="Search bankâ€¦"
                           className="w-full pl-9 pr-4 py-3 text-sm focus:outline-none bg-transparent font-medium"
                           autoFocus />
                       </div>
@@ -787,7 +790,7 @@ export default function WalletPage() {
                 <button type="submit" disabled={withdrawing || biometricBusy}
                   className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50 shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
-                  {(withdrawing || biometricBusy) ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (biometricEnabled && biometricAvailable ? 'Verify Biometrics →' : 'Enter PIN →')}
+                  {(withdrawing || biometricBusy) ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (biometricEnabled && biometricAvailable ? 'Verify Biometrics â†’' : 'Enter PIN â†’')}
                 </button>
               </div>
             </form>
@@ -795,9 +798,9 @@ export default function WalletPage() {
         </ModalShell>
       )}
 
-      {/* ── PIN Entry Modal ── */}
+      {/* â”€â”€ PIN Entry Modal â”€â”€ */}
       {showPinEntry && (
-        <ModalShell onClose={() => { setShowPinEntry(false); setPinValue(''); setPinError(''); setPendingWithdrawal(null) }}>
+        <ModalShell onClose={() => { setShowPinEntry(false); setPinValue(''); setPinError(''); setPendingWithdrawal(null); setWithdrawalRequestKey('') }}>
           <div className="p-6 space-y-5 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
               style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
@@ -813,7 +816,7 @@ export default function WalletPage() {
               value={pinValue} onChange={e => setPinValue(e.target.value.replace(/\D/g, ''))}
               onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
               className="w-full px-4 py-4 border-2 border-gray-100 rounded-2xl text-center text-3xl font-black tracking-[0.6em] focus:border-indigo-400 focus:outline-none transition-all bg-gray-50 focus:bg-white"
-              placeholder="••••••" autoFocus
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autoFocus
             />
             {pinError && (
               <p className="text-red-500 text-sm font-bold flex items-center justify-center gap-1.5">
@@ -833,7 +836,7 @@ export default function WalletPage() {
         </ModalShell>
       )}
 
-      {/* ── Set/Change PIN Modal ── */}
+      {/* â”€â”€ Set/Change PIN Modal â”€â”€ */}
       {showSetPin && (
         <ModalShell onClose={() => { setShowSetPin(false); setCurrentPin(''); setNewPin(''); setConfirmPin(''); setSavePinError('') }}>
           <div className="p-6 space-y-5">
@@ -869,7 +872,7 @@ export default function WalletPage() {
                     <input type="password" inputMode="numeric" maxLength={6} value={currentPin}
                       onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ''))}
                       className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                      placeholder="••••••" autoFocus />
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autoFocus />
                   </div>
                 )}
                 <div>
@@ -877,14 +880,14 @@ export default function WalletPage() {
                   <input type="password" inputMode="numeric" maxLength={6} value={newPin}
                     onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                    placeholder="••••••" />
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" />
                 </div>
                 <div>
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Confirm New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={confirmPin}
                     onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                    placeholder="••••••" />
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" />
                 </div>
                 {savePinError && (
                   <p className="text-red-500 text-sm font-bold flex items-center gap-1.5">
@@ -906,7 +909,7 @@ export default function WalletPage() {
         </ModalShell>
       )}
 
-      {/* ── Forgot PIN Modal ── */}
+      {/* â”€â”€ Forgot PIN Modal â”€â”€ */}
       {showForgotPin && (
         <ModalShell onClose={() => { setShowForgotPin(false); setForgotError('') }}>
           <div className="p-6 space-y-5">
@@ -952,26 +955,26 @@ export default function WalletPage() {
                   <input type="text" inputMode="numeric" maxLength={6} value={forgotOtp}
                     onChange={e => setForgotOtp(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                    placeholder="••••••" autoFocus />
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" autoFocus />
                 </div>
                 <div>
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={forgotNew}
                     onChange={e => setForgotNew(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                    placeholder="••••••" />
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" />
                 </div>
                 <div>
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-2">Confirm New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={forgotConfirm}
                     onChange={e => setForgotConfirm(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-3.5 bg-gray-50 border-2 border-transparent rounded-2xl text-center text-2xl font-black tracking-[0.5em] focus:border-indigo-400 focus:bg-white focus:outline-none transition-all"
-                    placeholder="••••••" />
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢" />
                 </div>
                 {forgotError && <p className="text-red-500 text-sm font-bold flex items-center gap-1.5"><AlertCircle className="w-4 h-4" /> {forgotError}</p>}
                 <div className="flex gap-3">
                   <button onClick={() => { setForgotStep('send'); setForgotOtp(''); setForgotError('') }}
-                    className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700">← Back</button>
+                    className="flex-1 py-3.5 border-2 border-gray-200 rounded-2xl text-sm font-bold text-gray-700">â† Back</button>
                   <button onClick={handleForgotVerify}
                     disabled={forgotLoading || forgotOtp.length !== 6 || forgotNew.length !== 6 || forgotConfirm.length !== 6}
                     className="flex-1 py-3.5 text-white rounded-2xl text-sm font-black disabled:opacity-50 shadow-lg"
@@ -989,7 +992,7 @@ export default function WalletPage() {
         </ModalShell>
       )}
 
-      {/* ── PIN Required Modal ── */}
+      {/* â”€â”€ PIN Required Modal â”€â”€ */}
       {showPinRequired && (
         <ModalShell onClose={() => setShowPinRequired(false)}>
           <div className="p-6 space-y-5 text-center">
@@ -1019,6 +1022,8 @@ export default function WalletPage() {
     </div>
   )
 }
+
+
 
 
 

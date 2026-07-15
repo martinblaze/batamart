@@ -565,17 +565,18 @@ model Transaction {
 }
 
 model WithdrawalRequest {
-  id          String           @id @default(cuid())
-  userId      String
-  amount      Float
-  bankDetails Json
-  status      WithdrawalStatus @default(PENDING)
-  adminNotes  String?
-  processedAt DateTime?
-  processedBy String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String           @id @default(cuid())
+  userId          String
+  clientRequestId String?          @unique
+  amount          Float
+  bankDetails     Json
+  status          WithdrawalStatus @default(PENDING)
+  adminNotes      String?
+  processedAt     DateTime?
+  processedBy     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -1044,4 +1045,5 @@ enum PaymentMethod {
 
   @@schema("public")
 }
+
 

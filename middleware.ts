@@ -50,6 +50,10 @@ function getBearerToken(req: NextRequest): string | null {
   return auth.slice(7)
 }
 
+function getAdminCookieToken(req: NextRequest): string | null {
+  return req.cookies.get('adminToken')?.value ?? null
+}
+
 function withSecurityHeaders(res: NextResponse): NextResponse {
   res.headers.set('X-Frame-Options', 'DENY')
   res.headers.set('X-Content-Type-Options', 'nosniff')
@@ -69,13 +73,15 @@ export async function middleware(req: NextRequest) {
 
   if (pathname.startsWith('/api/admin') && pathname !== '/api/admin/login') {
     const bearer = getBearerToken(req)
-    if (!bearer) return withSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
-    const isValid = await verifyAdminToken(bearer)
+    const cookieToken = getAdminCookieToken(req)
+    const token = bearer ?? cookieToken
+    if (!token) return withSecurityHeaders(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }))
+    const isValid = await verifyAdminToken(token)
     if (!isValid) return withSecurityHeaders(NextResponse.json({ error: 'Forbidden' }, { status: 403 }))
   }
 
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin-login')) {
-    const token = req.cookies.get('adminToken')?.value
+    const token = getAdminCookieToken(req)
     if (!token) return withSecurityHeaders(NextResponse.redirect(new URL('/admin-login', req.url)))
     const isValid = await verifyAdminToken(token)
     if (!isValid) {

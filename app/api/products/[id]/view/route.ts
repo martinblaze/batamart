@@ -24,49 +24,67 @@ export async function POST(
     const productId = params.id
     if (!productId) return NextResponse.json({ ok: true })
 
-    if (user) {
-      const key = `${user.id}:${productId}`
-      const lastView = viewDebounce.get(key)
-      const now = Date.now()
+    if (!user) {
+      return NextResponse.json({ ok: true, skipped: true })
+    }
 
-      if (lastView && now - lastView < DEBOUNCE_MS) {
-        return NextResponse.json({ ok: true, skipped: true })
-      }
+    const key = user.id + ':' + productId
+    const lastView = viewDebounce.get(key)
+    const now = Date.now()
 
+    if (lastView && now - lastView < DEBOUNCE_MS) {
+      return NextResponse.json({ ok: true, skipped: true })
+    }
+
+    const recentView = await prisma.userSessionEvent.findFirst({
+      where: {
+        userId: user.id,
+        productId,
+        eventType: 'view',
+        createdAt: { gte: new Date(now - DEBOUNCE_MS) },
+      },
+      select: { id: true },
+    })
+
+    if (recentView) {
       viewDebounce.set(key, now)
+      return NextResponse.json({ ok: true, skipped: true })
+    }
 
-      const product = await prisma.product.findUnique({
-        where: { id: productId },
-        select: { sellerId: true, viewCount: true, isHot: true },
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { sellerId: true, viewCount: true, isHot: true },
+    })
+    if (!product) return NextResponse.json({ ok: true })
+    if (product.sellerId === user.id) return NextResponse.json({ ok: true, skipped: true })
+
+    await prisma.userSessionEvent.create({
+      data: {
+        userId: user.id,
+        productId,
+        eventType: 'view',
+        meta: { source: 'product-page' },
+      },
+    })
+
+    viewDebounce.set(key, now)
+
+    const updated = await prisma.product.update({
+      where: { id: productId },
+      data: { viewCount: { increment: 1 } },
+      select: { viewCount: true, isHot: true },
+    })
+
+    // Re-evaluate hot only at the exact moment threshold is crossed
+    const crossedThreshold =
+      !product.isHot &&
+      updated.viewCount >= HOT_VIEW_THRESHOLD &&
+      product.viewCount < HOT_VIEW_THRESHOLD
+
+    if (crossedThreshold) {
+      setImmediate(() => {
+        updateHotStatus(productId).catch(() => {})
       })
-      if (!product) return NextResponse.json({ ok: true })
-      if (product.sellerId === user.id) return NextResponse.json({ ok: true, skipped: true })
-
-      const updated = await prisma.product.update({
-        where: { id: productId },
-        data: { viewCount: { increment: 1 } },
-        select: { viewCount: true, isHot: true },
-      })
-
-      // Re-evaluate hot only at the exact moment threshold is crossed
-      const crossedThreshold =
-        !product.isHot &&
-        updated.viewCount >= HOT_VIEW_THRESHOLD &&
-        product.viewCount < HOT_VIEW_THRESHOLD
-
-      if (crossedThreshold) {
-        setImmediate(() => {
-          updateHotStatus(productId).catch(() => {})
-        })
-      }
-    } else {
-      // Anonymous view — just increment
-      await prisma.product
-        .update({
-          where: { id: productId },
-          data: { viewCount: { increment: 1 } },
-        })
-        .catch(() => {})
     }
 
     return NextResponse.json({ ok: true })

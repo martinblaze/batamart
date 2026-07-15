@@ -1,48 +1,16 @@
-// app/api/auth/verify-otp/route.ts
+﻿// app/api/auth/verify-otp/route.ts
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP, generateToken, formatPhone } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
+import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 import jwt from 'jsonwebtoken'
 
-// ── In-memory rate limiter ────────────────────────────────────────────────────
-// Allows 10 verify attempts per IP per 15 minutes.
-// NOTE: This is good for single-instance dev. In production on Vercel
-// (multiple serverless instances) swap the Map for Upstash Redis so the
-// counter survives across cold starts.
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-
-const RATE_LIMIT_MAX       = 15
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
-
-function checkRateLimit(key: string): { allowed: boolean; retryAfterSecs: number } {
-  const now   = Date.now()
-  const entry = rateLimitMap.get(key)
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-    return { allowed: true, retryAfterSecs: 0 }
-  }
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return { allowed: false, retryAfterSecs: Math.ceil((entry.resetAt - now) / 1000) }
-  }
-  entry.count++
-  return { allowed: true, retryAfterSecs: 0 }
-}
-
-setInterval(() => {
-  const now = Date.now()
-  Array.from(rateLimitMap.entries()).forEach(([key, val]) => {
-    if (now > val.resetAt) rateLimitMap.delete(key)
-  })
-}, 60_000)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── OTP session token ─────────────────────────────────────────────────────────
+// OTP session token
 // After a successful OTP verification we return a short-lived signed token that
 // proves "this email/phone passed OTP". The signup-with-password route verifies
-// this token before creating the account — so you can't sign up with an email
+// this token before creating the account so you can't sign up with an email
 // you never verified.
 const OTP_SESSION_EXPIRES = '15m' // must complete signup within 15 minutes
 
@@ -66,34 +34,33 @@ export function verifyOtpSessionToken(token: string): string | null {
     return null
   }
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit by IP
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-      request.headers.get('x-real-ip') ??
-      'unknown'
+    const body = await request.json()
+    const { phone, email, code, otpCode, name } = body
+    const identifier = phone ? formatPhone(phone) : email
+    const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
 
-    const { allowed, retryAfterSecs } = checkRateLimit(`verify-otp:${ip}`)
+    const { allowed, retryAfterSecs } = await checkRateLimitDistributed(
+      `verify-otp:${ip}:${identifier || 'unknown'}`,
+      15,
+      15 * 60 * 1000,
+      { requireDistributedInProduction: true }
+    )
     if (!allowed) {
       return NextResponse.json(
         { error: `Too many attempts. Please wait ${Math.ceil(retryAfterSecs / 60)} minute(s) before trying again.` },
         { status: 429, headers: { 'Retry-After': String(retryAfterSecs) } }
       )
     }
-
-    const body = await request.json()
-    const { phone, email, code, otpCode, name } = body
+    await incrementRateLimit(`verify-otp:${ip}:${identifier || 'unknown'}`, 15 * 60 * 1000)
 
     const otpValue = otpCode || code
 
     if (!otpValue) {
       return NextResponse.json({ error: 'OTP code is required' }, { status: 400 })
     }
-
-    const identifier = phone ? formatPhone(phone) : email
 
     if (!identifier) {
       return NextResponse.json({ error: 'Phone or email is required' }, { status: 400 })
@@ -105,17 +72,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 })
     }
 
-    // ── Signup flow (no name passed) ──────────────────────────────────────
-    // Issue a short-lived OTP session token that proves this identifier was
-    // verified. The /signup-with-password route will require this token and
-    // check that the identifier in it matches the email being signed up with.
-    // This prevents someone verifying OTP for email A then signing up with email B.
+    // Signup flow (no name passed)
+    // Issue a short-lived OTP session token that proves this identifier was verified.
     if (!name) {
       const otpSessionToken = issueOtpSessionToken(identifier)
       return NextResponse.json({ success: true, otpSessionToken })
     }
 
-    // ── Login / other flows that pass a name ──────────────────────────────
+    // Login / other flows that pass a name
     let user = await prisma.user.findFirst({
       where: phone ? { phone: formatPhone(phone) } : { email },
     })
@@ -124,10 +88,10 @@ export async function POST(request: NextRequest) {
       const referralCode = await generateUniqueReferralCode()
       user = await prisma.user.create({
         data: {
-          phone:        phone ? formatPhone(phone) : undefined,
-          email:        email || undefined,
+          phone: phone ? formatPhone(phone) : undefined,
+          email: email || undefined,
           name,
-          password:     '',
+          password: '',
           referralCode,
         },
       })
@@ -139,10 +103,10 @@ export async function POST(request: NextRequest) {
       success: true,
       token,
       user: {
-        id:         user.id,
-        name:       user.name,
-        phone:      user.phone,
-        email:      user.email,
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
         hostelName: user.hostelName,
       },
     })

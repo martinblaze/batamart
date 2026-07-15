@@ -165,12 +165,28 @@ export async function checkSuspension(userId: string): Promise<{ suspended: bool
 // Used by every API route to get the current authenticated user.
 export const getUserFromRequest = async (request: Request) => {
   const authHeader = request.headers.get('authorization')
-  if (!authHeader) return null
+  const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
 
-  const token = authHeader.replace('Bearer ', '')
+  let token = headerToken
+  if (!token) {
+    const cookieHeader = request.headers.get('cookie')
+    if (cookieHeader) {
+      for (const part of cookieHeader.split(';')) {
+        const [rawKey, ...rawValue] = part.trim().split('=')
+        if (!rawKey) continue
+        const value = decodeURIComponent(rawValue.join('=') || '')
+        if (rawKey === 'token' || rawKey === 'adminToken') {
+          token = value || null
+          break
+        }
+      }
+    }
+  }
+
+  if (!token) return null
+
   const decoded = verifyToken(token)
   if (!decoded) return null
-
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
     select: {

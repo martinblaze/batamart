@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { OrderStatus } from '@prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { orderId, status } = await request.json()
+    const allowedStatuses: OrderStatus[] = ['PICKED_UP', 'ON_THE_WAY', 'DELIVERED']
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -38,7 +43,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not your delivery' }, { status: 403 })
     }
 
-    const updateData: any = { status }
+    const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
+      PENDING: [],
+      PROCESSING: [],
+      SHIPPED: [],
+      RIDER_ASSIGNED: ['PICKED_UP'],
+      PICKED_UP: ['ON_THE_WAY'],
+      ON_THE_WAY: ['DELIVERED'],
+      DELIVERED: [],
+      COMPLETED: [],
+      DISPUTED: [],
+      CANCELLED: [],
+    }
+
+    const currentStatus = order.status as OrderStatus
+    const nextStatus = status as OrderStatus
+    const allowedNext = validTransitions[currentStatus] ?? []
+    if (!allowedNext.includes(nextStatus)) {
+      return NextResponse.json({ error: `Cannot transition from ${currentStatus} to ${nextStatus}` }, { status: 400 })
+    }
+
+    const updateData: any = { status: nextStatus }
     if (status === 'PICKED_UP') updateData.pickedUpAt  = new Date()
     if (status === 'DELIVERED') updateData.deliveredAt = new Date()
 
