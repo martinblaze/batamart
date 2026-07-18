@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+﻿export const dynamic = 'force-dynamic'
 // app/api/admin/analytics/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       engagedNewUsers,
       // FIX #1: fetch rider-specific stats for a correct riderCompletionRate
       riderAssignedOrders, riderDeliveredOrders,
-      // FIX #6: fetch per-order amounts to compute real Paystack fees
+      // FIX #6: fetch per-order amounts to compute real Credo fees
       completedOrderAmounts,
     ] = await Promise.all([
 
@@ -224,8 +224,8 @@ export async function GET(req: NextRequest) {
     const platformCommission = revenueAgg._sum.platformCommission || 0
     const referralsPaidOut   = (referralData as any)._sum?.amount || 0
 
-    // FIX #6: compute actual Paystack fees per order, then subtract from commission
-    // Previously: netRevenue = platformCommission - referralsPaidOut (missing Paystack fees)
+    // FIX #6: compute actual Credo fees per order, then subtract from commission
+    // Previously: netRevenue = platformCommission - referralsPaidOut (missing Credo fees)
     // Now:        netRevenue = platformCommission - paystackFees - referralsPaidOut
     const paystackFees = completedOrderAmounts.reduce(
       (sum, o) => sum + calculateCredoFeePerOrder(o.totalAmount || 0),
@@ -334,3 +334,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 })
   }
 }
+

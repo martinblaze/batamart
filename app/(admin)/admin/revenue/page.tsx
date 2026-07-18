@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 // app/(admin)/admin/revenue/page.tsx
 
 import { useState, useEffect } from 'react'
@@ -57,6 +57,7 @@ export default function RevenuePage() {
   const gross       = p.gross                || {}
   const net         = p.net                  || {}
   const fees        = p.credoFees            || {}
+  const feeConfig    = revenue?.credoFeeConfig || {}
   const obligations = revenue?.obligations   || {}
   const withdrawal  = revenue?.withdrawal    || {}
   const referrals   = revenue?.referrals     || {}
@@ -66,7 +67,7 @@ export default function RevenuePage() {
   return (
     <div className="space-y-8">
 
-      {/* ── Header with switcher ── */}
+      {/* â”€â”€ Header with switcher â”€â”€ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white">Revenue</h1>
@@ -84,7 +85,7 @@ export default function RevenuePage() {
             >
               <option value="all">All Universities</option>
               {universities.map(u => (
-                <option key={u.id} value={u.id}>{u.shortName} — {u.name}</option>
+                <option key={u.id} value={u.id}>{u.shortName} â€” {u.name}</option>
               ))}
             </select>
           </div>
@@ -94,43 +95,43 @@ export default function RevenuePage() {
         </div>
       </div>
 
-      {/* ── Safe Withdrawal Banner ── */}
+      {/* â”€â”€ Safe Withdrawal Banner â”€â”€ */}
       <div className="bg-green-500/10 border-2 border-green-500/40 rounded-2xl p-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-green-500/20 rounded-xl shrink-0">
             <ShieldCheck className="w-7 h-7 text-green-400" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white mb-1">Safe to Withdraw from Credo</h2>
+            <h2 className="text-xl font-bold text-white mb-1">Safe to Withdraw from Credo-managed balance</h2>
             <p className="text-gray-300 text-sm mb-4">
-              Your actual profit after ALL deductions — including money still owed to sellers and riders.
+              Your actual profit after ALL deductions â€” including money still owed to sellers and riders.
               {selectedUni !== 'all' && ` Scoped to ${selectedUniName}.`}
             </p>
             <div className="bg-gray-800/60 rounded-xl p-4 space-y-2 mb-4 font-mono text-sm">
               <div className="flex justify-between text-gray-300">
                 <span>Gross platform commission (all time)</span>
-                <span className="text-white">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>
+                <span className="text-white">+ â‚¦{(breakdown.grossCommission || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-300">
-                <span>Credo fees (1.5% + ₦100, waived under ₦2k, max ₦2.1k per order)</span>
-                <span className="text-red-400">− ₦{(breakdown.minusCredoFees || 0).toLocaleString()}</span>
+                <span>Credo fees (plan-based estimate)</span>
+                <span className="text-red-400">âˆ’ â‚¦{(breakdown.minusCredoFees || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Referral rewards paid to users</span>
-                <span className="text-red-400">− ₦{(breakdown.minusReferralPayouts || 0).toLocaleString()}</span>
+                <span className="text-red-400">âˆ’ â‚¦{(breakdown.minusReferralPayouts || 0).toLocaleString()}</span>
               </div>
-              {/* ── NEW: show the seller/rider obligations deductions ── */}
+              {/* â”€â”€ NEW: show the seller/rider obligations deductions â”€â”€ */}
               <div className="flex justify-between text-gray-300">
                 <span>Seller balances (settled, not yet withdrawn)</span>
-                <span className="text-orange-400">− ₦{(breakdown.minusSellersAvailable || 0).toLocaleString()}</span>
+                <span className="text-orange-400">âˆ’ â‚¦{(breakdown.minusSellersAvailable || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Rider balances (settled, not yet withdrawn)</span>
-                <span className="text-orange-400">− ₦{(breakdown.minusRidersAvailable || 0).toLocaleString()}</span>
+                <span className="text-orange-400">âˆ’ â‚¦{(breakdown.minusRidersAvailable || 0).toLocaleString()}</span>
               </div>
               <div className="border-t border-gray-600 pt-2 flex justify-between font-bold text-lg">
                 <span className="text-white">Your NET profit (safe to withdraw)</span>
-                <span className="text-green-400">= ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}</span>
+                <span className="text-green-400">= â‚¦{(withdrawal.safeToWithdraw || 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -139,7 +140,7 @@ export default function RevenuePage() {
               <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/30 rounded-xl p-3 mb-4 text-sm text-orange-300">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Credo-managed balance belongs to sellers/riders who haven't withdrawn yet.
+                  â‚¦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Credo-managed balance belongs to sellers/riders who haven't withdrawn yet.
                   You must leave that amount in Credo-managed balance.
                 </span>
               </div>
@@ -147,37 +148,37 @@ export default function RevenuePage() {
 
             <div className="flex items-center gap-2 text-green-300 font-bold text-lg">
               <DollarSign className="w-5 h-5" />
-              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Credo-managed balance
+              Withdraw exactly â‚¦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Credo-managed balance
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Net Profit Cards ── */}
+      {/* â”€â”€ Net Profit Cards â”€â”€ */}
       <div>
         <h2 className="text-xl font-bold text-white mb-1">Net Platform Profit</h2>
         <p className="text-gray-400 text-sm mb-4">After Credo fees. Referral payouts + user obligations deducted from all-time.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: 'All Time NET',    value: withdrawal.safeToWithdraw || 0, sub: `Gross: ₦${(gross.allTime || 0).toLocaleString()}`,    color: 'from-green-500 to-green-600',   textLight: 'text-green-100' },
+            { label: 'All Time NET',    value: withdrawal.safeToWithdraw || 0, sub: `Gross: â‚¦${(gross.allTime || 0).toLocaleString()}`,    color: 'from-green-500 to-green-600',   textLight: 'text-green-100' },
             { label: 'This Month NET',  value: net.thisMonth || 0,             sub: `${revenue?.thisMonth?.orders || 0} orders`,           color: 'from-blue-500 to-blue-600',     textLight: 'text-blue-100' },
             { label: 'Last Month NET',  value: net.lastMonth || 0,             sub: `${revenue?.lastMonth?.orders || 0} orders`,           color: 'from-purple-500 to-purple-600', textLight: 'text-purple-100' },
             { label: 'Today NET',       value: net.today || 0,                 sub: `${revenue?.today?.orders || 0} orders`,               color: 'from-yellow-500 to-orange-500', textLight: 'text-yellow-100' },
           ].map(card => (
             <div key={card.label} className={`bg-gradient-to-br ${card.color} rounded-2xl p-6 text-white`}>
               <p className={`${card.textLight} text-sm mb-1`}>{card.label}</p>
-              <p className="text-3xl font-bold">₦{card.value.toLocaleString()}</p>
+              <p className="text-3xl font-bold">â‚¦{card.value.toLocaleString()}</p>
               <p className={`${card.textLight} text-xs mt-2`}>{card.sub}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Obligations ── */}
+      {/* â”€â”€ Obligations â”€â”€ */}
       <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
         <h3 className="text-lg font-bold text-white mb-1">Money Owed to Users</h3>
         <p className="text-xs text-gray-400 mb-4 flex items-center gap-1">
-          <Info className="w-3 h-3" /> Keep this amount in Credo-managed balance — it belongs to sellers and riders
+          <Info className="w-3 h-3" /> Keep this amount in Credo-managed balance â€” it belongs to sellers and riders
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-gray-700/50 rounded-xl p-4">
@@ -185,9 +186,9 @@ export default function RevenuePage() {
               <Users className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-semibold text-white">Sellers</span>
             </div>
-            <p className="text-2xl font-bold text-white">₦{((obligations.totalOwedToSellers) || 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">â‚¦{((obligations.totalOwedToSellers) || 0).toLocaleString()}</p>
             <p className="text-xs text-gray-400 mt-1">
-              ₦{(obligations.sellersAvailableNow || 0).toLocaleString()} available (must keep) · ₦{(obligations.sellersPending || 0).toLocaleString()} in escrow
+              â‚¦{(obligations.sellersAvailableNow || 0).toLocaleString()} available (must keep) Â· â‚¦{(obligations.sellersPending || 0).toLocaleString()} in escrow
             </p>
           </div>
           <div className="bg-gray-700/50 rounded-xl p-4">
@@ -195,15 +196,15 @@ export default function RevenuePage() {
               <Truck className="w-4 h-4 text-green-400" />
               <span className="text-sm font-semibold text-white">Riders</span>
             </div>
-            <p className="text-2xl font-bold text-white">₦{((obligations.totalOwedToRiders) || 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">â‚¦{((obligations.totalOwedToRiders) || 0).toLocaleString()}</p>
             <p className="text-xs text-gray-400 mt-1">
-              ₦{(obligations.ridersAvailableNow || 0).toLocaleString()} available (must keep) · ₦{(obligations.ridersPending || 0).toLocaleString()} in escrow
+              â‚¦{(obligations.ridersAvailableNow || 0).toLocaleString()} available (must keep) Â· â‚¦{(obligations.ridersPending || 0).toLocaleString()} in escrow
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Referrals ── */}
+      {/* â”€â”€ Referrals â”€â”€ */}
       <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Gift className="w-5 h-5 text-purple-400" />
@@ -212,7 +213,7 @@ export default function RevenuePage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-700/50 rounded-xl p-4">
             <p className="text-sm text-gray-400 mb-1">Total Paid Out (All Time)</p>
-            <p className="text-2xl font-bold text-white">₦{(referrals.totalPaidOut || 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">â‚¦{(referrals.totalPaidOut || 0).toLocaleString()}</p>
           </div>
           <div className="bg-gray-700/50 rounded-xl p-4">
             <p className="text-sm text-gray-400 mb-1">Total Rewards Given</p>
@@ -221,7 +222,7 @@ export default function RevenuePage() {
         </div>
       </div>
 
-      {/* ── Top Sellers ── */}
+      {/* â”€â”€ Top Sellers â”€â”€ */}
       {topSellers.length > 0 && (
         <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4">Top Sellers by Revenue</h3>
@@ -236,8 +237,8 @@ export default function RevenuePage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-white text-sm font-bold">₦{(seller.totalRevenue || 0).toLocaleString()}</p>
-                  <p className="text-gray-400 text-xs">₦{(seller.platformEarned || 0).toLocaleString()} commission</p>
+                  <p className="text-white text-sm font-bold">â‚¦{(seller.totalRevenue || 0).toLocaleString()}</p>
+                  <p className="text-gray-400 text-xs">â‚¦{(seller.platformEarned || 0).toLocaleString()} commission</p>
                 </div>
               </div>
             ))}
