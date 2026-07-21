@@ -381,7 +381,6 @@ const SELL_LIMITS = {
   variantValue: 30,
   attributeText: 80,
   attributeNumber: 1000000,
-  deliveryEstimate: 60,
   weightKg: 100,
   dimensionCm: 500,
 }
@@ -1004,6 +1003,8 @@ export default function SellPage() {
     if (!categoryKey) { setError('Please select a category'); return }
     if (!subcategoryKey) { setError('Please select a subcategory'); return }
     if (images.length < 1) { setError('Please add at least 1 product image'); return }
+    const deliveryDays = Number(deliveryEstimate)
+    if (!deliveryEstimate.trim() || !Number.isInteger(deliveryDays) || deliveryDays < 1 || deliveryDays > 30) { setError('Enter an estimated delivery time between 1 and 30 days'); return }
     if (!deliveryAgreementChecked) { setError('Please confirm motorcycle delivery suitability before listing'); return }
     if (!allUploaded) { setError('Please wait for all images to finish uploading'); return }
     for (const attr of categoryAttributes) {
@@ -1098,7 +1099,7 @@ export default function SellPage() {
           dimensionsCm: (dimensionL && dimensionW && dimensionH)
             ? { length: Number(dimensionL), width: Number(dimensionW), height: Number(dimensionH) }
             : undefined,
-          deliveryEstimate: deliveryEstimate.trim() || undefined,
+          deliveryEstimate: deliveryEstimate.trim() ? `${deliveryEstimate.trim()} day${Number(deliveryEstimate) === 1 ? '' : 's'}` : undefined,
         }),
       })
       const data = await response.json()
@@ -1776,7 +1777,25 @@ export default function SellPage() {
             <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
             <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
             <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
-            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(limitText(e.target.value, SELL_LIMITS.deliveryEstimate))} maxLength={SELL_LIMITS.deliveryEstimate} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">
+                Estimated Delivery Time *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={deliveryEstimate}
+                  onChange={(e) => setDeliveryEstimate(limitIntegerInput(e.target.value, 30, 1))}
+                  placeholder="e.g. 3"
+                  className="w-full px-4 py-3 pr-20 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-muted pointer-events-none">
+                  day{Number(deliveryEstimate) === 1 ? '' : 's'}
+                </span>
+              </div>
+              <p className="text-xs text-ink-muted mt-1.5">Digits only, up to 30 days</p>
+            </div>
           </div>
           <label className="flex items-start gap-3 text-sm text-danger">
             <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary/40" />

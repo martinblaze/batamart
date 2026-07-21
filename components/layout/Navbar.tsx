@@ -8,7 +8,7 @@ import NotificationBell from '@/components/layout/NotificationBell'
 import {
   ChevronDown, User, LogOut, Store, ShoppingBag, Wallet,
   Package, AlertTriangle, PlusCircle, Globe, Plus, Bike,
-  LayoutGrid, Bell as BellIcon, Menu, X,
+  LayoutGrid, Bell as BellIcon, Menu, X, Search, MapPin,
 } from 'lucide-react'
 
 import { isSplashPending } from '@/components/SplashScreen'
@@ -31,7 +31,10 @@ function AppTopBar({
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between h-14 px-4">
         <BATAMARTLogo appMode />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <Link href="/search?app=true&focus=1" className="p-2 text-ink-secondary" aria-label="Search">
+            <Search className="w-5 h-5" strokeWidth={1.75} />
+          </Link>
           {isLoggedIn ? (
             <>
               <Link href="/cart?app=true" className="relative p-2 text-ink-secondary">
@@ -645,6 +648,8 @@ export function Navbar() {
   const [isSellerMode, setIsSellerMode]           = useState(true)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const [isVisible, setIsVisible]                 = useState(true)
+  const [universityShortName, setUniversityShortName] = useState('')
+  const [navSearch, setNavSearch]                 = useState('')
   const lastScrollY  = useRef(0)
   const dropdownRef  = useRef<HTMLDivElement>(null)
 
@@ -696,6 +701,7 @@ export function Navbar() {
             setUserName(data.user.name)
             setUserBalance(data.user.availableBalance || 0)
             setUserRole(data.user.role || 'BUYER')
+            setUniversityShortName(data.user.university?.shortName || '')
             localStorage.setItem('userName', data.user.name)
             if (data.user.isSellerMode !== undefined) {
               setIsSellerMode(data.user.isSellerMode)
@@ -711,6 +717,7 @@ export function Navbar() {
         setUserBalance(0)
         setUserRole('')
         setIsSellerMode(true)
+        setUniversityShortName('')
       }
     }
     checkAuth()
@@ -753,6 +760,12 @@ export function Navbar() {
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
 
+  const submitNavSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = navSearch.trim()
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
+  }
+
   if (isAndroid) return null
   if (!splashDone) return null
   if (pathname === '/' || pathname?.startsWith('/rider/login')) return null
@@ -788,11 +801,31 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center gap-3 sm:gap-4 h-16">
 
-          <Logo size={34} />
+          <Logo size={30} />
 
-          <div className="hidden md:flex items-center space-x-2">
+          <form onSubmit={submitNavSearch} className="hidden md:flex flex-1 max-w-xl items-center gap-2 bg-surface border border-border rounded-lg px-3">
+            <Search className="w-4 h-4 text-ink-muted flex-shrink-0" strokeWidth={1.75} />
+            <input
+              type="text"
+              value={navSearch}
+              onChange={e => setNavSearch(e.target.value)}
+              placeholder="Search for products, brands and categories"
+              className="flex-1 bg-transparent outline-none text-sm text-ink placeholder:text-ink-muted py-2.5 min-w-0"
+            />
+            <button type="submit" className="flex-shrink-0 px-3 py-1.5 bg-primary hover:brightness-95 text-white rounded-md font-medium text-xs transition-colors flex items-center gap-1.5">
+              <Search className="w-3.5 h-3.5" strokeWidth={1.75} /> Search
+            </button>
+          </form>
+
+          <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
+            {universityShortName && (
+              <span className="flex items-center gap-1 text-xs font-medium text-ink-secondary whitespace-nowrap pr-2 border-r border-border mr-1">
+                <MapPin className="w-3.5 h-3.5 text-ink-muted flex-shrink-0" strokeWidth={1.75} />
+                Deliver to <span className="text-ink font-semibold">{universityShortName}</span>
+              </span>
+            )}
             {isLoggedIn && (
               <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-primary hover:bg-surface rounded-full transition-all">
                 <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
@@ -919,9 +952,14 @@ export function Navbar() {
             )}
           </div>
 
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-surface transition-colors" aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}>
-            {isMenuOpen ? <X className="w-6 h-6 text-ink" strokeWidth={1.75} /> : <Menu className="w-6 h-6 text-ink" strokeWidth={1.75} />}
-          </button>
+          <div className="flex md:hidden items-center gap-1 ml-auto flex-shrink-0">
+            <Link href="/search?focus=1" className="p-2 rounded-lg hover:bg-surface transition-colors" aria-label="Search">
+              <Search className="w-5 h-5 text-ink" strokeWidth={1.75} />
+            </Link>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-lg hover:bg-surface transition-colors" aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}>
+              {isMenuOpen ? <X className="w-6 h-6 text-ink" strokeWidth={1.75} /> : <Menu className="w-6 h-6 text-ink" strokeWidth={1.75} />}
+            </button>
+          </div>
         </div>
       </div>
 

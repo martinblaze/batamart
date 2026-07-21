@@ -401,7 +401,7 @@ function SearchPage() {
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4">
           <div className="flex items-center gap-2">
             <button onClick={() => router.push('/marketplace')} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white text-ink-secondary shadow-soft"><ChevronLeft className="h-4 w-4" /></button>
-            <div className="min-w-0 flex-1"><SearchAutocomplete value={query} onChange={(next) => { setQuery(next); setPage(1) }} onSubmit={() => setPage(1)} onSelect={(text) => { setQuery(text); setPage(1) }} /></div>
+            <div className="min-w-0 flex-1"><SearchAutocomplete value={query} onChange={(next) => { setQuery(next); setPage(1) }} onSubmit={() => setPage(1)} onSelect={(text) => { setQuery(text); setPage(1) }} autoFocus={params.get('focus') === '1'} /></div>
           </div>
           <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
             {ALL_CATEGORIES.map((cat) => {

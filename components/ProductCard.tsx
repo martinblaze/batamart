@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import LoadedImage from '@/components/LoadedImage'
-import { useCartStore } from '@/lib/cart-store'
 import { BadgeCheck, Flame, ShoppingCart, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import QuickViewModal from '@/components/marketplace/QuickViewModal'
 
 type ProductCardProduct = {
   id: string
@@ -61,51 +61,12 @@ export default function ProductCard({
   className?: string
   priority?: boolean
 }) {
-  const addItem = useCartStore((state) => state.addItem)
-  const [loading, setLoading] = useState(false)
-  const [toast, setToast] = useState('')
+  const [quickViewOpen, setQuickViewOpen] = useState(false)
 
   const image = product.images?.[0] || '/placeholder.png'
   const rating = product.avgRating ?? product.seller?.avgRating ?? 0
   const price = product.priceDisplay || fmt(product.price)
   const stock = product.quantity ?? 0
-
-  const handleQuickAdd = async () => {
-    if (loading) return
-    setLoading(true)
-    try {
-      const res = await fetch('/api/cart/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id, quantity: 1 }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Failed to add')
-
-      addItem({
-        productId: product.id,
-        variantId: product.variantId,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        maxQuantity: stock || 1,
-        image,
-        sellerId: product.seller?.id || '',
-        sellerName: product.seller?.name || 'Seller',
-        selectedVariants: product.selectedVariants,
-        category: product.category,
-        subcategory: product.subcategory || undefined,
-        deliveryEstimate: product.deliveryEstimate || undefined,
-      })
-      setToast('Added')
-      setTimeout(() => setToast(''), 1500)
-    } catch {
-      setToast('Failed')
-      setTimeout(() => setToast(''), 1500)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (layout === 'list') {
     return (
@@ -148,17 +109,17 @@ export default function ProductCard({
               {stock > 0 && stock <= 5 && <Badge status="low-stock">Only {stock} left</Badge>}
             </div>
             <div className="mt-4 flex gap-2">
-              <button type="button" onClick={handleQuickAdd} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
+              <button type="button" onClick={() => setQuickViewOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
                 <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-                {loading ? 'Adding…' : 'Add to cart'}
+                Add to cart
               </button>
               <button type="button" onClick={onOpen} className="rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-ink transition-all duration-150 hover:bg-surface">
                 View
               </button>
             </div>
-            {toast && <p className="mt-2 text-xs font-medium text-success">{toast}</p>}
           </div>
         </div>
+        {quickViewOpen && <QuickViewModal productId={product.id} onClose={() => setQuickViewOpen(false)} />}
       </article>
     )
   }
@@ -175,11 +136,6 @@ export default function ProductCard({
         <div className="absolute bottom-3 left-3 rounded-md bg-white/92 px-2.5 py-1 text-[11px] font-medium text-ink-secondary backdrop-blur">
           {product.deliveryEstimate || (stock > 0 ? `${stock} left` : 'Out of stock')}
         </div>
-        {toast && (
-          <div className="absolute bottom-3 right-3 rounded-md bg-white/92 px-2.5 py-1 text-[11px] font-medium text-success backdrop-blur">
-            {toast}
-          </div>
-        )}
       </button>
 
       <div className="p-4">
@@ -210,11 +166,12 @@ export default function ProductCard({
             <Badge status="low-stock">Only {stock} left</Badge>
           </div>
         ) : null}
-        <button type="button" onClick={handleQuickAdd} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
+        <button type="button" onClick={() => setQuickViewOpen(true)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
           <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-          {loading ? 'Adding…' : 'Add to cart'}
+          Add to cart
         </button>
       </div>
+      {quickViewOpen && <QuickViewModal productId={product.id} onClose={() => setQuickViewOpen(false)} />}
     </article>
   )
 }

@@ -1226,12 +1226,8 @@ export default function ProductDetailPage() {
                   if (!vals || vals.length === 0) return null
                   const isSingleLocked = vals.length === 1
                   const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-                  
-                  // Auto-select single variants
-                  if (isSingleLocked && !selected[key]) {
-                    setSelected(prev => ({ ...prev, [key]: vals[0] }))
-                  }
-                  
+
+                  // Single-value variants are auto-selected by the effect above.
                   // For single variants, show as plain text
                   if (isSingleLocked) {
                     return (

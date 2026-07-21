@@ -8,11 +8,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   Search, Star, Shield, ShoppingBag, Sparkles, Flame,
-  AlertCircle, Clock, TrendingUp, X, ChevronRight,
-  Package, Zap, Award, ArrowRight, Tag, Eye, Heart, Flag,
+  TrendingUp, X, ChevronRight,
+  Package, Zap, Award, Tag, Eye, Heart, Flag,
   RefreshCw, CheckCircle, Users, Truck, ChevronLeft,
-  BadgeCheck, Timer, Percent, MapPin, Bell, Menu,
-  ChevronDown, Grid3X3, List, Sliders, Loader2, Copy,
+  BadgeCheck, Timer, Percent, Bell, Menu,
+  Grid3X3, List, Sliders, Loader2, Copy,
   Gift, Crown, Coffee, BookOpen, Cpu, Shirt, Home,
   Headphones, Camera, Watch, Dumbbell, Music, Gamepad2,
   Wifi, Battery, Monitor, Smartphone, ShoppingCart,
@@ -414,7 +414,6 @@ const CATEGORIES = [
   { name: 'Arts & Crafts',        icon: Palette },
 ]
 
-const TRENDING_SEARCHES  = ['iPhone', 'Sneakers', 'Laptop', 'Jollof Rice', 'Textbooks', 'Earbuds', 'Braids', 'Power Bank']
 const RECENT_SEARCHES_KEY  = 'BATAMART-recent-searches'
 const RECENTLY_VIEWED_KEY  = 'BATAMART-recently-viewed'
 const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
@@ -428,16 +427,6 @@ const SESSION_ID_KEY = 'BATAMART_SESSION_ID'
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-// ── UPGRADED: handles both legacy pipe-tags AND new VARIANTS_V2 format ────────
-function parseTags(description: string): string[] {
-  const { tags, variants } = decodeProductData(description)
-  // Show top variant values as chips (max 3 total)
-  const variantValues = Object.values(variants).flat().slice(0, 3) as string[]
-  const allChips = [...variantValues, ...tags].filter(Boolean)
-  // Deduplicate and limit
-  return [...new Set(allChips)].slice(0, 5)
-}
-
 const fmt = (p: number) =>
   new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(p)
 
@@ -1613,11 +1602,7 @@ export default function MarketplacePage() {
   const [viewMode,          setViewMode]          = useState<'feed' | 'grid'>('feed')
   const [recentlyViewed,    setRecentlyViewed]    = useState<any[]>([])
   const [interestCategories,setInterestCategories]= useState<string[]>([])
-  const [searchInput,       setSearchInput]       = useState('')
-  const [recentSearches,    setRecentSearches]    = useState<string[]>([])
-  const [showSuggestions,   setShowSuggestions]   = useState(false)
   const [mounted,           setMounted]           = useState(false)
-  const [dropdownPos,       setDropdownPos]       = useState({ top: 0, left: 0, width: 0 })
   const [universityShortName, setUniversityShortName] = useState<string>('')
   const [universityId, setUniversityId] = useState<string>('')
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<any[]>([])
@@ -1634,10 +1619,6 @@ export default function MarketplacePage() {
   // Pull-to-refresh state
   const [pullDistance,  setPullDistance]  = useState(0)
   const [isRefreshing,  setIsRefreshing]  = useState(false)
-
-  const inputRef    = useRef<HTMLInputElement>(null)
-  const searchRef   = useRef<HTMLDivElement>(null)
-  const isClickingSuggestionRef = useRef(false)
 
   // Pull-to-refresh touch tracking (refs avoid stale closure issues)
   const ptrStartY     = useRef(0)
@@ -1667,10 +1648,6 @@ export default function MarketplacePage() {
   useEffect(() => {
     setMounted(true)
     try { setRecentlyViewed(JSON.parse(localStorage.getItem(RECENTLY_VIEWED_KEY) || '[]')) } catch {}
-    try {
-      const rawSearches = JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]')
-      setRecentSearches(normalizeSearchHistory(rawSearches))
-    } catch {}
 
     fetchPeopleLikeYouBought()
     const token = localStorage.getItem('token')
@@ -1711,16 +1688,6 @@ export default function MarketplacePage() {
       })
       .catch(() => {})
   }, [mounted])
-
-  // ── Close dropdown on outside click ──
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (isClickingSuggestionRef.current) return
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSuggestions(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
 
   // ── Category change ──
   useEffect(() => {
@@ -1815,22 +1782,6 @@ export default function MarketplacePage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRefreshing])
-
-  // ── Search dropdown position ──
-  const updateDropdownPos = useCallback(() => {
-    if (!inputRef.current) return
-    const r = inputRef.current.getBoundingClientRect()
-    setDropdownPos({ top: r.bottom + 8, left: r.left, width: r.width })
-  }, [])
-
-  useEffect(() => {
-    window.addEventListener('resize', updateDropdownPos)
-    window.addEventListener('scroll', updateDropdownPos)
-    return () => {
-      window.removeEventListener('resize', updateDropdownPos)
-      window.removeEventListener('scroll', updateDropdownPos)
-    }
-  }, [updateDropdownPos])
 
   // ── API calls ──
   const enqueueProductView = (id: string) => {
@@ -2073,35 +2024,6 @@ export default function MarketplacePage() {
     window.location.href = token ? `/product/${id}` : '/login'
   }
 
-  const handleSearch = (searchTerm?: string) => {
-    const q = (searchTerm || searchInput).trim()
-    if (!q) return
-    try {
-      const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 8)
-      setRecentSearches(updated)
-      const now = Date.now()
-      const timed = updated.map((keyword) => ({ keyword, timestamp: now }))
-      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(timed))
-      pushFeedActivitySignal('keywords', q)
-    } catch {}
-    try {
-      const token = localStorage.getItem('token')
-      if (token) {
-        fetch('/api/session-event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ sessionId: ensureSessionId(), eventType: 'search', meta: { query: q } }),
-        }).catch(() => {})
-      }
-    } catch {}
-    setShowSuggestions(false)
-    router.push(`/search?q=${encodeURIComponent(q)}`)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') { e.preventDefault(); handleSearch() }
-  }
-
   // ── Derived data ──
   const forYouProducts = useMemo(() => allProducts.filter(p => p.isPersonalised).slice(0, 12), [allProducts])
   // Hot Deals — powered by confirmed campus sales + view signals
@@ -2147,86 +2069,10 @@ export default function MarketplacePage() {
     return map
   }, [allProducts])
 
-  const suggestions = useMemo(() => {
-    const q = searchInput.trim().toLowerCase()
-    if (!q) return recentSearches.slice(0, 6).map(s => ({ type: 'recent', label: s }))
-    const productMatches = allProducts
-      .filter(p => {
-        const tags = parseTags(p.description || '')
-        return p.name.toLowerCase().includes(q) || tags.some((t: string) => t.toLowerCase().includes(q))
-      })
-      .slice(0, 5)
-      .map(p => ({ type: 'product', label: p.name, sublabel: fmt(p.price), id: p.id, image: p.images[0] }))
-    const trendingMatches = TRENDING_SEARCHES
-      .filter(s => s.toLowerCase().includes(q))
-      .slice(0, 3)
-      .map(s => ({ type: 'trending', label: s }))
-    return [...productMatches, ...trendingMatches]
-  }, [searchInput, allProducts, recentSearches])
-
-  // ── Search suggestions portal ──
-  const SuggestionsDropdown = mounted && showSuggestions && suggestions.length > 0
-    ? createPortal(
-        <div
-          className="drop-in fixed z-[9998] bg-white rounded-2xl shadow-soft border border-border overflow-hidden"
-          style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, maxHeight: '320px', overflowY: 'auto' }}
-        >
-          <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
-              {!searchInput.trim() ? 'Recent Searches' : 'Suggestions'}
-            </span>
-            {!searchInput.trim() && recentSearches.length > 0 && (
-              <span className="text-[10px] text-primary font-semibold">RECENT</span>
-            )}
-          </div>
-          {suggestions.map((s: any, i) => (
-            <button
-              key={i}
-              onMouseDown={e => { e.preventDefault(); isClickingSuggestionRef.current = true }}
-              onClick={() => {
-                isClickingSuggestionRef.current = false
-                if (s.type === 'product') { handleProductClick(s.id); return }
-                handleSearch(s.label)
-              }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface transition-colors text-left"
-            >
-              {s.type === 'product' && s.image
-                ? <img src={s.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt="" />
-                : s.type === 'recent'
-                  ? <Clock className="w-4 h-4 text-ink-muted flex-shrink-0" />
-                  : <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
-              }
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">{s.label}</p>
-                {s.sublabel && <p className="text-xs text-primary font-semibold">{s.sublabel}</p>}
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-ink-muted flex-shrink-0" />
-            </button>
-          ))}
-          {searchInput.trim() && (
-            <button
-              onMouseDown={e => { e.preventDefault(); isClickingSuggestionRef.current = true }}
-              onClick={() => { isClickingSuggestionRef.current = false; handleSearch() }}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border"
-            >
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Search className="w-4 h-4 text-primary" />
-              </div>
-              <span className="text-sm font-semibold text-primary">Search for "{searchInput}"</span>
-              <ArrowRight className="w-3.5 h-3.5 text-primary flex-shrink-0 ml-auto" />
-            </button>
-          )}
-        </div>,
-        document.body
-      )
-    : null
-
   if (!splashDone) return <div className="min-h-screen bg-white" />
 
   return (
     <div className="min-h-screen bg-surface marketplace-shell">
-      {SuggestionsDropdown}
-
       {/* ── Referral Popup Modal ── */}
       {showReferralPopup && mounted && createPortal(
         <div
@@ -2323,7 +2169,7 @@ export default function MarketplacePage() {
       {/* Promo ticker */}
       <PromoTicker />
 
-      {/* ══ HEADER ══ */}
+      {/* ══ CATEGORY BAR (trust strip above is the first thing on the page) ══ */}
       <header
         className={`batamart-header marketplace-header sticky top-0 z-40 ${isApp ? 'shadow-[0_8px_24px_rgba(15,23,42,0.16)]' : 'shadow-soft'}`}
         style={{
@@ -2333,79 +2179,8 @@ export default function MarketplacePage() {
         }}
       >
         <div className={`marketplace-header-inner ${isApp ? 'max-w-5xl' : 'max-w-7xl'} mx-auto px-3 sm:px-6`}>
-
-          {/* Top row */}
-          <div className={`marketplace-top-row flex items-center gap-2 sm:gap-4 ${isApp ? 'py-3.5' : 'py-3'}`}>
-            <div className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              </div>
-              <div className="hidden sm:block">
-                <p className="text-ink font-semibold text-lg leading-none tracking-tight">BataMart</p>
-                {universityShortName && (
-                  <p className="text-ink-secondary text-[10px] font-medium flex items-center gap-0.5">
-                    <MapPin className="w-2.5 h-2.5" /> {universityShortName}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Search bar */}
-            <div ref={searchRef} className="flex-1 min-w-0">
-              <div className="marketplace-search-input search-input flex items-center gap-2 bg-surface border border-border rounded-lg px-3 sm:px-4 ring-2 ring-transparent">
-                <div
-                  className="hidden sm:flex items-center gap-1 border-r border-border pr-3 mr-1 flex-shrink-0 cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => {}}
-                >
-                  <span className="text-xs font-medium text-ink-secondary whitespace-nowrap">All</span>
-                  <ChevronDown className="w-3 h-3 text-ink-muted" />
-                </div>
-                <Search className="w-4 h-4 text-ink-muted flex-shrink-0" />
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={searchInput}
-                  onChange={e => { setSearchInput(e.target.value); updateDropdownPos(); setShowSuggestions(true) }}
-                  onFocus={() => { updateDropdownPos(); setShowSuggestions(true) }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search products, sellers, categories..."
-                  className="flex-1 bg-transparent outline-none text-sm text-ink placeholder:text-ink-muted py-3 min-w-0"
-                  autoComplete="off"
-                />
-                {searchInput && (
-                  <button onClick={() => { setSearchInput(''); setShowSuggestions(false) }} className="text-ink-muted hover:text-ink-secondary p-1">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <button
-                  onClick={() => handleSearch()}
-                  className="flex-shrink-0 px-4 py-2 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-sm transition-colors"
-                >
-                  <span className="hidden sm:inline">Search</span>
-                  <Search className="w-4 h-4 sm:hidden" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-              <Link href="/sell"
-                className="btn-press hidden sm:flex items-center gap-1.5 bg-primary/10 hover:bg-primary/15 text-primary px-3.5 py-2 rounded-lg font-medium text-xs transition-colors">
-                <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} /> Sell
-              </Link>
-              <Link href="/report"
-                className="hidden sm:flex items-center gap-1.5 bg-surface hover:bg-border text-ink-secondary px-3 py-2 rounded-lg font-medium text-xs transition-colors">
-                <AlertCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
-              </Link>
-              {!isApp && (
-                <Link href="/sell" className="btn-press sm:hidden flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
-                  <Sparkles className="w-4 h-4 text-primary" strokeWidth={1.75} />
-                </Link>
-              )}
-            </div>
-          </div>
-
           {/* Category nav */}
-          <div className="marketplace-categories flex items-center justify-between gap-2 pb-2 border-t border-border pt-2">
+          <div className="marketplace-categories flex items-center justify-between gap-2 py-2.5">
             <div className="flex gap-1 overflow-x-auto no-scrollbar flex-1">
               {CATEGORIES.map(cat => (
                 <button
@@ -2431,24 +2206,6 @@ export default function MarketplacePage() {
                   className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${viewMode === mode ? 'bg-white text-primary shadow-soft' : 'text-ink-muted'}`}
                 >
                   {mode === 'feed' ? <List className="w-3.5 h-3.5" strokeWidth={1.75} /> : <Grid3X3 className="w-3.5 h-3.5" strokeWidth={1.75} />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Trending chips */}
-          <div className="flex items-center gap-2 pb-2.5 overflow-hidden">
-            <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wider flex-shrink-0 flex items-center gap-1">
-              <Flame className="w-3 h-3 text-warning" strokeWidth={1.75} />
-            </span>
-            <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-              {TRENDING_SEARCHES.map(tag => (
-                <button
-                  key={tag}
-                  onClick={() => router.push(`/search?q=${encodeURIComponent(tag)}`)}
-                  className="hot-tag flex items-center gap-1 px-2.5 py-1 bg-surface hover:bg-primary/10 text-ink-secondary hover:text-primary rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 transition-all"
-                >
-                  {tag}
                 </button>
               ))}
             </div>

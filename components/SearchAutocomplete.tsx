@@ -29,12 +29,14 @@ export default function SearchAutocomplete({
   onSubmit,
   onSelect,
   placeholder = 'Search products, sellers, categories...',
+  autoFocus = false,
 }: {
   value: string
   onChange: (value: string) => void
   onSubmit: () => void
   onSelect?: (value: string) => void
   placeholder?: string
+  autoFocus?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<string[]>([])
@@ -124,6 +126,7 @@ export default function SearchAutocomplete({
         <Search className="h-4 w-4 text-ink-muted" />
         <input
           ref={inputRef}
+          autoFocus={autoFocus}
           value={value}
           onChange={(e) => {
             onChange(e.target.value)
