@@ -20,6 +20,9 @@ export interface CartItem {
   subcategory?: string
   category?: string
   deliveryEstimate?: string
+  // Buyer's note to the seller, entered on the product page — carried through
+  // to the cart card and auto-filled into the checkout order note.
+  note?: string
 }
 
 interface CartState {
@@ -48,7 +51,7 @@ export const useCartStore = create<CartState>()(
             set({
               items: items.map((i) =>
                 i.productId === item.productId && (i.variantId || '') === (item.variantId || '')
-                  ? { ...i, quantity: newQuantity, selectedVariants: item.selectedVariants ?? i.selectedVariants }
+                  ? { ...i, quantity: newQuantity, selectedVariants: item.selectedVariants ?? i.selectedVariants, note: item.note ?? i.note }
                   : i
               ),
             })

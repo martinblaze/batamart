@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import LoadedImage from '@/components/LoadedImage'
-import { BadgeCheck, Flame, ShoppingCart, Star } from 'lucide-react'
+import { BadgeCheck, Eye, Flame, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
-import QuickViewModal from '@/components/marketplace/QuickViewModal'
 
 type ProductCardProduct = {
   id: string
@@ -61,8 +59,6 @@ export default function ProductCard({
   className?: string
   priority?: boolean
 }) {
-  const [quickViewOpen, setQuickViewOpen] = useState(false)
-
   const image = product.images?.[0] || '/placeholder.png'
   const rating = product.avgRating ?? product.seller?.avgRating ?? 0
   const price = product.priceDisplay || fmt(product.price)
@@ -109,17 +105,13 @@ export default function ProductCard({
               {stock > 0 && stock <= 5 && <Badge status="low-stock">Only {stock} left</Badge>}
             </div>
             <div className="mt-4 flex gap-2">
-              <button type="button" onClick={() => setQuickViewOpen(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
-                <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-                Add to cart
-              </button>
-              <button type="button" onClick={onOpen} className="rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-medium text-ink transition-all duration-150 hover:bg-surface">
-                View
+              <button type="button" onClick={onOpen} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
+                <Eye className="h-4 w-4" strokeWidth={1.75} />
+                View product
               </button>
             </div>
           </div>
         </div>
-        {quickViewOpen && <QuickViewModal productId={product.id} onClose={() => setQuickViewOpen(false)} />}
       </article>
     )
   }
@@ -166,12 +158,11 @@ export default function ProductCard({
             <Badge status="low-stock">Only {stock} left</Badge>
           </div>
         ) : null}
-        <button type="button" onClick={() => setQuickViewOpen(true)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
-          <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-          Add to cart
+        <button type="button" onClick={onOpen} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all duration-150 hover:brightness-95 active:scale-[0.98]">
+          <Eye className="h-4 w-4" strokeWidth={1.75} />
+          View product
         </button>
       </div>
-      {quickViewOpen && <QuickViewModal productId={product.id} onClose={() => setQuickViewOpen(false)} />}
     </article>
   )
 }

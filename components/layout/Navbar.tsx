@@ -14,6 +14,7 @@ import {
 import { isSplashPending } from '@/components/SplashScreen'
 import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider'
 import { Logo } from '@/components/layout/Logo'
+import SearchAutocomplete from '@/components/SearchAutocomplete'
 
 function BATAMARTLogo({ appMode = false }: { appMode?: boolean }) {
   const href = appMode ? '/marketplace?app=true' : '/'
@@ -760,10 +761,9 @@ export function Navbar() {
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
 
-  const submitNavSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const q = navSearch.trim()
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
+  const runNavSearch = (q: string) => {
+    const query = q.trim()
+    router.push(query ? `/search?q=${encodeURIComponent(query)}` : '/search')
   }
 
   if (isAndroid) return null
@@ -805,19 +805,24 @@ export function Navbar() {
 
           <Logo size={30} />
 
-          <form onSubmit={submitNavSearch} className="hidden md:flex flex-1 max-w-xl items-center gap-2 bg-surface border border-border rounded-lg px-3">
-            <Search className="w-4 h-4 text-ink-muted flex-shrink-0" strokeWidth={1.75} />
-            <input
-              type="text"
-              value={navSearch}
-              onChange={e => setNavSearch(e.target.value)}
-              placeholder="Search for products, brands and categories"
-              className="flex-1 bg-transparent outline-none text-sm text-ink placeholder:text-ink-muted py-2.5 min-w-0"
-            />
-            <button type="submit" className="flex-shrink-0 px-3 py-1.5 bg-primary hover:brightness-95 text-white rounded-md font-medium text-xs transition-colors flex items-center gap-1.5">
+          <div className="hidden md:flex flex-1 max-w-xl items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <SearchAutocomplete
+                value={navSearch}
+                onChange={setNavSearch}
+                onSubmit={() => runNavSearch(navSearch)}
+                placeholder="Search for products, brands and categories"
+                dimBackdrop
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => runNavSearch(navSearch)}
+              className="relative z-50 flex-shrink-0 px-3 py-2.5 bg-primary hover:brightness-95 text-white rounded-xl font-medium text-xs transition-colors flex items-center gap-1.5"
+            >
               <Search className="w-3.5 h-3.5" strokeWidth={1.75} /> Search
             </button>
-          </form>
+          </div>
 
           <div className="hidden md:flex items-center space-x-2 flex-shrink-0 ml-auto">
             {universityShortName && (

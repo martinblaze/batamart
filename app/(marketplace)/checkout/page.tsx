@@ -63,7 +63,11 @@ export default function CheckoutPage() {
     // ── Load cart items ──
     const cartData = sessionStorage.getItem('checkout_cart')
     if (cartData) {
-      setCartItems(JSON.parse(cartData))
+      const parsed = JSON.parse(cartData)
+      setCartItems(parsed)
+      const seededNotes: Record<string, string> = {}
+      parsed.forEach((item: any) => { if (item.note) seededNotes[item.productId] = item.note })
+      setOrderNotes(seededNotes)
     } else {
       const productData = sessionStorage.getItem('checkout_product')
       if (productData) {
@@ -78,7 +82,9 @@ export default function CheckoutPage() {
           sellerName: product.seller.name,
           deliveryEstimate: product.deliveryEstimate,
           selectedVariants: product.selectedVariants || {},
+          note: product.note || '',
         }])
+        if (product.note) setOrderNotes({ [product.id]: product.note })
       } else {
         if (!urlError) {
           router.push('/marketplace')

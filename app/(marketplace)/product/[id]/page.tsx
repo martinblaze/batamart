@@ -362,6 +362,7 @@ export default function ProductDetailPage() {
   const [activeImg, setActiveImg] = useState(0)
   const [imgSwitching, setImgSwitching] = useState(false)
   const [qty, setQty] = useState(1)
+  const [noteToSeller, setNoteToSeller] = useState('')
   const [addingToCart, setAddingToCart] = useState(false)
   const [cartMsg, setCartMsg] = useState('')
   const [showReportModal, setShowReportModal] = useState(false)
@@ -771,6 +772,7 @@ export default function ProductDetailPage() {
         category: product.category,
         subcategory: product.subcategory,
         deliveryEstimate: product.deliveryEstimate,
+        note: noteToSeller.trim() || undefined,
       })
       setCartMsg('Added to cart!')
       setTimeout(() => setCartMsg(''), 2500)
@@ -797,6 +799,7 @@ export default function ProductDetailPage() {
       variantId: matchedVariant?.id,
       price: effectivePrice,
       selectedVariants: selected,
+      note: noteToSeller.trim() || undefined,
     }))
     router.push('/checkout')
   }
@@ -1327,6 +1330,23 @@ export default function ProductDetailPage() {
                 )}
               </div>
             )}
+
+            {/* ── Note to seller ── */}
+            <div className="bg-white rounded-2xl p-4 ring-1 ring-border space-y-2">
+              <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-primary" />
+                Note to seller <span className="text-ink-muted font-normal text-xs">(optional)</span>
+              </h3>
+              <textarea
+                value={noteToSeller}
+                onChange={(e) => setNoteToSeller(e.target.value.slice(0, 300))}
+                maxLength={300}
+                rows={2}
+                placeholder="e.g. Please deliver after 4pm, or gift-wrap this…"
+                className="w-full text-sm bg-surface rounded-xl p-3 border border-transparent focus:border-primary focus:bg-white outline-none resize-none transition-colors"
+              />
+              <p className="text-[11px] text-ink-muted text-right">{noteToSeller.length}/300</p>
+            </div>
 
             {(!stockKnown || effectiveStock > 0) && (
               <div className="flex items-center gap-3">

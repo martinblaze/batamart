@@ -156,6 +156,13 @@ export default function CartPage() {
                                 </div>
                               )}
 
+                              {/* Note to seller */}
+                              {item.note && (
+                                <p className="text-[11px] text-ink-secondary bg-surface rounded-lg px-2.5 py-1.5 mt-1.5 italic">
+                                  &ldquo;{item.note}&rdquo;
+                                </p>
+                              )}
+
                               {/* Change Variants link */}
                               <Link href={`/product/${item.productId}`}
                                 className="text-[10px] text-ink-muted hover:text-primary font-medium mt-1 inline-block transition-colors">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Clock3, Search, Sparkles } from 'lucide-react'
 
 type Suggestion = {
@@ -30,6 +31,7 @@ export default function SearchAutocomplete({
   onSelect,
   placeholder = 'Search products, sellers, categories...',
   autoFocus = false,
+  dimBackdrop = false,
 }: {
   value: string
   onChange: (value: string) => void
@@ -37,7 +39,12 @@ export default function SearchAutocomplete({
   onSelect?: (value: string) => void
   placeholder?: string
   autoFocus?: boolean
+  // When true, dims + blurs the rest of the page behind the dropdown while it's
+  // open (like Jumia/Amazon) — meant for the navbar's search bar, not inline uses.
+  dimBackdrop?: boolean
 }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<string[]>([])
   const [popular, setPopular] = useState<Suggestion[]>([])
@@ -122,7 +129,14 @@ export default function SearchAutocomplete({
 
   return (
     <div className="relative w-full">
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2.5 shadow-sm transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+      {dimBackdrop && open && mounted && createPortal(
+        <div
+          className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-[2px] transition-opacity duration-150"
+          aria-hidden="true"
+        />,
+        document.body
+      )}
+      <div className="relative z-50 flex items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2.5 shadow-sm transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
         <Search className="h-4 w-4 text-ink-muted" />
         <input
           ref={inputRef}
