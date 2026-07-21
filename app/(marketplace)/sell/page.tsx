@@ -282,84 +282,11 @@ function StepHeader({ num, title, subtitle }: { num: string; title: string; subt
   )
 }
 
-// ── Variant Field Row ─────────────────────────────────────────────────────────
+// ── Variant field shape (derived from Category Details attributes with 2+ values) ──
 interface SellVariantField {
   key: string
   label: string
   suggestions: string[]
-}
-
-function VariantRow({
-  field,
-  values,
-  onChange,
-}: {
-  field: SellVariantField
-  values: string[]
-  onChange: (vals: string[]) => void
-}) {
-  const [customInput, setCustomInput] = useState('')
-
-  const addValue = (v: string) => {
-    const trimmed = v.trim()
-    if (!trimmed || values.includes(trimmed)) return
-    onChange([...values, trimmed])
-  }
-  const removeValue = (v: string) => onChange(values.filter(x => x !== v))
-  const handleCustomAdd = () => { addValue(customInput); setCustomInput('') }
-
-  return (
-    <div className="border border-border rounded-2xl p-4 bg-surface/50">
-      <p className="text-sm font-semibold text-ink-secondary mb-3">{field.label}</p>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {field.suggestions.map(s => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => values.includes(s) ? removeValue(s) : addValue(s)}
-            className={`chip text-xs px-3 py-1.5 rounded-xl border font-semibold inline-flex items-center gap-1 ${
-              values.includes(s)
-                ? 'bg-primary text-white border-transparent'
-                : 'bg-white text-ink-secondary border-border'
-            }`}
-          >
-            {values.includes(s) ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}{s}
-          </button>
-        ))}
-      </div>
-      {values.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {values.map(v => (
-            <span key={v} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
-              {v}
-              <button type="button" onClick={() => removeValue(v)} className="hover:text-primary ml-0.5">
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={customInput}
-          onChange={e => setCustomInput(limitText(e.target.value, SELL_LIMITS.variantValue))}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCustomAdd() } }}
-          maxLength={SELL_LIMITS.variantValue}
-          placeholder={`Add custom ${field.label.toLowerCase()}...`}
-          className="flex-1 text-xs px-3 py-2 rounded-xl border border-border bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
-        />
-        <button
-          type="button"
-          onClick={handleCustomAdd}
-          disabled={!customInput.trim()}
-          className="px-3 py-2 bg-primary text-white rounded-xl text-xs font-semibold disabled:opacity-40 hover:brightness-95 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  )
 }
 
 interface CategoryAttributeDef {
@@ -1463,29 +1390,15 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* ── STEP 5: Variants — automatic once any Category Detail above has 2+ values ── */}
-        {variantFields.length > 0 && (
+        {/* ── STEP 5: Variant Inventory — automatic once any Category Detail above has 2+ values ── */}
+        {variantFields.length > 0 && variantCombinations.length > 0 && (
           <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
             <StepHeader
               num="5"
-              title="Product Variants"
-              subtitle="Picked up automatically from your Category Details above — add or remove options here, then price each combination"
+              title="Variant Inventory"
+              subtitle="Price and stock for each combination from your Category Details above"
             />
-            <div className="space-y-4">
-              {variantFields.map(field => (
-                <VariantRow
-                  key={field.key}
-                  field={field}
-                  values={toStringArray(attributeValues[field.key])}
-                  onChange={vals => setAttributeValue(field.key, vals)}
-                />
-              ))}
-            </div>
-            {variantCombinations.length > 0 && (
-              <div className="mt-5 border border-border rounded-2xl overflow-hidden">
-                <div className="px-3 py-2.5 bg-surface border-b border-border">
-                  <p className="text-xs font-semibold text-ink-secondary">Variant Inventory</p>
-                </div>
+            <div className="border border-border rounded-2xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
@@ -1537,7 +1450,6 @@ export default function SellPage() {
                   </table>
                 </div>
               </div>
-            )}
           </div>
         )}
 

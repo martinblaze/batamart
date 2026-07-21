@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ShoppingCart, Sparkles, Star, Truck } from 'lucide-react'
+import { Sparkles, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 
 export type RelatedProductCardProduct = {
@@ -37,12 +37,10 @@ function formatPrice(value: number) {
 export default function RelatedProductCard({
   product,
   onOpen,
-  onAddToCart,
   compact = false,
 }: {
   product: RelatedProductCardProduct
   onOpen?: () => void
-  onAddToCart?: () => void
   compact?: boolean
 }) {
   const originalPrice = useMemo(() => {
@@ -75,20 +73,6 @@ export default function RelatedProductCard({
           <span className="absolute right-2 top-2">
             <Badge status="danger">{product.discountPercent ? `${product.discountPercent}% off` : 'Deal'}</Badge>
           </span>
-        )}
-        {onAddToCart && (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              onAddToCart()
-            }}
-            className="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink border border-border transition-colors hover:bg-surface"
-            aria-label="Add to cart"
-          >
-            <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
-          </button>
         )}
       </div>
 

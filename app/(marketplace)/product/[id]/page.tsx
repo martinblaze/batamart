@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ChevronLeft, ShoppingCart, Star, Shield, Package, Truck,
@@ -186,10 +186,6 @@ const PAGE_CSS = `
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
-  .sticky-bar {
-    transition: transform 0.2s ease-out;
-  }
-
   .see-more-btn {
     transition: filter 0.15s ease-out;
     background: var(--color-primary);
@@ -352,9 +348,7 @@ function SeeMoreCard({ onClick, loading }: { onClick: () => void; loading: boole
 export default function ProductDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const searchParams = useSearchParams()
   const productId = params?.id as string
-  const isApp = searchParams.get('app') === 'true'
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
@@ -409,14 +403,12 @@ export default function ProductDetailPage() {
 
   const [reviews, setReviews] = useState<any[]>([])
   const [reviewsLoading, setReviewsLoading] = useState(false)
-  const [showStickyBar, setShowStickyBar] = useState(false)
   const [sessionId, setSessionId] = useState('')
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([])
 
   const { addItem, items } = useCartStore()
   const toast = useToast()
   const mainRef = useRef<HTMLDivElement>(null)
-  const buyBoxRef = useRef<HTMLDivElement>(null)
   const relatedScrollRef = useRef<HTMLDivElement>(null)
 
   const alreadyInCart = items.some(i => i.productId === productId)
@@ -455,16 +447,6 @@ export default function ProductDetailPage() {
     if (typeof window === 'undefined') return
     setSessionId(ensureSessionId())
   }, [])
-
-  // ── Sticky CTA bar ──────────────────────────────────────
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([e]) => setShowStickyBar(!e.isIntersecting),
-      { threshold: 0 }
-    )
-    if (buyBoxRef.current) observer.observe(buyBoxRef.current)
-    return () => observer.disconnect()
-  }, [product])
 
   // ── Fetch product ───────────────────────────────────────
   useEffect(() => {
@@ -974,31 +956,6 @@ export default function ProductDetailPage() {
           Move it further down so it doesn't push the main product content.
           Render client-side only and keep existing behavior. */}
 
-      {/* ── Sticky bottom bar (mobile only) ──────────────── */}
-      {!isApp && <div
-        className={`sticky-bar fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border p-3 flex gap-2 sm:hidden ${
-          showStickyBar ? 'translate-y-0 shadow-soft' : 'translate-y-full'
-        }`}
-        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
-      >
-        <button
-          onClick={handleAddToCart}
-          disabled={product.quantity === 0 || addingToCart}
-          className="add-btn flex-1 text-white font-semibold text-sm py-3 rounded-xl flex items-center justify-center gap-1.5"
-        >
-          {addingToCart ? 'Adding…' : variantKeys.length > 0 && !allVariantsSelected
-            ? <><AlertCircle className="w-4 h-4" /> Select Options</>
-            : <><ShoppingCart className="w-4 h-4" /> Add to Cart</>}
-        </button>
-        <button
-          onClick={handleBuyNow}
-          disabled={product.quantity === 0}
-          className="buy-btn flex-1 text-white font-semibold text-sm py-3 rounded-xl"
-        >
-          Buy Now
-        </button>
-      </div>}
-
       {/* ── Top nav ───────────────────────────────────────── */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-soft">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-3">
@@ -1157,7 +1114,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* RIGHT — Buy box */}
-          <div ref={buyBoxRef} className="space-y-3">
+          <div className="space-y-3">
 
             <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-primary/10 text-primary text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
@@ -1694,11 +1651,6 @@ export default function ProductDetailPage() {
                           matchReason: (p as any).matchReason,
                         }}
                         onOpen={() => navigateRelatedTracked(p.id)}
-                        onAddToCart={() => {
-                          // quick add to cart
-                          addItem({ productId: p.id, variantId: undefined, name: p.name, price: p.price, image: p.images?.[0] || '', sellerId: p.seller?.id || '', sellerName: p.seller?.name || '', maxQuantity: 1, quantity: 1, selectedVariants: {}, category: product.category, subcategory: product.subcategory, deliveryEstimate: undefined })
-                          toast.success('Added to cart')
-                        }}
                       />
                     </div>
                   ))}
