@@ -43,6 +43,20 @@ html.splash-pending body > div > * {
     --color-danger: #EF4444;
     --color-warning: #F59E0B;
 
+    /* RGB-triplet mirrors so Tailwind can generate opacity-modified utilities
+       (bg-primary/10, ring-primary/40, etc.) via rgb(var(--x-rgb) / <alpha-value>).
+       Keep these in sync with the hex values above. */
+    --color-primary-rgb: 30 144 255;
+    --color-background-rgb: 255 255 255;
+    --color-surface-rgb: 248 250 252;
+    --color-border-rgb: 229 231 235;
+    --color-text-primary-rgb: 17 24 39;
+    --color-text-secondary-rgb: 107 114 128;
+    --color-text-muted-rgb: 156 163 175;
+    --color-success-rgb: 34 197 94;
+    --color-danger-rgb: 239 68 68;
+    --color-warning-rgb: 245 158 11;
+
     /* Legacy aliases kept for CSS still referencing the old var names below */
     --primary: var(--color-primary);
     --background: var(--color-background);
@@ -64,6 +78,17 @@ html.splash-pending body > div > * {
     --color-success: #22C55E;
     --color-danger: #EF4444;
     --color-warning: #F59E0B;
+
+    --color-primary-rgb: 77 171 255;
+    --color-background-rgb: 0 0 0;
+    --color-surface-rgb: 15 17 21;
+    --color-border-rgb: 39 43 51;
+    --color-text-primary-rgb: 229 231 235;
+    --color-text-secondary-rgb: 152 162 179;
+    --color-text-muted-rgb: 114 129 154;
+    --color-success-rgb: 34 197 94;
+    --color-danger-rgb: 239 68 68;
+    --color-warning-rgb: 245 158 11;
 
     --primary: var(--color-primary);
     --background: var(--color-background);

@@ -1,4 +1,16 @@
 /** @type {import('tailwindcss').Config} */
+
+// Resolves a theme color to an RGB-triplet CSS variable so Tailwind can
+// generate opacity-modified utilities (bg-primary/10, ring-primary/40, etc).
+// The variables (--color-*-rgb) are defined in styles/globals.css alongside
+// their hex counterparts, for both :root and .dark.
+function withOpacity(cssVar: string) {
+  return ({ opacityValue }: { opacityValue?: string }) =>
+    opacityValue !== undefined
+      ? `rgb(var(${cssVar}) / ${opacityValue})`
+      : `rgb(var(${cssVar}))`
+}
+
 module.exports = {
   darkMode: 'class',
   content: [
@@ -11,18 +23,18 @@ module.exports = {
       colors: {
         // BataMart Design Bible tokens (see BATAMART_DESIGN_BIBLE.md section 2)
         // Backed by CSS custom properties in styles/globals.css so light/dark stay in sync.
-        primary: 'var(--color-primary)',           // --color-primary #1E90FF — the only accent color
-        background: 'var(--color-background)',     // --color-background
-        surface: 'var(--color-surface)',            // --color-surface
-        border: 'var(--color-border)',               // --color-border
+        primary: withOpacity('--color-primary-rgb'),           // --color-primary #1E90FF — the only accent color
+        background: withOpacity('--color-background-rgb'),     // --color-background
+        surface: withOpacity('--color-surface-rgb'),            // --color-surface
+        border: withOpacity('--color-border-rgb'),               // --color-border
         ink: {
-          DEFAULT: 'var(--color-text-primary)',      // --color-text-primary
-          secondary: 'var(--color-text-secondary)',  // --color-text-secondary
-          muted: 'var(--color-text-muted)',           // --color-text-muted
+          DEFAULT: withOpacity('--color-text-primary-rgb'),      // --color-text-primary
+          secondary: withOpacity('--color-text-secondary-rgb'),  // --color-text-secondary
+          muted: withOpacity('--color-text-muted-rgb'),           // --color-text-muted
         },
-        success: 'var(--color-success)',
-        danger: 'var(--color-danger)',
-        warning: 'var(--color-warning)',
+        success: withOpacity('--color-success-rgb'),
+        danger: withOpacity('--color-danger-rgb'),
+        warning: withOpacity('--color-warning-rgb'),
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
