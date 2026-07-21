@@ -696,7 +696,10 @@ export default function ProductDetailPage() {
     requiredVariants.every(k => (v.combination || {})[k] === selected[k])
   )
   const effectivePrice = matchedVariant?.price ?? product?.price ?? 0
-  const effectiveStock = matchedVariant?.stock ?? product?.quantity ?? 0
+  // Stock is only meaningful once a matching combination is found (or the product has no variants) —
+  // before that, don't show a stale/misleading number pulled from the base product quantity.
+  const stockKnown = requiredVariants.length === 0 || Boolean(matchedVariant)
+  const effectiveStock = matchedVariant?.stock ?? (requiredVariants.length === 0 ? product?.quantity ?? 0 : 0)
   const structuredPriceValues = structuredVariants.map(v => Number(v.price)).filter(v => Number.isFinite(v) && v > 0)
   const minStructuredPrice = structuredPriceValues.length ? Math.min(...structuredPriceValues) : 0
   const maxStructuredPrice = structuredPriceValues.length ? Math.max(...structuredPriceValues) : 0
@@ -1192,7 +1195,7 @@ export default function ProductDetailPage() {
               </p>
             </div>
 
-            {effectiveStock > 0 && (
+            {stockKnown && effectiveStock > 0 && (
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${effectiveStock <= 5 ? 'bg-warning' : 'bg-success'}`} />
                 <span className={`text-sm font-medium ${effectiveStock <= 5 ? 'text-warning' : 'text-success'}`}>
@@ -1325,7 +1328,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {effectiveStock > 0 && (
+            {(!stockKnown || effectiveStock > 0) && (
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink-secondary">Qty:</span>
                 <div className="flex items-center gap-2 bg-surface rounded-xl p-1 ring-1 ring-border">
@@ -1338,36 +1341,36 @@ export default function ProductDetailPage() {
                   </button>
                   <span className="w-8 text-center text-sm font-semibold text-ink">{qty}</span>
                   <button
-                    onClick={() => setQty(q => Math.min(effectiveStock, q + 1))}
-                    disabled={qty >= effectiveStock}
+                    onClick={() => setQty(q => stockKnown ? Math.min(effectiveStock, q + 1) : q + 1)}
+                    disabled={stockKnown && qty >= effectiveStock}
                     className="qty-btn w-8 h-8 rounded-lg bg-white ring-1 ring-border flex items-center justify-center text-ink-secondary disabled:opacity-40"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <span className="text-xs text-ink-muted">({effectiveStock} available)</span>
+                {stockKnown && <span className="text-xs text-ink-muted">({effectiveStock} available)</span>}
               </div>
             )}
 
             <div className="flex gap-2.5">
               <button
                 onClick={handleAddToCart}
-                disabled={effectiveStock === 0 || addingToCart}
+                disabled={(stockKnown && effectiveStock === 0) || addingToCart}
                 className="add-btn flex-1 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {addingToCart
                   ? <RefreshCw className="w-4 h-4 animate-spin" />
                   : <ShoppingCart className="w-4 h-4" />
                 }
-                {effectiveStock === 0
-                  ? 'Out of Stock'
-                  : addingToCart
+                {addingToCart
                   ? 'Adding…'
                   : variantKeys.length > 0 && !allVariantsSelected
                   ? 'Select Options First'
+                  : stockKnown && effectiveStock === 0
+                  ? 'Out of Stock'
                   : 'Add to Cart'}
               </button>
-              {effectiveStock > 0 && (
+              {!(stockKnown && effectiveStock === 0) && (
                 <button
                   onClick={handleBuyNow}
                   className="buy-btn flex-1 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base"

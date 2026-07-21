@@ -819,7 +819,7 @@ export function Navbar() {
             </button>
           </form>
 
-          <div className="hidden md:flex items-center space-x-2 flex-shrink-0">
+          <div className="hidden md:flex items-center space-x-2 flex-shrink-0 ml-auto">
             {universityShortName && (
               <span className="flex items-center gap-1 text-xs font-medium text-ink-secondary whitespace-nowrap pr-2 border-r border-border mr-1">
                 <MapPin className="w-3.5 h-3.5 text-ink-muted flex-shrink-0" strokeWidth={1.75} />

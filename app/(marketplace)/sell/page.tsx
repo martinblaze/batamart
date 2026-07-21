@@ -283,12 +283,18 @@ function StepHeader({ num, title, subtitle }: { num: string; title: string; subt
 }
 
 // ── Variant Field Row ─────────────────────────────────────────────────────────
+interface SellVariantField {
+  key: string
+  label: string
+  suggestions: string[]
+}
+
 function VariantRow({
   field,
   values,
   onChange,
 }: {
-  field: VariantField
+  field: SellVariantField
   values: string[]
   onChange: (vals: string[]) => void
 }) {
@@ -508,7 +514,6 @@ export default function SellPage() {
   // Category system
   const [categoryKey, setCategoryKey]       = useState('')
   const [subcategoryKey, setSubcategoryKey] = useState('')
-  const [variantValues, setVariantValues]   = useState<Record<string, string[]>>({})
   const [variantPricing, setVariantPricing] = useState<Record<string, { price: string; stock: string }>>({})
   const [variantsEnabledToggle, setVariantsEnabledToggle] = useState(false)
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttributeDef[]>([])
@@ -531,7 +536,12 @@ export default function SellPage() {
 
   const categories    = getCategoryList()
   const subcategories = categoryKey ? getSubcategoryList(categoryKey) : []
-  const variantFields = []
+  // A Category Detail attribute becomes a sellable "variant" once the seller has
+  // picked 2+ values for it — e.g. Storage: 128GB, 256GB. Single-value attributes
+  // stay plain specs (shown in Item Specs on the product page).
+  const variantFields: SellVariantField[] = categoryAttributes
+    .filter((attr) => (attr.type === 'select' || attr.type === 'multi_select') && toStringArray(attributeValues[attr.key]).length >= 2)
+    .map((attr) => ({ key: attr.key, label: attr.label, suggestions: attr.options || [] }))
   const selectedCategoryDisplay = getCategoryDisplayInfo(categoryKey, subcategoryKey, '', '')
 
   // Restore draft after refresh/network issues
@@ -554,15 +564,6 @@ export default function SellPage() {
         }
         if (draft?.categoryKey) setCategoryKey(draft.categoryKey)
         if (draft?.subcategoryKey) setSubcategoryKey(draft.subcategoryKey)
-        if (draft?.variantValues) {
-          const nextVariants: Record<string, string[]> = {}
-          for (const [key, values] of Object.entries(draft.variantValues as Record<string, unknown>)) {
-            nextVariants[key] = Array.isArray(values)
-              ? values.map(v => limitText(String(v).trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12)
-              : []
-          }
-          setVariantValues(nextVariants)
-        }
         if (draft?.variantPricing) {
           const nextPricing: Record<string, { price: string; stock: string }> = {}
           for (const [key, row] of Object.entries(draft.variantPricing as Record<string, any>)) {
@@ -606,7 +607,6 @@ export default function SellPage() {
           descriptionEdited,
           categoryKey,
           subcategoryKey,
-          variantValues,
           variantPricing,
           variantsEnabledToggle,
           attributeValues,
@@ -616,7 +616,7 @@ export default function SellPage() {
         })
       )
     } catch {}
-  }, [draftHydrated, formData, description, descriptionEdited, categoryKey, subcategoryKey, variantValues, variantPricing, attributeValues, manuallyTouchedAttributes, tags, images])
+  }, [draftHydrated, formData, description, descriptionEdited, categoryKey, subcategoryKey, variantPricing, attributeValues, manuallyTouchedAttributes, tags, images])
 
   useEffect(() => {
     if (document.getElementById('sell-anim')) return
@@ -679,7 +679,6 @@ export default function SellPage() {
     if (!draftHydrated) return
     if (skipNextCategoryResetRef.current) { skipNextCategoryResetRef.current = false; return }
     setSubcategoryKey('')
-    setVariantValues({})
     setCategoryAttributes([])
     setAttributeValues({})
     setAttributeCustomInput({})
@@ -688,7 +687,6 @@ export default function SellPage() {
   useEffect(() => {
     if (!draftHydrated) return
     if (skipNextSubcategoryResetRef.current) { skipNextSubcategoryResetRef.current = false; return }
-    setVariantValues({})
     setVariantPricing({})
     setAttributeValues({})
     setAttributeCustomInput({})
@@ -891,10 +889,6 @@ export default function SellPage() {
     else if (e.key === 'Backspace' && !tagInput && tags.length > 0) removeTag(tags.length - 1)
   }
 
-  const setVariantField = (key: string, vals: string[]) => {
-    setVariantValues(prev => ({ ...prev, [key]: vals.map(v => limitText(v.trim(), SELL_LIMITS.variantValue)).filter(Boolean).slice(0, 12) }))
-  }
-
   const setAttributeValue = (key: string, value: any, markTouched = true) => {
     const attr = categoryAttributes.find(a => a.key === key)
     let nextValue = value
@@ -948,7 +942,6 @@ export default function SellPage() {
     setDimensionH('')
     setCategoryKey('')
     setSubcategoryKey('')
-    setVariantValues({})
     setVariantPricing({})
     setVariantsEnabledToggle(false)
     setCategoryAttributes([])
@@ -964,10 +957,10 @@ export default function SellPage() {
     localStorage.removeItem(SELL_DRAFT_KEY)
   }
 
-  const variantKeysForMatrix = Object.keys(variantValues).filter(k => (variantValues[k] || []).length > 0)
+  const variantKeysForMatrix = variantFields.map(f => f.key)
   const variantCombinations = variantKeysForMatrix.reduce<Record<string, string>[]>(
     (acc, key) => {
-      const values = variantValues[key] || []
+      const values = toStringArray(attributeValues[key])
       if (acc.length === 0) return values.map(v => ({ [key]: v }))
       const out: Record<string, string>[] = []
       for (const row of acc) {
@@ -1501,8 +1494,8 @@ export default function SellPage() {
                   <VariantRow
                     key={field.key}
                     field={field}
-                    values={variantValues[field.key] ?? []}
-                    onChange={vals => setVariantField(field.key, vals)}
+                    values={toStringArray(attributeValues[field.key])}
+                    onChange={vals => setAttributeValue(field.key, vals)}
                   />
                 ))}
               </div>

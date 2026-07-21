@@ -93,8 +93,11 @@ export default function QuickViewModal({ productId, onClose }: { productId: stri
   const allSelected = requiredVariants.length === 0 || requiredVariants.every((k) => selected[k])
   const matchedVariant = structuredVariants.find((v) => requiredVariants.every((k) => (v.combination || {})[k] === selected[k]))
   const effectivePrice = matchedVariant?.price ?? product?.price ?? 0
-  const effectiveStock = matchedVariant?.stock ?? product?.quantity ?? 0
+  // Before every option is picked there is no single "stock" figure yet —
+  // fall back to the base product quantity only once selection is complete.
+  const effectiveStock = matchedVariant ? matchedVariant.stock : (requiredVariants.length > 0 ? null : product?.quantity ?? 0)
   const isStructured = structuredVariants.length > 0
+  const variantSummary = Object.entries(selected).filter(([, v]) => v).map(([, v]) => v).join(' · ')
 
   // Auto-select single-value variant fields
   useEffect(() => {
@@ -180,7 +183,7 @@ export default function QuickViewModal({ productId, onClose }: { productId: stri
             <div>
               <h2 className="text-base font-semibold text-ink leading-snug line-clamp-2">{product.name}</h2>
               <p className="text-xl font-semibold text-primary mt-1">{fmt(effectivePrice)}</p>
-              {effectiveStock > 0 && effectiveStock <= 5 && (
+              {effectiveStock !== null && effectiveStock > 0 && effectiveStock <= 5 && (
                 <p className="text-xs font-semibold text-warning mt-0.5">Only {effectiveStock} left</p>
               )}
             </div>
@@ -221,6 +224,14 @@ export default function QuickViewModal({ productId, onClose }: { productId: stri
               )
             })}
 
+            {requiredVariants.length > 0 && (
+              <p className="text-xs font-medium text-ink-secondary">
+                {allSelected
+                  ? <>Selected: <span className="font-semibold text-primary">{variantSummary}</span></>
+                  : 'Select an option for each of the above before adding to cart'}
+              </p>
+            )}
+
             {error && <p className="text-xs font-semibold text-danger">{error}</p>}
 
             <div className="flex items-center gap-3">
@@ -236,11 +247,11 @@ export default function QuickViewModal({ productId, onClose }: { productId: stri
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={adding || effectiveStock === 0}
+                disabled={adding || (allSelected && effectiveStock === 0)}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white transition-all hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
               >
                 <ShoppingCart className="w-4 h-4" strokeWidth={1.75} />
-                {message ? message : adding ? 'Adding…' : effectiveStock === 0 ? 'Out of stock' : 'Add to cart'}
+                {message ? message : adding ? 'Adding…' : !allSelected ? 'Select options' : effectiveStock === 0 ? 'Out of stock' : 'Add to cart'}
               </button>
             </div>
 
