@@ -49,13 +49,13 @@ export function ReferralCard() {
   if (loading) return null
 
   return (
-    <div className="bg-white dark:bg-[#1E1E1E] rounded-xl border border-gray-200 dark:border-[#343434] overflow-hidden">
-      <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-100 dark:border-[#343434] flex items-center justify-between">
+    <div className="bg-white rounded-xl border border-border overflow-hidden">
+      <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Gift className="w-4 h-4 text-BATAMART-primary" />
-          <h2 className="font-bold text-gray-900 dark:text-[#E0E0E0] text-sm lg:text-base">REFERRAL PROGRAMME</h2>
+          <Gift className="w-4 h-4 text-primary" />
+          <h2 className="font-semibold text-ink text-sm lg:text-base">REFERRAL PROGRAMME</h2>
         </div>
-        <Link href="/referrals" className="text-BATAMART-primary text-sm font-medium flex items-center gap-1">
+        <Link href="/referrals" className="text-primary text-sm font-medium flex items-center gap-1">
           View All <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
@@ -63,34 +63,34 @@ export function ReferralCard() {
       <div className="p-4 lg:p-5 space-y-4">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-purple-50 dark:bg-purple-900/30 rounded-xl p-3 text-center">
-            <Users className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-            <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{totalReferrals}</p>
-            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Referrals</p>
+          <div className="bg-primary/10 rounded-xl p-3 text-center">
+            <Users className="w-5 h-5 text-primary mx-auto mb-1" />
+            <p className="font-semibold text-ink">{totalReferrals}</p>
+            <p className="text-xs text-ink-muted">Referrals</p>
           </div>
-          <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-3 text-center">
-            <TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
-            <p className="font-bold text-gray-900 dark:text-[#E0E0E0]">{fmt(totalEarnings)}</p>
-            <p className="text-xs text-gray-500 dark:text-[#A0A0A0]">Earned</p>
+          <div className="bg-success/10 rounded-xl p-3 text-center">
+            <TrendingUp className="w-5 h-5 text-success mx-auto mb-1" />
+            <p className="font-semibold text-ink">{fmt(totalEarnings)}</p>
+            <p className="text-xs text-ink-muted">Earned</p>
           </div>
         </div>
 
         {/* Referral code */}
         <div>
-          <p className="text-xs text-gray-400 dark:text-[#A0A0A0] mb-1.5">Your referral code</p>
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#232323] rounded-lg px-3 py-2 border border-gray-200 dark:border-[#343434]">
-            <span className="font-extrabold text-BATAMART-primary tracking-widest flex-1 text-sm">
+          <p className="text-xs text-ink-muted mb-1.5">Your referral code</p>
+          <div className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2 border border-border">
+            <span className="font-semibold text-primary tracking-widest flex-1 text-sm">
               {referralCode}
             </span>
-            <button onClick={copy} className="text-BATAMART-primary hover:text-BATAMART-dark transition-colors">
-              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            <button onClick={copy} className="text-primary hover:brightness-95 transition-colors">
+              {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         <Link
           href="/referrals"
-          className="block w-full text-center py-2.5 rounded-xl bg-BATAMART-primary text-white text-sm font-semibold hover:bg-BATAMART-dark transition-colors"
+          className="block w-full text-center py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:brightness-95 transition-colors"
         >
           Invite Friends & Earn
         </Link>

@@ -35,21 +35,21 @@ export default function FilterGroup({
   const hiddenCount = Math.max(0, options.length - visibleOptions.length)
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-[#272b33] dark:bg-[#0f1115]">
+    <div className="rounded-xl border border-border bg-white">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
       >
-        <span className="flex items-center gap-2 text-sm font-black text-gray-900 dark:text-[#e5e7eb]">
+        <span className="flex items-center gap-2 text-sm font-medium text-ink">
           {title}
           {selectedCount > 0 && (
-            <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-black text-white">
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-white">
               {selectedCount}
             </span>
           )}
         </span>
-        <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-ink-secondary transition-transform duration-150 ${open ? 'rotate-180' : ''}`} strokeWidth={1.75} />
       </button>
 
       {open && (
@@ -60,18 +60,18 @@ export default function FilterGroup({
               return (
                 <label
                   key={option.value}
-                  className="flex cursor-pointer items-center justify-between gap-3 rounded-xl px-2 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 dark:text-[#cbd5e1] dark:hover:bg-white/5"
+                  className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-ink-secondary transition-colors hover:bg-surface"
                 >
                   <span className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => onChange(option.value)}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary/40"
                     />
                     <span className="font-medium">{option.value}</span>
                   </span>
-                  <span className="text-xs font-semibold text-gray-400">{option.count}</span>
+                  <span className="text-xs font-medium text-ink-muted">{option.count}</span>
                 </label>
               )
             })}
@@ -81,7 +81,7 @@ export default function FilterGroup({
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="mt-3 text-xs font-black text-indigo-600 hover:underline"
+              className="mt-3 text-xs font-medium text-primary hover:underline"
             >
               Show {hiddenCount} more
             </button>
@@ -90,7 +90,7 @@ export default function FilterGroup({
             <button
               type="button"
               onClick={() => setExpanded(false)}
-              className="mt-3 text-xs font-black text-indigo-600 hover:underline"
+              className="mt-3 text-xs font-medium text-primary hover:underline"
             >
               Show less
             </button>

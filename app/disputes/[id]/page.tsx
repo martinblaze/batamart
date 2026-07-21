@@ -49,55 +49,55 @@ const STATUS_CONFIG: Record<string, {
   OPEN: {
     label: 'Case Opened',
     sublabel: 'Awaiting admin review',
-    color: 'text-blue-700',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    dot: 'bg-blue-500',
+    color: 'text-primary',
+    bg: 'bg-primary/10',
+    border: 'border-primary/30',
+    dot: 'bg-primary',
     step: 1,
   },
   UNDER_REVIEW: {
     label: 'Under Review',
     sublabel: 'Admin is reviewing your case',
-    color: 'text-amber-700',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    dot: 'bg-amber-500',
+    color: 'text-warning',
+    bg: 'bg-warning/10',
+    border: 'border-warning/30',
+    dot: 'bg-warning',
     step: 2,
   },
   RESOLVED_BUYER_FAVOR: {
     label: 'Resolved — Refund Issued',
     sublabel: 'Case closed in your favour',
-    color: 'text-emerald-700',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    dot: 'bg-emerald-500',
+    color: 'text-success',
+    bg: 'bg-success/10',
+    border: 'border-success/30',
+    dot: 'bg-success',
     step: 3,
   },
   RESOLVED_SELLER_FAVOR: {
     label: 'Resolved — No Refund',
     sublabel: 'Case closed in seller\'s favour',
-    color: 'text-slate-700',
-    bg: 'bg-slate-50',
-    border: 'border-slate-200',
-    dot: 'bg-slate-500',
+    color: 'text-ink-secondary',
+    bg: 'bg-surface',
+    border: 'border-border',
+    dot: 'bg-ink-muted',
     step: 3,
   },
   RESOLVED_COMPROMISE: {
     label: 'Resolved — Partial Refund',
     sublabel: 'Compromise reached',
-    color: 'text-violet-700',
-    bg: 'bg-violet-50',
-    border: 'border-violet-200',
-    dot: 'bg-violet-500',
+    color: 'text-primary',
+    bg: 'bg-primary/10',
+    border: 'border-primary/30',
+    dot: 'bg-primary',
     step: 3,
   },
   DISMISSED: {
     label: 'Case Dismissed',
     sublabel: 'Insufficient grounds for dispute',
-    color: 'text-red-700',
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    dot: 'bg-red-400',
+    color: 'text-danger',
+    bg: 'bg-danger/10',
+    border: 'border-danger/30',
+    dot: 'bg-danger',
     step: 3,
   },
 }
@@ -248,10 +248,10 @@ export default function DisputeDetailsPage() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center">
+      <div className="min-h-screen bg-surface dark:bg-[#000000] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-gray-500 font-medium">Loading case details…</p>
+          <div className="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-ink-secondary font-medium">Loading case details…</p>
         </div>
       </div>
     )
@@ -259,16 +259,16 @@ export default function DisputeDetailsPage() {
 
   if (!dispute) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-surface dark:bg-[#000000] flex items-center justify-center px-4">
         <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-red-500" />
+          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-danger" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Case Not Found</h2>
-          <p className="text-gray-500 mb-6 text-sm">{error || 'This dispute does not exist or you don\'t have access to it.'}</p>
+          <h2 className="text-xl font-semibold text-ink mb-2">Case Not Found</h2>
+          <p className="text-ink-secondary mb-6 text-sm">{error || 'This dispute does not exist or you don\'t have access to it.'}</p>
           <button
             onClick={() => router.push('/orders')}
-            className="px-6 py-2.5 bg-gray-900 text-white rounded-lg font-medium text-sm hover:bg-gray-800 transition-colors"
+            className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:brightness-95 transition-colors"
           >
             Back to Orders
           </button>
@@ -279,8 +279,8 @@ export default function DisputeDetailsPage() {
 
   const isResolved = dispute.status.startsWith('RESOLVED_') || dispute.status === 'DISMISSED'
   const statusInfo = STATUS_CONFIG[dispute.status] ?? {
-    label: dispute.status, sublabel: '', color: 'text-gray-700',
-    bg: 'bg-gray-50', border: 'border-gray-200', dot: 'bg-gray-400', step: 1,
+    label: dispute.status, sublabel: '', color: 'text-ink-secondary',
+    bg: 'bg-surface', border: 'border-border', dot: 'bg-ink-muted', step: 1,
   }
   const preferenceInfo = dispute.resolutionPreference
     ? RESOLUTION_LABELS[dispute.resolutionPreference]
@@ -290,23 +290,23 @@ export default function DisputeDetailsPage() {
   const ticketId = `BATAMART-${dispute.id.slice(-8).toUpperCase()}`
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
 
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => router.push('/orders')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors"
+            className="flex items-center gap-2 text-ink-secondary hover:text-ink text-sm font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Orders
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-gray-400 tracking-wider">{ticketId}</span>
+            <span className="text-xs font-mono font-semibold text-ink-muted tracking-wider">{ticketId}</span>
             {refreshing && (
-              <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 text-ink-muted animate-spin" />
             )}
           </div>
 
@@ -320,11 +320,11 @@ export default function DisputeDetailsPage() {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* ── Case header ─────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
 
           {/* Product strip */}
-          <div className="flex items-center gap-4 p-5 border-b border-gray-100">
-            <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+          <div className="flex items-center gap-4 p-5 border-b border-border">
+            <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
               <img
                 src={dispute.order.product.images[0] || '/placeholder.png'}
                 alt={dispute.order.product.name}
@@ -332,14 +332,14 @@ export default function DisputeDetailsPage() {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 truncate">{dispute.order.product.name}</p>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="font-semibold text-ink truncate">{dispute.order.product.name}</p>
+              <p className="text-sm text-ink-secondary mt-0.5">
                 Order #{dispute.order.orderNumber} &middot; ₦{dispute.order.totalAmount.toLocaleString()}
               </p>
             </div>
             <button
               onClick={() => router.push(`/orders/${dispute.order.id}`)}
-              className="flex items-center gap-1 text-xs text-orange-600 font-semibold hover:text-orange-700 transition-colors flex-shrink-0"
+              className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline transition-colors flex-shrink-0"
             >
               View Order <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -356,19 +356,19 @@ export default function DisputeDetailsPage() {
                 return (
                   <div key={step.key} className="flex items-center flex-1 last:flex-none">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? 'bg-gray-900 border-gray-900'
-                          : active ? 'bg-orange-500 border-orange-500'
-                            : 'bg-white border-gray-200'
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? 'bg-ink border-ink'
+                          : active ? 'bg-primary border-primary'
+                            : 'bg-white border-border'
                         }`}>
-                        <StepIcon className={`w-4 h-4 ${(done || active) ? 'text-white' : 'text-gray-300'}`} />
+                        <StepIcon className={`w-4 h-4 ${(done || active) ? 'text-white' : 'text-ink-muted'}`} />
                       </div>
-                      <p className={`text-xs font-semibold mt-1.5 whitespace-nowrap ${active ? 'text-orange-600' : done ? 'text-gray-900' : 'text-gray-400'
+                      <p className={`text-xs font-semibold mt-1.5 whitespace-nowrap ${active ? 'text-primary' : done ? 'text-ink' : 'text-ink-muted'
                         }`}>
                         {step.label}
                       </p>
                     </div>
                     {!last && (
-                      <div className={`flex-1 h-0.5 mx-3 mb-4 rounded-full transition-colors ${done ? 'bg-gray-900' : 'bg-gray-200'
+                      <div className={`flex-1 h-0.5 mx-3 mb-4 rounded-full transition-colors ${done ? 'bg-ink' : 'bg-border'
                         }`} />
                     )}
                   </div>
@@ -391,65 +391,65 @@ export default function DisputeDetailsPage() {
         <div className="grid sm:grid-cols-2 gap-4">
 
           {/* Your complaint */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Your Complaint</p>
-            <p className="text-sm text-gray-800 leading-relaxed">{dispute.reason}</p>
-            <p className="text-xs text-gray-400 mt-3">Filed {formatDateTime(dispute.createdAt)}</p>
+          <div className="bg-white rounded-2xl border border-border p-5">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Your Complaint</p>
+            <p className="text-sm text-ink leading-relaxed">{dispute.reason}</p>
+            <p className="text-xs text-ink-muted mt-3">Filed {formatDateTime(dispute.createdAt)}</p>
           </div>
 
           {/* Resolution request / outcome */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <div className="bg-white rounded-2xl border border-border p-5">
             {isResolved && dispute.resolution ? (
               <>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Admin Decision</p>
-                <p className="text-sm text-gray-800 leading-relaxed">{dispute.resolution}</p>
+                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Admin Decision</p>
+                <p className="text-sm text-ink leading-relaxed">{dispute.resolution}</p>
                 {dispute.refundAmount != null && dispute.refundAmount > 0 && (
-                  <div className="mt-3 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-bold text-emerald-700">
+                  <div className="mt-3 inline-flex items-center gap-2 bg-success/10 border border-success/30 px-3 py-1.5 rounded-lg">
+                    <CheckCircle2 className="w-4 h-4 text-success" />
+                    <span className="text-sm font-semibold text-success">
                       ₦{dispute.refundAmount.toLocaleString()} refund
                     </span>
                   </div>
                 )}
-                <p className="text-xs text-gray-400 mt-3">Resolved {formatDateTime(dispute.updatedAt)}</p>
+                <p className="text-xs text-ink-muted mt-3">Resolved {formatDateTime(dispute.updatedAt)}</p>
               </>
             ) : preferenceInfo ? (
               <>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Requested Resolution</p>
+                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Requested Resolution</p>
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <preferenceInfo.icon className="w-4 h-4 text-orange-600" />
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <preferenceInfo.icon className="w-4 h-4 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{preferenceInfo.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{preferenceInfo.desc}</p>
+                    <p className="text-sm font-semibold text-ink">{preferenceInfo.label}</p>
+                    <p className="text-xs text-ink-secondary mt-0.5">{preferenceInfo.desc}</p>
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Resolution</p>
-                <p className="text-sm text-gray-400 italic">Pending admin decision</p>
+                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Resolution</p>
+                <p className="text-sm text-ink-muted italic">Pending admin decision</p>
               </>
             )}
           </div>
         </div>
 
         {/* ── Chat ────────────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
 
           {/* Chat header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-            <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
               <Shield className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-900">BATAMARTMart Support</p>
-              <p className="text-xs text-gray-400">Dispute Resolution Team · Replies within 24h</p>
+              <p className="text-sm font-semibold text-ink">BATAMARTMart Support</p>
+              <p className="text-xs text-ink-muted">Dispute Resolution Team · Replies within 24h</p>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${isResolved ? 'bg-gray-400' : 'bg-emerald-500 animate-pulse'}`} />
-              <span className="text-xs text-gray-500 font-medium">
+              <span className={`w-2 h-2 rounded-full ${isResolved ? 'bg-ink-muted' : 'bg-success animate-pulse'}`} />
+              <span className="text-xs text-ink-secondary font-medium">
                 {isResolved ? 'Closed' : 'Active'}
               </span>
             </div>
@@ -460,16 +460,16 @@ export default function DisputeDetailsPage() {
 
             {/* System: case opened */}
             <div className="flex justify-center">
-              <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-full font-medium">
+              <span className="px-3 py-1 bg-surface text-ink-secondary text-xs rounded-full font-medium">
                 Case opened · {formatDate(dispute.createdAt)}
               </span>
             </div>
 
             {dispute.messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <MessageSquare className="w-10 h-10 text-gray-200 mb-3" />
-                <p className="text-sm font-semibold text-gray-400">No messages yet</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <MessageSquare className="w-10 h-10 text-border mb-3" />
+                <p className="text-sm font-semibold text-ink-muted">No messages yet</p>
+                <p className="text-xs text-ink-muted mt-1">
                   {isResolved
                     ? 'This case was resolved without additional messages.'
                     : 'Send a message to the support team below.'}
@@ -480,9 +480,9 @@ export default function DisputeDetailsPage() {
                 <div key={group.date} className="space-y-3">
                   {/* Date separator */}
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-gray-100" />
-                    <span className="text-xs text-gray-400 font-medium">{group.date}</span>
-                    <div className="flex-1 h-px bg-gray-100" />
+                    <div className="flex-1 h-px bg-surface" />
+                    <span className="text-xs text-ink-muted font-medium">{group.date}</span>
+                    <div className="flex-1 h-px bg-surface" />
                   </div>
 
                   {group.messages.map((msg) => {
@@ -493,22 +493,22 @@ export default function DisputeDetailsPage() {
                       <div key={msg.id} className={`flex ${isBuyer ? 'justify-end' : 'justify-start'}`}>
                         {/* Admin avatar */}
                         {isAdmin && (
-                          <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+                          <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1">
                             <Shield className="w-3.5 h-3.5 text-white" />
                           </div>
                         )}
 
                         <div className={`max-w-xs lg:max-w-md space-y-1 ${isBuyer ? 'items-end' : 'items-start'} flex flex-col`}>
                           {isAdmin && (
-                            <p className="text-xs font-semibold text-gray-500 ml-1">Support Team</p>
+                            <p className="text-xs font-semibold text-ink-secondary ml-1">Support Team</p>
                           )}
                           <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${isBuyer
-                              ? 'bg-orange-500 text-white rounded-br-md'
-                              : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                              ? 'bg-primary text-white rounded-br-md'
+                              : 'bg-surface text-ink rounded-bl-md'
                             }`}>
                             {msg.message}
                           </div>
-                          <p className={`text-[11px] px-1 ${isBuyer ? 'text-gray-400 text-right' : 'text-gray-400'}`}>
+                          <p className={`text-[11px] px-1 ${isBuyer ? 'text-ink-muted text-right' : 'text-ink-muted'}`}>
                             {formatTime(msg.createdAt)}
                           </p>
                         </div>
@@ -523,10 +523,10 @@ export default function DisputeDetailsPage() {
           </div>
 
           {/* Input area */}
-          <div className="border-t border-gray-100 p-4">
+          <div className="border-t border-border p-4">
             {error && (
-              <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs text-red-700">{error}</p>
+              <div className="mb-3 px-3 py-2 bg-danger/10 border border-danger/30 rounded-lg">
+                <p className="text-xs text-danger">{error}</p>
               </div>
             )}
 
@@ -538,13 +538,13 @@ export default function DisputeDetailsPage() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Message the support team…"
-                  className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-400 transition-all"
+                  className="flex-1 px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent placeholder-ink-muted transition-all"
                   disabled={sending}
                 />
                 <button
                   type="submit"
                   disabled={sending || !newMessage.trim()}
-                  className="w-10 h-10 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
+                  className="w-10 h-10 bg-primary hover:brightness-95 disabled:bg-border text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
                 >
                   {sending
                     ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -554,8 +554,8 @@ export default function DisputeDetailsPage() {
               </form>
             ) : (
               <div className="flex items-center justify-center gap-2 py-2">
-                <XCircle className="w-4 h-4 text-gray-400" />
-                <p className="text-sm text-gray-400">
+                <XCircle className="w-4 h-4 text-ink-muted" />
+                <p className="text-sm text-ink-muted">
                   This case is closed. No further messages can be sent.
                 </p>
               </div>
@@ -565,8 +565,8 @@ export default function DisputeDetailsPage() {
 
         {/* ── Info footer ─────────────────────────────────────────────────── */}
         {!isResolved && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">What happens next</p>
+          <div className="bg-white rounded-2xl border border-border p-5">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">What happens next</p>
             <div className="space-y-3">
               {[
                 { icon: Shield, text: 'Your case is being reviewed by our admin team.' },
@@ -577,10 +577,10 @@ export default function DisputeDetailsPage() {
                   : []),
               ].map(({ icon: Icon, text }, idx) => (
                 <div key={idx} className="flex items-start gap-3">
-                  <div className="w-7 h-7 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-gray-500" />
+                  <div className="w-7 h-7 bg-surface border border-border rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed pt-0.5">{text}</p>
+                  <p className="text-sm text-ink-secondary leading-relaxed pt-0.5">{text}</p>
                 </div>
               ))}
             </div>

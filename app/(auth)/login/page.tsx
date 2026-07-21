@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { AlertTriangle, Bike, Mail } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
+import { Logo } from '@/components/layout/Logo'
 
 function LoginForm() {
   const router = useRouter()
@@ -86,35 +88,28 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 3h18v4H3V3zm0 6h18v12H3V9zm2 2v8h14v-8H5zm2 2h10v4H7v-4z" />
-              </svg>
-            </div>
-            <span className="font-bold text-2xl bg-gradient-to-r from-BATAMART-primary to-BATAMART-secondary bg-clip-text text-transparent">
-              BATAMART
-            </span>
+          <div className="inline-flex items-center mb-4">
+            <Logo size={40} />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-500">Login to your BATAMART account</p>
+          <h1 className="text-[28px] font-semibold text-ink mb-2">Welcome back</h1>
+          <p className="text-ink-secondary">Log in to your BataMart account</p>
         </div>
 
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-2xl shadow-xl p-8">
+        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
 
           {/* Suspension message */}
           {suspensionMessage && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="mb-6 bg-danger/5 border border-danger/20 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <span className="text-red-500 text-xl flex-shrink-0">Warning</span>
+                <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" strokeWidth={1.75} />
                 <div>
-                  <p className="font-semibold text-red-800 text-sm">Account Suspended</p>
-                  <p className="text-red-700 text-sm mt-1 whitespace-pre-line">{suspensionMessage}</p>
+                  <p className="font-medium text-danger text-sm">Account suspended</p>
+                  <p className="text-danger text-sm mt-1 whitespace-pre-line">{suspensionMessage}</p>
                 </div>
               </div>
             </div>
@@ -122,25 +117,25 @@ function LoginForm() {
 
           {/* Rider error */}
           {error === '__RIDER__' ? (
-            <div className="mb-6 bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <div className="mb-6 bg-primary/5 border border-primary/20 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">Rider</span>
+                <Bike className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={1.75} />
                 <div>
-                  <p className="font-semibold text-purple-900 text-sm">Rider Account Detected</p>
-                  <p className="text-purple-700 text-sm mt-1">
-                    Rider accounts cannot access the marketplace. Please use the Rider Login instead.
+                  <p className="font-medium text-ink text-sm">Rider account detected</p>
+                  <p className="text-ink-secondary text-sm mt-1">
+                    Rider accounts cannot access the marketplace. Please use the rider login instead.
                   </p>
                   <Link
                     href="/rider/login"
-                    className="inline-block mt-3 px-4 py-2 bg-purple-600 text-white text-sm font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                    className="inline-flex items-center justify-center mt-3 h-9 px-4 bg-primary text-white text-sm font-medium rounded-lg hover:brightness-95 transition-all"
                   >
-                    Go to Rider Login
+                    Go to rider login
                   </Link>
                 </div>
               </div>
             </div>
           ) : error ? (
-            <p className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>
+            <p className="mb-4 bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">{error}</p>
           ) : null}
 
           {/* -- PRIMARY: Google Sign-In -- */}
@@ -152,84 +147,82 @@ function LoginForm() {
             />
           </div>
 
-          <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended | Fast | Secure
+          <p className="text-center text-xs text-ink-muted mb-5">
+            Recommended — fast and secure
           </p>
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-xs text-gray-400 font-semibold">or continue with email</span>
-            <div className="h-px bg-gray-200 flex-1" />
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-ink-muted font-medium">or continue with email</span>
+            <div className="h-px bg-border flex-1" />
           </div>
 
           {/* -- SECONDARY: Email/Password (collapsed by default) -- */}
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
-              className="w-full py-3 rounded-lg border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-lg border border-border text-ink-secondary font-medium text-sm hover:bg-surface transition-all flex items-center justify-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Use email &amp; password instead
+              <Mail className="w-4 h-4" strokeWidth={1.75} />
+              Use email & password instead
             </button>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-[#272b33] rounded-lg focus:border-BATAMART-primary focus:outline-none bg-white dark:bg-[#0b0d12] text-gray-900 dark:text-[#e5e7eb]"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="Enter your password"
                 />
               </div>
 
               <div className="text-right">
-                <Link href="/forgot-password" className="text-sm text-BATAMART-primary hover:underline font-semibold">
-                  Forgot Password?
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline font-medium">
+                  Forgot password?
                 </Link>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
+                className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? 'Logging in…' : 'Log in'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowEmailForm(false)}
-                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="w-full text-center text-xs text-ink-muted hover:text-ink-secondary transition-colors"
               >
-                Back to Google Sign-In
+                Back to Google sign-in
               </button>
             </form>
           )}
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm">
+            <p className="text-ink-secondary text-sm">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-BATAMART-primary font-semibold hover:underline">Sign Up</Link>
+              <Link href="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
             </p>
           </div>
         </div>
@@ -241,8 +234,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#000000]">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
       </div>
     }>
       <LoginForm />
@@ -263,4 +256,3 @@ function buildSuspensionMessage(reason: string | null, until: string | null): st
   }
   return `Your account is suspended until ${untilDate.toLocaleDateString('en-NG', { dateStyle: 'long' })}.\n\nReason: ${reasonText}\n\nContact support if you believe this is an error.`
 }
-

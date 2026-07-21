@@ -120,8 +120,8 @@ export default function SearchAutocomplete({
 
   return (
     <div className="relative w-full">
-      <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-[#272b33] dark:bg-[#0f1115] dark:focus-within:ring-indigo-900/30">
-        <Search className="h-4 w-4 text-gray-400 dark:text-[#72819a]" />
+      <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2.5 shadow-sm transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+        <Search className="h-4 w-4 text-ink-muted" />
         <input
           ref={inputRef}
           value={value}
@@ -154,33 +154,33 @@ export default function SearchAutocomplete({
             }
           }}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-[#e5e7eb] dark:placeholder:text-[#72819a]"
+          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
         />
         {trimmed ? (
-          <button type="button" onClick={() => { onChange(''); setLive([]) }} className="rounded-full p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">
+          <button type="button" onClick={() => { onChange(''); setLive([]) }} className="rounded-full p-1 text-ink-muted hover:bg-surface">
             <ChevronDown className="h-4 w-4 rotate-90" />
           </button>
         ) : null}
       </div>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-2xl dark:border-[#272b33] dark:bg-[#0f1115]">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-3xl border border-border bg-white shadow-soft">
           {!trimmed && (
-            <div className="border-b border-gray-100 px-4 py-3 dark:border-[#272b33]">
-              <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-[#72819a]">Recent searches</p>
+            <div className="border-b border-border px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Recent searches</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {recent.length > 0 ? recent.map((item) => (
-                  <button key={item} type="button" onClick={() => choose(item)} className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 dark:bg-[#141821] dark:text-[#d1d5db]">
+                  <button key={item} type="button" onClick={() => choose(item)} className="inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary hover:bg-primary/10 hover:text-primary">
                     <Clock3 className="h-3 w-3" /> {item}
                   </button>
-                )) : <span className="text-xs text-gray-400 dark:text-[#72819a]">No recent searches yet.</span>}
+                )) : <span className="text-xs text-ink-muted">No recent searches yet.</span>}
               </div>
             </div>
           )}
 
           <div className="px-4 py-3">
-            <p className="text-[11px] font-black uppercase tracking-wider text-gray-400 dark:text-[#72819a]">{trimmed ? 'Suggestions' : 'Popular searches'}</p>
-            {loading && <p className="mt-2 text-xs text-gray-400 dark:text-[#72819a]">Searching...</p>}
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">{trimmed ? 'Suggestions' : 'Popular searches'}</p>
+            {loading && <p className="mt-2 text-xs text-ink-muted">Searching...</p>}
             <div className="mt-2 space-y-1">
               {(trimmed ? live : popular).length > 0 ? (trimmed ? live : popular).map((item, index) => (
                 <button
@@ -188,23 +188,23 @@ export default function SearchAutocomplete({
                   key={`${item.type}-${item.text}-${index}`}
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => choose(item.text)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-left transition ${activeIndex === index ? 'bg-indigo-50 dark:bg-white/8' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
+                  className={`flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2 text-left transition ${activeIndex === index ? 'bg-primary/10' : 'hover:bg-surface'}`}
                 >
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-gray-800 dark:text-[#e5e7eb]">
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-secondary">
                     {trimmed ? highlightMatch(item.text, trimmed) : item.text}
                   </span>
-                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-[10px] font-black text-gray-500 dark:bg-[#1a1f2a] dark:text-[#94a3b8]">
+                  <span className="shrink-0 rounded-full bg-surface px-2 py-1 text-[10px] font-semibold text-ink-muted">
                     {item.category || (item.type === 'popular' ? 'Popular' : item.type)}
                   </span>
                 </button>
               )) : (
-                <div className="py-4 text-sm text-gray-500 dark:text-[#94a3b8]">No suggestions found.</div>
+                <div className="py-4 text-sm text-ink-muted">No suggestions found.</div>
               )}
             </div>
           </div>
 
-          <div className="border-t border-gray-100 px-4 py-3 dark:border-[#272b33]">
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-[#94a3b8]">
+          <div className="border-t border-border px-4 py-3">
+            <div className="flex items-center gap-2 text-xs text-ink-muted">
               <Sparkles className="h-3.5 w-3.5" />
               Tip: press Enter to search, Esc to close.
             </div>

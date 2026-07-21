@@ -112,7 +112,7 @@ export default function GoogleAuthButton({
 
   if (!clientId) {
     return (
-      <div className="w-full text-center text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+      <div className="w-full text-center text-xs text-warning bg-warning/5 border border-warning/20 rounded-lg px-3 py-2">
         Google Sign-In is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID.
       </div>
     )
@@ -120,7 +120,7 @@ export default function GoogleAuthButton({
 
   if (scriptError) {
     return (
-      <div className="w-full text-center text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+      <div className="w-full text-center text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-3 py-2">
         {scriptError}
       </div>
     )
@@ -130,7 +130,7 @@ export default function GoogleAuthButton({
     <div className="w-full">
       <div ref={buttonRef} className="w-full flex justify-center" />
       {!ready && (
-        <div className="mt-2 text-center text-xs text-gray-500">
+        <div className="mt-2 text-center text-xs text-ink-muted">
           Loading Google sign-in…
         </div>
       )}

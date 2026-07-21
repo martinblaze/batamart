@@ -7,7 +7,8 @@ import {
   User, ShoppingBag, Store, PlusCircle, Wallet, Package,
   AlertTriangle, LogOut, ChevronRight, MapPin, Phone,
   Home, Mail, Edit2, Check, X, Loader2, Menu, Gift,
-  Sparkles, Bell, BellOff, Shield, Star, Search, Sun, Moon,
+  Sparkles, Shield, Star, Search, Sun, Moon,
+  Share, SquarePlus, CheckCircle2, BellRing, BellOff,
 } from 'lucide-react'
 import { ReferralCard } from '@/components/ui/ReferralCard'
 import { usePushSubscription } from '@/hooks/usePushSubscription'
@@ -27,15 +28,15 @@ const PROFILE_CSS = `
   .fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
 
   .header-gradient {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    background: var(--color-primary);
   }
 
   .nav-item {
     transition: background 0.12s ease, color 0.12s ease, padding-left 0.12s ease;
   }
   .nav-item:hover {
-    background: #f5f3ff;
-    color: #6366f1;
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary);
     padding-left: 20px;
   }
 
@@ -48,28 +49,18 @@ const PROFILE_CSS = `
     transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   }
   .input-field:focus {
-    border-color: #6366f1 !important;
+    border-color: var(--color-primary) !important;
     background: white !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
     outline: none;
   }
 
   .save-btn {
-    background: linear-gradient(135deg, #6366f1, #4c1d95);
+    background: var(--color-primary);
     transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease;
   }
-  .save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.35); }
+  .save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 35%, transparent); }
   .save-btn:active:not(:disabled) { transform: scale(0.97); }
-
-  @keyframes shimmerAnim {
-    0%   { background-position: -600px 0; }
-    100% { background-position:  600px 0; }
-  }
-  .shimmer {
-    background: linear-gradient(90deg, #f3f4f6 25%, #e9eaec 50%, #f3f4f6 75%);
-    background-size: 1200px 100%;
-    animation: shimmerAnim 1.5s ease-in-out infinite;
-  }
 
   .product-thumb {
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
@@ -81,7 +72,7 @@ const PROFILE_CSS = `
     transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
   }
   .tag-chip:hover {
-    background: #6366f1;
+    background: var(--color-primary);
     color: white;
     transform: scale(1.05);
   }
@@ -99,59 +90,19 @@ const PROFILE_CSS = `
     transform: translateY(-1px);
   }
 
-  .dark .profile-page { background: #000000 !important; }
-  .dark .profile-page .bg-white { background-color: #0f1115 !important; }
-  .dark .profile-page .bg-gray-50 { background-color: #151922 !important; }
-  .dark .profile-page .bg-gray-100 { background-color: #1a1f2a !important; }
-  .dark .profile-page .bg-indigo-50 { background-color: rgba(99, 102, 241, 0.2) !important; }
-  .dark .profile-page .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.18) !important; }
-  .dark .profile-page .bg-violet-50 { background-color: rgba(139, 92, 246, 0.2) !important; }
-  .dark .profile-page .bg-blue-50 { background-color: rgba(59, 130, 246, 0.18) !important; }
-  .dark .profile-page .bg-amber-50 { background-color: rgba(245, 158, 11, 0.18) !important; }
-  .dark .profile-page .border-gray-50,
-  .dark .profile-page .border-gray-100,
-  .dark .profile-page .border-gray-200 { border-color: #272b33 !important; }
-  .dark .profile-page .text-gray-900 { color: #f8fafc !important; }
-  .dark .profile-page .text-gray-800 { color: #e2e8f0 !important; }
-  .dark .profile-page .text-gray-700 { color: #cbd5e1 !important; }
-  .dark .profile-page .text-gray-600 { color: #94a3b8 !important; }
-  .dark .profile-page .text-gray-500 { color: #94a3b8 !important; }
-  .dark .profile-page .text-gray-400 { color: #64748b !important; }
-  .dark .profile-page .text-indigo-600 { color: #a5b4fc !important; }
-  .dark .profile-page .text-indigo-700 { color: #c7d2fe !important; }
-  .dark .profile-page .text-emerald-700 { color: #6ee7b7 !important; }
-  .dark .profile-page .text-red-700 { color: #fca5a5 !important; }
-  .dark .profile-page .text-red-600 { color: #fca5a5 !important; }
-  .dark .profile-page .text-red-500 { color: #f87171 !important; }
-  .dark .profile-page .text-blue-600 { color: #93c5fd !important; }
-  .dark .profile-page .text-amber-500 { color: #fcd34d !important; }
-  .dark .profile-page .nav-item:hover {
-    background: #161a22;
-    color: #a5b4fc;
-  }
-  .dark .profile-page .section-card:hover { box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45); }
   .dark .profile-page .input-field {
-    background: #12161d !important;
-    border-color: #2f3642 !important;
-    color: #f8fafc !important;
+    background: var(--color-background) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-primary) !important;
   }
-  .dark .profile-page .input-field::placeholder { color: #64748b; }
+  .dark .profile-page .input-field::placeholder { color: var(--color-text-muted); }
   .dark .profile-page .input-field:focus {
-    border-color: #818cf8 !important;
-    background: #0f1115 !important;
-    box-shadow: 0 0 0 3px rgba(129,140,248,0.18);
-  }
-  .dark .profile-page .shimmer {
-    background: linear-gradient(90deg, #151922 25%, #1d2330 50%, #151922 75%);
-    background-size: 1200px 100%;
-  }
-  .dark .profile-page .tag-chip {
-    background: #151922 !important;
-    color: #cbd5e1 !important;
-    border-color: #272b33 !important;
+    border-color: var(--color-primary) !important;
+    background: var(--color-background) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
   .dark .profile-page .tag-chip:hover {
-    background: #6366f1 !important;
+    background: var(--color-primary) !important;
     color: #ffffff !important;
     border-color: transparent !important;
   }
@@ -295,12 +246,12 @@ export default function MyProfilePage() {
   }
 
   if (loading || !user) return (
-    <div className="profile-page min-h-screen flex items-center justify-center bg-[#f0f2f5] dark:bg-[#000000]">
+    <div className="profile-page min-h-screen flex items-center justify-center bg-surface dark:bg-[#000000]">
       <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
-        <p className="text-gray-500 font-semibold">Loading your profile…</p>
+        <p className="text-ink-secondary font-semibold">Loading your profile…</p>
       </div>
     </div>
   )
@@ -317,63 +268,62 @@ export default function MyProfilePage() {
   ]
 
   const roleLabel = user.role === 'SELLER' ? 'Seller' : user.role === 'RIDER' ? 'Rider' : user.role === 'ADMIN' ? 'Admin' : 'Buyer'
-  const roleGradient = user.role === 'SELLER' ? 'from-violet-500 to-indigo-600' : user.role === 'RIDER' ? 'from-emerald-500 to-teal-600' : user.role === 'ADMIN' ? 'from-red-500 to-rose-600' : 'from-blue-500 to-indigo-600'
+  const roleColor = 'bg-primary'
   const activeTheme = mounted ? theme : 'light'
 
   return (
-    <div className="profile-page min-h-screen bg-[#f0f2f5] dark:bg-[#000000]">
+    <div className="profile-page min-h-screen bg-surface dark:bg-[#000000]">
 
       {/* ── iOS Install Modal ── */}
       {showIOSInstallModal && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowIOSInstallModal(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl max-h-[88vh] overflow-y-auto">
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+            <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-soft max-h-[88vh] overflow-y-auto">
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
-                  <span className="text-2xl">🛍️</span>
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary">
+                  <ShoppingBag className="w-6 h-6 text-white" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <p className="font-black text-gray-900">Add BataMart to Home Screen</p>
-                  <p className="text-sm text-gray-500">Get the full app experience 🚀</p>
+                  <p className="font-semibold text-ink">Add BataMart to Home Screen</p>
+                  <p className="text-sm text-ink-secondary">Get the full app experience</p>
                 </div>
               </div>
               <div className="space-y-3 mb-6">
                 {[
-                  { icon: '⎋', bg: 'bg-blue-50', title: 'Tap the Share button', sub: 'At the bottom of your Safari browser' },
-                  { icon: '➕', bg: 'bg-indigo-50', title: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet' },
-                  { icon: '✅', bg: 'bg-emerald-50', title: 'Tap "Add" to confirm', sub: 'BataMart appears on your home screen' },
-                ].map(({ icon, bg, title, sub }) => (
+                  { icon: Share, bg: 'bg-primary/10', iconColor: 'text-primary', title: 'Tap the Share button', sub: 'At the bottom of your Safari browser' },
+                  { icon: SquarePlus, bg: 'bg-primary/10', iconColor: 'text-primary', title: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet' },
+                  { icon: CheckCircle2, bg: 'bg-success/10', iconColor: 'text-success', title: 'Tap "Add" to confirm', sub: 'BataMart appears on your home screen' },
+                ].map(({ icon: Icon, bg, iconColor, title, sub }) => (
                   <div key={title} className={`flex items-center gap-3 ${bg} rounded-2xl px-4 py-3.5`}>
-                    <span className="text-xl">{icon}</span>
+                    <Icon className={`w-5 h-5 flex-shrink-0 ${iconColor}`} strokeWidth={1.75} />
                     <div>
-                      <p className="font-black text-sm text-gray-800">{title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{sub}</p>
+                      <p className="font-semibold text-sm text-ink">{title}</p>
+                      <p className="text-xs text-ink-secondary mt-0.5">{sub}</p>
                     </div>
                   </div>
                 ))}
               </div>
               <button onClick={() => setShowIOSInstallModal(false)}
-                className="w-full text-white font-black py-4 rounded-2xl text-sm mb-3"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
+                className="w-full text-white font-semibold py-4 rounded-2xl text-sm mb-3 bg-primary hover:brightness-95 transition-colors">
                 Got it!
               </button>
-              <button onClick={() => setShowIOSInstallModal(false)} className="w-full text-gray-400 text-sm font-medium">Maybe later</button>
+              <button onClick={() => setShowIOSInstallModal(false)} className="w-full text-ink-muted text-sm font-medium">Maybe later</button>
             </div>
           </div>
         </>
       )}
 
       {/* ── Mobile Header ── */}
-      <div className="lg:hidden header-gradient sticky top-0 z-30 shadow-xl">
+      <div className="lg:hidden header-gradient sticky top-0 z-30 shadow-soft">
         <div className="flex items-center px-4 py-3.5 gap-3">
           <button onClick={() => setIsMobileMenuOpen(true)} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
             <Menu className="w-5 h-5 text-white" />
           </button>
-          <h1 className="font-black text-white flex-1">My Account</h1>
-          <div className={`px-2.5 py-1 bg-gradient-to-r ${roleGradient} rounded-xl`}>
-            <span className="text-[10px] font-black text-white">{roleLabel}</span>
+          <h1 className="font-semibold text-white flex-1">My Account</h1>
+          <div className={`px-2.5 py-1 ${roleColor} rounded-xl`}>
+            <span className="text-[10px] font-semibold text-white">{roleLabel}</span>
           </div>
         </div>
       </div>
@@ -382,24 +332,24 @@ export default function MyProfilePage() {
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#0f1115] z-50 lg:hidden shadow-2xl`}>
+          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#0f1115] z-50 lg:hidden shadow-soft`}>
             <div className="flex flex-col h-full">
               {/* Menu header */}
               <div className="header-gradient px-5 py-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br ${roleGradient}`}>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${roleColor}`}>
                     <User className="w-4 h-4 text-white" />
                   </div>
                   <button onClick={() => setIsMobileMenuOpen(false)} className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center">
                     <X className="w-4 h-4 text-white" />
                   </button>
                 </div>
-                <p className="font-black text-white text-lg">{user.name}</p>
+                <p className="font-semibold text-white text-lg">{user.name}</p>
                 <p className="text-white/60 text-xs mt-0.5">{user.email}</p>
                 {wallet && (
                   <div className="mt-3 bg-white/10 rounded-xl px-3 py-2 flex items-center justify-between">
                     <span className="text-white/70 text-xs font-semibold">Wallet</span>
-                    <span className="text-white font-black text-sm">₦{wallet.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
+                    <span className="text-white font-semibold text-sm">₦{wallet.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
               </div>
@@ -407,16 +357,16 @@ export default function MyProfilePage() {
               <nav className="flex-1 overflow-y-auto py-3">
                 {menuItems.map((item, i) => (
                   <Link key={i} href={item.href} onClick={() => setIsMobileMenuOpen(false)}
-                    className="nav-item flex items-center gap-4 px-5 py-3.5 text-gray-700 border-b border-gray-50">
-                    <span className="text-gray-400 flex-shrink-0">{item.icon}</span>
-                    <span className="font-bold text-sm">{item.label}</span>
-                    <ChevronRight className="w-4 h-4 ml-auto text-gray-300 flex-shrink-0" />
+                    className="nav-item flex items-center gap-4 px-5 py-3.5 text-ink-secondary border-b border-border">
+                    <span className="text-ink-muted flex-shrink-0">{item.icon}</span>
+                    <span className="font-semibold text-sm">{item.label}</span>
+                    <ChevronRight className="w-4 h-4 ml-auto text-ink-muted flex-shrink-0" />
                   </Link>
                 ))}
               </nav>
-              <div className="p-4 border-t border-gray-100">
+              <div className="p-4 border-t border-border">
                 <button onClick={() => { setIsMobileMenuOpen(false); handleLogout() }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-2xl font-black text-sm transition-colors">
+                  className="flex items-center gap-3 w-full px-4 py-3 text-danger hover:bg-danger/10 rounded-2xl font-semibold text-sm transition-colors">
                   <LogOut className="w-5 h-5" /> Logout
                 </button>
               </div>
@@ -426,7 +376,7 @@ export default function MyProfilePage() {
       )}
 
       {/* ── Desktop breadcrumb ── */}
-      <div className="hidden lg:block header-gradient shadow-xl">
+      <div className="hidden lg:block header-gradient shadow-soft">
         <div className="max-w-6xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
@@ -435,10 +385,10 @@ export default function MyProfilePage() {
                 <ChevronRight className="w-3.5 h-3.5" />
                 <span className="text-white/80 font-semibold">My Account</span>
               </div>
-              <h1 className="text-xl font-black text-white">Account Overview</h1>
+              <h1 className="text-xl font-semibold text-white">Account Overview</h1>
             </div>
-            <div className={`px-3 py-1.5 bg-gradient-to-r ${roleGradient} rounded-xl shadow-lg`}>
-              <span className="text-xs font-black text-white">{roleLabel}</span>
+            <div className={`px-3 py-1.5 ${roleColor} rounded-xl shadow-soft`}>
+              <span className="text-xs font-semibold text-white">{roleLabel}</span>
             </div>
           </div>
         </div>
@@ -449,36 +399,36 @@ export default function MyProfilePage() {
 
           {/* ── Desktop Sidebar ── */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden sticky top-6">
-              <div className="p-5 border-b border-gray-50">
+            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden sticky top-6">
+              <div className="p-5 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center bg-gradient-to-br ${roleGradient} shadow-md`}>
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${roleColor} shadow-soft`}>
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-black text-gray-900 truncate">{user.name}</p>
-                    <p className="text-xs text-gray-400 capitalize">{roleLabel}</p>
+                    <p className="font-semibold text-ink truncate">{user.name}</p>
+                    <p className="text-xs text-ink-muted capitalize">{roleLabel}</p>
                   </div>
                 </div>
                 {wallet && (
-                  <div className="mt-3 bg-indigo-50 rounded-xl px-3 py-2.5 flex items-center justify-between">
-                    <span className="text-indigo-500 text-xs font-bold">Balance</span>
-                    <span className="text-indigo-700 font-black text-sm">₦{wallet.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
+                  <div className="mt-3 bg-primary/10 rounded-xl px-3 py-2.5 flex items-center justify-between">
+                    <span className="text-primary text-xs font-semibold">Balance</span>
+                    <span className="text-primary font-semibold text-sm">₦{wallet.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
               </div>
               <nav className="py-2">
                 {menuItems.map((item, i) => (
                   <Link key={i} href={item.href}
-                    className="nav-item flex items-center gap-3 px-4 py-3 text-gray-600 border-b border-gray-50 last:border-0">
-                    <span className="text-gray-400 flex-shrink-0">{item.icon}</span>
-                    <span className="font-bold text-sm">{item.label}</span>
+                    className="nav-item flex items-center gap-3 px-4 py-3 text-ink-secondary border-b border-border last:border-0">
+                    <span className="text-ink-muted flex-shrink-0">{item.icon}</span>
+                    <span className="font-semibold text-sm">{item.label}</span>
                   </Link>
                 ))}
               </nav>
-              <div className="border-t border-gray-100 p-4">
+              <div className="border-t border-border p-4">
                 <button onClick={handleLogout}
-                  className="flex items-center gap-2.5 text-red-500 hover:text-red-700 font-black text-sm w-full hover:bg-red-50 px-3 py-2.5 rounded-xl transition-all">
+                  className="flex items-center gap-2.5 text-danger hover:text-danger font-semibold text-sm w-full hover:bg-danger/10 px-3 py-2.5 rounded-xl transition-all">
                   <LogOut className="w-4 h-4" /> Logout
                 </button>
               </div>
@@ -489,24 +439,24 @@ export default function MyProfilePage() {
           <div className="lg:col-span-3 space-y-4">
 
             {/* Edit header */}
-            <div className="fade-up flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+            <div className="fade-up flex items-center justify-between bg-white rounded-2xl border border-border shadow-soft px-5 py-4">
               <div>
-                <h2 className="text-lg font-black text-gray-900">Profile Details</h2>
-                <p className="text-xs text-gray-400 mt-0.5">{isEditing ? '✏️ Editing mode' : 'View & manage your account'}</p>
+                <h2 className="text-lg font-semibold text-ink">Profile Details</h2>
+                <p className="text-xs text-ink-muted mt-0.5">{isEditing ? 'Editing mode' : 'View & manage your account'}</p>
               </div>
               {!isEditing ? (
                 <button onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-black text-sm px-4 py-2 rounded-xl hover:bg-indigo-50 transition-all">
+                  className="flex items-center gap-2 text-primary hover:text-primary font-semibold text-sm px-4 py-2 rounded-xl hover:bg-primary/10 transition-all">
                   <Edit2 className="w-4 h-4" /> Edit Profile
                 </button>
               ) : (
                 <div className="flex items-center gap-2">
                   <button onClick={handleCancel}
-                    className="flex items-center gap-1.5 text-gray-600 font-bold text-sm px-3 py-2 rounded-xl hover:bg-gray-100 transition-all">
+                    className="flex items-center gap-1.5 text-ink-secondary font-semibold text-sm px-3 py-2 rounded-xl hover:bg-surface transition-all">
                     <X className="w-4 h-4" /> Cancel
                   </button>
                   <button onClick={handleSave} disabled={saving}
-                    className="save-btn flex items-center gap-1.5 text-white font-black text-sm px-4 py-2 rounded-xl disabled:opacity-50 shadow-lg">
+                    className="save-btn flex items-center gap-1.5 text-white font-semibold text-sm px-4 py-2 rounded-xl disabled:opacity-50 shadow-soft">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -516,58 +466,58 @@ export default function MyProfilePage() {
 
             {/* Feedback banners */}
             {saveSuccess && (
-              <div className="fade-up flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3.5 rounded-2xl">
-                <Check className="w-5 h-5 flex-shrink-0" /> <span className="font-black text-sm">Profile updated!</span>
+              <div className="fade-up flex items-center gap-3 bg-success/10 border border-success/30 text-success px-4 py-3.5 rounded-2xl">
+                <Check className="w-5 h-5 flex-shrink-0" /> <span className="font-semibold text-sm">Profile updated!</span>
               </div>
             )}
             {saveError && (
-              <div className="fade-up flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3.5 rounded-2xl">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" /> <span className="font-bold text-sm">{saveError}</span>
+              <div className="fade-up flex items-center gap-3 bg-danger/10 border border-danger/30 text-danger px-4 py-3.5 rounded-2xl">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" /> <span className="font-semibold text-sm">{saveError}</span>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Account Details */}
-              <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                  <div className="w-7 h-7 bg-indigo-50 rounded-lg flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-indigo-600" />
+              <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                  <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-primary" />
                   </div>
-                  <h2 className="font-black text-gray-900 text-sm">Account Details</h2>
-                  {isEditing && <span className="ml-auto text-[10px] text-indigo-600 font-black bg-indigo-50 px-2 py-0.5 rounded-full">EDITING</span>}
+                  <h2 className="font-semibold text-ink text-sm">Account Details</h2>
+                  {isEditing && <span className="ml-auto text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">EDITING</span>}
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Full Name</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Full Name</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.name || ''} onChange={e => setEditedUser({ ...editedUser, name: e.target.value })}
-                        className="input-field w-full px-3.5 py-3 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold" />
+                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
                     ) : (
-                      <p className="text-gray-900 font-black">{user.name}</p>
+                      <p className="text-ink font-semibold">{user.name}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Email</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Email</label>
                     <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <p className="text-gray-700 font-semibold text-sm break-all">{user.email}</p>
+                      <Mail className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                      <p className="text-ink-secondary font-semibold text-sm break-all">{user.email}</p>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1">Cannot be changed</p>
+                    <p className="text-[11px] text-ink-muted mt-1">Cannot be changed</p>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Phone</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Phone</label>
                     {isEditing ? (
                       <div className="flex">
-                        <span className="inline-flex items-center px-3 bg-gray-100 border-2 border-r-0 border-gray-100 rounded-l-xl text-gray-500 text-xs font-bold">+234</span>
+                        <span className="inline-flex items-center px-3 bg-surface border-2 border-r-0 border-border rounded-l-xl text-ink-secondary text-xs font-semibold">+234</span>
                         <input type="tel" value={(editedUser.phone || '').replace(/^\+?234/, '')}
                           onChange={e => setEditedUser({ ...editedUser, phone: e.target.value.replace(/\D/g, '') })}
                           maxLength={11}
-                          className="input-field flex-1 px-3 py-3 bg-gray-50 border-2 border-transparent rounded-r-xl text-sm font-bold" />
+                          className="input-field flex-1 px-3 py-3 bg-surface border-2 border-transparent rounded-r-xl text-sm font-semibold" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <p className="text-gray-900 font-bold">+234 {user.phone}</p>
+                        <Phone className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                        <p className="text-ink font-semibold">+234 {user.phone}</p>
                       </div>
                     )}
                   </div>
@@ -575,47 +525,47 @@ export default function MyProfilePage() {
               </div>
 
               {/* Address */}
-              <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                  <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                  <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-3.5 h-3.5 text-success" />
                   </div>
-                  <h2 className="font-black text-gray-900 text-sm">Delivery Address</h2>
+                  <h2 className="font-semibold text-ink text-sm">Delivery Address</h2>
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Hostel / Lodge</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Hostel / Lodge</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.hostelName || ''} onChange={e => setEditedUser({ ...editedUser, hostelName: e.target.value })}
                         placeholder="e.g. Boys Hostel, Block A"
-                        className="input-field w-full px-3.5 py-3 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold" />
+                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
                     ) : (
                       <div className="flex items-center gap-2">
-                        <Home className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <p className="text-gray-900 font-bold">{user.hostelName || <span className="text-gray-400 font-medium">Not set</span>}</p>
+                        <Home className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                        <p className="text-ink font-semibold">{user.hostelName || <span className="text-ink-muted font-medium">Not set</span>}</p>
                       </div>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Room Number</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Room Number</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.roomNumber || ''} onChange={e => setEditedUser({ ...editedUser, roomNumber: e.target.value })}
                         placeholder="e.g. 205"
-                        className="input-field w-full px-3.5 py-3 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold" />
+                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
                     ) : (
-                      <p className="text-gray-900 font-bold">{user.roomNumber || <span className="text-gray-400 font-medium">Not set</span>}</p>
+                      <p className="text-ink font-semibold">{user.roomNumber || <span className="text-ink-muted font-medium">Not set</span>}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Landmark</label>
+                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Landmark</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.landmark || ''} onChange={e => setEditedUser({ ...editedUser, landmark: e.target.value })}
                         placeholder="e.g. Near the cafeteria"
-                        className="input-field w-full px-3.5 py-3 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold" />
+                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
                     ) : (
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <p className="text-gray-900 font-bold">{user.landmark || <span className="text-gray-400 font-medium">Not set</span>}</p>
+                        <MapPin className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                        <p className="text-ink font-semibold">{user.landmark || <span className="text-ink-muted font-medium">Not set</span>}</p>
                       </div>
                     )}
                   </div>
@@ -624,61 +574,59 @@ export default function MyProfilePage() {
             </div>
 
             {/* Wallet balance card */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                <div className="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center">
-                  <Wallet className="w-3.5 h-3.5 text-violet-600" />
+            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-primary" />
                 </div>
-                <h2 className="font-black text-gray-900 text-sm">BataMart Balance</h2>
+                <h2 className="font-semibold text-ink text-sm">BataMart Balance</h2>
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md"
-                    style={{ background: 'linear-gradient(135deg, #6366f1, #4c1d95)' }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-soft bg-primary">
                     <Wallet className="w-6 h-6 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-gray-400 font-semibold">Available Balance</p>
-                    <p className="text-2xl font-black text-gray-900 truncate">
+                    <p className="text-xs text-ink-muted font-semibold">Available Balance</p>
+                    <p className="text-2xl font-semibold text-ink truncate">
                       ₦{wallet?.availableBalance?.toLocaleString('en-NG', { minimumFractionDigits: 2 }) || '0.00'}
                     </p>
                   </div>
                   <Link href={isApp ? '/wallet?app=true' : '/wallet'}
-                    className="flex-shrink-0 flex items-center gap-1.5 text-indigo-600 font-black text-sm px-4 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all">
+                    className="flex-shrink-0 flex items-center gap-1.5 text-primary font-semibold text-sm px-4 py-2 bg-primary/10 hover:bg-primary/10 rounded-xl transition-all">
                     View <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
             </div>
 
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <Shield className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-success" />
                 </div>
-                <h2 className="font-black text-gray-900 text-sm">Withdrawal Biometrics</h2>
+                <h2 className="font-semibold text-ink text-sm">Withdrawal Biometrics</h2>
               </div>
               <div className="p-5">
                 {!biometricAvailable ? (
-                  <p className="text-xs text-gray-500">Biometrics not available on this browser/device.</p>
+                  <p className="text-xs text-ink-secondary">Biometrics not available on this browser/device.</p>
                 ) : (
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-black text-sm text-gray-900">{biometricEnabled ? 'Enabled' : 'Disabled'}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">Use fingerprint or face unlock for withdrawals.</p>
+                      <p className="font-semibold text-sm text-ink">{biometricEnabled ? 'Enabled' : 'Disabled'}</p>
+                      <p className="text-xs text-ink-muted mt-0.5">Use fingerprint or face unlock for withdrawals.</p>
                     </div>
                     <button
                       onClick={handleBiometricToggle}
                       disabled={biometricBusy}
-                      className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50 ${biometricEnabled ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'text-white'}`}
-                      style={!biometricEnabled ? { background: 'linear-gradient(135deg, #10b981, #059669)' } : {}}
+                      className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50 ${biometricEnabled ? 'bg-danger/10 text-danger hover:bg-danger/10' : 'bg-success text-white hover:brightness-95'}`}
                     >
                       {biometricBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : biometricEnabled ? 'Turn Off' : 'Turn On'}
                     </button>
                   </div>
                 )}
                 {biometricMessage && (
-                  <p className={`mt-3 text-xs font-bold ${biometricMessage.includes('Could not') ? 'text-red-500' : 'text-emerald-600'}`}>
+                  <p className={`mt-3 text-xs font-semibold ${biometricMessage.includes('Could not') ? 'text-danger' : 'text-success'}`}>
                     {biometricMessage}
                   </p>
                 )}
@@ -686,19 +634,19 @@ export default function MyProfilePage() {
             </div>
 
             {/* Notifications */}
-            <div className="section-card bg-white rounded-2xl border border-gray-100 overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50">
-                <h3 className="font-semibold text-gray-900 text-sm">Order Notifications</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Get alerted when your order is picked up and delivered</p>
+            <div className="section-card bg-white rounded-2xl border border-border overflow-hidden">
+              <div className="px-5 py-4 border-b border-border">
+                <h3 className="font-semibold text-ink text-sm">Order Notifications</h3>
+                <p className="text-xs text-ink-secondary mt-0.5">Get alerted when your order is picked up and delivered</p>
               </div>
 
               <div className="px-5 py-4">
                 {isIosBrowserTab && (
-                  <div className="flex items-start gap-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <span className="text-xl flex-shrink-0">📲</span>
+                  <div className="flex items-start gap-3 p-3 bg-warning/10 rounded-xl border border-warning/20">
+                    <BellRing className="w-5 h-5 flex-shrink-0 text-warning" strokeWidth={1.75} />
                     <div>
-                      <p className="text-sm font-semibold text-amber-800">Install app first to get notifications</p>
-                      <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                      <p className="text-sm font-semibold text-warning">Install app first to get notifications</p>
+                      <p className="text-xs text-warning mt-1 leading-relaxed">
                         iPhone notifications only work when BataMart is installed to your Home Screen.
                         Tap Share in Safari → "Add to Home Screen", then open from your home screen and enable notifications here.
                       </p>
@@ -707,11 +655,11 @@ export default function MyProfilePage() {
                 )}
 
                 {!isIosBrowserTab && permission === 'denied' && (
-                  <div className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
-                    <span className="text-xl flex-shrink-0">🔕</span>
+                  <div className="flex items-start gap-3 p-3 bg-danger/10 rounded-xl border border-danger/20">
+                    <BellOff className="w-5 h-5 flex-shrink-0 text-danger" strokeWidth={1.75} />
                     <div>
-                      <p className="text-sm font-semibold text-red-700">Notifications are blocked</p>
-                      <p className="text-xs text-red-600 mt-1 leading-relaxed">
+                      <p className="text-sm font-semibold text-danger">Notifications are blocked</p>
+                      <p className="text-xs text-danger mt-1 leading-relaxed">
                         {isIosPwa
                           ? 'Go to iPhone Settings → BataMart → Notifications → turn on "Allow Notifications".'
                           : 'Go to your browser Settings → Site Settings → Notifications → find BataMart and allow it.'}
@@ -721,8 +669,8 @@ export default function MyProfilePage() {
                 )}
 
                 {isIosPwa && permission !== 'granted' && permission !== 'denied' && (
-                  <div className="mb-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-xs text-blue-700 leading-relaxed">
+                  <div className="mb-3 p-3 bg-primary/10 rounded-xl border border-primary/20">
+                    <p className="text-xs text-primary leading-relaxed">
                       After enabling below, also go to <strong>iPhone Settings → BataMart → Notifications</strong> and turn on "Allow Notifications".
                     </p>
                   </div>
@@ -731,10 +679,10 @@ export default function MyProfilePage() {
                 {!isIosBrowserTab && permission !== 'denied' && (
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-800">
+                      <p className="text-sm font-medium text-ink">
                         {isSubscribed ? 'Notifications enabled' : 'Enable notifications'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-ink-secondary mt-0.5">
                         {isSubscribed
                           ? 'You\'ll be notified for orders, deliveries, and payments'
                           : 'Stay updated on your orders in real time'}
@@ -744,7 +692,7 @@ export default function MyProfilePage() {
                       onClick={isSubscribed ? unsubscribe : subscribe}
                       disabled={notifLoading || !isSupported}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        isSubscribed ? 'bg-indigo-600' : 'bg-gray-200'
+                        isSubscribed ? 'bg-primary' : 'bg-border'
                       } ${notifLoading || !isSupported ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       role="switch"
                       aria-checked={isSubscribed}
@@ -761,21 +709,21 @@ export default function MyProfilePage() {
             </div>
 
             {/* Appearance */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2">
-                <div className="w-7 h-7 bg-indigo-50 rounded-lg flex items-center justify-center">
+            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
                   {activeTheme === 'dark'
-                    ? <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                    : <Sun className="w-3.5 h-3.5 text-indigo-600" />}
+                    ? <Moon className="w-3.5 h-3.5 text-primary" />
+                    : <Sun className="w-3.5 h-3.5 text-primary" />}
                 </div>
-                <h2 className="font-black text-gray-900 text-sm">Appearance</h2>
+                <h2 className="font-semibold text-ink text-sm">Appearance</h2>
               </div>
               <div className="p-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="font-black text-sm text-gray-900">
+                  <p className="font-semibold text-sm text-ink">
                     {activeTheme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-ink-muted mt-0.5">
                     {activeTheme === 'dark'
                       ? 'Optimized for low-light viewing.'
                       : 'Switch to dark mode for a softer night look.'}
@@ -783,10 +731,7 @@ export default function MyProfilePage() {
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className="theme-toggle flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black text-white shadow-md"
-                  style={{ background: activeTheme === 'dark'
-                    ? 'linear-gradient(135deg, #4f46e5, #312e81)'
-                    : 'linear-gradient(135deg, #6366f1, #4c1d95)' }}
+                  className="theme-toggle flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white shadow-soft bg-primary hover:brightness-95"
                 >
                   {activeTheme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                   {activeTheme === 'dark' ? 'Use Light' : 'Use Dark'}
@@ -798,16 +743,16 @@ export default function MyProfilePage() {
             <div className="fade-up"><ReferralCard /></div>
 
             {/* Recommended */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
-                    <Star className="w-3.5 h-3.5 text-amber-500" />
+                  <div className="w-7 h-7 bg-warning/10 rounded-lg flex items-center justify-center">
+                    <Star className="w-3.5 h-3.5 text-warning" />
                   </div>
-                  <h2 className="font-black text-gray-900 text-sm">Recommended For You</h2>
+                  <h2 className="font-semibold text-ink text-sm">Recommended For You</h2>
                 </div>
                 <Link href={isApp ? '/marketplace?app=true' : '/marketplace'}
-                  className="text-indigo-600 font-black text-xs flex items-center gap-1 hover:underline">
+                  className="text-primary font-semibold text-xs flex items-center gap-1 hover:underline">
                   See All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -815,16 +760,16 @@ export default function MyProfilePage() {
             </div>
 
             {/* Search History */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Search className="w-3.5 h-3.5 text-gray-500" />
+                  <div className="w-7 h-7 bg-surface rounded-lg flex items-center justify-center">
+                    <Search className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <h2 className="font-black text-gray-900 text-sm">Search History</h2>
+                  <h2 className="font-semibold text-ink text-sm">Search History</h2>
                 </div>
                 <button onClick={() => { localStorage.removeItem('BATAMART-recent-searches'); window.location.reload() }}
-                  className="text-red-400 hover:text-red-600 text-xs font-bold transition-colors">
+                  className="text-danger hover:text-danger text-xs font-semibold transition-colors">
                   Clear All
                 </button>
               </div>
@@ -862,9 +807,9 @@ function RecommendedProducts({ isApp }: { isApp: boolean }) {
     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i}>
-          <div className="aspect-square shimmer rounded-xl mb-2" />
-          <div className="h-3 shimmer rounded-full w-3/4 mb-1" />
-          <div className="h-3 shimmer rounded-full w-1/2" />
+          <div className="aspect-square animate-pulse bg-surface rounded-xl mb-2" />
+          <div className="h-3 animate-pulse bg-surface rounded-full w-3/4 mb-1" />
+          <div className="h-3 animate-pulse bg-surface rounded-full w-1/2" />
         </div>
       ))}
     </div>
@@ -872,7 +817,7 @@ function RecommendedProducts({ isApp }: { isApp: boolean }) {
 
   if (products.length === 0) return (
     <div className="text-center py-8">
-      <p className="text-gray-400 text-sm font-medium">Browse more to get personalized picks!</p>
+      <p className="text-ink-muted text-sm font-medium">Browse more to get personalized picks!</p>
     </div>
   )
 
@@ -881,12 +826,12 @@ function RecommendedProducts({ isApp }: { isApp: boolean }) {
       {products.map(product => (
         <div key={product.id} onClick={() => router.push(`/product/${product.id}`)}
           className="product-thumb cursor-pointer group overflow-hidden rounded-xl">
-          <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-2">
+          <div className="aspect-square rounded-xl overflow-hidden bg-surface mb-2">
             <img src={product.images?.[0] || '/placeholder.png'} alt={product.name}
               className="w-full h-full object-cover transition-transform duration-500" />
           </div>
-          <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug">{product.name}</p>
-          <p className="text-xs font-black text-indigo-600 mt-0.5">{fmt(product.price)}</p>
+          <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{product.name}</p>
+          <p className="text-xs font-semibold text-primary mt-0.5">{fmt(product.price)}</p>
         </div>
       ))}
     </div>
@@ -904,12 +849,12 @@ function SearchHistory() {
       .slice(0, 10)
     setSearches(normalized)
   }, [])
-  if (searches.length === 0) return <div className="text-center py-8"><p className="text-gray-400 text-sm font-medium">No search history yet</p></div>
+  if (searches.length === 0) return <div className="text-center py-8"><p className="text-ink-muted text-sm font-medium">No search history yet</p></div>
   return (
     <div className="flex flex-wrap gap-2">
       {searches.map((s, i) => (
         <button key={i} onClick={() => router.push(`/search?q=${encodeURIComponent(s)}`)}
-          className="tag-chip px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-bold border border-transparent transition-all">
+          className="tag-chip px-4 py-2 bg-surface text-ink-secondary rounded-full text-sm font-semibold border border-transparent transition-all">
           {s}
         </button>
       ))}

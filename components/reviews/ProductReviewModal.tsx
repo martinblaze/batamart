@@ -80,12 +80,12 @@ export default function ProductReviewModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-ink-muted hover:text-ink"
           disabled={submitting}
         >
           <X className="w-6 h-6" />
@@ -93,14 +93,14 @@ export default function ProductReviewModal({
 
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Rate this Product</h2>
-          <p className="text-gray-600">{productName}</p>
+          <h2 className="text-2xl font-semibold text-ink mb-2">Rate this Product</h2>
+          <p className="text-ink-secondary">{productName}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Star Rating */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-ink-secondary mb-3">
               How would you rate this product?
             </label>
             <div className="flex gap-2 justify-center">
@@ -116,15 +116,15 @@ export default function ProductReviewModal({
                   <Star
                     className={`w-10 h-10 ${
                       star <= (hoveredRating || rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
+                        ? 'fill-warning text-warning'
+                        : 'text-border'
                     }`}
                   />
                 </button>
               ))}
             </div>
             {rating > 0 && (
-              <p className="text-center mt-2 text-sm text-gray-600">
+              <p className="text-center mt-2 text-sm text-ink-secondary">
                 {rating === 1 && 'Poor'}
                 {rating === 2 && 'Fair'}
                 {rating === 3 && 'Good'}
@@ -136,26 +136,26 @@ export default function ProductReviewModal({
 
           {/* Comment */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-ink-secondary mb-2">
               Write your review
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/40 focus:border-transparent resize-none"
               placeholder="Tell us about your experience with this product..."
               maxLength={500}
               disabled={submitting}
             />
-            <p className="text-xs text-gray-500 mt-1 text-right">
+            <p className="text-xs text-ink-muted mt-1 text-right">
               {comment.length}/500 characters
             </p>
           </div>
 
           {/* Error message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -173,7 +173,7 @@ export default function ProductReviewModal({
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-primary hover:brightness-95"
               disabled={submitting}
             >
               {submitting ? (

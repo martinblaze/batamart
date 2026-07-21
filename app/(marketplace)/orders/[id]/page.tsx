@@ -191,35 +191,36 @@ export default function OrderDetailPage() {
     }
   };
 
+  // Design bible: status colors reserved for true status only — no per-stage color variety.
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'PENDING': return <Clock className="w-5 h-5 text-yellow-500" />;
-      case 'PROCESSING': return <Package className="w-5 h-5 text-blue-500" />;
-      case 'SHIPPED': return <Truck className="w-5 h-5 text-purple-500" />;
-      case 'RIDER_ASSIGNED': return <Truck className="w-5 h-5 text-indigo-500" />;
-      case 'PICKED_UP': return <Package className="w-5 h-5 text-orange-500" />;
-      case 'ON_THE_WAY': return <Truck className="w-5 h-5 text-blue-500" />;
-      case 'DELIVERED': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'COMPLETED': return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'CANCELLED': return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'DISPUTED': return <XCircle className="w-5 h-5 text-orange-500" />;
-      default: return <Clock className="w-5 h-5 text-gray-500" />;
+      case 'PENDING': return <Clock className="w-5 h-5 text-warning" strokeWidth={1.75} />;
+      case 'PROCESSING': return <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />;
+      case 'SHIPPED': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
+      case 'RIDER_ASSIGNED': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
+      case 'PICKED_UP': return <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />;
+      case 'ON_THE_WAY': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
+      case 'DELIVERED': return <CheckCircle className="w-5 h-5 text-success" strokeWidth={1.75} />;
+      case 'COMPLETED': return <CheckCircle className="w-5 h-5 text-success" strokeWidth={1.75} />;
+      case 'CANCELLED': return <XCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />;
+      case 'DISPUTED': return <XCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />;
+      default: return <Clock className="w-5 h-5 text-ink-secondary" strokeWidth={1.75} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'PROCESSING': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'SHIPPED': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'RIDER_ASSIGNED': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-      case 'PICKED_UP': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'ON_THE_WAY': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'DELIVERED': return 'bg-green-100 text-green-800 border-green-200';
-      case 'COMPLETED': return 'bg-green-100 text-green-900 border-green-300';
-      case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
-      case 'DISPUTED': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'PENDING': return 'bg-warning/10 text-warning border-warning/30';
+      case 'PROCESSING': return 'bg-primary/10 text-primary border-primary/30';
+      case 'SHIPPED': return 'bg-primary/10 text-primary border-primary/30';
+      case 'RIDER_ASSIGNED': return 'bg-primary/10 text-primary border-primary/30';
+      case 'PICKED_UP': return 'bg-primary/10 text-primary border-primary/30';
+      case 'ON_THE_WAY': return 'bg-primary/10 text-primary border-primary/30';
+      case 'DELIVERED': return 'bg-success/10 text-success border-success/30';
+      case 'COMPLETED': return 'bg-success/10 text-success border-success/30';
+      case 'CANCELLED': return 'bg-danger/10 text-danger border-danger/30';
+      case 'DISPUTED': return 'bg-danger/10 text-danger border-danger/30';
+      default: return 'bg-surface text-ink border-border';
     }
   };
 
@@ -309,9 +310,9 @@ export default function OrderDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="h-64 bg-gray-200 rounded mb-6"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-border rounded w-1/4 mb-6"></div>
+          <div className="h-64 bg-border rounded mb-6"></div>
+          <div className="h-32 bg-border rounded"></div>
         </div>
       </div>
     );
@@ -321,10 +322,10 @@ export default function OrderDetailPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-lg text-center">
-        <div className="bg-white rounded-2xl border border-red-100 shadow-sm p-8">
-          <WifiOff className="w-14 h-14 mx-auto text-red-400 mb-4" />
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Couldn't Load Order</h1>
-          <p className="text-gray-500 mb-6 text-sm leading-relaxed">{error}</p>
+        <div className="bg-white rounded-2xl border border-danger/20 shadow-soft p-8">
+          <WifiOff className="w-14 h-14 mx-auto text-danger mb-4" />
+          <h1 className="text-xl font-semibold text-ink mb-2">Couldn't Load Order</h1>
+          <p className="text-ink-secondary mb-6 text-sm leading-relaxed">{error}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button onClick={() => fetchOrder()} className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
@@ -344,9 +345,9 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Order Not Found</h1>
-        <p className="text-gray-600 mb-6">The order you're looking for doesn't exist or you don't have access to it.</p>
+        <Package className="w-16 h-16 mx-auto text-ink-muted mb-4" />
+        <h1 className="text-2xl font-semibold mb-2">Order Not Found</h1>
+        <p className="text-ink-secondary mb-6">The order you're looking for doesn't exist or you don't have access to it.</p>
         <Button onClick={() => router.push('/orders')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Orders
@@ -372,11 +373,11 @@ export default function OrderDetailPage() {
   }
 
   const getDisputeStatusBadge = (s: string) => {
-    if (s === 'OPEN') return 'bg-blue-100 text-blue-700'
-    if (s === 'UNDER_REVIEW') return 'bg-amber-100 text-amber-700'
-    if (s.startsWith('RESOLVED')) return 'bg-emerald-100 text-emerald-700'
-    if (s === 'DISMISSED') return 'bg-gray-100 text-gray-600'
-    return 'bg-gray-100 text-gray-600'
+    if (s === 'OPEN') return 'bg-primary/10 text-primary'
+    if (s === 'UNDER_REVIEW') return 'bg-warning/10 text-warning'
+    if (s.startsWith('RESOLVED')) return 'bg-success/10 text-success'
+    if (s === 'DISMISSED') return 'bg-surface text-ink-secondary'
+    return 'bg-surface text-ink-secondary'
   }
 
   const getCheckpointLabel = (checkpoint: any) => {
@@ -407,15 +408,15 @@ export default function OrderDetailPage() {
 
       {/* Inline update error banner — replaces alert() */}
       {updateError && (
-        <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 flex items-start gap-3 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
+          <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-800">Action Failed</p>
-            <p className="text-sm text-red-700 mt-0.5">{updateError}</p>
+            <p className="text-sm font-semibold text-danger">Action Failed</p>
+            <p className="text-sm text-danger mt-0.5">{updateError}</p>
           </div>
           <button
             onClick={() => setUpdateError(null)}
-            className="text-red-400 hover:text-red-600 text-lg leading-none flex-shrink-0"
+            className="text-danger hover:text-danger text-lg leading-none flex-shrink-0"
           >
             ×
           </button>
@@ -425,7 +426,7 @@ export default function OrderDetailPage() {
       {/* Order header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-2">
+          <h1 className="text-2xl font-semibold mb-2">
             Order #{order.orderNumber || order.id.slice(-8)}
           </h1>
           <div className="flex items-center gap-4 flex-wrap">
@@ -435,13 +436,13 @@ export default function OrderDetailPage() {
             </div>
 
             {isPolling && (
-              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-semibold">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="flex items-center gap-1.5 text-xs text-success font-semibold">
+                <span className="w-2 h-2 bg-success/100 rounded-full animate-pulse" />
                 Live
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-ink-secondary">
               <Calendar className="w-4 h-4" />
               <span>{format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}</span>
             </div>
@@ -466,12 +467,12 @@ export default function OrderDetailPage() {
 
       {/* ── Order progress tracker ─────────────────────────────────────────── */}
       {ACTIVE_STATUSES.includes(order.status) && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Order Progress</h2>
+        <div className="bg-white rounded-xl border border-border p-6 mb-6">
+          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wide mb-4">Order Progress</h2>
           <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 right-0 top-4 h-0.5 bg-gray-200 z-0" />
+            <div className="absolute left-0 right-0 top-4 h-0.5 bg-border z-0" />
             <div
-              className="absolute left-0 top-4 h-0.5 bg-BATAMART-primary z-0 transition-all duration-500"
+              className="absolute left-0 top-4 h-0.5 bg-primary z-0 transition-all duration-500"
               style={{
                 width: `${order.status === 'PENDING' ? 0 :
                     order.status === 'PROCESSING' ? 20 :
@@ -483,25 +484,26 @@ export default function OrderDetailPage() {
               }}
             />
             {[
-              { key: 'PENDING', label: 'Placed', icon: '🛒' },
-              { key: 'PROCESSING', label: 'Confirmed', icon: '✅' },
-              { key: 'PICKED_UP', label: 'Picked Up', icon: '📦' },
-              { key: 'ON_THE_WAY', label: 'On Way', icon: '🛵' },
-              { key: 'DELIVERED', label: 'Delivered', icon: '🎉' },
+              { key: 'PENDING', label: 'Placed', icon: ShoppingBag },
+              { key: 'PROCESSING', label: 'Confirmed', icon: CheckCircle },
+              { key: 'PICKED_UP', label: 'Picked up', icon: Package },
+              { key: 'ON_THE_WAY', label: 'On the way', icon: Truck },
+              { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle },
             ].map((step) => {
               const statusOrder = ['PENDING', 'PROCESSING', 'SHIPPED', 'RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY', 'DELIVERED']
               const currentIdx = statusOrder.indexOf(order.status)
               const stepIdx = statusOrder.indexOf(step.key)
               const isDone = currentIdx >= stepIdx
+              const StepIcon = step.icon
               return (
                 <div key={step.key} className="flex flex-col items-center z-10 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm border-2 transition-all ${isDone
-                      ? 'bg-BATAMART-primary border-BATAMART-primary text-white'
-                      : 'bg-white border-gray-300 text-gray-400'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${isDone
+                      ? 'bg-primary border-primary text-white'
+                      : 'bg-white border-border text-ink-muted'
                     }`}>
-                    {step.icon}
+                    <StepIcon className="w-4 h-4" strokeWidth={1.75} />
                   </div>
-                  <p className={`text-[10px] font-semibold mt-1.5 text-center ${isDone ? 'text-BATAMART-primary' : 'text-gray-400'}`}>
+                  <p className={`text-[10px] font-medium mt-1.5 text-center ${isDone ? 'text-primary' : 'text-ink-muted'}`}>
                     {step.label}
                   </p>
                 </div>
@@ -516,7 +518,7 @@ export default function OrderDetailPage() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Product card */}
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Product Details</h2>
               <Link href={`/product/${order.product?.id}`}>
@@ -535,20 +537,20 @@ export default function OrderDetailPage() {
                 />
               )}
               <div className="flex-1">
-                <h3 className="font-bold text-lg">{order.product?.name || 'Product'}</h3>
-                <p className="text-gray-600 mt-1">{order.product?.description || 'No description'}</p>
+                <h3 className="font-semibold text-lg">{order.product?.name || 'Product'}</h3>
+                <p className="text-ink-secondary mt-1">{order.product?.description || 'No description'}</p>
                 <div className="flex items-center justify-between mt-4">
                   <div>
-                    <p className="text-sm text-gray-500">Price</p>
-                    <p className="font-bold">₦{(order.productPrice || order.product?.price || 0).toLocaleString()}</p>
+                    <p className="text-sm text-ink-secondary">Price</p>
+                    <p className="font-semibold">₦{(order.productPrice || order.product?.price || 0).toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Quantity</p>
-                    <p className="font-bold">{order.quantity || 1}</p>
+                    <p className="text-sm text-ink-secondary">Quantity</p>
+                    <p className="font-semibold">{order.quantity || 1}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Total</p>
-                    <p className="font-bold">₦{((order.productPrice || order.product?.price || 0) * (order.quantity || 1)).toLocaleString()}</p>
+                    <p className="text-sm text-ink-secondary">Total</p>
+                    <p className="font-semibold">₦{((order.productPrice || order.product?.price || 0) * (order.quantity || 1)).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -558,69 +560,69 @@ export default function OrderDetailPage() {
           {/* Shipping & Payment */}
           <div className="grid md:grid-cols-2 gap-6">
 
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Truck className="w-5 h-5" />
                 Shipping Information
               </h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-500">Hostel</p>
+                  <p className="text-sm text-ink-secondary">Hostel</p>
                   <p className="font-medium">{order.deliveryHostel || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Room</p>
+                  <p className="text-sm text-ink-secondary">Room</p>
                   <p className="font-medium">{order.deliveryRoom || 'Not specified'}</p>
                 </div>
                 {order.deliveryLandmark && (
                   <div>
-                    <p className="text-sm text-gray-500">Landmark</p>
+                    <p className="text-sm text-ink-secondary">Landmark</p>
                     <p className="font-medium">{order.deliveryLandmark}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="text-sm text-ink-secondary">Phone</p>
                   <p className="font-medium">{order.deliveryPhone || 'Not specified'}</p>
                 </div>
                 {order.orderNote && (
                   <div>
-                    <p className="text-sm text-gray-500">Note to rider</p>
-                    <p className="font-medium text-amber-700 bg-amber-50 rounded-lg px-3 py-2 text-sm">{order.orderNote}</p>
+                    <p className="text-sm text-ink-secondary">Note to rider</p>
+                    <p className="font-medium text-warning bg-warning/10 rounded-lg px-3 py-2 text-sm">{order.orderNote}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 Payment Information
               </h2>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-500">Subtotal</p>
+                  <p className="text-sm text-ink-secondary">Subtotal</p>
                   <p className="font-medium">₦{(order.productPrice || 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Delivery Fee</p>
+                  <p className="text-sm text-ink-secondary">Delivery Fee</p>
                   <p className="font-medium">₦{(order.deliveryFee || 0).toLocaleString()}</p>
                 </div>
                 <div className="pt-2 border-t">
-                  <p className="text-sm text-gray-500">Total Paid</p>
-                  <p className="font-bold text-lg">₦{(order.totalAmount || 0).toLocaleString()}</p>
+                  <p className="text-sm text-ink-secondary">Total Paid</p>
+                  <p className="font-semibold text-lg">₦{(order.totalAmount || 0).toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Payment Status</p>
+                  <p className="text-sm text-ink-secondary">Payment Status</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {order.isPaid ? (
                       <>
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <span className="font-medium text-green-600">Paid</span>
+                        <CheckCircle className="w-4 h-4 text-success" />
+                        <span className="font-medium text-success">Paid</span>
                       </>
                     ) : (
                       <>
-                        <Clock className="w-4 h-4 text-yellow-500" />
-                        <span className="font-medium text-yellow-600">Pending</span>
+                        <Clock className="w-4 h-4 text-warning" />
+                        <span className="font-medium text-warning">Pending</span>
                       </>
                     )}
                   </div>
@@ -631,51 +633,51 @@ export default function OrderDetailPage() {
 
           {/* Reviews Section */}
           {(order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" />
                 Reviews & Feedback
               </h2>
 
-              <div className="flex items-center justify-between p-4 border rounded-lg mb-4 bg-gradient-to-r from-purple-50 to-pink-50">
+              <div className="flex items-center justify-between p-4 border border-border rounded-lg mb-4 bg-primary/5">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Package className="w-5 h-5 text-purple-600" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <h3 className="font-medium">Rate this Product</h3>
-                    <p className="text-sm text-gray-600">Share your experience with {order.product?.name}</p>
+                    <h3 className="font-medium">Rate this product</h3>
+                    <p className="text-sm text-ink-secondary">Share your experience with {order.product?.name}</p>
                   </div>
                 </div>
                 {canReviewProduct ? (
                   <div className="flex gap-2">
                     <Button
                       onClick={() => router.push(`/orders/${order.id}/review-product`)}
-                      className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+                      className="flex items-center gap-2 bg-primary hover:brightness-95"
                     >
-                      <Star className="w-4 h-4" /> Review Product
+                      <Star className="w-4 h-4" strokeWidth={1.75} /> Review product
                     </Button>
                     <Button variant="ghost" onClick={() => setReviewModal({ isOpen: true, type: 'PRODUCT' })}>
                       Quick Review
                     </Button>
                   </div>
                 ) : order.productReviews?.length > 0 ? (
-                  <span className="text-green-600 font-medium flex items-center gap-1">
+                  <span className="text-success font-medium flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" /> Product Reviewed
                   </span>
                 ) : (
-                  <span className="text-gray-500 text-sm">Review not available</span>
+                  <span className="text-ink-secondary text-sm">Review not available</span>
                 )}
               </div>
 
               <div className="flex items-center justify-between p-4 border rounded-lg mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <User className="w-5 h-5 text-blue-600" />
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <User className="w-5 h-5 text-primary" />
                   </div>
                   <div>
                     <h3 className="font-medium">Rate the Seller</h3>
-                    <p className="text-sm text-gray-600">How was your experience with {order.seller?.name || 'the seller'}?</p>
+                    <p className="text-sm text-ink-secondary">How was your experience with {order.seller?.name || 'the seller'}?</p>
                   </div>
                 </div>
                 {canReviewSeller ? (
@@ -691,23 +693,23 @@ export default function OrderDetailPage() {
                     </Button>
                   </div>
                 ) : order.reviews?.some((r: any) => r.type === 'SELLER') ? (
-                  <span className="text-green-600 font-medium flex items-center gap-1">
+                  <span className="text-success font-medium flex items-center gap-1">
                     <CheckCircle className="w-4 h-4" /> Seller Reviewed
                   </span>
                 ) : (
-                  <span className="text-gray-500 text-sm">Complete product review first</span>
+                  <span className="text-ink-secondary text-sm">Complete product review first</span>
                 )}
               </div>
 
               {order.rider && (
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-50 rounded-lg">
-                      <Truck className="w-5 h-5 text-green-600" />
+                    <div className="p-2 bg-success/10 rounded-lg">
+                      <Truck className="w-5 h-5 text-success" />
                     </div>
                     <div>
                       <h3 className="font-medium">Rate the Rider</h3>
-                      <p className="text-sm text-gray-600">How was your delivery with {order.rider.name}?</p>
+                      <p className="text-sm text-ink-secondary">How was your delivery with {order.rider.name}?</p>
                     </div>
                   </div>
                   {canReviewRider ? (
@@ -715,11 +717,11 @@ export default function OrderDetailPage() {
                       <Star className="w-4 h-4" /> Review Rider
                     </Button>
                   ) : order.reviews?.some((r: any) => r.type === 'RIDER') ? (
-                    <span className="text-green-600 font-medium flex items-center gap-1">
+                    <span className="text-success font-medium flex items-center gap-1">
                       <CheckCircle className="w-4 h-4" /> Rider Reviewed
                     </span>
                   ) : (
-                    <span className="text-gray-500 text-sm">Review not available</span>
+                    <span className="text-ink-secondary text-sm">Review not available</span>
                   )}
                 </div>
               )}
@@ -738,7 +740,7 @@ export default function OrderDetailPage() {
         <div className="space-y-6">
 
           {/* Buyer Card */}
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-lg border border-border p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <User className="w-5 h-5" />
               Buyer Information
@@ -747,19 +749,19 @@ export default function OrderDetailPage() {
               {order.buyer?.profilePhoto ? (
                 <img src={order.buyer.profilePhoto} alt={order.buyer.name || 'Buyer'} className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-6 h-6 text-gray-500" />
+                <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
+                  <User className="w-6 h-6 text-ink-secondary" />
                 </div>
               )}
               <div>
                 <h4 className="font-medium">{order.buyer?.name || 'Anonymous'}</h4>
-                <p className="text-sm text-gray-600">{order.buyer?.phone || order.buyer?.email || ''}</p>
+                <p className="text-sm text-ink-secondary">{order.buyer?.phone || order.buyer?.email || ''}</p>
               </div>
             </div>
           </div>
 
           {/* Seller Card */}
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-lg border border-border p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2">
               <Shield className="w-5 h-5" />
               Seller Information
@@ -768,15 +770,15 @@ export default function OrderDetailPage() {
               {order.seller?.profilePhoto ? (
                 <img src={order.seller.profilePhoto} alt={order.seller.name || 'Seller'} className="w-12 h-12 rounded-full object-cover" />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                  <User className="w-6 h-6 text-gray-500" />
+                <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
+                  <User className="w-6 h-6 text-ink-secondary" />
                 </div>
               )}
               <div>
-                <Link href={`/seller/${order.seller?.id}`} className="font-medium text-blue-600 hover:underline">
+                <Link href={`/seller/${order.seller?.id}`} className="font-medium text-primary hover:underline">
                   {order.seller?.name || 'Seller'}
                 </Link>
-                <p className="text-sm text-gray-600">{order.seller?.phone || order.seller?.email || ''}</p>
+                <p className="text-sm text-ink-secondary">{order.seller?.phone || order.seller?.email || ''}</p>
               </div>
             </div>
             <RatingBadge
@@ -791,7 +793,7 @@ export default function OrderDetailPage() {
 
           {/* Rider Card */}
           {order.rider && (
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <Truck className="w-5 h-5" />
                 Rider Information
@@ -800,13 +802,13 @@ export default function OrderDetailPage() {
                 {order.rider.profilePhoto ? (
                   <img src={order.rider.profilePhoto} alt={order.rider.name || 'Rider'} className="w-12 h-12 rounded-full object-cover" />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="w-6 h-6 text-gray-500" />
+                  <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
+                    <User className="w-6 h-6 text-ink-secondary" />
                   </div>
                 )}
                 <div>
                   <h4 className="font-medium">{order.rider.name}</h4>
-                  <p className="text-sm text-gray-600">{order.rider.phone || order.rider.email || ''}</p>
+                  <p className="text-sm text-ink-secondary">{order.rider.phone || order.rider.email || ''}</p>
                 </div>
               </div>
               <RatingBadge
@@ -819,14 +821,14 @@ export default function OrderDetailPage() {
 
           {/* ── Dispute card ──────────────────────────────────────────────── */}
           {userRole === 'BUYER' && order.rider && LIVE_TRACKING_STATUSES.includes(order.status) && (
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <Navigation className="w-5 h-5 text-blue-600" />
+                  <Navigation className="w-5 h-5 text-primary" />
                   Rider Live Map
                 </h3>
                 {liveTrackingLoading && (
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <span className="text-xs text-ink-secondary flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     Loading
                   </span>
@@ -834,14 +836,14 @@ export default function OrderDetailPage() {
               </div>
 
               {liveTrackingError && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">
+                <p className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 mb-3">
                   {liveTrackingError}
                 </p>
               )}
 
               {liveTracking?.latestPoint ? (
                 <>
-                  <div className="rounded-xl overflow-hidden border border-gray-200 mb-3">
+                  <div className="rounded-xl overflow-hidden border border-border mb-3">
                     <iframe
                       title="Rider live location map"
                       src={liveMapUrl || undefined}
@@ -850,15 +852,15 @@ export default function OrderDetailPage() {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-blue-50 rounded-lg px-3 py-2">
-                      <p className="text-[11px] text-blue-600 font-semibold">Last update</p>
-                      <p className="text-xs font-bold text-blue-800">
+                    <div className="bg-primary/10 rounded-lg px-3 py-2">
+                      <p className="text-[11px] text-primary font-semibold">Last update</p>
+                      <p className="text-xs font-semibold text-primary">
                         {format(new Date(liveTracking.latestPoint.at), 'h:mm:ss a')}
                       </p>
                     </div>
-                    <div className="bg-violet-50 rounded-lg px-3 py-2">
-                      <p className="text-[11px] text-violet-600 font-semibold">Route points</p>
-                      <p className="text-xs font-bold text-violet-800">{liveTracking.points?.length || 0} captured</p>
+                    <div className="bg-primary/10 rounded-lg px-3 py-2">
+                      <p className="text-[11px] text-primary font-semibold">Route points</p>
+                      <p className="text-xs font-semibold text-primary">{liveTracking.points?.length || 0} captured</p>
                     </div>
                   </div>
                   {openMapUrl && (
@@ -866,7 +868,7 @@ export default function OrderDetailPage() {
                       href={openMapUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 text-blue-700 font-semibold text-sm hover:bg-blue-50 transition-colors"
+                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-lg border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                       Open in Google Maps
@@ -874,22 +876,22 @@ export default function OrderDetailPage() {
                   )}
                 </>
               ) : (
-                <p className="text-sm text-gray-500 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                <p className="text-sm text-ink-secondary bg-surface border border-border rounded-lg px-3 py-2">
                   Waiting for rider location ping...
                 </p>
               )}
 
               {liveTracking?.checkpoints?.length > 0 && (
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2 flex items-center gap-1.5">
+                  <p className="text-xs uppercase tracking-wide text-ink-secondary font-semibold mb-2 flex items-center gap-1.5">
                     <Route className="w-3.5 h-3.5" />
                     Delivery checkpoints
                   </p>
                   <div className="space-y-2 max-h-40 overflow-auto">
                     {[...liveTracking.checkpoints].reverse().slice(0, 5).map((checkpoint: any) => (
-                      <div key={checkpoint.id} className="flex items-start justify-between gap-2 bg-gray-50 rounded-lg px-3 py-2">
-                        <p className="text-xs text-gray-700 font-medium">{getCheckpointLabel(checkpoint)}</p>
-                        <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                      <div key={checkpoint.id} className="flex items-start justify-between gap-2 bg-surface rounded-lg px-3 py-2">
+                        <p className="text-xs text-ink-secondary font-medium">{getCheckpointLabel(checkpoint)}</p>
+                        <span className="text-[11px] text-ink-secondary whitespace-nowrap">
                           {format(new Date(checkpoint.at), 'h:mm a')}
                         </span>
                       </div>
@@ -901,12 +903,12 @@ export default function OrderDetailPage() {
           )}
 
           {order.dispute ? (
-            <div className="bg-white rounded-lg border border-orange-200 p-6">
-              <h3 className="font-semibold mb-1 flex items-center gap-2 text-orange-700">
+            <div className="bg-white rounded-lg border border-warning/30 p-6">
+              <h3 className="font-semibold mb-1 flex items-center gap-2 text-warning">
                 <Shield className="w-5 h-5" />
                 Dispute Filed
               </h3>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-ink-secondary mb-4">
                 A dispute has been opened for this order. Track your case and
                 communicate with the support team.
               </p>
@@ -917,7 +919,7 @@ export default function OrderDetailPage() {
               </div>
               <Button
                 onClick={() => router.push(`/disputes/${order.dispute.id}`)}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2"
+                className="w-full bg-warning hover:brightness-95 text-white flex items-center justify-center gap-2"
               >
                 <Shield className="w-4 h-4" />
                 Track Dispute
@@ -927,7 +929,7 @@ export default function OrderDetailPage() {
                 <Button
                   onClick={handleSellerConfirmReturn}
                   disabled={confirmingReturn}
-                  className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
+                  className="w-full mt-3 bg-success hover:brightness-95 text-white flex items-center justify-center gap-2"
                 >
                   {confirmingReturn
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming...</>
@@ -939,19 +941,19 @@ export default function OrderDetailPage() {
           ) : (
             userRole === 'BUYER' &&
             (order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-              <div className="bg-white rounded-lg border p-6">
-                <h3 className="font-semibold mb-1 flex items-center gap-2 text-gray-700">
-                  <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <div className="bg-white rounded-lg border border-border p-6">
+                <h3 className="font-semibold mb-1 flex items-center gap-2 text-ink-secondary">
+                  <AlertTriangle className="w-5 h-5 text-warning" />
                   Something wrong?
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-ink-secondary mb-4">
                   If there's an issue with this order, you can open a dispute
                   within 48 hours of delivery.
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => router.push(`/orders/${order.id}/dispute`)}
-                  className="w-full border-orange-300 text-orange-600 hover:bg-orange-50"
+                  className="w-full border-warning/30 text-warning hover:bg-warning/10"
                 >
                   Open a Dispute
                 </Button>
@@ -960,18 +962,18 @@ export default function OrderDetailPage() {
           )}
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-lg border border-border p-6">
             <h3 className="font-semibold mb-4">Order Summary</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
+                <span className="text-ink-secondary">Subtotal</span>
                 <span>₦{(order.productPrice || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
+                <span className="text-ink-secondary">Delivery Fee</span>
                 <span>₦{(order.deliveryFee || 0).toLocaleString()}</span>
               </div>
-              <div className="border-t pt-3 flex justify-between font-bold">
+              <div className="border-t pt-3 flex justify-between font-semibold">
                 <span>Total</span>
                 <span>₦{(order.totalAmount || 0).toLocaleString()}</span>
               </div>
@@ -980,26 +982,26 @@ export default function OrderDetailPage() {
 
           {/* Review Status Summary */}
           {(order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-            <div className="bg-white rounded-lg border p-6">
+            <div className="bg-white rounded-lg border border-border p-6">
               <h3 className="font-semibold mb-4">Review Status</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Product Review</span>
-                  <span className={`px-2 py-1 rounded text-xs ${order.productReviews?.length > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {order.productReviews?.length > 0 ? 'Completed ✓' : 'Pending'}
+                  <span className="text-ink-secondary">Product Review</span>
+                  <span className={`px-2 py-1 rounded text-xs ${order.productReviews?.length > 0 ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                    {order.productReviews?.length > 0 ? 'Completed' : 'Pending'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Seller Review</span>
-                  <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'SELLER') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                    {order.reviews?.some((r: any) => r.type === 'SELLER') ? 'Completed ✓' : 'Pending'}
+                  <span className="text-ink-secondary">Seller Review</span>
+                  <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'SELLER') ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                    {order.reviews?.some((r: any) => r.type === 'SELLER') ? 'Completed' : 'Pending'}
                   </span>
                 </div>
                 {order.rider && (
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Rider Review</span>
-                    <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'RIDER') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                      {order.reviews?.some((r: any) => r.type === 'RIDER') ? 'Completed ✓' : 'Pending'}
+                    <span className="text-ink-secondary">Rider Review</span>
+                    <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'RIDER') ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
+                      {order.reviews?.some((r: any) => r.type === 'RIDER') ? 'Completed' : 'Pending'}
                     </span>
                   </div>
                 )}

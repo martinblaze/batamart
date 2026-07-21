@@ -1,5 +1,9 @@
 // app/terms/sellers/page.tsx
 import Link from 'next/link'
+import {
+  GraduationCap, Package, Tag, CreditCard, Lock, Truck, Scale, Star, Ban,
+  FileEdit, ShoppingBag, ChevronLeft, CheckCircle2,
+} from 'lucide-react'
 
 export const metadata = {
   title: 'Seller Terms & Conditions – BATAMART Marketplace',
@@ -10,7 +14,7 @@ const sections = [
   {
     id: '1',
     title: 'Eligibility',
-    icon: '🎓',
+    icon: GraduationCap,
     content: [
       'You must be a currently enrolled student, staff member, or affiliated member of a supported campus to sell on BATAMART.',
       'You must be at least 16 years of age or have the consent of a parent or guardian.',
@@ -21,7 +25,7 @@ const sections = [
   {
     id: '2',
     title: 'Permitted & Prohibited Products',
-    icon: '📦',
+    icon: Package,
     content: [
       'You may sell physical goods, digital items, and campus-relevant services that comply with university policies and Nigerian law.',
       'Prohibited items include: weapons, alcohol, tobacco, counterfeit goods, stolen property, explicit/adult content, prescription medications, and any item banned by campus regulations.',
@@ -32,7 +36,7 @@ const sections = [
   {
     id: '3',
     title: 'Listings & Pricing',
-    icon: '🏷️',
+    icon: Tag,
     content: [
       'All listings must include accurate photos, honest descriptions, and a fair market price.',
       'Prices must be in Nigerian Naira (₦). Price manipulation or price gouging is not permitted.',
@@ -43,7 +47,7 @@ const sections = [
   {
     id: '4',
     title: 'Payments & Escrow',
-    icon: '💳',
+    icon: CreditCard,
     content: [
       "All payments are processed through BATAMART's secure escrow system. Funds are held until the buyer confirms delivery.",
       'You will receive payment into your BATAMART wallet after successful delivery confirmation by the buyer.',
@@ -54,7 +58,7 @@ const sections = [
   {
     id: '5',
     title: 'Withdrawals & Security',
-    icon: '🔐',
+    icon: Lock,
     content: [
       'All withdrawal requests from your BATAMART wallet require your configured security checks (such as withdrawal PIN and account validation).',
       'You are responsible for keeping your account credentials and payout details accurate and confidential.',
@@ -65,7 +69,7 @@ const sections = [
   {
     id: '6',
     title: 'Order Fulfillment & Delivery',
-    icon: '🚚',
+    icon: Truck,
     content: [
       'You are responsible for ensuring your product is ready for pickup when an order is placed.',
       'Orders must be made available for pickup or delivery within the timeframe stated on your listing.',
@@ -76,7 +80,7 @@ const sections = [
   {
     id: '7',
     title: 'Disputes & Returns',
-    icon: '⚖️',
+    icon: Scale,
     content: [
       'Buyers may raise a dispute within 48 hours of delivery if a product does not match its listing description.',
       "BATAMART's support team will review all disputes fairly, considering evidence from both parties.",
@@ -87,7 +91,7 @@ const sections = [
   {
     id: '8',
     title: 'Ratings & Reviews',
-    icon: '⭐',
+    icon: Star,
     content: [
       'Buyers may leave honest ratings and reviews after each completed transaction.',
       'Attempting to manipulate your ratings — including creating fake buyer accounts or coercing buyers — is strictly prohibited.',
@@ -98,7 +102,7 @@ const sections = [
   {
     id: '9',
     title: 'Account Suspension & Termination',
-    icon: '🚫',
+    icon: Ban,
     content: [
       'BATAMART may suspend or permanently terminate your seller account for violations of these terms, fraudulent activity, or behaviour deemed harmful to the community.',
       'Upon termination, any funds held in escrow for ongoing orders will be resolved per the dispute resolution process.',
@@ -109,7 +113,7 @@ const sections = [
   {
     id: '10',
     title: 'Changes to These Terms',
-    icon: '📝',
+    icon: FileEdit,
     content: [
       'BATAMART reserves the right to update these Seller Terms at any time. You will be notified via email or in-app notification.',
       'Continued use of your seller account after changes take effect constitutes acceptance of the updated terms.',
@@ -120,41 +124,39 @@ const sections = [
 
 export default function SellerTermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Link
             href="/become-seller"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-BATAMART-primary transition-colors mb-6"
+            className="inline-flex items-center text-sm text-ink-secondary hover:text-primary transition-colors mb-6"
           >
-            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="w-4 h-4 mr-1.5" strokeWidth={2} />
             Back to Become a Seller
           </Link>
 
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl">🛍️</span>
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <ShoppingBag className="w-7 h-7 text-primary" strokeWidth={1.75} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Seller Terms & Conditions</h1>
-          <p className="text-gray-500 mt-1 text-sm">
+              <h1 className="text-3xl font-semibold text-ink">Seller Terms & Conditions</h1>
+          <p className="text-ink-secondary mt-1 text-sm">
                 BATAMART Campus Marketplace &nbsp;·&nbsp; Effective: May 2026 &nbsp;·&nbsp; Version 1.1
           </p>
             </div>
           </div>
 
-          <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-5">
-            <p className="text-blue-900 text-sm leading-relaxed">
+          <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl p-5">
+            <p className="text-ink text-sm leading-relaxed">
               By registering as a seller on BATAMART, you agree to abide by these terms in addition to our general{' '}
-              <Link href="/terms" className="font-semibold underline underline-offset-2 hover:text-blue-700">
+              <Link href="/terms" className="font-semibold underline underline-offset-2 hover:text-primary">
                 Terms & Conditions
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="font-semibold underline underline-offset-2 hover:text-blue-700">
+              <Link href="/privacy" className="font-semibold underline underline-offset-2 hover:text-primary">
                 Privacy Policy
               </Link>
               . Please read carefully before proceeding.
@@ -166,16 +168,16 @@ export default function SellerTermsPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
 
         {/* Table of Contents */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Contents</h2>
+        <div className="bg-white rounded-2xl border border-border p-6 mb-8">
+          <h2 className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-4">Contents</h2>
           <div className="grid sm:grid-cols-2 gap-1">
             {sections.map((s) => (
               <a
                 key={s.id}
                 href={`#section-${s.id}`}
-                className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-BATAMART-primary py-1.5 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2.5 text-sm text-ink-secondary hover:text-primary py-1.5 px-3 rounded-lg hover:bg-surface transition-colors"
               >
-                <span>{s.icon}</span>
+                <s.icon className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
                 <span>{s.id}. {s.title}</span>
               </a>
             ))}
@@ -188,19 +190,19 @@ export default function SellerTermsPage() {
             <div
               key={section.id}
               id={`section-${section.id}`}
-              className="bg-white rounded-2xl border border-gray-200 overflow-hidden scroll-mt-6"
+              className="bg-white rounded-2xl border border-border overflow-hidden scroll-mt-6"
             >
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/70">
-                <span className="text-xl">{section.icon}</span>
-                <h2 className="font-bold text-gray-900 text-base">
-                  <span className="text-gray-400 font-normal mr-1.5">{section.id}.</span>
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-surface/70">
+                <section.icon className="w-5 h-5 text-primary flex-shrink-0" strokeWidth={1.75} />
+                <h2 className="font-semibold text-ink text-base">
+                  <span className="text-ink-muted font-normal mr-1.5">{section.id}.</span>
                   {section.title}
                 </h2>
               </div>
               <ul className="px-6 py-5 space-y-3">
                 {section.content.map((point, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-gray-700 leading-relaxed">
-                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-BATAMART-primary flex-shrink-0" />
+                  <li key={i} className="flex items-start gap-3 text-sm text-ink-secondary leading-relaxed">
+                    <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                     {point}
                   </li>
                 ))}
@@ -210,31 +212,31 @@ export default function SellerTermsPage() {
         </div>
 
         {/* Footer CTA */}
-        <div className="mt-10 bg-white border border-gray-200 rounded-2xl p-8 text-center">
-          <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
+        <div className="mt-10 bg-white border border-border rounded-2xl p-8 text-center">
+          <p className="text-ink-secondary text-sm mb-6 max-w-md mx-auto">
             By clicking{' '}
-            <strong className="text-gray-700">"Become a Seller"</strong>{' '}
+            <strong className="text-ink-secondary">"Become a Seller"</strong>{' '}
             on the previous page, you confirm that you have read, understood, and agree to these Seller Terms & Conditions.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/become-seller"
-              className="inline-flex items-center justify-center gap-2 bg-BATAMART-primary hover:bg-BATAMART-dark text-white px-8 py-3 rounded-xl font-semibold text-sm transition-colors"
+              className="inline-flex items-center justify-center gap-2 bg-primary hover:brightness-95 text-white px-8 py-3 rounded-xl font-semibold text-sm transition-colors"
             >
-              ✅ I Agree — Become a Seller
+              <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} /> I Agree — Become a Seller
             </Link>
             <Link
               href="/marketplace"
-              className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 px-8 py-3 rounded-xl font-semibold text-sm transition-colors"
+              className="inline-flex items-center justify-center gap-2 border border-border text-ink-secondary hover:bg-surface px-8 py-3 rounded-xl font-semibold text-sm transition-colors"
             >
               Back to Marketplace
             </Link>
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6 pb-8">
+        <p className="text-center text-xs text-ink-muted mt-6 pb-8">
           Questions? Contact us at{' '}
-          <a href="mailto:support@BATAMART.com" className="hover:text-BATAMART-primary underline">
+          <a href="mailto:support@BATAMART.com" className="hover:text-primary underline">
             support@BATAMART.com
           </a>
         </p>

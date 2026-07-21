@@ -53,16 +53,16 @@ function UsageCard({
   accent: string
 }) {
   return (
-    <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-gray-600 transition-colors">
+    <div className="bg-white border border-border rounded-2xl p-6 hover:border-border transition-colors">
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-xl ${accent}`}>
           {icon}
         </div>
-        <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full">Live</span>
+        <span className="text-xs text-ink-muted bg-surface px-2 py-1 rounded-full">Live</span>
       </div>
-      <h3 className="text-gray-400 text-sm font-medium mb-1">{label}</h3>
-      <p className="text-3xl font-bold text-white mb-2 font-mono">{value}</p>
-      <p className="text-sm text-gray-500">{sub}</p>
+      <h3 className="text-ink-secondary text-sm font-medium mb-1">{label}</h3>
+      <p className="text-3xl font-semibold text-ink mb-2 font-mono">{value}</p>
+      <p className="text-sm text-ink-muted">{sub}</p>
     </div>
   )
 }
@@ -111,15 +111,15 @@ export default function AdminUsagePage() {
     <div className="space-y-6 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Usage</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
+          <h1 className="text-2xl font-semibold text-ink">Usage</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">
             Database size and table counts for free-tier monitoring
           </p>
         </div>
         <button
           onClick={fetchUsage}
           disabled={loading}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-sm font-semibold text-gray-300 hover:text-white hover:border-gray-600 disabled:opacity-60 transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-border rounded-xl text-sm font-semibold text-ink-secondary hover:text-ink hover:border-border disabled:opacity-60 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
@@ -127,11 +127,11 @@ export default function AdminUsagePage() {
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
-          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 bg-danger/10 border border-danger/30 rounded-2xl p-4">
+          <AlertTriangle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-red-200">Usage data unavailable</p>
-            <p className="text-sm text-red-300/80 mt-1">{error}</p>
+            <p className="text-sm font-semibold text-danger">Usage data unavailable</p>
+            <p className="text-sm text-danger/80 mt-1">{error}</p>
           </div>
         </div>
       )}
@@ -139,10 +139,10 @@ export default function AdminUsagePage() {
       {loading && !usage ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-gray-800 border border-gray-700 rounded-2xl p-6 animate-pulse">
-              <div className="h-12 w-12 rounded-xl bg-gray-700 mb-4" />
-              <div className="h-4 w-24 bg-gray-700 rounded mb-2" />
-              <div className="h-8 w-20 bg-gray-700 rounded" />
+            <div key={i} className="bg-white border border-border rounded-2xl p-6 animate-pulse">
+              <div className="h-12 w-12 rounded-xl bg-surface mb-4" />
+              <div className="h-4 w-24 bg-surface rounded mb-2" />
+              <div className="h-8 w-20 bg-surface rounded" />
             </div>
           ))}
         </div>
@@ -153,56 +153,56 @@ export default function AdminUsagePage() {
               label="Database Size"
               value={usage.dbSize || 'Unknown'}
               sub={dbSizeSub}
-              icon={<HardDrive className="w-6 h-6 text-indigo-300" />}
-              accent="bg-indigo-500/10"
+              icon={<HardDrive className="w-6 h-6 text-primary" />}
+              accent="bg-primary/10"
             />
             <UsageCard
               label="Users"
               value={numberFmt(usage.userCount)}
               sub="Total accounts in the database"
-              icon={<Users className="w-6 h-6 text-blue-300" />}
-              accent="bg-blue-500/10"
+              icon={<Users className="w-6 h-6 text-primary" />}
+              accent="bg-primary/10"
             />
             <UsageCard
               label="Products"
               value={numberFmt(usage.productCount)}
               sub="Total product records"
-              icon={<Package className="w-6 h-6 text-green-300" />}
-              accent="bg-green-500/10"
+              icon={<Package className="w-6 h-6 text-success" />}
+              accent="bg-success/10"
             />
             <UsageCard
               label="Orders"
               value={numberFmt(usage.orderCount)}
               sub="Total order records"
-              icon={<ShoppingBag className="w-6 h-6 text-purple-300" />}
-              accent="bg-purple-500/10"
+              icon={<ShoppingBag className="w-6 h-6 text-primary" />}
+              accent="bg-primary/10"
             />
             <UsageCard
               label="Notifications"
               value={numberFmt(usage.notificationCount)}
               sub="Rows that can grow quickly over time"
-              icon={<Bell className="w-6 h-6 text-amber-300" />}
-              accent="bg-amber-500/10"
+              icon={<Bell className="w-6 h-6 text-warning" />}
+              accent="bg-warning/100/10"
             />
           </div>
 
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
+          <div className="bg-white border border-border rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <Database className="w-5 h-5 text-indigo-400" />
-              <h2 className="text-lg font-bold text-white">Free-Tier Watchlist</h2>
+              <Database className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-ink">Free-Tier Watchlist</h2>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-700/60">
-                <span className="text-gray-400">Supabase storage</span>
-                <span className="font-mono text-white">{usage.dbSize || 'Unknown'}</span>
+              <div className="flex items-center justify-between gap-4 py-3 border-b border-border/60">
+                <span className="text-ink-secondary">Supabase storage</span>
+                <span className="font-mono text-ink">{usage.dbSize || 'Unknown'}</span>
               </div>
-              <div className="flex items-center justify-between gap-4 py-3 border-b border-gray-700/60">
-                <span className="text-gray-400">Most likely table to prune first</span>
-                <span className="font-mono text-white">Notifications</span>
+              <div className="flex items-center justify-between gap-4 py-3 border-b border-border/60">
+                <span className="text-ink-secondary">Most likely table to prune first</span>
+                <span className="font-mono text-ink">Notifications</span>
               </div>
               <div className="flex items-center justify-between gap-4 py-3">
-                <span className="text-gray-400">Last refreshed</span>
-                <span className="font-mono text-white">{lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}</span>
+                <span className="text-ink-secondary">Last refreshed</span>
+                <span className="font-mono text-ink">{lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}</span>
               </div>
             </div>
           </div>

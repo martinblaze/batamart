@@ -53,11 +53,11 @@ export default function ReportsPage() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'PRODUCT': return 'bg-blue-500/10 text-blue-400'
-      case 'SELLER': return 'bg-green-500/10 text-green-400'
-      case 'RIDER': return 'bg-purple-500/10 text-purple-400'
-      case 'BUYER': return 'bg-yellow-500/10 text-yellow-400'
-      default: return 'bg-gray-500/10 text-gray-400'
+      case 'PRODUCT': return 'bg-primary/10 text-primary'
+      case 'SELLER': return 'bg-success/10 text-success'
+      case 'RIDER': return 'bg-primary/10 text-primary'
+      case 'BUYER': return 'bg-warning/10 text-warning'
+      default: return 'bg-surface text-ink-secondary'
     }
   }
 
@@ -68,7 +68,7 @@ export default function ReportsPage() {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="px-4 py-3 bg-white border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="PENDING">Pending</option>
           <option value="UNDER_REVIEW">Under Review</option>
@@ -80,7 +80,7 @@ export default function ReportsPage() {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+          className="px-4 py-3 bg-white border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
           <option value="ALL">All Types</option>
           <option value="PRODUCT">Product</option>
@@ -94,60 +94,60 @@ export default function ReportsPage() {
       <div className="space-y-4">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
           </div>
         ) : reports.length === 0 ? (
-          <div className="text-center py-12 bg-gray-800 border border-gray-700 rounded-2xl">
-            <Flag className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400">No reports found</p>
+          <div className="text-center py-12 bg-white border border-border rounded-2xl">
+            <Flag className="w-16 h-16 text-ink-muted mx-auto mb-4" />
+            <p className="text-ink-secondary">No reports found</p>
           </div>
         ) : (
           reports.map((report) => (
-            <div key={report.id} className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:shadow-xl transition-all">
+            <div key={report.id} className="bg-white border border-border rounded-2xl p-6 hover:shadow-soft transition-all">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-3 bg-red-500/10 rounded-xl">
-                    <Flag className="w-6 h-6 text-red-400" />
+                  <div className="p-3 bg-danger/10 rounded-xl">
+                    <Flag className="w-6 h-6 text-danger" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(report.type)}`}>
                         {report.type}
                       </span>
-                      <span className="px-3 py-1 bg-yellow-500/10 text-yellow-400 rounded-full text-xs font-semibold">
+                      <span className="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-semibold">
                         {report.reason}
                       </span>
                     </div>
-                    <p className="text-white font-medium mb-1">
+                    <p className="text-ink font-medium mb-1">
                       Reported by: {report.reporter.name}
                     </p>
                     {report.reportedUser && (
-                      <p className="text-gray-400 text-sm">Against: {report.reportedUser.name}</p>
+                      <p className="text-ink-secondary text-sm">Against: {report.reportedUser.name}</p>
                     )}
                     {report.reportedProduct && (
-                      <p className="text-gray-400 text-sm">Product: {report.reportedProduct.name}</p>
+                      <p className="text-ink-secondary text-sm">Product: {report.reportedProduct.name}</p>
                     )}
                   </div>
                 </div>
                 <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  report.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' :
-                  report.status === 'UNDER_REVIEW' ? 'bg-blue-500/10 text-blue-400' :
-                  report.status === 'RESOLVED' ? 'bg-green-500/10 text-green-400' :
-                  'bg-gray-500/10 text-gray-400'
+                  report.status === 'PENDING' ? 'bg-warning/10 text-warning' :
+                  report.status === 'UNDER_REVIEW' ? 'bg-primary/10 text-primary' :
+                  report.status === 'RESOLVED' ? 'bg-success/10 text-success' :
+                  'bg-surface text-ink-secondary'
                 }`}>
                   {report.status}
                 </span>
               </div>
 
-              <p className="text-gray-400 mb-4">{report.description}</p>
+              <p className="text-ink-secondary mb-4">{report.description}</p>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                <span className="text-sm text-gray-500">
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <span className="text-sm text-ink-muted">
                   {new Date(report.createdAt).toLocaleDateString()}
                 </span>
                 <Link
                   href={`/admin/reports/${report.id}`}
-                  className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors font-semibold text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-danger/10 text-danger rounded-lg hover:bg-danger/10 transition-colors font-semibold text-sm flex items-center gap-2"
                 >
                   <Eye className="w-4 h-4" />
                   Review

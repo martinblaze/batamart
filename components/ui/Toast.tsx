@@ -62,26 +62,26 @@ export function ToastContainer() {
   const getIcon = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-success" strokeWidth={1.75} />;
       case 'error':
-        return <XCircle className="w-5 h-5 text-red-600" />;
+        return <XCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />;
       case 'warning':
-        return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+        return <AlertCircle className="w-5 h-5 text-warning" strokeWidth={1.75} />;
       case 'info':
-        return <Info className="w-5 h-5 text-blue-600" />;
+        return <Info className="w-5 h-5 text-primary" strokeWidth={1.75} />;
     }
   };
 
   const getStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'bg-white border-success/30';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-white border-danger/30';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-white border-warning/30';
       case 'info':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-white border-primary/30';
     }
   };
 
@@ -92,23 +92,24 @@ export function ToastContainer() {
           key={toast.id}
           className={`${getStyles(
             toast.type
-          )} border rounded-lg shadow-lg p-4 pointer-events-auto animate-in slide-in-from-right-5 duration-300`}
+          )} border rounded-lg shadow-soft p-4 pointer-events-auto animate-in slide-in-from-right-5 duration-200`}
         >
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-0.5">{getIcon(toast.type)}</div>
             <div className="flex-1 min-w-0">
               {toast.title && (
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                <h4 className="text-sm font-semibold text-ink mb-1">
                   {toast.title}
                 </h4>
               )}
-              <p className="text-sm text-gray-700">{toast.message}</p>
+              <p className="text-sm text-ink-secondary">{toast.message}</p>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex-shrink-0 text-ink-muted hover:text-ink-secondary transition-colors"
+              aria-label="Dismiss notification"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" strokeWidth={1.75} />
             </button>
           </div>
         </div>

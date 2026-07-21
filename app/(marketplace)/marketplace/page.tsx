@@ -17,6 +17,10 @@ import {
   Headphones, Camera, Watch, Dumbbell, Music, Gamepad2,
   Wifi, Battery, Monitor, Smartphone, ShoppingCart,
   TrendingDown, BarChart3, Globe, Leaf, Sun, Moon,
+  Laptop, Car, Ticket, Baby, Palette, LayoutGrid, UtensilsCrossed,
+  Building2, Rocket, Tablet, Footprints, BatteryCharging, GraduationCap,
+  RotateCcw, ClipboardList, Calculator, Ruler, FlaskConical, Usb, Plug,
+  PenTool, Lock, Tv, type LucideIcon,
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 
@@ -60,18 +64,13 @@ const ANIM_CSS = `
     animation: sectionIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  @keyframes shimmer {
-    0%   { background-position: -600px 0; }
-    100% { background-position:  600px 0; }
-  }
   .shimmer {
-    background: linear-gradient(90deg, #f3f4f6 25%, #e9eaec 50%, #f3f4f6 75%);
-    background-size: 1200px 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    background: var(--color-surface);
+    animation: pulse-shimmer 1.5s ease-in-out infinite;
   }
-  .dark .marketplace-shell .shimmer {
-    background: linear-gradient(90deg, #1f2937 25%, #273449 50%, #1f2937 75%);
-    background-size: 1200px 100%;
+  @keyframes pulse-shimmer {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
   }
 
   @keyframes pulse-badge {
@@ -162,11 +161,9 @@ const ANIM_CSS = `
                 color 0.2s ease, border-color 0.2s ease;
   }
   .interest-pill:hover {
-    transform: scale(1.05) translateY(-1px);
-    background: #6366f1 !important;
+    background: var(--color-primary) !important;
     color: white !important;
     border-color: transparent !important;
-    box-shadow: 0 8px 20px rgba(99,102,241,0.25);
   }
   .interest-pill:active { transform: scale(0.96); }
 
@@ -204,49 +201,33 @@ const ANIM_CSS = `
     pointer-events: none;
   }
 
-  /* ── Misc ── */
-  @keyframes viewerCount {
-    0%, 100% { color: #ef4444; }
-    50%       { color: #f97316; }
-  }
-  .viewer-anim { animation: viewerCount 2.5s ease-in-out infinite; }
 
-  .section-stripe         { background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%); }
-  .section-stripe-orange  { background: linear-gradient(135deg, #f97316 0%, #dc2626 100%); }
-  .section-stripe-emerald { background: linear-gradient(135deg, #059669 0%, #0891b2 100%); }
-  .dark .marketplace-shell .section-stripe         { background: linear-gradient(135deg, #0d1016 0%, #171c26 100%); }
-  .dark .marketplace-shell .section-stripe-orange  { background: linear-gradient(135deg, #1a1311 0%, #241a17 100%); }
-  .dark .marketplace-shell .section-stripe-emerald { background: linear-gradient(135deg, #0f1515 0%, #162024 100%); }
+  /* Design bible: gradients banned, single flat accent everywhere. */
+  .section-stripe,
+  .section-stripe-orange,
+  .section-stripe-emerald { background: var(--color-primary); }
+  .dark .marketplace-shell .section-stripe,
+  .dark .marketplace-shell .section-stripe-orange,
+  .dark .marketplace-shell .section-stripe-emerald { background: var(--color-primary); }
 
   .discount-badge {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+    background: var(--color-danger);
   }
 
-  @keyframes floatBadge {
-    0%, 100% { transform: translateY(0)   rotate(-2deg); }
-    50%       { transform: translateY(-2px) rotate(-2deg); }
-  }
-  .float-badge { animation: floatBadge 3s ease-in-out infinite; }
+  .float-badge { }
 
   .promo-bar {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #6366f1);
-    background-size: 200% 100%;
-    animation: shimmerBg 4s linear infinite;
+    background: var(--color-primary);
   }
   .dark .marketplace-shell .promo-bar {
-    background: linear-gradient(90deg, #0f1115, #1a1f2a, #0f1115);
-    background-size: 200% 100%;
-  }
-  @keyframes shimmerBg {
-    0%   { background-position:   0% 50%; }
-    100% { background-position: 200% 50%; }
+    background: var(--color-primary);
   }
 
   .batamart-header {
-    background: linear-gradient(135deg, #4c1d95 0%, #6366f1 60%, #4c1d95 100%);
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
   }
-  .dark .marketplace-shell .batamart-header { background: linear-gradient(135deg, #0c0f15 0%, #171c26 60%, #0c0f15 100%); }
+  .dark .marketplace-shell .batamart-header { background: var(--color-background); border-bottom: 1px solid var(--color-border); }
 
   .cat-tile {
     transition: transform 0.25s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.25s ease;
@@ -278,7 +259,7 @@ const ANIM_CSS = `
     display: block;
     height: 3px;
     width: 40px;
-    background: #6366f1;
+    background: var(--color-primary);
     border-radius: 2px;
     margin-top: 4px;
   }
@@ -334,15 +315,6 @@ const ANIM_CSS = `
   }
   .float-y { animation: floatY 3s ease-in-out infinite; }
 
-  @keyframes gradientShift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .gradient-animated {
-    background-size: 200% 200%;
-    animation: gradientShift 5s ease infinite;
-  }
 
   @keyframes slideInRight {
     from { opacity: 0; transform: translateX(30px); }
@@ -368,21 +340,10 @@ const ANIM_CSS = `
   }
 
   .flash-card {
-    transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.25s ease;
+    transition: transform 0.15s ease-out;
   }
   .flash-card:hover {
-    transform: translateY(-5px) scale(1.03);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.14);
-  }
-
-  .trust-bar {
-    background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
-    background-size: 200% 100%;
-    animation: shimmerBg 3s linear infinite;
-  }
-  .dark .marketplace-shell .trust-bar {
-    background: linear-gradient(90deg, #161a22, #232937, #161a22);
-    background-size: 200% 100%;
+    transform: translateY(-2px);
   }
 
   .dark .marketplace-shell .cat-tile,
@@ -435,21 +396,22 @@ const ANIM_CSS = `
 // ─────────────────────────────────────────────
 // Static data
 // ─────────────────────────────────────────────
-// ── UPGRADED: Category list now matches the full variant system ──────────────
+// Design bible section 6 — lucide-react icons only, no emoji. Single accent
+// color everywhere, so per-category custom hex accents are dropped.
 const CATEGORIES = [
-  { name: 'All',                  icon: '🛍️', color: '#6366f1' },
-  { name: 'Electronics',          icon: '📱', color: '#7c3aed' },
-  { name: 'Computing',            icon: '💻', color: '#2563eb' },
-  { name: 'Fashion',              icon: '👔', color: '#ec4899' },
-  { name: 'Home & Kitchen',       icon: '🏠', color: '#0891b2' },
-  { name: 'Food & Groceries',     icon: '🍔', color: '#f97316' },
-  { name: 'Beauty & Health',      icon: '💄', color: '#db2777' },
-  { name: 'Sports & Fitness',     icon: '⚽', color: '#16a34a' },
-  { name: 'Vehicles & Transport', icon: '🚗', color: '#d97706' },
-  { name: 'Books & Stationery',   icon: '📚', color: '#9333ea' },
-  { name: 'Tickets & Events',     icon: '🎟️', color: '#f59e0b' },
-  { name: 'Kids & Baby',          icon: '🧸', color: '#0d9488' },
-  { name: 'Arts & Crafts',        icon: '🎨', color: '#8b5cf6' },
+  { name: 'All',                  icon: LayoutGrid },
+  { name: 'Electronics',          icon: Smartphone },
+  { name: 'Computing',            icon: Laptop },
+  { name: 'Fashion',              icon: Shirt },
+  { name: 'Home & Kitchen',       icon: Home },
+  { name: 'Food & Groceries',     icon: UtensilsCrossed },
+  { name: 'Beauty & Health',      icon: Sparkles },
+  { name: 'Sports & Fitness',     icon: Dumbbell },
+  { name: 'Vehicles & Transport', icon: Car },
+  { name: 'Books & Stationery',   icon: BookOpen },
+  { name: 'Tickets & Events',     icon: Ticket },
+  { name: 'Kids & Baby',          icon: Baby },
+  { name: 'Arts & Crafts',        icon: Palette },
 ]
 
 const TRENDING_SEARCHES  = ['iPhone', 'Sneakers', 'Laptop', 'Jollof Rice', 'Textbooks', 'Earbuds', 'Braids', 'Power Bank']
@@ -459,15 +421,6 @@ const FEED_ACTIVITY_KEY = 'BATAMART-feed-activity-v1'
 const FEED_CACHE_TTL_MS = 90 * 1000
 
 const MARKETPLACE_VIEW_QUEUE_KEY = 'batamart_product_view_queue_v1'
-
-const CATEGORY_SPOTLIGHTS = [
-  { title: 'Level up your Tech',  categories: ['Phones','Laptops','Earbuds','Power Banks'],          icon: '📱', bg: 'from-violet-50 to-indigo-50', accent: '#6366f1', catFilter: 'Electronics' },
-  { title: 'Campus Fashion',      categories: ['Sneakers','Bags','Watches','Accessories'],          icon: '👔', bg: 'from-pink-50 to-rose-50',    accent: '#ec4899', catFilter: 'Fashion' },
-  { title: 'Home & Kitchen',      categories: ['Furniture','Appliances','Bedding','Decor'],         icon: '🏠', bg: 'from-sky-50 to-blue-50',     accent: '#0891b2', catFilter: 'Home & Kitchen' },
-  { title: 'Food & Groceries',    categories: ['Jollof Rice','Snacks','Drinks','Fast Food'],       icon: '🍔', bg: 'from-orange-50 to-amber-50', accent: '#f97316', catFilter: 'Food & Groceries' },
-  { title: 'Fitness & Sport',     categories: ['Gym Gear','Footwear','Jerseys','Supplements'],     icon: '⚽', bg: 'from-emerald-50 to-green-50', accent: '#16a34a', catFilter: 'Sports & Fitness' },
-  { title: 'Beauty & Health',     categories: ['Skincare','Makeup','Hair','Wellness'],             icon: '💄', bg: 'from-fuchsia-50 to-pink-50', accent: '#db2777', catFilter: 'Beauty & Health' },
-]
 
 const JUST_DROPPED_PAGE_SIZE = 12
 const SESSION_ID_KEY = 'BATAMART_SESSION_ID'
@@ -518,20 +471,19 @@ function ensureSessionId(): string {
 // Small UI atoms
 // ─────────────────────────────────────────────
 function TrustPill({ level }: { level: string }) {
-  const tone =
-    level === 'GOLD'   ? { bg: 'bg-amber-50', text: 'text-amber-700',  ring: 'ring-amber-200',  dot: 'bg-amber-400'  } :
-    level === 'SILVER' ? { bg: 'bg-slate-50',  text: 'text-slate-600',  ring: 'ring-slate-200',  dot: 'bg-slate-400'  } :
-                         { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200', dot: 'bg-orange-400' }
+  // Design bible: status color is reserved for real status, not a "rank" spectrum.
+  // Every trust level renders as a neutral badge; GOLD/verified sellers additionally
+  // get the primary-colored verified badge elsewhere.
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} /> {level}
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface text-ink-secondary">
+      <span className="w-1.5 h-1.5 rounded-full bg-ink-muted" /> {level}
     </span>
   )
 }
 
 function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold ring-1 ring-blue-100">
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary rounded-full text-[10px] font-semibold ring-1 ring-primary/20">
       <BadgeCheck className="w-2.5 h-2.5" /> Verified
     </span>
   )
@@ -541,9 +493,9 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <Star key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
+        <Star key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-warning fill-warning' : 'text-border fill-border'}`} />
       ))}
-      <span className="text-xs font-semibold text-gray-500 ml-0.5">{rating.toFixed(1)}</span>
+      <span className="text-xs font-semibold text-ink-secondary ml-0.5">{rating.toFixed(1)}</span>
     </div>
   )
 }
@@ -566,68 +518,68 @@ function ProductCard({ product, onClick, delay = 0 }: {
   return (
     <div
       onClick={onClick}
-      className="product-card card-enter bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm cursor-pointer flex flex-col group"
+      className="product-card card-enter bg-white rounded-xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      <div className="relative aspect-square bg-surface overflow-hidden">
         <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isTrending && (
-            <span className="badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
-              <Flame className="w-2.5 h-2.5" /> HOT
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-warning text-white text-[10px] font-medium rounded-md">
+              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT
             </span>
           )}
           {product.isNew && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-[10px] font-black rounded-lg shadow-md">
-              <Sparkles className="w-2.5 h-2.5" /> NEW
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Sparkles className="w-2.5 h-2.5" strokeWidth={1.75} /> NEW
             </span>
           )}
           {product.isPersonalised && !product.isTrending && !product.isNew && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-[10px] font-black rounded-lg shadow-md">
-              <Heart className="w-2.5 h-2.5 fill-white" /> FOR YOU
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Heart className="w-2.5 h-2.5 fill-white" strokeWidth={1.75} /> FOR YOU
             </span>
           )}
         </div>
         {discount > 0 && (
-          <div className="float-badge absolute top-2 right-2 discount-badge text-white text-[11px] font-black px-2 py-1 rounded-lg flex items-center gap-1">
+          <div className="float-badge absolute top-2 right-2 discount-badge text-white text-[11px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1">
             <Percent className="w-2.5 h-2.5" />-{discount}%
           </div>
         )}
         {product.images?.length > 1 && (
-          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm">
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-semibold backdrop-blur-sm">
             {product.images.length} photos
           </div>
         )}
         <div className="quick-actions absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-sm transition-colors">
-            <Eye className="w-3.5 h-3.5 text-gray-500" />
+          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+            <Eye className="w-3.5 h-3.5 text-ink-secondary" />
           </button>
-          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors">
-            <Flag className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" />
+          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-white/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+            <Flag className="w-3.5 h-3.5 text-ink-secondary hover:text-danger" />
           </button>
         </div>
       </div>
 
       <div className="p-2.5 sm:p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+        <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-0.5">
           {(() => {
             const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
             return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
           })()}
         </p>
-        <h3 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
+        <h3 className="font-semibold text-ink line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
 
         <div className="mt-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-BATAMART-primary font-black text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
-            {originalPrice && <span className="text-gray-400 font-medium text-[11px] line-through">{fmt(originalPrice)}</span>}
+            <span className="text-primary font-semibold text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
+            {originalPrice && <span className="text-ink-muted font-medium text-[11px] line-through">{fmt(originalPrice)}</span>}
           </div>
           <StarRating rating={product.seller?.avgRating || 0} />
         </div>
 
         {deliveryTag && (
           <div className="mt-1.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
               <Truck className="w-2.5 h-2.5" /> {deliveryTag}
             </span>
           </div>
@@ -635,17 +587,17 @@ function ProductCard({ product, onClick, delay = 0 }: {
 
         {stockLeft && (
           <div className="mt-1">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-500">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-danger">
               <Timer className="w-2.5 h-2.5" /> Only {stockLeft} left
             </span>
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-border">
           <div className="min-w-0 flex items-center gap-1 flex-wrap">
             <Link
               href={`/seller/${product.seller?.id}`}
-              className="text-[10px] font-semibold text-gray-500 hover:text-BATAMART-primary truncate transition-colors"
+              className="text-[10px] font-semibold text-ink-secondary hover:text-primary truncate transition-colors"
               onClick={e => e.stopPropagation()}
             >
               {product.seller?.name}
@@ -665,18 +617,18 @@ function ProductCard({ product, onClick, delay = 0 }: {
 function MiniProductCard({ product, onClick }: { product: any; onClick: () => void }) {
   return (
     <div onClick={onClick} className="mini-card cursor-pointer group">
-      <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2">
+      <div className="aspect-square rounded-xl overflow-hidden bg-surface mb-2">
         <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
       </div>
-      <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{product.name}</p>
-      <p className="text-xs font-black text-BATAMART-primary mt-0.5">{fmt(product.price)}</p>
+      <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{product.name}</p>
+      <p className="text-xs font-semibold text-primary mt-0.5">{fmt(product.price)}</p>
     </div>
   )
 }
 
 function SkeletonCard({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="card-enter bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm" style={{ animationDelay: `${delay}ms` }}>
+    <div className="card-enter bg-white rounded-xl overflow-hidden border border-border shadow-soft" style={{ animationDelay: `${delay}ms` }}>
       <div className="aspect-square shimmer" />
       <div className="p-3 space-y-2">
         <div className="h-2.5 shimmer rounded-full w-1/2" />
@@ -689,84 +641,17 @@ function SkeletonCard({ delay = 0 }: { delay?: number }) {
 }
 
 // ─────────────────────────────────────────────
-// Promo Ticker
+// Trust strip — flat, static, no urgency/emoji (design bible section 1 + 2)
 // ─────────────────────────────────────────────
 function PromoTicker() {
-  const items = [
-    '🔥 Hot Deals — Up to 40% OFF',
-    '⚡ Flash Sale — Limited stock',
-    '🚀 Free Delivery on orders over ₦30,000',
-    '🎓 Verified Campus Sellers Only',
-    '💳 Secure Payments — Wallet Protected',
-    '📦 Campus Pickup Available',
-    '⭐ Top Rated Products on Campus',
-    '🛡️ Buyer Protection Guaranteed',
-  ]
-  const doubled = [...items, ...items]
+  const items = ['Secure payments', 'Verified campus sellers', 'Fast delivery', 'Buyer protection']
   return (
-    <div className="promo-bar overflow-hidden py-1.5 ticker-wrap">
-      <div className="ticker-inner flex whitespace-nowrap">
-        {doubled.map((item, i) => (
-          <span key={i} className="text-white text-[11px] font-bold mx-6 flex-shrink-0">{item}</span>
+    <div className="bg-surface border-b border-border overflow-hidden py-2">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 px-4">
+        {items.map((item) => (
+          <span key={item} className="text-ink-secondary text-xs font-medium">{item}</span>
         ))}
       </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// Category Spotlight Grid
-// ─────────────────────────────────────────────
-function CategorySpotlightGrid({ allProducts, onCategorySelect }: {
-  allProducts: any[]
-  onCategorySelect: (cat: string) => void
-}) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-      {CATEGORY_SPOTLIGHTS.map(spot => {
-        const catProducts = allProducts.filter((p: any) => matchesCategoryFilter(p, spot.catFilter)).slice(0, 4)
-        return (
-          <div
-            key={spot.title}
-            className={`cat-tile card-enter bg-gradient-to-br ${spot.bg} rounded-2xl overflow-hidden border border-white shadow-sm cursor-pointer`}
-            onClick={() => onCategorySelect(spot.catFilter)}
-          >
-            <div className="p-3 pb-1">
-              <p className="text-sm font-black text-gray-900 leading-tight">{spot.title}</p>
-            </div>
-            {catProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-1 p-2 pt-1">
-                {catProducts.map(p => (
-                  <div
-                    key={p.id}
-                    onClick={e => { e.stopPropagation(); onCategorySelect(spot.catFilter) }}
-                    className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm"
-                  >
-                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-                {Array.from({ length: Math.max(0, 4 - catProducts.length) }).map((_, i) => (
-                  <div key={i} className="aspect-square rounded-lg bg-white/60 flex items-center justify-center text-2xl">{spot.icon}</div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-1 p-2 pt-1">
-                {spot.categories.slice(0, 4).map((cat, i) => (
-                  <div key={i} className="aspect-square rounded-lg bg-white/70 flex flex-col items-center justify-center p-1">
-                    <span className="text-lg">{spot.icon}</span>
-                    <span className="text-[8px] font-bold text-gray-600 text-center leading-tight mt-0.5">{cat}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="px-3 pb-3">
-              <span style={{ color: spot.accent }} className="text-[11px] font-black flex items-center gap-1">
-                Shop now <ChevronRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }
@@ -790,7 +675,7 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 // ─────────────────────────────────────────────
 const PRICE_PANELS = [
   {
-    title: 'Shop Fashion for Less',
+    title: 'Shop fashion for less',
     category: 'Fashion',
     catFilter: 'Fashion',
     tiers: [
@@ -799,12 +684,10 @@ const PRICE_PANELS = [
       { label: 'Under ₦30k',  max: 30000 },
       { label: 'Under ₦50k',  max: 50000 },
     ],
-    bg: 'from-pink-50 to-rose-50',
-    accent: '#ec4899',
-    icon: '👔',
+    icon: Shirt,
   },
   {
-    title: 'Tech Deals on Campus',
+    title: 'Tech deals on campus',
     category: 'Electronics',
     catFilter: 'Electronics',
     tiers: [
@@ -813,12 +696,10 @@ const PRICE_PANELS = [
       { label: 'Under ₦100k', max: 100000 },
       { label: 'Under ₦200k', max: 200000 },
     ],
-    bg: 'from-violet-50 to-indigo-50',
-    accent: '#6366f1',
-    icon: '📱',
+    icon: Smartphone,
   },
   {
-    title: 'Beauty Picks for Less',
+    title: 'Beauty picks for less',
     category: 'Beauty & Health',
     catFilter: 'Beauty & Health',
     tiers: [
@@ -827,12 +708,10 @@ const PRICE_PANELS = [
       { label: 'Under ₦20k',  max: 20000 },
       { label: 'Under ₦30k',  max: 30000 },
     ],
-    bg: 'from-fuchsia-50 to-pink-50',
-    accent: '#db2777',
-    icon: '💄',
+    icon: Sparkles,
   },
   {
-    title: 'Food & Groceries Under Budget',
+    title: 'Food & groceries under budget',
     category: 'Food & Groceries',
     catFilter: 'Food & Groceries',
     tiers: [
@@ -841,76 +720,73 @@ const PRICE_PANELS = [
       { label: 'Under ₦10k',  max: 10000 },
       { label: 'Under ₦20k',  max: 20000 },
     ],
-    bg: 'from-orange-50 to-amber-50',
-    accent: '#f97316',
-    icon: '🍔',
+    icon: UtensilsCrossed,
   },
 ]
 
-// ── Campus Stats (animated numbers shown in the stats banner) ──────────────
+// ── Campus stats (shown in the stats banner) ──────────────
 const CAMPUS_STATS = [
-  { label: 'Products Listed',  value: '2,400+', icon: '📦', color: 'text-violet-600' },
-  { label: 'Campus Sellers',   value: '380+',   icon: '🧑‍💼', color: 'text-emerald-600' },
-  { label: 'Orders Delivered', value: '5,100+', icon: '🚀', color: 'text-orange-500' },
-  { label: 'Happy Buyers',     value: '1,200+', icon: '⭐', color: 'text-amber-500' },
+  { label: 'Products listed',  value: '2,400+', icon: Package },
+  { label: 'Campus sellers',   value: '380+',   icon: Building2 },
+  { label: 'Orders delivered', value: '5,100+', icon: Rocket },
+  { label: 'Happy buyers',     value: '1,200+', icon: Star },
 ]
 
 // ── Brand/search chips for the brand spotlight row ─────────────────────────
 const BRAND_CHIPS = [
-  { label: 'iPhone',      icon: '📱', cat: 'Electronics' },
-  { label: 'Samsung',     icon: '📺', cat: 'Electronics' },
-  { label: 'Sneakers',    icon: '👟', cat: 'Fashion' },
-  { label: 'Laptops',     icon: '💻', cat: 'Computing' },
-  { label: 'Power Banks', icon: '🔋', cat: 'Electronics' },
-  { label: 'Earbuds',     icon: '🎧', cat: 'Electronics' },
-  { label: 'Skincare',    icon: '✨', cat: 'Beauty & Health' },
-  { label: 'Textbooks',   icon: '📚', cat: 'Books & Stationery' },
-  { label: 'Wigs',        icon: '💇', cat: 'Beauty & Health' },
-  { label: 'Watches',     icon: '⌚', cat: 'Fashion' },
-  { label: 'Gaming',      icon: '🎮', cat: 'Electronics' },
-  { label: 'Food',        icon: '🍔', cat: 'Food & Groceries' },
+  { label: 'iPhone',      icon: Smartphone, cat: 'Electronics' },
+  { label: 'Samsung',     icon: Tv, cat: 'Electronics' },
+  { label: 'Sneakers',    icon: Footprints, cat: 'Fashion' },
+  { label: 'Laptops',     icon: Laptop, cat: 'Computing' },
+  { label: 'Power banks', icon: BatteryCharging, cat: 'Electronics' },
+  { label: 'Earbuds',     icon: Headphones, cat: 'Electronics' },
+  { label: 'Skincare',    icon: Sparkles, cat: 'Beauty & Health' },
+  { label: 'Textbooks',   icon: BookOpen, cat: 'Books & Stationery' },
+  { label: 'Wigs',        icon: Sparkles, cat: 'Beauty & Health' },
+  { label: 'Watches',     icon: Watch, cat: 'Fashion' },
+  { label: 'Gaming',      icon: Gamepad2, cat: 'Electronics' },
+  { label: 'Food',        icon: UtensilsCrossed, cat: 'Food & Groceries' },
 ]
 
 // ── Why BataMart trust points ──────────────────────────────────────────────
 const TRUST_POINTS = [
-  { icon: '🔒', title: 'Escrow Protected',   desc: 'Money held safely until you confirm delivery' },
-  { icon: '🎓', title: 'Campus Verified',     desc: 'Only students from your university can sell' },
-  { icon: '⚡', title: 'Fast Campus Delivery', desc: 'Delivered to your hostel door' },
-  { icon: '🛡️', title: 'Dispute Protection', desc: 'Open and track order disputes from your dashboard' },
-  { icon: '⭐', title: 'Ratings & Reviews',   desc: 'Buy from trusted, rated sellers only' },
-  { icon: '🔄', title: 'Easy Disputes',       desc: 'Raise an issue, get it resolved fast' },
-  { icon: '🎁', title: 'Referral Rewards', desc: 'Invite friends and earn rewards when they join and buy' },
-  { icon: '📦', title: 'Order Tracking', desc: 'Track order status from confirmation to delivery' },
-  { icon: '🔔', title: 'Smart Notifications', desc: 'Get updates on orders, referrals, and account activity' },
-
+  { icon: Lock, title: 'Escrow protected',   desc: 'Money held safely until you confirm delivery' },
+  { icon: GraduationCap, title: 'Campus verified',     desc: 'Only students from your university can sell' },
+  { icon: Zap, title: 'Fast campus delivery', desc: 'Delivered to your hostel door' },
+  { icon: Shield, title: 'Dispute protection', desc: 'Open and track order disputes from your dashboard' },
+  { icon: Star, title: 'Ratings & reviews',   desc: 'Buy from trusted, rated sellers only' },
+  { icon: RotateCcw, title: 'Easy disputes',       desc: 'Raise an issue, get it resolved fast' },
+  { icon: Gift, title: 'Referral rewards', desc: 'Invite friends and earn rewards when they join and buy' },
+  { icon: Package, title: 'Order tracking', desc: 'Track order status from confirmation to delivery' },
+  { icon: Bell, title: 'Smart notifications', desc: 'Get updates on orders, referrals, and account activity' },
 ]
 
 // ── Study essentials quick links ────────────────────────────────────────────
 const STUDY_LINKS = [
-  { label: 'Past Questions', icon: '📋', query: 'past questions' },
-  { label: 'Textbooks',      icon: '📗', query: 'textbook' },
-  { label: 'Calculators',    icon: '🔢', query: 'calculator' },
-  { label: 'Drawing Tools',  icon: '📐', query: 'drawing' },
-  { label: 'Lab Coats',      icon: '🥼', query: 'lab coat' },
-  { label: 'Flash Drives',   icon: '💾', query: 'flash drive' },
-  { label: 'Extension Boxes',icon: '🔌', query: 'extension' },
-  { label: 'Stationery',     icon: '✏️', query: 'stationery' },
+  { label: 'Past questions', icon: ClipboardList, query: 'past questions' },
+  { label: 'Textbooks',      icon: BookOpen, query: 'textbook' },
+  { label: 'Calculators',    icon: Calculator, query: 'calculator' },
+  { label: 'Drawing tools',  icon: Ruler, query: 'drawing' },
+  { label: 'Lab coats',      icon: FlaskConical, query: 'lab coat' },
+  { label: 'Flash drives',   icon: Usb, query: 'flash drive' },
+  { label: 'Extension boxes',icon: Plug, query: 'extension' },
+  { label: 'Stationery',     icon: PenTool, query: 'stationery' },
 ]
 
-// ── Category mega grid ──────────────────────────────────────────────────────
-const MEGA_CATEGORIES = [
-  { name: 'Electronics',          icon: '📱', bg: 'from-violet-500 to-indigo-600',     count: '450+' },
-  { name: 'Computing',            icon: '💻', bg: 'from-blue-500 to-cyan-600',         count: '210+' },
-  { name: 'Fashion',              icon: '👔', bg: 'from-pink-500 to-rose-600',          count: '380+' },
-  { name: 'Home & Kitchen',       icon: '🏠', bg: 'from-sky-500 to-blue-500',           count: '240+' },
-  { name: 'Food & Groceries',     icon: '🍔', bg: 'from-orange-500 to-amber-500',       count: '320+' },
-  { name: 'Beauty & Health',      icon: '💄', bg: 'from-fuchsia-500 to-pink-500',       count: '290+' },
-  { name: 'Sports & Fitness',     icon: '⚽', bg: 'from-emerald-500 to-lime-600',        count: '180+' },
-  { name: 'Vehicles & Transport', icon: '🚗', bg: 'from-yellow-500 to-orange-500',      count: '70+' },
-  { name: 'Books & Stationery',   icon: '📚', bg: 'from-indigo-500 to-violet-500',      count: '150+' },
-  { name: 'Tickets & Events',     icon: '🎟️', bg: 'from-amber-500 to-orange-600',        count: '90+' },
-  { name: 'Kids & Baby',          icon: '🧸', bg: 'from-teal-500 to-cyan-500',          count: '130+' },
-  { name: 'Arts & Crafts',        icon: '🎨', bg: 'from-purple-500 to-fuchsia-500',      count: '120+' },
+// ── Category mega grid — flat, single accent (design bible: no gradients, no per-item color variety) ──
+const MEGA_CATEGORIES: { name: string; icon: LucideIcon; count: string }[] = [
+  { name: 'Electronics',          icon: Smartphone, count: '450+' },
+  { name: 'Computing',            icon: Laptop, count: '210+' },
+  { name: 'Fashion',              icon: Shirt, count: '380+' },
+  { name: 'Home & Kitchen',       icon: Home, count: '240+' },
+  { name: 'Food & Groceries',     icon: UtensilsCrossed, count: '320+' },
+  { name: 'Beauty & Health',      icon: Sparkles, count: '290+' },
+  { name: 'Sports & Fitness',     icon: Dumbbell, count: '180+' },
+  { name: 'Vehicles & Transport', icon: Car, count: '70+' },
+  { name: 'Books & Stationery',   icon: BookOpen, count: '150+' },
+  { name: 'Tickets & Events',     icon: Ticket, count: '90+' },
+  { name: 'Kids & Baby',          icon: Baby, count: '130+' },
+  { name: 'Arts & Crafts',        icon: Palette, count: '120+' },
 ]
 
 function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
@@ -922,10 +798,11 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {PRICE_PANELS.map((panel, pi) => {
         const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
+        const Icon = panel.icon
         return (
-          <div key={panel.title} className={`bg-gradient-to-br ${panel.bg} rounded-2xl border border-white shadow-sm overflow-hidden`}>
+          <div key={panel.title} className="bg-white rounded-xl border border-border overflow-hidden">
             <div className="p-3 pb-2">
-              <p className="text-sm font-black text-gray-900 leading-tight">{panel.title}</p>
+              <p className="text-sm font-medium text-ink leading-tight">{panel.title}</p>
             </div>
             <div className="grid grid-cols-2 gap-1 px-2 pb-1">
               {panel.tiers.map((tier, ti) => {
@@ -938,14 +815,16 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
                     onClick={() => onCategorySelect(panel.catFilter, tier.max)}
                     className="cursor-pointer group"
                   >
-                    <div className="aspect-square rounded-xl overflow-hidden bg-white shadow-sm mb-1 relative">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-surface mb-1 relative">
                       {pick ? (
                         <img src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">{panel.icon}</div>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Icon className="w-6 h-6 text-ink-muted" strokeWidth={1.75} />
+                        </div>
                       )}
                     </div>
-                    <p className="text-[10px] font-bold text-gray-600 text-center leading-tight pb-1">{tier.label}</p>
+                    <p className="text-[10px] font-medium text-ink-secondary text-center leading-tight pb-1">{tier.label}</p>
                   </div>
                 )
               })}
@@ -953,10 +832,9 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
             <div className="px-3 pb-3">
               <button
                 onClick={() => onCategorySelect(panel.catFilter)}
-                style={{ color: panel.accent }}
-                className="text-[11px] font-black flex items-center gap-1 hover:underline"
+                className="text-[11px] font-medium text-primary flex items-center gap-1 hover:underline"
               >
-                See all deals <ChevronRight className="w-3 h-3" />
+                See all deals <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </div>
           </div>
@@ -967,62 +845,50 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
 }
 
 // ─────────────────────────────────────────────
-// Amazon-style Category Showcase Panels
+// Category Showcase Panels
 // ─────────────────────────────────────────────
 const SHOWCASE_PANELS = [
   {
-    title: 'Level up your Tech',
+    title: 'Level up your tech',
     catFilter: 'Electronics',
-    subcats: ['Phones', 'Laptops', 'Earbuds', 'Power Banks'],
-    bg: 'from-violet-50 to-indigo-50',
-    accent: '#6366f1',
-    icon: '📱',
-    cta: 'Explore Tech',
+    subcats: ['Phones', 'Laptops', 'Earbuds', 'Power banks'],
+    icon: Smartphone,
+    cta: 'Explore tech',
   },
   {
-    title: 'Campus Fashion',
+    title: 'Campus fashion',
     catFilter: 'Fashion',
     subcats: ['Sneakers', 'Bags', 'Watches', 'Accessories'],
-    bg: 'from-pink-50 to-rose-50',
-    accent: '#ec4899',
-    icon: '👔',
-    cta: 'Shop Fashion',
+    icon: Shirt,
+    cta: 'Shop fashion',
   },
   {
-    title: 'Home & Kitchen',
+    title: 'Home & kitchen',
     catFilter: 'Home & Kitchen',
     subcats: ['Furniture', 'Appliances', 'Bedding', 'Decor'],
-    bg: 'from-sky-50 to-blue-50',
-    accent: '#0891b2',
-    icon: '🏠',
-    cta: 'Shop Home',
+    icon: Home,
+    cta: 'Shop home',
   },
   {
-    title: 'Food & Groceries',
+    title: 'Food & groceries',
     catFilter: 'Food & Groceries',
-    subcats: ['Jollof Rice', 'Snacks', 'Drinks', 'Fast Food'],
-    bg: 'from-orange-50 to-amber-50',
-    accent: '#f97316',
-    icon: '🍔',
-    cta: 'Order Food',
+    subcats: ['Jollof rice', 'Snacks', 'Drinks', 'Fast food'],
+    icon: UtensilsCrossed,
+    cta: 'Order food',
   },
   {
-    title: 'Fitness & Sport',
+    title: 'Fitness & sport',
     catFilter: 'Sports & Fitness',
-    subcats: ['Gym Gear', 'Sneakers', 'Jerseys', 'Supplements'],
-    bg: 'from-emerald-50 to-green-50',
-    accent: '#16a34a',
-    icon: '⚽',
-    cta: 'Shop Fitness',
+    subcats: ['Gym gear', 'Sneakers', 'Jerseys', 'Supplements'],
+    icon: Dumbbell,
+    cta: 'Shop fitness',
   },
   {
-    title: 'Beauty & Health',
+    title: 'Beauty & health',
     catFilter: 'Beauty & Health',
     subcats: ['Skincare', 'Makeup', 'Hair', 'Wellness'],
-    bg: 'from-fuchsia-50 to-pink-50',
-    accent: '#db2777',
-    icon: '💄',
-    cta: 'Shop Beauty',
+    icon: Sparkles,
+    cta: 'Shop beauty',
   },
 ]
 
@@ -1038,19 +904,20 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
         // Pick 4 random products, shuffled differently each render
         const shuffled = seededShuffle(catProds, renderSeed + pi * 37)
         const picks = shuffled.slice(0, 4)
+        const Icon = panel.icon
         return (
           <div
             key={panel.title}
-            className={`bg-gradient-to-br ${panel.bg} rounded-2xl border border-white shadow-sm overflow-hidden cursor-pointer group`}
+            className="bg-white rounded-xl border border-border overflow-hidden cursor-pointer group"
             onClick={() => onCategorySelect(panel.catFilter)}
           >
             <div className="p-3 pb-1">
-              <p className="text-sm font-black text-gray-900 leading-tight">{panel.title}</p>
+              <p className="text-sm font-medium text-ink leading-tight">{panel.title}</p>
             </div>
             {picks.length > 0 ? (
               <div className="grid grid-cols-2 gap-1 px-2 pb-1">
                 {picks.map((p, i) => (
-                  <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm">
+                  <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-surface">
                     <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 ))}
@@ -1058,16 +925,16 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
             ) : (
               <div className="grid grid-cols-2 gap-1 px-2 pb-1">
                 {panel.subcats.map((sub, i) => (
-                  <div key={i} className="aspect-square rounded-lg bg-white/70 flex flex-col items-center justify-center p-1">
-                    <span className="text-lg">{panel.icon}</span>
-                    <span className="text-[8px] font-bold text-gray-600 text-center leading-tight mt-0.5">{sub}</span>
+                  <div key={i} className="aspect-square rounded-lg bg-surface flex flex-col items-center justify-center p-1">
+                    <Icon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
+                    <span className="text-[8px] font-medium text-ink-secondary text-center leading-tight mt-0.5">{sub}</span>
                   </div>
                 ))}
               </div>
             )}
             <div className="px-3 pb-3">
-              <span style={{ color: panel.accent }} className="text-[11px] font-black flex items-center gap-1">
-                {panel.cta} <ChevronRight className="w-3 h-3" />
+              <span className="text-[11px] font-medium text-primary flex items-center gap-1">
+                {panel.cta} <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
               </span>
             </div>
           </div>
@@ -1088,42 +955,42 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
   const scrollBy = (dir: number) => rowRef.current?.scrollBy({ left: dir * 240, behavior: 'smooth' })
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-gray-50">
+    <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+      <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
-          <h2 className="text-lg font-black text-gray-900 section-header-line">{title}</h2>
-          {subtitle && <p className="text-xs text-gray-400 font-medium mt-1">{subtitle}</p>}
+          <h2 className="text-lg font-semibold text-ink section-header-line">{title}</h2>
+          {subtitle && <p className="text-xs text-ink-muted font-medium mt-1">{subtitle}</p>}
         </div>
         {onSeeAll && (
-          <button onClick={onSeeAll} className="text-xs font-bold text-BATAMART-primary flex items-center gap-1 hover:underline">
+          <button onClick={onSeeAll} className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline">
             See all <ChevronRight className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
       <div className="relative group/row px-5 py-4">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-BATAMART-primary hover:text-white hover:border-BATAMART-primary">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-4 overflow-x-auto no-scrollbar scroll-section">
           {products.map(p => (
             <div key={p.id} onClick={() => onProductClick(p.id)} className="deal-card flex-shrink-0 w-36 sm:w-44 cursor-pointer group/card">
-              <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2.5">
+              <div className="aspect-square rounded-xl overflow-hidden bg-surface mb-2.5">
                 <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" />
               </div>
-              <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug">{p.name}</p>
-              <p className="text-xs font-black text-BATAMART-primary mt-1">{fmt(p.price)}</p>
+              <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{p.name}</p>
+              <p className="text-xs font-semibold text-primary mt-1">{fmt(p.price)}</p>
               {p.seller?.avgRating > 0 && (
                 <div className="flex items-center gap-0.5 mt-0.5">
-                  <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                  <span className="text-[10px] text-gray-500 font-medium">{p.seller.avgRating.toFixed(1)}</span>
+                  <Star className="w-2.5 h-2.5 text-warning fill-warning" />
+                  <span className="text-[10px] text-ink-secondary font-medium">{p.seller.avgRating.toFixed(1)}</span>
                 </div>
               )}
             </div>
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-BATAMART-primary hover:text-white hover:border-BATAMART-primary">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1141,21 +1008,21 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
   const rowRef = useRef<HTMLDivElement>(null)
   const scrollBy = (dir: number) => rowRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
       <div className={`${sectionClass} px-5 py-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             {icon}
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-white">{title}</h2>
-                {badge && <span className="badge-pulse bg-white/20 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{badge}</span>}
+                <h2 className="text-base font-semibold text-white">{title}</h2>
+                {badge && <span className="badge-pulse bg-white/20 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">{badge}</span>}
               </div>
               <p className="text-white/70 text-[11px] mt-0.5">{subtitle}</p>
             </div>
           </div>
           {onSeeAll && (
-            <button onClick={onSeeAll} className="text-white/80 text-xs font-bold flex items-center gap-1">
+            <button onClick={onSeeAll} className="text-white/80 text-xs font-semibold flex items-center gap-1">
               See all <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
@@ -1163,7 +1030,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
       </div>
       <div className="bg-white px-5 py-4 relative group/row">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-section">
@@ -1174,7 +1041,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1200,14 +1067,14 @@ function PullIndicator({ pullDistance, isRefreshing }: { pullDistance: number; i
       }}
     >
       <div
-        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-lg border border-gray-100"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-soft border border-border"
         style={{ transform: `scale(${0.85 + progress * 0.15})` }}
       >
         <RefreshCw
-          className={`w-4 h-4 text-BATAMART-primary ${isRefreshing ? 'ptr-spinning' : ''}`}
+          className={`w-4 h-4 text-primary ${isRefreshing ? 'ptr-spinning' : ''}`}
           style={{ transform: isRefreshing ? undefined : `rotate(${progress * 220}deg)` }}
         />
-        <span className="text-xs font-bold text-gray-600">
+        <span className="text-xs font-semibold text-ink-secondary">
           {isRefreshing ? 'Refreshing…' : ready ? 'Release to refresh' : 'Pull to refresh'}
         </span>
       </div>
@@ -1221,16 +1088,14 @@ function PullIndicator({ pullDistance, isRefreshing }: { pullDistance: number; i
 function LiveStatsBar({ count }: { count: number }) {
   if (!count) return null
   return (
-    <div className="flex items-center gap-3 flex-wrap text-[11px] text-gray-500 font-medium">
+    <div className="flex items-center gap-3 flex-wrap text-[11px] text-ink-secondary font-medium">
       <span className="flex items-center gap-1">
-        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse inline-block" />
-        <span className="font-bold text-gray-700">{count}</span> products live
+        <span className="w-1.5 h-1.5 bg-success rounded-full inline-block" />
+        <span className="font-semibold text-ink-secondary">{count}</span> products live
       </span>
-      <span className="w-px h-3 bg-gray-200" />
-      <span className="viewer-anim font-bold">🔴 LIVE marketplace</span>
-      <span className="w-px h-3 bg-gray-200" />
+      <span className="w-px h-3 bg-border" />
       <span className="flex items-center gap-1">
-        <Users className="w-3 h-3 text-violet-400" />
+        <Users className="w-3 h-3 text-primary" strokeWidth={1.75} />
         Students buying now
       </span>
     </div>
@@ -1293,20 +1158,20 @@ function JustDroppedSection({ allProducts, onProductClick }: {
   if (allNew.length === 0) return null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
       <div className="section-stripe-emerald px-5 py-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-white" />
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-white">Just Dropped</h2>
-                <span className="badge-pulse bg-white/20 text-white text-[9px] font-black px-2 py-0.5 rounded-full">NEW</span>
+                <h2 className="text-base font-semibold text-white">Just Dropped</h2>
+                <span className="badge-pulse bg-white/20 text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
               </div>
               <p className="text-white/70 text-[11px] mt-0.5">Fresh listings — keep scrolling, more loads as you go</p>
             </div>
           </div>
-          <span className="text-white/60 text-[11px] font-bold">{filtered.length} items</span>
+          <span className="text-white/60 text-[11px] font-semibold">{filtered.length} items</span>
         </div>
         <div className="flex items-center gap-2 bg-white/15 hover:bg-white/20 rounded-xl px-3 py-2.5 transition-colors ring-1 ring-white/20 focus-within:ring-white/40 focus-within:bg-white/25">
           <Search className="w-4 h-4 text-white/70 flex-shrink-0" />
@@ -1328,9 +1193,9 @@ function JustDroppedSection({ allProducts, onProductClick }: {
       <div className="bg-white p-4">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <Sparkles className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 font-semibold text-sm">No results for &ldquo;{search}&rdquo;</p>
-            <button onClick={() => setSearch('')} className="text-BATAMART-primary text-xs font-bold mt-2 hover:underline">
+            <Sparkles className="w-10 h-10 text-border mx-auto mb-3" />
+            <p className="text-ink-muted font-semibold text-sm">No results for &ldquo;{search}&rdquo;</p>
+            <button onClick={() => setSearch('')} className="text-primary text-xs font-semibold mt-2 hover:underline">
               Clear search
             </button>
           </div>
@@ -1346,13 +1211,13 @@ function JustDroppedSection({ allProducts, onProductClick }: {
             </div>
             <div ref={loaderRef} className="flex justify-center items-center py-8 mt-2">
               {loadingMore ? (
-                <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                <div className="flex items-center gap-2 text-ink-muted text-sm font-medium">
                   <Loader2 className="w-4 h-4 spin" /> Loading more…
                 </div>
               ) : hasMore ? (
                 <div className="w-full h-4" />
               ) : (
-                <div className="flex flex-col items-center gap-1 text-gray-300">
+                <div className="flex flex-col items-center gap-1 text-ink-muted">
                   <CheckCircle className="w-5 h-5" />
                   <p className="text-xs font-semibold">You&apos;ve seen them all!</p>
                 </div>
@@ -1371,19 +1236,18 @@ function JustDroppedSection({ allProducts, onProductClick }: {
 // ── Stats Banner ──────────────────────────────────────────────────────────────
 function StatsBanner() {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-gray-100">
-        {CAMPUS_STATS.map((stat, i) => (
+    <div className="bg-white rounded-xl border border-border overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border">
+        {CAMPUS_STATS.map((stat) => (
           <div
             key={stat.label}
-            className="stat-card flex flex-col items-center justify-center p-4 text-center gap-1"
-            style={{ animationDelay: `${i * 100}ms` }}
+            className="flex flex-col items-center justify-center p-4 text-center gap-1"
           >
-            <span className="text-2xl">{stat.icon}</span>
-            <p className={`text-xl font-black ${stat.color} count-up`} style={{ animationDelay: `${i * 120}ms` }}>
+            <stat.icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            <p className="text-xl font-semibold text-ink">
               {stat.value}
             </p>
-            <p className="text-[11px] text-gray-400 font-medium leading-tight">{stat.label}</p>
+            <p className="text-[11px] text-ink-muted font-medium leading-tight">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -1397,24 +1261,19 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
   onCategorySelect: (cat: string) => void
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 overflow-hidden">
+    <div className="bg-white rounded-xl border border-border p-5 overflow-hidden">
       <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-4 h-4 text-violet-500" />
-        <h2 className="text-base font-black text-gray-900">Trending on Campus</h2>
-        <span className="ml-auto flex items-center gap-1 text-[10px] font-bold text-red-500">
-          <span className="live-ping w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
-          LIVE
-        </span>
+        <TrendingUp className="w-4 h-4 text-primary" strokeWidth={1.75} />
+        <h2 className="text-[16px] font-semibold text-ink">Trending on campus</h2>
       </div>
       <div className="flex gap-2 flex-wrap">
-        {BRAND_CHIPS.map((chip, i) => (
+        {BRAND_CHIPS.map((chip) => (
           <button
             key={chip.label}
             onClick={() => onCategorySelect(chip.cat)}
-            className="brand-chip card-enter flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-violet-50 border border-gray-200 hover:border-violet-200 rounded-xl text-sm font-bold text-gray-700 hover:text-violet-700 shadow-sm"
-            style={{ animationDelay: `${i * 40}ms` }}
+            className="flex items-center gap-1.5 px-3 py-2 bg-surface hover:bg-primary/10 border border-border rounded-lg text-sm font-medium text-ink-secondary hover:text-primary transition-colors"
           >
-            <span>{chip.icon}</span> {chip.label}
+            <chip.icon className="w-4 h-4" strokeWidth={1.75} /> {chip.label}
           </button>
         ))}
       </div>
@@ -1425,27 +1284,26 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 // ── Study Essentials Quick Links ─────────────────────────────────────────────
 function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-[#12161f] dark:to-[#1b2230] px-5 py-4">
+    <div className="rounded-xl overflow-hidden border border-border">
+      <div className="bg-primary px-5 py-4">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-white" />
+          <BookOpen className="w-5 h-5 text-white" strokeWidth={1.75} />
           <div>
-            <h2 className="text-base font-black text-white">Study Essentials</h2>
-            <p className="text-white/70 text-[11px] mt-0.5">Everything you need for lectures & exams</p>
+            <h2 className="text-[16px] font-semibold text-white">Study essentials</h2>
+            <p className="text-white/80 text-[11px] mt-0.5">Everything you need for lectures & exams</p>
           </div>
         </div>
       </div>
       <div className="bg-white px-5 py-4">
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-          {STUDY_LINKS.map((link, i) => (
+          {STUDY_LINKS.map((link) => (
             <button
               key={link.label}
               onClick={() => onSearch(link.query)}
-              className="card-enter flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 hover:bg-violet-50 border border-gray-100 hover:border-violet-200 transition-all group"
-              style={{ animationDelay: `${i * 50}ms` }}
+              className="flex flex-col items-center gap-2 p-3 rounded-lg bg-surface hover:bg-primary/10 border border-border transition-colors group"
             >
-              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">{link.icon}</span>
-              <p className="text-[10px] font-bold text-gray-600 group-hover:text-violet-600 text-center leading-tight">{link.label}</p>
+              <link.icon className="w-5 h-5 text-ink-secondary group-hover:text-primary transition-colors" strokeWidth={1.75} />
+              <p className="text-[10px] font-medium text-ink-secondary group-hover:text-primary text-center leading-tight">{link.label}</p>
             </button>
           ))}
         </div>
@@ -1459,21 +1317,21 @@ function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-black text-gray-800 section-header-line">All Categories</h2>
-        <span className="text-[11px] text-gray-400 font-medium">Browse everything</span>
+        <h2 className="text-[16px] font-semibold text-ink">All categories</h2>
+        <span className="text-[11px] text-ink-muted font-medium">Browse everything</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {MEGA_CATEGORIES.map((cat, i) => (
+        {MEGA_CATEGORIES.map((cat) => (
           <button
             key={cat.name}
             onClick={() => onCategorySelect(cat.name)}
-            className={`mega-cat-card card-enter relative overflow-hidden rounded-2xl bg-gradient-to-br ${cat.bg} p-4 text-left group cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}
-            style={{ animationDelay: `${i * 60}ms` }}
+            className="relative overflow-hidden rounded-xl bg-white border border-border p-4 text-left group cursor-pointer transition-transform duration-150 ease-out hover:-translate-y-0.5"
           >
-            <span className="text-3xl mb-2 block group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
-            <p className="text-white font-black text-sm leading-tight">{cat.name.split(' /')[0]}</p>
-            <p className="text-white/70 text-[10px] font-bold mt-0.5">{cat.count} items</p>
-            <div className="absolute -bottom-3 -right-3 w-16 h-16 rounded-full bg-white/10 group-hover:scale-150 transition-transform duration-500" />
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+              <cat.icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
+            </div>
+            <p className="text-ink font-medium text-sm leading-tight">{cat.name.split(' /')[0]}</p>
+            <p className="text-ink-muted text-[10px] font-medium mt-0.5">{cat.count} items</p>
           </button>
         ))}
       </div>
@@ -1484,25 +1342,24 @@ function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string
 // ── Why BataMart Trust Banner ─────────────────────────────────────────────────
 function TrustBanner() {
   return (
-    <div className="rounded-2xl overflow-hidden border border-violet-100 shadow-sm">
-      <div className="trust-bar px-5 py-3">
+    <div className="rounded-xl overflow-hidden border border-border">
+      <div className="bg-primary px-5 py-3">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-white" />
-          <h2 className="text-base font-black text-white">Why Students Trust BataMart</h2>
+          <Shield className="w-5 h-5 text-white" strokeWidth={1.75} />
+          <h2 className="text-[16px] font-semibold text-white">Why students trust BataMart</h2>
         </div>
       </div>
       <div className="bg-white p-5">
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {TRUST_POINTS.map((point, i) => (
+          {TRUST_POINTS.map((point) => (
             <div
               key={point.title}
-              className="card-enter flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-violet-200 hover:bg-violet-50 transition-all"
-              style={{ animationDelay: `${i * 80}ms` }}
+              className="flex items-start gap-3 p-3 rounded-lg bg-surface border border-border"
             >
-              <span className="text-xl flex-shrink-0 mt-0.5">{point.icon}</span>
+              <point.icon className="w-5 h-5 flex-shrink-0 mt-0.5 text-primary" strokeWidth={1.75} />
               <div>
-                <p className="text-xs font-black text-gray-900">{point.title}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">{point.desc}</p>
+                <p className="text-xs font-medium text-ink">{point.title}</p>
+                <p className="text-[10px] text-ink-secondary mt-0.5 leading-tight">{point.desc}</p>
               </div>
             </div>
           ))}
@@ -1524,9 +1381,9 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
   if (picks.length < 3) return null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
       <div className={`${sectionClass} px-5 py-4`}>
-        <h2 className="text-base font-black text-white">{title}</h2>
+        <h2 className="text-base font-semibold text-white">{title}</h2>
         <p className="text-white/70 text-[11px] mt-0.5">{subtitle}</p>
       </div>
       <div className="bg-white p-3">
@@ -1542,10 +1399,10 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
               className="mosaic-img w-full h-full object-cover"
             />
             {picks[0] && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+              <div className="absolute inset-0 bg-ink/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                 <div>
-                  <p className="text-white text-xs font-black line-clamp-1">{picks[0].name}</p>
-                  <p className="text-white/80 text-[10px] font-bold">₦{picks[0].price?.toLocaleString()}</p>
+                  <p className="text-white text-xs font-medium line-clamp-1">{picks[0].name}</p>
+                  <p className="text-white/80 text-[10px] font-medium">₦{picks[0].price?.toLocaleString()}</p>
                 </div>
               </div>
             )}
@@ -1607,11 +1464,11 @@ function TopSellersRow({ products, onProductClick }: {
   if (topSellers.length === 0) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-gray-50">
+    <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+      <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
-          <h2 className="text-base font-black text-gray-900 section-header-line">🏆 Top Campus Sellers</h2>
-          <p className="text-xs text-gray-400 font-medium mt-1">Most active sellers on campus right now</p>
+          <h2 className="text-base font-semibold text-ink section-header-line">Top campus sellers</h2>
+          <p className="text-xs text-ink-muted font-medium mt-1">Most active sellers on campus right now</p>
         </div>
       </div>
       <div className="px-5 py-4">
@@ -1625,31 +1482,33 @@ function TopSellersRow({ products, onProductClick }: {
             >
               {/* Avatar */}
               <div className="relative mx-auto mb-2 w-16 h-16">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-100 to-indigo-100 border-2 border-violet-200">
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-primary/10 border border-border">
                   {seller.profilePhoto ? (
                     <img src={seller.profilePhoto} alt={seller.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl font-black text-violet-400">
+                    <div className="w-full h-full flex items-center justify-center text-2xl font-semibold text-primary">
                       {seller.name?.[0]?.toUpperCase() || '?'}
                     </div>
                   )}
                 </div>
                 {seller.trustLevel === 'GOLD' && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center text-[9px]">👑</span>
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-warning rounded-full flex items-center justify-center">
+                    <Crown className="w-3 h-3 text-white" strokeWidth={1.75} />
+                  </span>
                 )}
               </div>
-              <p className="text-xs font-black text-gray-900 line-clamp-1">{seller.name}</p>
-              <p className="text-[10px] text-violet-600 font-bold">{count} listing{count !== 1 ? 's' : ''}</p>
+              <p className="text-xs font-semibold text-ink line-clamp-1">{seller.name}</p>
+              <p className="text-[10px] text-primary font-semibold">{count} listing{count !== 1 ? 's' : ''}</p>
               {seller.avgRating > 0 && (
                 <div className="flex items-center justify-center gap-0.5 mt-1">
-                  <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                  <span className="text-[10px] text-gray-500 font-bold">{seller.avgRating.toFixed(1)}</span>
+                  <Star className="w-2.5 h-2.5 text-warning fill-warning" />
+                  <span className="text-[10px] text-ink-secondary font-semibold">{seller.avgRating.toFixed(1)}</span>
                 </div>
               )}
               {/* Mini product previews */}
               <div className="flex gap-1 mt-2 justify-center">
                 {sellerProds.slice(0, 2).map(p => (
-                  <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100">
+                  <div key={p.id} className="w-9 h-9 rounded-lg overflow-hidden bg-surface">
                     <img src={p.images[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
@@ -1667,74 +1526,42 @@ function FlashSaleCountdown({ products, onProductClick }: {
   products: any[]
   onProductClick: (id: string) => void
 }) {
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 })
-
-  useEffect(() => {
-    const tick = () => {
-      const now = new Date()
-      const midnight = new Date()
-      midnight.setHours(24, 0, 0, 0)
-      const diff = Math.max(0, midnight.getTime() - now.getTime())
-      const h = Math.floor(diff / 3_600_000)
-      const m = Math.floor((diff % 3_600_000) / 60_000)
-      const s = Math.floor((diff % 60_000) / 1_000)
-      setTimeLeft({ h, m, s })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
   const picks = products.slice(0, 6)
   if (picks.length === 0) return null
 
-  const pad = (n: number) => String(n).padStart(2, '0')
-
   return (
-    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-[#151313] dark:via-[#201a18] dark:to-[#151313] gradient-animated px-5 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-white" />
-            <div>
-              <h2 className="text-base font-black text-white">⚡ Flash Picks Today</h2>
-              <p className="text-white/75 text-[11px] mt-0.5">Grab them before they&apos;re gone</p>
-            </div>
-          </div>
-          {/* Countdown */}
-          <div className="flex items-center gap-1 bg-black/20 rounded-xl px-3 py-1.5">
-            {[pad(timeLeft.h), pad(timeLeft.m), pad(timeLeft.s)].map((val, i) => (
-              <span key={i} className="flex items-center gap-0.5">
-                <span className="countdown-digit text-white font-black text-sm tabular-nums">{val}</span>
-                {i < 2 && <span className="text-white/60 font-black text-sm">:</span>}
-              </span>
-            ))}
+    <div className="rounded-xl overflow-hidden border border-border">
+      {/* Header — design bible bans countdown-timer urgency tactics, so this is a calm section header, not a ticking clock */}
+      <div className="bg-primary px-5 py-4">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-white" strokeWidth={1.75} />
+          <div>
+            <h2 className="text-[16px] font-semibold text-white">Flash picks today</h2>
+            <p className="text-white/80 text-[11px] mt-0.5">A rotating selection of deals</p>
           </div>
         </div>
       </div>
       {/* Products */}
       <div className="bg-white px-5 py-4">
         <div className="flex gap-3 overflow-x-auto no-scrollbar">
-          {picks.map((p, i) => (
+          {picks.map((p) => (
             <div
               key={p.id}
-              className="flash-card card-enter flex-shrink-0 w-36 cursor-pointer"
-              style={{ animationDelay: `${i * 60}ms` }}
+              className="flash-card flex-shrink-0 w-36 cursor-pointer"
               onClick={() => onProductClick(p.id)}
             >
-              <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2 relative">
+              <div className="aspect-square rounded-lg overflow-hidden bg-surface mb-2 relative">
                 <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
                 {p.discountPercent && (
-                  <span className="absolute top-1.5 left-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg">
+                  <span className="absolute top-1.5 left-1.5 bg-danger text-white text-[9px] font-medium px-1.5 py-0.5 rounded-md">
                     -{p.discountPercent}%
                   </span>
                 )}
               </div>
-              <p className="text-xs font-black text-gray-900 line-clamp-2 leading-tight">{p.name}</p>
-              <p className="text-sm font-black text-BATAMART-primary mt-1">₦{p.price?.toLocaleString()}</p>
+              <p className="text-xs font-medium text-ink line-clamp-2 leading-tight">{p.name}</p>
+              <p className="text-sm font-semibold text-ink mt-1">₦{p.price?.toLocaleString()}</p>
               {p.marketPrice && p.marketPrice > p.price && (
-                <p className="text-[10px] text-gray-400 line-through">₦{Math.round(p.marketPrice).toLocaleString()}</p>
+                <p className="text-[10px] text-ink-muted line-through">₦{Math.round(p.marketPrice).toLocaleString()}</p>
               )}
             </div>
           ))}
@@ -1744,33 +1571,24 @@ function FlashSaleCountdown({ products, onProductClick }: {
   )
 }
 
-// ── Live Activity Marquee ─────────────────────────────────────────────────────
+// ── Live Activity strip — low-key, high-contrast text (design bible section 10) ──
 function LiveActivityMarquee({ products }: { products: any[] }) {
-  const items = [
-    ...products.slice(0, 8).map(p => `🛒 ${p.seller?.name || 'A student'} listed "${p.name}" for ₦${p.price?.toLocaleString()}`),
-    '🔥 Hot deals updated — check the deals page',
-    '⭐ Campus marketplace is LIVE — buy safely with escrow',
-    '🚀 New listings drop every day — check back often',
-    '💬 Chat sellers directly before buying',
-  ]
-  const doubled = [...items, ...items]
+  const recent = products.slice(0, 3)
+  if (recent.length === 0) return null
 
   return (
-    <div className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-[#12161f] dark:to-[#1b2230] rounded-2xl overflow-hidden py-2.5 px-0">
-      <div className="flex items-center gap-3 overflow-hidden">
-        <div className="flex-shrink-0 flex items-center gap-1.5 bg-white/20 px-3 py-1 rounded-r-xl">
-          <span className="live-ping w-2 h-2 rounded-full bg-green-400 inline-block" />
-          <span className="text-white text-[11px] font-black whitespace-nowrap">LIVE</span>
-        </div>
-        <div className="overflow-hidden flex-1">
-          <div className="marquee-track flex gap-8 whitespace-nowrap">
-            {doubled.map((item, i) => (
-              <span key={i} className="text-white/90 text-[11px] font-medium flex-shrink-0">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
+    <div className="bg-surface border border-border rounded-xl py-2.5 px-4">
+      <div className="flex items-center gap-2 flex-wrap text-[11px] text-ink-secondary">
+        <span className="inline-flex items-center gap-1.5 font-medium text-ink flex-shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-success" />
+          Just listed
+        </span>
+        {recent.map((p, i) => (
+          <span key={p.id} className="flex-shrink-0">
+            {p.seller?.name || 'A student'} listed &ldquo;{p.name}&rdquo; for ₦{p.price?.toLocaleString()}
+            {i < recent.length - 1 && <span className="mx-2 text-ink-muted">·</span>}
+          </span>
+        ))}
       </div>
     </div>
   )
@@ -2211,7 +2029,7 @@ export default function MarketplacePage() {
   const shareReferralWhatsApp = () => {
     if (!referralLink) return
     const text = encodeURIComponent(
-      `🔥 I'm on BATAMART — the hottest campus marketplace at ${universityShortName || 'my campus'}!\nSign up with my link and start buying & selling today:\n${referralLink}`
+      `I'm on BataMart — the campus marketplace at ${universityShortName || 'my campus'}.\nSign up with my link and start buying & selling today:\n${referralLink}`
     )
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
@@ -2350,15 +2168,15 @@ export default function MarketplacePage() {
   const SuggestionsDropdown = mounted && showSuggestions && suggestions.length > 0
     ? createPortal(
         <div
-          className="drop-in fixed z-[9998] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+          className="drop-in fixed z-[9998] bg-white rounded-2xl shadow-soft border border-border overflow-hidden"
           style={{ top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, maxHeight: '320px', overflowY: 'auto' }}
         >
-          <div className="px-4 py-2.5 border-b border-gray-50 flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+          <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
               {!searchInput.trim() ? 'Recent Searches' : 'Suggestions'}
             </span>
             {!searchInput.trim() && recentSearches.length > 0 && (
-              <span className="text-[10px] text-BATAMART-primary font-bold">RECENT</span>
+              <span className="text-[10px] text-primary font-semibold">RECENT</span>
             )}
           </div>
           {suggestions.map((s: any, i) => (
@@ -2370,32 +2188,32 @@ export default function MarketplacePage() {
                 if (s.type === 'product') { handleProductClick(s.id); return }
                 handleSearch(s.label)
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface transition-colors text-left"
             >
               {s.type === 'product' && s.image
                 ? <img src={s.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt="" />
                 : s.type === 'recent'
-                  ? <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  : <TrendingUp className="w-4 h-4 text-BATAMART-primary flex-shrink-0" />
+                  ? <Clock className="w-4 h-4 text-ink-muted flex-shrink-0" />
+                  : <TrendingUp className="w-4 h-4 text-primary flex-shrink-0" />
               }
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">{s.label}</p>
-                {s.sublabel && <p className="text-xs text-BATAMART-primary font-bold">{s.sublabel}</p>}
+                <p className="text-sm font-semibold text-ink truncate">{s.label}</p>
+                {s.sublabel && <p className="text-xs text-primary font-semibold">{s.sublabel}</p>}
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              <ArrowRight className="w-3.5 h-3.5 text-ink-muted flex-shrink-0" />
             </button>
           ))}
           {searchInput.trim() && (
             <button
               onMouseDown={e => { e.preventDefault(); isClickingSuggestionRef.current = true }}
               onClick={() => { isClickingSuggestionRef.current = false; handleSearch() }}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-BATAMART-primary/5 hover:bg-BATAMART-primary/10 transition-colors border-t border-gray-50"
+              className="w-full flex items-center gap-3 px-4 py-3 bg-primary/5 hover:bg-primary/10 transition-colors border-t border-border"
             >
-              <div className="w-8 h-8 rounded-lg bg-BATAMART-primary/10 flex items-center justify-center flex-shrink-0">
-                <Search className="w-4 h-4 text-BATAMART-primary" />
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Search className="w-4 h-4 text-primary" />
               </div>
-              <span className="text-sm font-bold text-BATAMART-primary">Search for "{searchInput}"</span>
-              <ArrowRight className="w-3.5 h-3.5 text-BATAMART-primary flex-shrink-0 ml-auto" />
+              <span className="text-sm font-semibold text-primary">Search for "{searchInput}"</span>
+              <ArrowRight className="w-3.5 h-3.5 text-primary flex-shrink-0 ml-auto" />
             </button>
           )}
         </div>,
@@ -2406,78 +2224,71 @@ export default function MarketplacePage() {
   if (!splashDone) return <div className="min-h-screen bg-white" />
 
   return (
-    <div className={`${isApp ? 'min-h-screen bg-[#e7ebf2]' : 'min-h-screen bg-[#f0f2f5]'} marketplace-shell`}>
+    <div className="min-h-screen bg-surface marketplace-shell">
       {SuggestionsDropdown}
 
       {/* ── Referral Popup Modal ── */}
       {showReferralPopup && mounted && createPortal(
         <div
-          className="fixed inset-0 z-[9990] flex items-center justify-center px-4"
-          style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+          className="fixed inset-0 z-[9990] flex items-center justify-center px-4 bg-ink/50"
           onClick={() => setShowReferralPopup(false)}
         >
           <div
-            className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-            style={{
-              background: 'linear-gradient(145deg, #121212 0%, #1E1E1E 50%, #0ea5e9 100%)',
-              animation: 'referralPopIn 0.45s cubic-bezier(0.34,1.4,0.64,1) both',
-            }}
+            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-white shadow-soft"
             onClick={e => e.stopPropagation()}
           >
-            {/* Glow orbs */}
-            <div style={{ position:'absolute', top:'-40px', right:'-40px', width:'150px', height:'150px', borderRadius:'50%', background:'rgba(14,165,233,0.25)', filter:'blur(40px)', pointerEvents:'none' }} />
-            <div style={{ position:'absolute', bottom:'-30px', left:'-30px', width:'120px', height:'120px', borderRadius:'50%', background:'rgba(99,102,241,0.2)', filter:'blur(35px)', pointerEvents:'none' }} />
-
             {/* Close btn */}
             <button
               onClick={() => setShowReferralPopup(false)}
-              className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Close"
+              className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full text-ink-secondary hover:bg-surface transition-colors"
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4" strokeWidth={1.75} />
             </button>
 
             {/* Content */}
-            <div className="p-6 pb-7 text-white relative z-[1]">
+            <div className="p-6 pb-7">
               {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 bg-yellow-400/20 border border-yellow-400/40 rounded-full px-3 py-1 mb-4">
-                <span className="text-yellow-300 text-xs font-bold tracking-wide">🎁 EARN REAL MONEY</span>
+              <div className="inline-flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1 mb-4">
+                <Gift className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
+                <span className="text-primary text-xs font-medium tracking-wide">Earn real money</span>
               </div>
 
               {/* Headline */}
-              <h2 className="text-2xl font-black leading-tight mb-1">
-                Refer Friends &<br />
-                <span className="text-[#0ea5e9]">Earn ₦120 Per Order!</span>
+              <h2 className="text-[24px] font-semibold leading-tight text-ink mb-1">
+                Refer friends &<br />
+                <span className="text-primary">earn ₦120 per order</span>
               </h2>
-              <p className="text-blue-200 text-sm leading-relaxed mb-5">
-                Every time someone you refer completes a delivery order on BataMart, <span className="text-white font-semibold">₦120 drops straight into your wallet</span> — no limit, no stress. Stack up referrals, stack up cash. 💰
+              <p className="text-ink-secondary text-sm leading-relaxed mb-5">
+                Every time someone you refer completes a delivery order on BataMart, ₦120 drops straight into your wallet — no limit.
               </p>
 
               {/* Stats row */}
               <div className="grid grid-cols-2 gap-3 mb-5">
-                <div className="bg-white/10 rounded-2xl p-3 text-center border border-white/10">
-                  <p className="text-2xl font-black text-yellow-300">₦120</p>
-                  <p className="text-xs text-blue-200 mt-0.5">per completed order</p>
+                <div className="bg-surface rounded-xl p-3 text-center border border-border">
+                  <p className="text-2xl font-semibold text-ink">₦120</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">per completed order</p>
                 </div>
-                <div className="bg-white/10 rounded-2xl p-3 text-center border border-white/10">
-                  <p className="text-2xl font-black text-green-300">Unlimited</p>
-                  <p className="text-xs text-blue-200 mt-0.5">referrals you can make</p>
+                <div className="bg-surface rounded-xl p-3 text-center border border-border">
+                  <p className="text-2xl font-semibold text-ink">Unlimited</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">referrals you can make</p>
                 </div>
               </div>
 
               {/* Referral code display */}
               {referralCode && (
-                <div className="bg-white/10 border border-white/20 rounded-2xl p-3 flex items-center gap-3 mb-4">
+                <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3 mb-4">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-blue-300 mb-0.5">Your referral code</p>
-                    <p className="font-black text-white tracking-widest text-sm truncate">{referralCode}</p>
+                    <p className="text-xs text-ink-muted mb-0.5">Your referral code</p>
+                    <p className="font-semibold text-ink tracking-widest text-sm truncate">{referralCode}</p>
                   </div>
                   <button
                     onClick={copyReferralCode}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1E1E1E] font-bold text-xs px-3 py-2 rounded-xl hover:bg-blue-50 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-primary text-white font-medium text-xs px-3 py-2 rounded-lg hover:brightness-95 transition-colors"
                   >
                     {referralCopied
-                      ? <><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Copied!</>
-                      : <><Copy className="w-3.5 h-3.5" /> Copy Link</>
+                      ? <><CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} /> Copied</>
+                      : <><Copy className="w-3.5 h-3.5" strokeWidth={1.75} /> Copy link</>
                     }
                   </button>
                 </div>
@@ -2487,28 +2298,19 @@ export default function MarketplacePage() {
               <div className="flex gap-3">
                 <button
                   onClick={shareReferralWhatsApp}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm"
-                  style={{ background: '#25D366', color: '#fff' }}
+                  className="flex-1 flex items-center justify-center gap-2 h-11 rounded-lg font-medium text-sm bg-primary text-white hover:brightness-95 transition-colors"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                   Share on WhatsApp
                 </button>
                 <button
                   onClick={() => { setShowReferralPopup(false); router.push('/referrals') }}
-                  className="px-4 py-3 rounded-2xl font-bold text-sm bg-white/15 border border-white/20 text-white hover:bg-white/25 transition-colors flex items-center gap-1.5"
+                  className="px-4 h-11 rounded-lg font-medium text-sm bg-white border border-border text-ink hover:bg-surface transition-colors flex items-center gap-1.5"
                 >
-                  <Users className="w-4 h-4" /> View
+                  <Users className="w-4 h-4" strokeWidth={1.75} /> View
                 </button>
               </div>
             </div>
           </div>
-
-          <style>{`
-            @keyframes referralPopIn {
-              from { opacity: 0; transform: scale(0.85) translateY(20px); }
-              to   { opacity: 1; transform: scale(1) translateY(0); }
-            }
-          `}</style>
         </div>,
         document.body
       )}
@@ -2523,7 +2325,7 @@ export default function MarketplacePage() {
 
       {/* ══ HEADER ══ */}
       <header
-        className={`batamart-header marketplace-header sticky top-0 z-40 ${isApp ? 'shadow-[0_8px_24px_rgba(15,23,42,0.16)]' : 'shadow-lg'}`}
+        className={`batamart-header marketplace-header sticky top-0 z-40 ${isApp ? 'shadow-[0_8px_24px_rgba(15,23,42,0.16)]' : 'shadow-soft'}`}
         style={{
           // Subtle push-down effect during PTR — keeps header anchored-feeling
           transform: pullDistance > 0 ? `translateY(${Math.min(pullDistance * 0.15, 16)}px)` : undefined,
@@ -2535,13 +2337,13 @@ export default function MarketplacePage() {
           {/* Top row */}
           <div className={`marketplace-top-row flex items-center gap-2 sm:gap-4 ${isApp ? 'py-3.5' : 'py-3'}`}>
             <div className="flex-shrink-0 flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/15 flex items-center justify-center">
-                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <div className="hidden sm:block">
-                <p className="text-white font-black text-lg leading-none tracking-tight">BATAMART</p>
+                <p className="text-ink font-semibold text-lg leading-none tracking-tight">BataMart</p>
                 {universityShortName && (
-                  <p className="text-white/60 text-[10px] font-semibold flex items-center gap-0.5">
+                  <p className="text-ink-secondary text-[10px] font-medium flex items-center gap-0.5">
                     <MapPin className="w-2.5 h-2.5" /> {universityShortName}
                   </p>
                 )}
@@ -2550,15 +2352,15 @@ export default function MarketplacePage() {
 
             {/* Search bar */}
             <div ref={searchRef} className="flex-1 min-w-0">
-              <div className="marketplace-search-input search-input flex items-center gap-2 bg-white rounded-xl shadow-md px-3 sm:px-4 ring-2 ring-transparent">
+              <div className="marketplace-search-input search-input flex items-center gap-2 bg-surface border border-border rounded-lg px-3 sm:px-4 ring-2 ring-transparent">
                 <div
-                  className="hidden sm:flex items-center gap-1 border-r border-gray-200 pr-3 mr-1 flex-shrink-0 cursor-pointer hover:text-BATAMART-primary transition-colors"
+                  className="hidden sm:flex items-center gap-1 border-r border-border pr-3 mr-1 flex-shrink-0 cursor-pointer hover:text-primary transition-colors"
                   onClick={() => {}}
                 >
-                  <span className="text-xs font-bold text-gray-500 whitespace-nowrap">All</span>
-                  <ChevronDown className="w-3 h-3 text-gray-400" />
+                  <span className="text-xs font-medium text-ink-secondary whitespace-nowrap">All</span>
+                  <ChevronDown className="w-3 h-3 text-ink-muted" />
                 </div>
-                <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <Search className="w-4 h-4 text-ink-muted flex-shrink-0" />
                 <input
                   ref={inputRef}
                   type="text"
@@ -2567,17 +2369,17 @@ export default function MarketplacePage() {
                   onFocus={() => { updateDropdownPos(); setShowSuggestions(true) }}
                   onKeyDown={handleKeyDown}
                   placeholder="Search products, sellers, categories..."
-                  className="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400 py-3 min-w-0"
+                  className="flex-1 bg-transparent outline-none text-sm text-ink placeholder:text-ink-muted py-3 min-w-0"
                   autoComplete="off"
                 />
                 {searchInput && (
-                  <button onClick={() => { setSearchInput(''); setShowSuggestions(false) }} className="text-gray-400 hover:text-gray-600 p-1">
+                  <button onClick={() => { setSearchInput(''); setShowSuggestions(false) }} className="text-ink-muted hover:text-ink-secondary p-1">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
                 <button
                   onClick={() => handleSearch()}
-                  className="flex-shrink-0 px-4 py-2 bg-BATAMART-primary hover:bg-BATAMART-dark text-white rounded-lg font-black text-sm transition-colors"
+                  className="flex-shrink-0 px-4 py-2 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-sm transition-colors"
                 >
                   <span className="hidden sm:inline">Search</span>
                   <Search className="w-4 h-4 sm:hidden" />
@@ -2587,49 +2389,48 @@ export default function MarketplacePage() {
 
             <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               <Link href="/sell"
-                className="btn-press glow-pulse hidden sm:flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-xl font-bold text-xs ring-1 ring-white/20 transition-colors">
-                <Sparkles className="w-3.5 h-3.5" /> Sell
+                className="btn-press hidden sm:flex items-center gap-1.5 bg-primary/10 hover:bg-primary/15 text-primary px-3.5 py-2 rounded-lg font-medium text-xs transition-colors">
+                <Sparkles className="w-3.5 h-3.5" strokeWidth={1.75} /> Sell
               </Link>
               <Link href="/report"
-                className="hidden sm:flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white/80 px-3 py-2 rounded-xl font-semibold text-xs ring-1 ring-white/10 transition-colors">
-                <AlertCircle className="w-3.5 h-3.5" />
+                className="hidden sm:flex items-center gap-1.5 bg-surface hover:bg-border text-ink-secondary px-3 py-2 rounded-lg font-medium text-xs transition-colors">
+                <AlertCircle className="w-3.5 h-3.5" strokeWidth={1.75} />
               </Link>
               {!isApp && (
-                <Link href="/sell" className="btn-press sm:hidden flex items-center justify-center w-10 h-10 bg-white/15 rounded-xl">
-                  <Sparkles className="w-4 h-4 text-white" />
+                <Link href="/sell" className="btn-press sm:hidden flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-primary" strokeWidth={1.75} />
                 </Link>
               )}
             </div>
           </div>
 
           {/* Category nav */}
-          <div className="marketplace-categories flex items-center justify-between gap-2 pb-2 border-t border-white/10 pt-2">
+          <div className="marketplace-categories flex items-center justify-between gap-2 pb-2 border-t border-border pt-2">
             <div className="flex gap-1 overflow-x-auto no-scrollbar flex-1">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat.name}
                   onClick={() => handleCategorySelect(cat.name)}
-                  className={`cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold whitespace-nowrap text-[11px] sm:text-xs flex-shrink-0 transition-all ${
+                  className={`cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap text-[11px] sm:text-xs flex-shrink-0 transition-all ${
                     selectedCategory === cat.name
-                      ? 'cat-active bg-white text-BATAMART-primary shadow-sm'
-                      : 'text-white/80 hover:text-white hover:bg-white/15'
+                      ? 'cat-active bg-primary text-white'
+                      : 'text-ink-secondary hover:text-ink hover:bg-surface'
                   }`}
                 >
-                  <span>{cat.icon}</span>
+                  <cat.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
                   <span className="hidden sm:inline">{cat.name}</span>
                   <span className="sm:hidden">{cat.name.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-0.5 bg-white/10 rounded-lg p-0.5 flex-shrink-0">
+            <div className="flex items-center gap-0.5 bg-surface rounded-lg p-0.5 flex-shrink-0">
               {(['feed', 'grid'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className="px-2.5 py-1.5 rounded-md text-[11px] font-bold capitalize transition-all"
-                  style={viewMode === mode ? { background: 'white', color: '#6366f1' } : { color: 'rgba(255,255,255,0.65)' }}
+                  className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${viewMode === mode ? 'bg-white text-primary shadow-soft' : 'text-ink-muted'}`}
                 >
-                  {mode === 'feed' ? <List className="w-3.5 h-3.5" /> : <Grid3X3 className="w-3.5 h-3.5" />}
+                  {mode === 'feed' ? <List className="w-3.5 h-3.5" strokeWidth={1.75} /> : <Grid3X3 className="w-3.5 h-3.5" strokeWidth={1.75} />}
                 </button>
               ))}
             </div>
@@ -2637,15 +2438,15 @@ export default function MarketplacePage() {
 
           {/* Trending chips */}
           <div className="flex items-center gap-2 pb-2.5 overflow-hidden">
-            <span className="text-[10px] font-black text-white/60 uppercase tracking-wider flex-shrink-0 flex items-center gap-1">
-              <Flame className="w-3 h-3 text-orange-400" />
+            <span className="text-[10px] font-medium text-ink-muted uppercase tracking-wider flex-shrink-0 flex items-center gap-1">
+              <Flame className="w-3 h-3 text-warning" strokeWidth={1.75} />
             </span>
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
               {TRENDING_SEARCHES.map(tag => (
                 <button
                   key={tag}
                   onClick={() => router.push(`/search?q=${encodeURIComponent(tag)}`)}
-                  className="hot-tag flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white text-white/80 hover:text-BATAMART-primary rounded-full text-[10px] font-bold whitespace-nowrap flex-shrink-0 transition-all"
+                  className="hot-tag flex items-center gap-1 px-2.5 py-1 bg-surface hover:bg-primary/10 text-ink-secondary hover:text-primary rounded-full text-[10px] font-medium whitespace-nowrap flex-shrink-0 transition-all"
                 >
                   {tag}
                 </button>
@@ -2666,40 +2467,40 @@ export default function MarketplacePage() {
         ) : selectedCategory !== 'All' ? (
           /* ── CATEGORY FILTER VIEW ── */
           <div>
-            <div className="flex items-center gap-2 mb-4 bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+            <div className="flex items-center gap-2 mb-4 bg-white rounded-xl border border-border shadow-soft px-4 py-3">
               <button
                 onClick={() => handleCategorySelect('All')}
-                className="text-xs font-bold text-gray-400 hover:text-BATAMART-primary transition-colors flex items-center gap-1"
+                className="text-xs font-semibold text-ink-muted hover:text-primary transition-colors flex items-center gap-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> All
               </button>
-              <span className="text-gray-300">/</span>
-              <span className="text-sm font-bold text-gray-700">{selectedCategory}</span>
+              <span className="text-ink-muted">/</span>
+              <span className="text-sm font-semibold text-ink-secondary">{selectedCategory}</span>
               {maxPriceFilter !== null && (
-                <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-BATAMART-primary/10 text-BATAMART-primary rounded-full text-[11px] font-black">
+                <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-semibold">
                   <Tag className="w-3 h-3" /> Under {fmt(maxPriceFilter)}
-                  <button onClick={() => setMaxPriceFilter(null)} className="ml-1 hover:text-red-500"><X className="w-3 h-3" /></button>
+                  <button onClick={() => setMaxPriceFilter(null)} className="ml-1 hover:text-danger"><X className="w-3 h-3" /></button>
                 </span>
               )}
               <div className="ml-auto flex items-center gap-2">
                 <select
                   value={sortMode}
                   onChange={(e) => setSortMode(e.target.value as 'relevance' | 'price_asc' | 'price_desc' | 'newest')}
-                  className="text-xs font-semibold border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 outline-none"
+                  className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-white text-ink-secondary outline-none"
                 >
                   <option value="relevance">Relevance</option>
                   <option value="newest">Newest</option>
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
                 </select>
-                <span className="text-[11px] text-gray-400 font-medium">{sortedFilteredByCategory.length} items</span>
+                <span className="text-[11px] text-ink-muted font-medium">{sortedFilteredByCategory.length} items</span>
               </div>
             </div>
             {sortedFilteredByCategory.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-                <ShoppingBag className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                <p className="text-gray-400 font-semibold mb-4">Nothing here yet</p>
-                <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-BATAMART-primary text-white rounded-xl font-bold text-sm shadow-md">
+              <div className="text-center py-16 bg-white rounded-2xl border border-border">
+                <ShoppingBag className="w-12 h-12 text-border mx-auto mb-3" />
+                <p className="text-ink-muted font-semibold mb-4">Nothing here yet</p>
+                <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft">
                   <Sparkles className="w-4 h-4" /> List a Product
                 </Link>
               </div>
@@ -2715,12 +2516,12 @@ export default function MarketplacePage() {
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
           <div>
-            <div className="flex items-center justify-between mb-3 bg-white rounded-xl px-4 py-3 border border-gray-100 shadow-sm gap-2">
+            <div className="flex items-center justify-between mb-3 bg-white rounded-xl px-4 py-3 border border-border shadow-soft gap-2">
               <LiveStatsBar count={allProducts.length} />
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as 'relevance' | 'price_asc' | 'price_desc' | 'newest')}
-                className="text-xs font-semibold border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 outline-none"
+                className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-white text-ink-secondary outline-none"
               >
                 <option value="relevance">Relevance</option>
                 <option value="newest">Newest</option>
@@ -2751,7 +2552,7 @@ export default function MarketplacePage() {
           <div className="space-y-4">
 
             {allProducts.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3">
+              <div className="bg-white rounded-xl border border-border shadow-soft px-4 py-3">
                 <LiveStatsBar count={allProducts.length} />
               </div>
             )}
@@ -2768,7 +2569,7 @@ export default function MarketplacePage() {
             {allProducts.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-black text-gray-800 section-header-line">Shop by Category</h2>
+                  <h2 className="text-base font-semibold text-ink section-header-line">Shop by Category</h2>
                 </div>
                 <ShowcasePanels allProducts={allProducts} onCategorySelect={handleCategorySelect} renderSeed={renderSeed} />
               </div>
@@ -2827,8 +2628,8 @@ export default function MarketplacePage() {
             {allProducts.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-black text-gray-800 section-header-line">Campus Deals by Budget</h2>
-                  <span className="text-[11px] text-gray-400 font-medium">Tap a price to filter</span>
+                  <h2 className="text-base font-semibold text-ink section-header-line">Campus Deals by Budget</h2>
+                  <span className="text-[11px] text-ink-muted font-medium">Tap a price to filter</span>
                 </div>
                 <PricePanelsRow allProducts={allProducts} onCategorySelect={handleCategorySelect} renderSeed={renderSeed} />
               </div>
@@ -2847,11 +2648,11 @@ export default function MarketplacePage() {
 
             {/* ── Recently Viewed ── */}
             {recentlyViewed.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-gray-50">
+              <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+                <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
                   <div>
-                    <h2 className="text-base font-black text-gray-900 section-header-line">Recently Viewed</h2>
-                    <p className="text-xs text-gray-400 font-medium mt-1">Pick up where you left off</p>
+                    <h2 className="text-base font-semibold text-ink section-header-line">Recently Viewed</h2>
+                    <p className="text-xs text-ink-muted font-medium mt-1">Pick up where you left off</p>
                   </div>
                 </div>
                 <div className="px-5 py-4">
@@ -2874,7 +2675,7 @@ export default function MarketplacePage() {
               <MosaicRow
                 products={productsByCategory['Electronics']}
                 onProductClick={handleProductClick}
-                title="📱 Tech on Campus"
+                title="Tech on campus"
                 subtitle="See what students are selling in electronics"
                 sectionClass="section-stripe"
               />
@@ -2890,7 +2691,7 @@ export default function MarketplacePage() {
               <MosaicRow
                 products={productsByCategory['Fashion']}
                 onProductClick={handleProductClick}
-                title="👔 Campus Style"
+                title="Campus Style"
                 subtitle="What students are wearing this season"
                 sectionClass="section-stripe-orange"
               />
@@ -2908,23 +2709,23 @@ export default function MarketplacePage() {
 
             {/* ── Your Interests ── */}
             {interestCategories.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="bg-white rounded-xl border border-border p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <Eye className="w-4 h-4 text-violet-500" />
-                  <h2 className="text-base font-black text-gray-900">Your Interests</h2>
-                  <span className="text-[10px] text-gray-400 font-medium">Based on your browsing</span>
+                  <Eye className="w-4 h-4 text-primary" strokeWidth={1.75} />
+                  <h2 className="text-[16px] font-semibold text-ink">Your interests</h2>
+                  <span className="text-[10px] text-ink-muted font-medium">Based on your browsing</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {interestCategories.map((cat, i) => {
+                  {interestCategories.map((cat) => {
                     const catObj = CATEGORIES.find(c => c.name === cat)
+                    const Icon = catObj?.icon
                     return (
                       <button
                         key={cat}
                         onClick={() => handleCategorySelect(cat)}
-                        className="interest-pill card-enter flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 shadow-sm"
-                        style={{ animationDelay: `${i * 50}ms` }}
+                        className="interest-pill flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-ink-secondary"
                       >
-                        <span>{catObj?.icon}</span> {cat}
+                        {Icon && <Icon className="w-4 h-4" strokeWidth={1.75} />} {cat}
                       </button>
                     )
                   })}
@@ -2945,7 +2746,7 @@ export default function MarketplacePage() {
               <MosaicRow
                 products={productsByCategory['Beauty & Health']}
                 onProductClick={handleProductClick}
-                title="💄 Beauty & Glow"
+                title="Beauty & glow"
                 subtitle="Top beauty picks from campus sellers"
                 sectionClass="section-stripe-emerald"
               />
@@ -2971,7 +2772,7 @@ export default function MarketplacePage() {
               <MosaicRow
                 products={productsByCategory['Home & Kitchen']}
                 onProductClick={handleProductClick}
-                title="🏠 Room Goals"
+                title="Room Goals"
                 subtitle="Make your hostel feel like home"
                 sectionClass="section-stripe"
               />
@@ -2986,11 +2787,11 @@ export default function MarketplacePage() {
             <JustDroppedSection allProducts={allProducts} onProductClick={handleProductClick} />
 
             {allProducts.length === 0 && (
-              <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-                <ShoppingBag className="w-14 h-14 text-gray-200 mx-auto mb-4" />
-                <p className="text-gray-500 font-black text-lg mb-1">No products yet</p>
-                <p className="text-gray-400 text-sm mb-6">Be the first seller on your campus!</p>
-                <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-6 py-3 bg-BATAMART-primary text-white rounded-xl font-black text-sm shadow-lg shadow-BATAMART-primary/25">
+              <div className="text-center py-20 bg-white rounded-2xl border border-border">
+                <ShoppingBag className="w-14 h-14 text-border mx-auto mb-4" />
+                <p className="text-ink-secondary font-semibold text-lg mb-1">No products yet</p>
+                <p className="text-ink-muted text-sm mb-6">Be the first seller on your campus!</p>
+                <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft shadow-soft">
                   <Sparkles className="w-4 h-4" /> List a Product
                 </Link>
               </div>
@@ -2998,11 +2799,11 @@ export default function MarketplacePage() {
 
             {/* ── All Listings ── */}
             {discoverProducts.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="bg-white rounded-2xl border border-border shadow-soft p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-base font-black text-gray-900 section-header-line">All Listings</h2>
-                    <p className="text-xs text-gray-400 mt-1">Everything currently live in your campus marketplace</p>
+                    <h2 className="text-base font-semibold text-ink section-header-line">All Listings</h2>
+                    <p className="text-xs text-ink-muted mt-1">Everything currently live in your campus marketplace</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -3019,7 +2820,7 @@ export default function MarketplacePage() {
       {/* Floating Sell Button (mobile) */}
       {!isApp && (
         <div className="fixed bottom-20 right-4 sm:right-6 z-40">
-          <Link href="/sell" className="btn-press glow-pulse flex items-center gap-2 px-5 py-3 bg-BATAMART-primary text-white rounded-2xl font-black text-sm shadow-xl shadow-BATAMART-primary/40">
+          <Link href="/sell" className="btn-press glow-pulse flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-2xl font-semibold text-sm shadow-soft shadow-soft">
             <Sparkles className="w-4 h-4" /> Sell
           </Link>
         </div>

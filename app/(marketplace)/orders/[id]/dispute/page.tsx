@@ -178,7 +178,7 @@ export default function OpenDisputePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-warning border-t-transparent" />
       </div>
     )
   }
@@ -187,9 +187,9 @@ export default function OpenDisputePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Not Found</h2>
-          <p className="text-gray-600">{error}</p>
+          <AlertCircle className="w-16 h-16 text-danger mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-ink mb-2">Order Not Found</h2>
+          <p className="text-ink-secondary">{error}</p>
         </div>
       </div>
     )
@@ -210,17 +210,17 @@ export default function OpenDisputePage() {
     else if (!isWithinTimeWindow) msg = `Dispute window has expired (must be within ${DISPUTE_WINDOW_HOURS} hours of delivery).`
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center max-w-md bg-white p-8 rounded-xl shadow-lg">
-          <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cannot Open Dispute</h2>
-          <p className="text-gray-600 mb-6">{msg}</p>
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg text-left">
-            <p className="text-sm text-gray-600 mb-1"><strong>Order Status:</strong> {order.status}</p>
-            <p className="text-sm text-gray-600"><strong>Delivered At:</strong> {deliveredDate ? deliveredDate.toLocaleString() : 'Not set'}</p>
-            {deadline && <p className="text-sm text-gray-600 mt-1"><strong>Deadline:</strong> {deadline.toLocaleString()}</p>}
+      <div className="min-h-screen flex items-center justify-center bg-surface px-4">
+        <div className="text-center max-w-md bg-white p-8 rounded-xl shadow-soft">
+          <AlertCircle className="w-16 h-16 text-warning mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-ink mb-2">Cannot Open Dispute</h2>
+          <p className="text-ink-secondary mb-6">{msg}</p>
+          <div className="mb-6 p-4 bg-surface rounded-lg text-left">
+            <p className="text-sm text-ink-secondary mb-1"><strong>Order Status:</strong> {order.status}</p>
+            <p className="text-sm text-ink-secondary"><strong>Delivered At:</strong> {deliveredDate ? deliveredDate.toLocaleString() : 'Not set'}</p>
+            {deadline && <p className="text-sm text-ink-secondary mt-1"><strong>Deadline:</strong> {deadline.toLocaleString()}</p>}
           </div>
-          <button onClick={() => router.back()} className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors">
+          <button onClick={() => router.back()} className="px-6 py-3 bg-border hover:brightness-95 text-ink rounded-lg font-medium transition-colors">
             Go Back
           </button>
         </div>
@@ -229,42 +229,42 @@ export default function OpenDisputePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-8 px-4">
+    <div className="min-h-screen bg-surface dark:bg-[#000000] py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-soft p-6">
           <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-8 h-8 text-red-500" />
+            <Shield className="w-8 h-8 text-danger" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Open a Dispute</h1>
-              <p className="text-sm text-gray-600">Order #{order.orderNumber}</p>
+              <h1 className="text-2xl font-semibold text-ink">Open a Dispute</h1>
+              <p className="text-sm text-ink-secondary">Order #{order.orderNumber}</p>
             </div>
           </div>
 
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg flex gap-4">
+          <div className="mb-6 p-4 bg-surface rounded-lg flex gap-4">
             <img src={order.product.images[0] || '/placeholder.png'} alt={order.product.name} className="w-20 h-20 object-cover rounded" />
             <div className="flex-1">
-              <h3 className="font-bold text-gray-900">{order.product.name}</h3>
-              <p className="text-sm font-bold text-orange-600 mt-1">₦{order.totalAmount.toLocaleString()}</p>
+              <h3 className="font-semibold text-ink">{order.product.name}</h3>
+              <p className="text-sm font-semibold text-warning mt-1">₦{order.totalAmount.toLocaleString()}</p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg">
+              <p className="text-sm text-danger">{error}</p>
             </div>
           )}
 
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+          <div className="mb-6 p-4 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning">
             <strong>Note:</strong> Disputes must be filed within {DISPUTE_WINDOW_HOURS} hours after delivery, with evidence images.
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Reason *</label>
+              <label className="block text-sm font-medium text-ink-secondary mb-2">Reason *</label>
               <select
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm mb-3"
+                className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-warning/40 focus:border-transparent text-sm mb-3"
                 required
               >
                 <option value="">Select reason</option>
@@ -273,76 +273,76 @@ export default function OpenDisputePage() {
                 ))}
               </select>
 
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+              <label className="block text-sm font-medium text-ink-secondary mb-2">Description *</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent min-h-36 resize-none"
+                className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-warning/40 focus:border-transparent min-h-36 resize-none"
                 placeholder="Explain exactly what is wrong with the product..."
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Resolution</label>
-              <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-orange-500 bg-orange-50">
-                <div className="p-2 rounded-lg mt-0.5 bg-orange-100">
-                  <Truck className="w-4 h-4 text-orange-600" />
+              <label className="block text-sm font-medium text-ink-secondary mb-3">Resolution</label>
+              <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-warning bg-warning/10">
+                <div className="p-2 rounded-lg mt-0.5 bg-warning/10">
+                  <Truck className="w-4 h-4 text-warning" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-sm text-orange-900">Refund + Return Item</p>
-                  <p className="text-xs text-gray-600 mt-0.5">A rider will collect the item and return it before refund is released.</p>
+                  <p className="font-semibold text-sm text-warning">Refund + Return Item</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">A rider will collect the item and return it before refund is released.</p>
                 </div>
               </div>
             </div>
 
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <MapPin className="w-4 h-4 text-gray-500" />
-                <label className="text-sm font-medium text-gray-700">Confirm Pickup Address</label>
+                <MapPin className="w-4 h-4 text-ink-secondary" />
+                <label className="text-sm font-medium text-ink-secondary">Confirm Pickup Address</label>
               </div>
-              <p className="text-xs text-gray-500 mb-3">Pre-filled from your delivery address. Edit if needed.</p>
+              <p className="text-xs text-ink-secondary mb-3">Pre-filled from your delivery address. Edit if needed.</p>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Hostel / Area *</label>
-                    <input type="text" value={formData.pickupHostel} onChange={(e) => setFormData({ ...formData, pickupHostel: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent" required />
+                    <label className="block text-xs text-ink-secondary mb-1">Hostel / Area *</label>
+                    <input type="text" value={formData.pickupHostel} onChange={(e) => setFormData({ ...formData, pickupHostel: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Room Number *</label>
-                    <input type="text" value={formData.pickupRoom} onChange={(e) => setFormData({ ...formData, pickupRoom: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent" required />
+                    <label className="block text-xs text-ink-secondary mb-1">Room Number *</label>
+                    <input type="text" value={formData.pickupRoom} onChange={(e) => setFormData({ ...formData, pickupRoom: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Landmark</label>
-                  <input type="text" value={formData.pickupLandmark} onChange={(e) => setFormData({ ...formData, pickupLandmark: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                  <label className="block text-xs text-ink-secondary mb-1">Landmark</label>
+                  <input type="text" value={formData.pickupLandmark} onChange={(e) => setFormData({ ...formData, pickupLandmark: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Contact Number *</label>
-                  <input type="tel" value={formData.pickupPhone} onChange={(e) => setFormData({ ...formData, pickupPhone: e.target.value })} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent" required />
+                  <label className="block text-xs text-ink-secondary mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Contact Number *</label>
+                  <input type="tel" value={formData.pickupPhone} onChange={(e) => setFormData({ ...formData, pickupPhone: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Evidence Images (required)</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">Upload clear photos showing the issue (max 5)</p>
+              <label className="block text-sm font-medium text-ink-secondary mb-2">Evidence Images (required)</label>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 text-ink-muted mx-auto mb-2" />
+                <p className="text-sm text-ink-secondary">Upload clear photos showing the issue (max 5)</p>
 
-                <label className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold cursor-pointer transition-colors">
+                <label className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-warning/100 hover:brightness-95 text-white rounded-lg text-sm font-semibold cursor-pointer transition-colors">
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   {uploading ? 'Uploading...' : 'Choose Images'}
                   <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadEvidenceFiles(e.target.files)} disabled={uploading} />
                 </label>
 
-                <p className="text-xs text-gray-400 mt-2">{formData.evidence.length} / 5 uploaded</p>
+                <p className="text-xs text-ink-muted mt-2">{formData.evidence.length} / 5 uploaded</p>
 
                 {formData.evidence.length > 0 && (
                   <div className="mt-4 grid grid-cols-3 gap-2">
                     {formData.evidence.map((url, idx) => (
                       <div key={`${url}-${idx}`} className="relative">
-                        <img src={url} alt={`Evidence ${idx + 1}`} className="w-full h-20 object-cover rounded-md border border-gray-200" />
+                        <img src={url} alt={`Evidence ${idx + 1}`} className="w-full h-20 object-cover rounded-md border border-border" />
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, evidence: prev.evidence.filter((_, i) => i !== idx) }))}
@@ -358,10 +358,10 @@ export default function OpenDisputePage() {
             </div>
 
             <div className="flex gap-3">
-              <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors" disabled={submitting || uploading}>
+              <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border border-border rounded-lg font-medium text-ink-secondary hover:bg-surface transition-colors" disabled={submitting || uploading}>
                 Cancel
               </button>
-              <button type="submit" className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold disabled:opacity-50 transition-colors" disabled={submitting || uploading || !!order.dispute}>
+              <button type="submit" className="flex-1 px-6 py-3 bg-danger hover:brightness-95 text-white rounded-lg font-semibold disabled:opacity-50 transition-colors" disabled={submitting || uploading || !!order.dispute}>
                 {submitting ? 'Submitting...' : 'Submit Dispute'}
               </button>
             </div>

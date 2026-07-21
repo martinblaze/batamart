@@ -100,22 +100,22 @@ export default function AdminRiderTrackingPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Rider GPS Records</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Track rider movement per delivered/completed order.</p>
+          <h1 className="text-2xl font-semibold text-ink">Rider GPS Records</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">Track rider movement per delivered/completed order.</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 min-w-[260px]">
-            <Search className="w-4 h-4 text-gray-500" />
+          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2 min-w-[260px]">
+            <Search className="w-4 h-4 text-ink-muted" />
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Search order, rider, product..."
-              className="bg-transparent text-sm text-white outline-none flex-1"
+              className="bg-transparent text-sm text-ink outline-none flex-1"
             />
           </div>
           <button
             onClick={() => { setPage(1); setSearch(searchInput.trim()) }}
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-semibold"
+            className="px-4 py-2 rounded-xl bg-danger hover:brightness-95 text-white text-sm font-semibold"
           >
             Filter
           </button>
@@ -123,50 +123,50 @@ export default function AdminRiderTrackingPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <div className="xl:col-span-3 bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-700">
-            <p className="text-sm text-gray-300 font-semibold">Delivered Orders with Tracking Data</p>
+        <div className="xl:col-span-3 bg-white border border-border rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm text-ink-secondary font-semibold">Delivered Orders with Tracking Data</p>
           </div>
           {loading ? (
-            <div className="p-8 flex items-center justify-center text-gray-400">
+            <div className="p-8 flex items-center justify-center text-ink-secondary">
               <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading records...
             </div>
           ) : rows.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No tracking records found.</div>
+            <div className="p-8 text-center text-ink-secondary">No tracking records found.</div>
           ) : (
-            <div className="divide-y divide-gray-700">
+            <div className="divide-y divide-border">
               {rows.map((row: any) => {
                 const active = selectedOrderId === row.id
                 return (
                   <button
                     key={row.id}
                     onClick={() => setSelectedOrderId(row.id)}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-700/40 transition-colors ${
-                      active ? 'bg-gray-700/50' : ''
+                    className={`w-full text-left px-4 py-3 hover:bg-surface/40 transition-colors ${
+                      active ? 'bg-primary/10' : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <img
                         src={row.product?.images?.[0] || '/placeholder.png'}
                         alt={row.product?.name || 'Product'}
-                        className="w-12 h-12 rounded-lg object-cover bg-gray-700"
+                        className="w-12 h-12 rounded-lg object-cover bg-surface"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{row.product?.name || 'Product'}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-sm font-semibold text-ink truncate">{row.product?.name || 'Product'}</p>
+                        <p className="text-xs text-ink-secondary mt-0.5">
                           #{row.orderNumber} • Rider: {row.rider?.name || 'N/A'}
                         </p>
-                        <div className="flex items-center gap-4 mt-2 text-[11px] text-gray-400">
+                        <div className="flex items-center gap-4 mt-2 text-[11px] text-ink-secondary">
                           <span className="inline-flex items-center gap-1">
-                            <Crosshair className="w-3.5 h-3.5 text-cyan-400" />
+                            <Crosshair className="w-3.5 h-3.5 text-primary" />
                             {row.trackingSummary?.totalPings || 0} pings
                           </span>
                           <span className="inline-flex items-center gap-1">
-                            <Route className="w-3.5 h-3.5 text-violet-400" />
+                            <Route className="w-3.5 h-3.5 text-primary" />
                             {row.trackingSummary?.checkpointCount || 0} checkpoints
                           </span>
                           <span className="inline-flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                            <Calendar className="w-3.5 h-3.5 text-warning" />
                             {fmtDate(row.deliveredAt)}
                           </span>
                         </div>
@@ -178,22 +178,22 @@ export default function AdminRiderTrackingPage() {
             </div>
           )}
 
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
-            <p className="text-xs text-gray-400">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <p className="text-xs text-ink-secondary">
               Page {page} of {totalPages} • {total} total orders
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-3 py-1.5 rounded-lg text-xs bg-gray-700 text-gray-200 disabled:opacity-40"
+                className="px-3 py-1.5 rounded-lg text-xs bg-surface text-ink-secondary disabled:opacity-40"
               >
                 Prev
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-lg text-xs bg-gray-700 text-gray-200 disabled:opacity-40"
+                className="px-3 py-1.5 rounded-lg text-xs bg-surface text-ink-secondary disabled:opacity-40"
               >
                 Next
               </button>
@@ -201,79 +201,79 @@ export default function AdminRiderTrackingPage() {
           </div>
         </div>
 
-        <div className="xl:col-span-2 bg-gray-800 border border-gray-700 rounded-2xl p-4">
+        <div className="xl:col-span-2 bg-white border border-border rounded-2xl p-4">
           {!selectedOrderId ? (
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-full flex items-center justify-center text-ink-secondary text-sm">
               Select an order to view full GPS trail.
             </div>
           ) : detailLoading ? (
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-full flex items-center justify-center text-ink-secondary text-sm">
               <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading order trail...
             </div>
           ) : !detail ? (
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+            <div className="h-full flex items-center justify-center text-ink-secondary text-sm">
               Failed to load this order trail.
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <p className="text-xs text-gray-400">Order</p>
-                <p className="text-white font-semibold">#{detail.order?.orderNumber}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{detail.order?.product?.name}</p>
+                <p className="text-xs text-ink-secondary">Order</p>
+                <p className="text-ink font-semibold">#{detail.order?.orderNumber}</p>
+                <p className="text-xs text-ink-secondary mt-0.5">{detail.order?.product?.name}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-900/60 rounded-xl p-3">
-                  <p className="text-[11px] text-gray-400">Rider</p>
-                  <p className="text-sm text-white font-semibold">{detail.order?.rider?.name || 'N/A'}</p>
-                  <p className="text-xs text-gray-400 inline-flex items-center gap-1 mt-0.5">
+                <div className="bg-surface/60 rounded-xl p-3">
+                  <p className="text-[11px] text-ink-secondary">Rider</p>
+                  <p className="text-sm text-ink font-semibold">{detail.order?.rider?.name || 'N/A'}</p>
+                  <p className="text-xs text-ink-secondary inline-flex items-center gap-1 mt-0.5">
                     <Phone className="w-3 h-3" /> {detail.order?.rider?.phone || 'N/A'}
                   </p>
                 </div>
-                <div className="bg-gray-900/60 rounded-xl p-3">
-                  <p className="text-[11px] text-gray-400">GPS Pings</p>
-                  <p className="text-sm text-cyan-300 font-bold">{detail.tracking?.totalPings || 0}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{fmtDate(detail.tracking?.latestPoint?.at)}</p>
+                <div className="bg-surface/60 rounded-xl p-3">
+                  <p className="text-[11px] text-ink-secondary">GPS Pings</p>
+                  <p className="text-sm text-primary font-semibold">{detail.tracking?.totalPings || 0}</p>
+                  <p className="text-xs text-ink-secondary mt-0.5">{fmtDate(detail.tracking?.latestPoint?.at)}</p>
                 </div>
               </div>
 
               {mapEmbed ? (
-                <div className="rounded-xl overflow-hidden border border-gray-700">
+                <div className="rounded-xl overflow-hidden border border-border">
                   <iframe title="Admin rider GPS map" src={mapEmbed} className="w-full h-52" loading="lazy" />
                 </div>
               ) : (
-                <div className="rounded-xl border border-gray-700 bg-gray-900/50 p-3 text-sm text-gray-400">
+                <div className="rounded-xl border border-border bg-surface p-3 text-sm text-ink-secondary">
                   No GPS coordinates saved for this order.
                 </div>
               )}
 
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-2 inline-flex items-center gap-1.5">
-                  <Navigation className="w-3.5 h-3.5 text-blue-400" />
+                <p className="text-xs text-ink-secondary uppercase tracking-wide font-semibold mb-2 inline-flex items-center gap-1.5">
+                  <Navigation className="w-3.5 h-3.5 text-primary" />
                   Checkpoints
                 </p>
                 <div className="space-y-2 max-h-52 overflow-auto pr-1">
                   {(detail.tracking?.checkpoints || []).map((checkpoint: any) => (
-                    <div key={checkpoint.id} className="bg-gray-900/60 rounded-lg px-3 py-2">
-                      <p className="text-sm text-white">{checkpointLabel(checkpoint)}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{fmtDate(checkpoint.at)}</p>
+                    <div key={checkpoint.id} className="bg-surface/60 rounded-lg px-3 py-2">
+                      <p className="text-sm text-ink">{checkpointLabel(checkpoint)}</p>
+                      <p className="text-xs text-ink-secondary mt-0.5">{fmtDate(checkpoint.at)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-2 inline-flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                <p className="text-xs text-ink-secondary uppercase tracking-wide font-semibold mb-2 inline-flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-primary" />
                   GPS Trail (latest first)
                 </p>
                 <div className="space-y-2 max-h-56 overflow-auto pr-1">
                   {[...(detail.tracking?.points || [])].reverse().slice(0, 30).map((point: any) => (
-                    <div key={point.id} className="bg-gray-900/60 rounded-lg px-3 py-2">
-                      <p className="text-xs text-cyan-300 font-semibold">
+                    <div key={point.id} className="bg-surface/60 rounded-lg px-3 py-2">
+                      <p className="text-xs text-primary font-semibold">
                         {point.lat?.toFixed(6)}, {point.lng?.toFixed(6)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{fmtDate(point.at)}</p>
+                      <p className="text-xs text-ink-secondary mt-0.5">{fmtDate(point.at)}</p>
                     </div>
                   ))}
                 </div>

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Shield, Eye, Lock, Database, UserCheck, Bell } from 'lucide-react'
+import { Shield, Eye, Lock, Database, UserCheck, Bell, Calendar, Cookie, AlertTriangle, Baby, FileEdit, Check } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -118,15 +118,15 @@ export default function PrivacyPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4">
+      <section className="bg-primary text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full mb-6">
             <Shield className="w-5 h-5" />
             <span className="font-semibold">Privacy Policy</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="text-4xl md:text-5xl font-semibold mb-6">
             Your Privacy Matters to Us
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
@@ -142,9 +142,9 @@ export default function PrivacyPage() {
       {/* Introduction */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
-            <p className="text-gray-700 leading-relaxed">
-              <strong className="text-blue-900">Welcome to BATAMART's Privacy Policy.</strong> This policy explains how
+          <div className="bg-primary/10 border-l-4 border-primary p-6 rounded-r-xl">
+            <p className="text-ink-secondary leading-relaxed">
+              <strong className="text-ink">Welcome to BATAMART's Privacy Policy.</strong> This policy explains how
               BATAMART ("we," "us," or "our") collects, uses, shares, and protects your personal information when you
               use our student marketplace platform. By using BATAMART, you agree to the practices described in this policy.
             </p>
@@ -156,13 +156,13 @@ export default function PrivacyPage() {
       <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto space-y-12">
           {sections.map((section, index) => (
-            <div key={index} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
-              <div className="bg-gradient-to-r from-BATAMART-light to-white p-6 border-b border-gray-100">
+            <div key={index} className="bg-white rounded-2xl border border-border shadow-soft hover:shadow-soft transition-shadow duration-300 overflow-hidden">
+              <div className="bg-primary/5 p-6 border-b border-border">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
                     <section.icon className="w-6 h-6 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-semibold text-ink">
                     {section.title}
                   </h2>
                 </div>
@@ -170,10 +170,10 @@ export default function PrivacyPage() {
               <div className="p-6 space-y-6">
                 {section.content.map((item, itemIndex) => (
                   <div key={itemIndex} className="space-y-2">
-                    <h3 className="text-lg font-bold text-gray-900">
+                    <h3 className="text-lg font-semibold text-ink">
                       {item.subtitle}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed pl-4 border-l-2 border-BATAMART-primary/20">
+                    <p className="text-ink-secondary leading-relaxed pl-4 border-l-2 border-primary/20">
                       {item.text}
                     </p>
                   </div>
@@ -187,29 +187,29 @@ export default function PrivacyPage() {
       {/* Data Retention */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-gray-50 to-white p-8 rounded-2xl border border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              📅 Data Retention
+          <div className="bg-surface p-8 rounded-2xl border border-border">
+            <h2 className="text-2xl font-semibold text-ink mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" strokeWidth={1.75} /> Data Retention
             </h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
+            <p className="text-ink-secondary leading-relaxed mb-4">
               We retain your personal information for as long as necessary to provide our services and comply
               with legal obligations. Specifically:
             </p>
-            <ul className="space-y-2 text-gray-700">
+            <ul className="space-y-2 text-ink-secondary">
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
+                <Check className="w-4 h-4 text-success mt-1 flex-shrink-0" strokeWidth={2} />
                 <span><strong>Active accounts:</strong> Data is retained while your account is active</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
+                <Check className="w-4 h-4 text-success mt-1 flex-shrink-0" strokeWidth={2} />
                 <span><strong>Deleted accounts:</strong> We aim to delete or anonymise most data within a reasonable processing window after approved deletion requests</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
+                <Check className="w-4 h-4 text-success mt-1 flex-shrink-0" strokeWidth={2} />
                 <span><strong>Transaction records:</strong> Retained for 7 years for legal and accounting purposes</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-green-500 mt-1">✓</span>
+                <Check className="w-4 h-4 text-success mt-1 flex-shrink-0" strokeWidth={2} />
                 <span><strong>Dispute records:</strong> Retained as needed for support, fraud prevention, and legal compliance</span>
               </li>
             </ul>
@@ -218,26 +218,26 @@ export default function PrivacyPage() {
       </section>
 
       {/* Cookies */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              🍪 Cookies & Tracking
+          <div className="bg-white p-8 rounded-2xl border border-border shadow-soft">
+            <h2 className="text-2xl font-semibold text-ink mb-4 flex items-center gap-2">
+              <Cookie className="w-5 h-5 text-primary" strokeWidth={1.75} /> Cookies & Tracking
             </h2>
-            <p className="text-gray-700 leading-relaxed mb-4">
+            <p className="text-ink-secondary leading-relaxed mb-4">
               BATAMART uses cookies and similar technologies to improve your experience, analyze usage, and personalize content.
             </p>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h4 className="font-bold text-gray-900 mb-2">Essential Cookies</h4>
-                <p className="text-sm text-gray-600">Required for the platform to function (login, cart, security)</p>
+              <div className="bg-surface p-4 rounded-xl">
+                <h4 className="font-semibold text-ink mb-2">Essential Cookies</h4>
+                <p className="text-sm text-ink-secondary">Required for the platform to function (login, cart, security)</p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-xl">
-                <h4 className="font-bold text-gray-900 mb-2">Analytics Cookies</h4>
-                <p className="text-sm text-gray-600">Help us understand how users interact with BATAMART</p>
+              <div className="bg-surface p-4 rounded-xl">
+                <h4 className="font-semibold text-ink mb-2">Analytics Cookies</h4>
+                <p className="text-sm text-ink-secondary">Help us understand how users interact with BATAMART</p>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mt-4">
+            <p className="text-sm text-ink-secondary mt-4">
               You can manage cookie preferences through your browser settings.
             </p>
           </div>
@@ -247,11 +247,11 @@ export default function PrivacyPage() {
       {/* Third-Party Links */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-xl">
-            <h3 className="text-lg font-bold text-yellow-900 mb-2">
-              ⚠️ Third-Party Links
+          <div className="bg-warning/10 border-l-4 border-warning p-6 rounded-r-xl">
+            <h3 className="text-lg font-semibold text-ink mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" strokeWidth={1.75} /> Third-Party Links
             </h3>
-            <p className="text-gray-700">
+            <p className="text-ink-secondary">
               BATAMART may contain links to external websites. We are not responsible for the privacy practices
               of these third-party sites. We encourage you to read their privacy policies.
             </p>
@@ -260,13 +260,13 @@ export default function PrivacyPage() {
       </section>
 
       {/* Children's Privacy */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              👶 Children's Privacy
+          <div className="bg-white p-8 rounded-2xl border border-border shadow-soft">
+            <h2 className="text-2xl font-semibold text-ink mb-4 flex items-center gap-2">
+              <Baby className="w-5 h-5 text-primary" strokeWidth={1.75} /> Children's Privacy
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-ink-secondary leading-relaxed">
               BATAMART is intended for University students aged 18 and above. We do not knowingly collect
               information from individuals under 18. If we discover we have collected data from someone
               under 18, we will delete it promptly.
@@ -278,11 +278,11 @@ export default function PrivacyPage() {
       {/* Changes to Policy */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-purple-50 border-l-4 border-purple-500 p-6 rounded-r-xl">
-            <h3 className="text-lg font-bold text-purple-900 mb-2">
-              📝 Changes to This Policy
+          <div className="bg-primary/5 border-l-4 border-primary p-6 rounded-r-xl">
+            <h3 className="text-lg font-semibold text-ink mb-2 flex items-center gap-2">
+              <FileEdit className="w-5 h-5 text-primary" strokeWidth={1.75} /> Changes to This Policy
             </h3>
-            <p className="text-gray-700">
+            <p className="text-ink-secondary">
               We may update this Privacy Policy from time to time. When we make significant changes,
               we'll notify you via email or through a notice on the platform. Continued use of BATAMART
               after changes constitutes acceptance of the updated policy.
@@ -292,9 +292,9 @@ export default function PrivacyPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white">
+      <section className="py-16 px-4 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-semibold mb-4">
             Questions About Your Privacy?
           </h2>
           <p className="text-xl text-white/90 mb-8">
@@ -304,13 +304,13 @@ export default function PrivacyPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="mailto:support@BATAMART.com"
-              className="bg-white text-BATAMART-primary hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
+              className="bg-white text-primary hover:bg-surface px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-soft hover:shadow-soft"
             >
               Email: support@BATAMART.com
             </a>
             <Link
               href="/contact"
-              className="bg-BATAMART-dark/50 hover:bg-BATAMART-dark text-white border-2 border-white px-8 py-4 rounded-xl font-bold text-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold text-lg transition-all"
             >
               Contact Support
             </Link>

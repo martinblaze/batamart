@@ -35,20 +35,20 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+        <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-border rounded-2xl shadow-soft p-8 text-center">
+            <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-danger" strokeWidth={1.75} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-[20px] font-semibold text-ink mb-2">
               Something went wrong
             </h1>
-            <p className="text-gray-600 mb-6">
-              We encountered an error while loading this page. Don't worry, it's not your fault!
+            <p className="text-[15px] text-ink-secondary mb-6">
+              We encountered an error while loading this page. Don&apos;t worry, it&apos;s not your fault!
             </p>
             {this.state.error && (
-              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-xs font-mono text-left text-gray-700 break-all">
+              <div className="mb-6 p-4 bg-surface rounded-lg text-left">
+                <p className="text-xs font-mono text-ink-secondary break-all">
                   {this.state.error.message}
                 </p>
               </div>
@@ -56,17 +56,17 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-primary hover:brightness-95 text-white rounded-lg font-medium transition-all"
               >
-                <RefreshCw className="w-4 h-4" />
-                Reload Page
+                <RefreshCw className="w-4 h-4" strokeWidth={1.75} />
+                Reload page
               </button>
               <Link
                 href="/"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-white border border-border hover:bg-surface text-ink rounded-lg font-medium transition-all"
               >
-                <Home className="w-4 h-4" />
-                Go Home
+                <Home className="w-4 h-4" strokeWidth={1.75} />
+                Go home
               </Link>
             </div>
           </div>
@@ -90,18 +90,18 @@ export function ErrorMessage({
   className?: string;
 }) {
   return (
-    <div className={`bg-red-50 border border-red-200 rounded-lg p-4 ${className}`}>
+    <div className={`bg-danger/5 border border-danger/20 rounded-lg p-4 ${className || ''}`}>
       <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" strokeWidth={1.75} />
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-red-900">{title}</h3>
-          <p className="text-sm text-red-700 mt-1">{message}</p>
+          <h3 className="text-sm font-medium text-ink">{title}</h3>
+          <p className="text-sm text-ink-secondary mt-1">{message}</p>
           {onRetry && (
             <button
               onClick={onRetry}
-              className="mt-3 text-sm font-medium text-red-600 hover:text-red-700 flex items-center gap-1"
+              className="mt-3 text-sm font-medium text-danger hover:brightness-90 flex items-center gap-1"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-4 h-4" strokeWidth={1.75} />
               Try again
             </button>
           )}
@@ -125,16 +125,16 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
-      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-        <Icon className="w-8 h-8 text-gray-400" />
+    <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className || ''}`}>
+      <div className="w-12 h-12 bg-surface border border-border rounded-full flex items-center justify-center mb-4">
+        <Icon className="w-6 h-6 text-ink-muted" strokeWidth={1.75} />
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600 max-w-md mb-6">{message}</p>
+      <h3 className="text-[16px] font-medium text-ink mb-2">{title}</h3>
+      <p className="text-[15px] text-ink-secondary max-w-md mb-6">{message}</p>
       {action && (
         <button
           onClick={action.onClick}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+          className="h-11 px-4 bg-primary hover:brightness-95 text-white rounded-lg font-medium transition-all"
         >
           {action.label}
         </button>

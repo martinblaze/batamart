@@ -1,8 +1,41 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Trash2, Check, Filter } from 'lucide-react'
+import {
+  Bell, Trash2, Check, Filter, ShoppingCart, Bike, Package, Truck,
+  CheckCircle2, Star, AlertTriangle, MessageCircle, Ban, Banknote,
+  type LucideIcon,
+} from 'lucide-react'
 import Link from 'next/link'
+
+// Design bible section 6 — lucide-react only, no emoji. Status-colored icons
+// use the matching status token; everything else inherits ink-secondary.
+const NOTIFICATION_ICONS: Record<string, { icon: LucideIcon; tone: 'primary' | 'success' | 'warning' | 'danger' }> = {
+  ORDER_PLACED: { icon: ShoppingCart, tone: 'primary' },
+  RIDER_ASSIGNED: { icon: Bike, tone: 'primary' },
+  ORDER_PICKED_UP: { icon: Package, tone: 'primary' },
+  ORDER_ON_THE_WAY: { icon: Truck, tone: 'primary' },
+  ORDER_DELIVERED: { icon: CheckCircle2, tone: 'success' },
+  ORDER_COMPLETED: { icon: CheckCircle2, tone: 'success' },
+  PRODUCT_REVIEWED: { icon: Star, tone: 'warning' },
+  SELLER_REVIEWED: { icon: Star, tone: 'warning' },
+  RIDER_REVIEWED: { icon: Star, tone: 'warning' },
+  DISPUTE_OPENED: { icon: AlertTriangle, tone: 'warning' },
+  DISPUTE_MESSAGE: { icon: MessageCircle, tone: 'primary' },
+  DISPUTE_RESOLVED: { icon: CheckCircle2, tone: 'success' },
+  REPORT_SUBMITTED: { icon: AlertTriangle, tone: 'warning' },
+  REPORT_RESOLVED: { icon: CheckCircle2, tone: 'success' },
+  PENALTY_ISSUED: { icon: Ban, tone: 'danger' },
+  PAYMENT_RECEIVED: { icon: Banknote, tone: 'success' },
+  WITHDRAWAL_PROCESSED: { icon: Banknote, tone: 'primary' },
+}
+const DEFAULT_NOTIFICATION_ICON: { icon: LucideIcon; tone: 'primary' | 'success' | 'warning' | 'danger' } = { icon: Bell, tone: 'primary' }
+const toneClasses: Record<'primary' | 'success' | 'warning' | 'danger', string> = {
+  primary: 'bg-primary/10 text-primary',
+  success: 'bg-success/10 text-success',
+  warning: 'bg-warning/10 text-warning',
+  danger: 'bg-danger/10 text-danger',
+}
 
 interface Notification {
   id: string
@@ -141,30 +174,6 @@ export default function NotificationsPage() {
     return new Date(dateString).toLocaleDateString()
   }
 
-  // Get notification icon/emoji
-  const getNotificationIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      ORDER_PLACED: '🛒',
-      RIDER_ASSIGNED: '🚴',
-      ORDER_PICKED_UP: '📦',
-      ORDER_ON_THE_WAY: '🛵',
-      ORDER_DELIVERED: '✅',
-      ORDER_COMPLETED: '🎉',
-      PRODUCT_REVIEWED: '⭐',
-      SELLER_REVIEWED: '⭐',
-      RIDER_REVIEWED: '⭐',
-      DISPUTE_OPENED: '⚠️',
-      DISPUTE_MESSAGE: '💬',
-      DISPUTE_RESOLVED: '✅',
-      REPORT_SUBMITTED: '⚠️',
-      REPORT_RESOLVED: '✅',
-      PENALTY_ISSUED: '⚠️',
-      PAYMENT_RECEIVED: '💰',
-      WITHDRAWAL_PROCESSED: '💸',
-    }
-    return icons[type] || '🔔'
-  }
-
   // Filter notifications
   const filteredNotifications = notifications.filter(n => {
     if (filter === 'unread') return !n.isRead
@@ -175,18 +184,18 @@ export default function NotificationsPage() {
   const unreadCount = notifications.filter(n => !n.isRead).length
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-8">
+    <div className="min-h-screen bg-surface dark:bg-[#000000] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-soft p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-BATAMART-primary/10 rounded-full flex items-center justify-center">
-                <Bell className="w-6 h-6 text-BATAMART-primary" />
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                <Bell className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-                <p className="text-sm text-gray-500">
+                <h1 className="text-2xl font-semibold text-ink">Notifications</h1>
+                <p className="text-sm text-ink-secondary">
                   {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
                 </p>
               </div>
@@ -197,7 +206,7 @@ export default function NotificationsPage() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="px-4 py-2 text-sm font-medium text-BATAMART-primary hover:bg-BATAMART-primary/10 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                 >
                   Mark all read
                 </button>
@@ -205,7 +214,7 @@ export default function NotificationsPage() {
               {notifications.some(n => n.isRead) && (
                 <button
                   onClick={deleteAllRead}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
                   Clear read
@@ -219,8 +228,8 @@ export default function NotificationsPage() {
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'all'
-                  ? 'bg-BATAMART-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary text-white'
+                  : 'text-ink-secondary hover:bg-surface'
                 }`}
             >
               All ({notifications.length})
@@ -228,8 +237,8 @@ export default function NotificationsPage() {
             <button
               onClick={() => setFilter('unread')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'unread'
-                  ? 'bg-BATAMART-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary text-white'
+                  : 'text-ink-secondary hover:bg-surface'
                 }`}
             >
               Unread ({unreadCount})
@@ -237,8 +246,8 @@ export default function NotificationsPage() {
             <button
               onClick={() => setFilter('read')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'read'
-                  ? 'bg-BATAMART-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-primary text-white'
+                  : 'text-ink-secondary hover:bg-surface'
                 }`}
             >
               Read ({notifications.length - unreadCount})
@@ -247,36 +256,40 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-soft overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="inline-block w-8 h-8 border-4 border-BATAMART-primary border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-500">Loading notifications...</p>
+              <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-4 text-ink-secondary">Loading notifications...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-12 text-center">
-              <Bell className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <Bell className="w-16 h-16 mx-auto mb-4 text-ink-muted" />
+              <h3 className="text-lg font-semibold text-ink mb-2">
                 {filter === 'all' ? 'No notifications yet' : `No ${filter} notifications`}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-ink-secondary">
                 {filter === 'all'
                   ? "We'll notify you when something important happens"
                   : `You don't have any ${filter} notifications`}
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredNotifications.map((notification) => (
+            <div className="divide-y divide-border">
+              {filteredNotifications.map((notification) => {
+                const { icon: NotifIcon, tone } = NOTIFICATION_ICONS[notification.type] || DEFAULT_NOTIFICATION_ICON
+                return (
                 <div
                   key={notification.id}
-                  className={`p-6 hover:bg-gray-50 transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''
+                  className={`p-6 hover:bg-surface transition-colors ${!notification.isRead ? 'bg-primary/5' : ''
                     }`}
                 >
                   <div className="flex items-start gap-4">
                     {/* Icon */}
                     <div className="flex-shrink-0">
-                      <span className="text-3xl">{getNotificationIcon(notification.type)}</span>
+                      <span className={`w-10 h-10 rounded-full flex items-center justify-center ${toneClasses[tone]}`}>
+                        <NotifIcon className="w-5 h-5" strokeWidth={1.75} />
+                      </span>
                     </div>
 
                     {/* Content */}
@@ -291,17 +304,17 @@ export default function NotificationsPage() {
                         className="block"
                       >
                         <div className="flex items-start justify-between gap-4 mb-1">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-ink">
                             {notification.title}
                           </h3>
                           {!notification.isRead && (
-                            <span className="flex-shrink-0 w-2 h-2 bg-BATAMART-primary rounded-full mt-2"></span>
+                            <span className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2"></span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                        <p className="text-sm text-ink-secondary mb-2 line-clamp-2">
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-ink-muted">
                           {timeAgo(notification.createdAt)}
                         </p>
                       </Link>
@@ -312,23 +325,24 @@ export default function NotificationsPage() {
                       {!notification.isRead && (
                         <button
                           onClick={() => markAsRead([notification.id])}
-                          className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                          className="p-2 hover:bg-border rounded-full transition-colors"
                           title="Mark as read"
                         >
-                          <Check className="w-4 h-4 text-gray-600" />
+                          <Check className="w-4 h-4 text-ink-secondary" />
                         </button>
                       )}
                       <button
                         onClick={() => deleteNotification(notification.id)}
-                        className="p-2 hover:bg-red-100 rounded-full transition-colors"
+                        className="p-2 hover:bg-danger/10 rounded-full transition-colors"
                         title="Delete"
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className="w-4 h-4 text-danger" strokeWidth={1.75} />
                       </button>
                     </div>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

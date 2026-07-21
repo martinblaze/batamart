@@ -31,13 +31,13 @@ function Toast({
   onClose: () => void
 }) {
   const colors = {
-    success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    error:   'bg-red-50 border-red-200 text-red-800',
-    info:    'bg-blue-50 border-blue-200 text-blue-800',
+    success: 'bg-success/10 border-success/30 text-success',
+    error:   'bg-danger/10 border-danger/30 text-danger',
+    info:    'bg-primary/10 border-primary/30 text-primary',
   }
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <div className={`flex items-start gap-3 px-4 py-3 rounded-2xl border shadow-lg max-w-sm w-full pointer-events-auto ${colors[type]}`}>
+      <div className={`flex items-start gap-3 px-4 py-3 rounded-2xl border shadow-soft max-w-sm w-full pointer-events-auto ${colors[type]}`}>
         <p className="text-sm font-semibold flex-1">{message}</p>
         <button onClick={onClose} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity">
           <X className="w-4 h-4" />
@@ -50,13 +50,13 @@ function Toast({
 // ── Order status badge ────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    RIDER_ASSIGNED: 'bg-indigo-100 text-indigo-700',
-    PICKED_UP:      'bg-blue-100 text-blue-700',
-    ON_THE_WAY:     'bg-amber-100 text-amber-700',
-    DELIVERED:      'bg-emerald-100 text-emerald-700',
+    RIDER_ASSIGNED: 'bg-primary/10 text-primary',
+    PICKED_UP:      'bg-primary/10 text-primary',
+    ON_THE_WAY:     'bg-warning/10 text-warning',
+    DELIVERED:      'bg-success/10 text-success',
   }
   return (
-    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${map[status] ?? 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${map[status] ?? 'bg-surface text-ink-secondary'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -412,11 +412,11 @@ export default function RiderDashboardPage() {
     }
   }
   const getDisputeReturnStage = (status: string) => {
-    if (status === 'RIDER_ASSIGNED') return { label: 'Awaiting Pickup', tone: 'bg-yellow-100 text-yellow-700' }
-    if (status === 'PICKED_UP') return { label: 'Picked Up - Head to Seller', tone: 'bg-blue-100 text-blue-700' }
-    if (status === 'ON_THE_WAY') return { label: 'On The Way to Seller', tone: 'bg-indigo-100 text-indigo-700' }
-    if (status === 'DELIVERED') return { label: 'Delivered - Waiting Seller Confirmation', tone: 'bg-emerald-100 text-emerald-700' }
-    return { label: status.replace(/_/g, ' '), tone: 'bg-gray-100 text-gray-600' }
+    if (status === 'RIDER_ASSIGNED') return { label: 'Awaiting Pickup', tone: 'bg-warning/10 text-warning' }
+    if (status === 'PICKED_UP') return { label: 'Picked Up - Head to Seller', tone: 'bg-primary/10 text-primary' }
+    if (status === 'ON_THE_WAY') return { label: 'On The Way to Seller', tone: 'bg-primary/10 text-primary' }
+    if (status === 'DELIVERED') return { label: 'Delivered - Waiting Seller Confirmation', tone: 'bg-success/10 text-success' }
+    return { label: status.replace(/_/g, ' '), tone: 'bg-surface text-ink-secondary' }
   }
 
   const hasDisputePickupPending = disputePickups.some((o: any) => o.status !== 'DELIVERED')
@@ -524,59 +524,63 @@ export default function RiderDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-BATAMART-primary border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] py-6 px-4 pb-24">
+    <div className="min-h-screen bg-surface dark:bg-[#000000] py-6 px-4 pb-24">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* ── Header ───────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+        <div className="bg-white rounded-2xl shadow-soft border border-border p-5">
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Bike className="w-5 h-5 text-BATAMART-primary" />
-                <h1 className="text-xl font-black text-gray-900">Rider Dashboard</h1>
+                <Bike className="w-5 h-5 text-primary" />
+                <h1 className="text-xl font-semibold text-ink">Rider Dashboard</h1>
               </div>
-              <p className="text-sm text-gray-500">Welcome back, {rider?.name}!</p>
+              <p className="text-sm text-ink-secondary">Welcome back, {rider?.name}!</p>
             </div>
             <button
               onClick={toggleAvailability}
               disabled={actionLoading['toggle-availability']}
-              className={`px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                 isAvailable
-                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-200'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  ? 'bg-success text-white'
+                  : 'bg-border hover:bg-ink-muted/30 text-ink-secondary'
               }`}
             >
-              {actionLoading['toggle-availability']
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
-                : isAvailable ? '🟢 Available' : '⚫ Unavailable'
-              }
+              {actionLoading['toggle-availability'] ? (
+                <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} /> Updating…</>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-current" />
+                  {isAvailable ? 'Available' : 'Unavailable'}
+                </>
+              )}
             </button>
             <div className="flex items-center gap-2 flex-wrap justify-end">
               <button
                 onClick={openRiderInstallPage}
-                className="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 border border-border bg-white text-ink-secondary hover:bg-surface"
               >
                 Open Rider Install Page
               </button>
               {!isInstalled && deferredInstallPrompt && (
                 <button
                   onClick={installRiderApp}
-                  className="px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  className="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 border border-primary/30 bg-primary/10 text-primary hover:bg-primary/10"
                 >
                   Install Rider App
                 </button>
               )}
               {isInstalled && (
-                <div className="px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 border border-emerald-200 bg-emerald-50 text-emerald-700">
+                <div className="px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 border border-success/30 bg-success/10 text-success">
                   Installed
                 </div>
               )}
@@ -584,29 +588,29 @@ export default function RiderDashboardPage() {
           </div>
 
           <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="bg-emerald-50 p-3 rounded-xl text-center">
-              <p className="text-2xl font-black text-emerald-700">{rider?.completedOrders || 0}</p>
-              <p className="text-xs font-semibold text-emerald-600 mt-0.5">Completed</p>
+            <div className="bg-success/10 p-3 rounded-xl text-center">
+              <p className="text-2xl font-semibold text-success">{rider?.completedOrders || 0}</p>
+              <p className="text-xs font-semibold text-success mt-0.5">Completed</p>
             </div>
-            <div className="bg-blue-50 p-3 rounded-xl text-center">
-              <p className="text-2xl font-black text-blue-700">{totalActiveOrders}</p>
-              <p className="text-xs font-semibold text-blue-600 mt-0.5">Active Orders</p>
+            <div className="bg-primary/10 p-3 rounded-xl text-center">
+              <p className="text-2xl font-semibold text-primary">{totalActiveOrders}</p>
+              <p className="text-xs font-semibold text-primary mt-0.5">Active Orders</p>
             </div>
-            <div className="bg-violet-50 p-3 rounded-xl text-center">
-              <p className="text-2xl font-black text-violet-700">
+            <div className="bg-primary/10 p-3 rounded-xl text-center">
+              <p className="text-2xl font-semibold text-primary">
                 ₦{((rider?.completedOrders || 0) * 560).toLocaleString()}
               </p>
-              <p className="text-xs font-semibold text-violet-600 mt-0.5">Earned</p>
+              <p className="text-xs font-semibold text-primary mt-0.5">Earned</p>
             </div>
           </div>
 
           {liveOrderIds.length > 0 && (
             <div className={`mt-4 rounded-xl border px-3 py-2.5 text-xs ${
               trackingError
-                ? 'bg-red-50 border-red-200 text-red-700'
-                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                ? 'bg-danger/10 border-danger/30 text-danger'
+                : 'bg-success/10 border-success/30 text-success'
             }`}>
-              <p className="font-bold">
+              <p className="font-semibold">
                 {trackingError
                   ? 'Live Tracking Issue'
                   : trackingActive
@@ -625,14 +629,14 @@ export default function RiderDashboardPage() {
         {hasDisputePickupPending && (
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <h2 className="text-base font-black text-red-600">Return Pickup Required</h2>
-              <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+              <AlertTriangle className="w-4 h-4 text-danger" />
+              <h2 className="text-base font-semibold text-danger">Return Pickup Required</h2>
+              <span className="px-2 py-0.5 bg-danger/10 text-danger rounded-full text-xs font-semibold">
                 {blockingDisputeReturns.length} pending
               </span>
             </div>
 
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 mb-3 flex items-start gap-2">
+            <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-sm text-danger mb-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
                 Complete this return pickup before accepting new orders.
@@ -644,75 +648,75 @@ export default function RiderDashboardPage() {
               {disputePickups.map((order: any) => {
                 const pickup = order.dispute?.pickupAddress as any
                 return (
-                  <div key={order.id} className="bg-white border-2 border-red-300 rounded-2xl p-5">
+                  <div key={order.id} className="bg-white border-2 border-danger/40 rounded-2xl p-5">
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-danger bg-danger/10 px-2 py-1 rounded-full">
                           Dispute Return
                         </span>
-                        <p className="text-xs text-gray-400 mt-1">#{order.orderNumber}</p>
-                        <p className="font-bold text-gray-900 mt-0.5">{order.product.name}</p>
+                        <p className="text-xs text-ink-muted mt-1">#{order.orderNumber}</p>
+                        <p className="font-semibold text-ink mt-0.5">{order.product.name}</p>
                       </div>
-                      <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
+                      <span className="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-semibold">
                         ₦560 on done
                       </span>
                     </div>
 
                     <div className="mb-3">
-                      <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${getDisputeReturnStage(order.status).tone}`}>
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${getDisputeReturnStage(order.status).tone}`}>
                         {getDisputeReturnStage(order.status).label}
                       </span>
                     </div>
 
                     {order.dispute?.reason && (
-                      <div className="mb-3 p-3 bg-gray-50 rounded-xl text-sm text-gray-600">
-                        <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Reason</p>
+                      <div className="mb-3 p-3 bg-surface rounded-xl text-sm text-ink-secondary">
+                        <p className="text-xs font-semibold text-ink-muted uppercase mb-1">Reason</p>
                         <p>{order.dispute.reason}</p>
                       </div>
                     )}
 
-                    <div className="mb-3 p-3 bg-blue-50 rounded-xl">
+                    <div className="mb-3 p-3 bg-primary/10 rounded-xl">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                        <p className="text-xs font-bold text-blue-600 uppercase">Collect from buyer</p>
+                        <MapPin className="w-3.5 h-3.5 text-primary" />
+                        <p className="text-xs font-semibold text-primary uppercase">Collect from buyer</p>
                       </div>
                       {pickup ? (
                         <div className="text-sm space-y-0.5">
-                          <p className="font-semibold text-gray-800">{pickup.hostel}{pickup.room ? `, Room ${pickup.room}` : ''}</p>
-                          {pickup.landmark && <p className="text-gray-500 text-xs">{pickup.landmark}</p>}
-                          <p className="text-blue-700 font-semibold flex items-center gap-1 mt-1">
+                          <p className="font-semibold text-ink">{pickup.hostel}{pickup.room ? `, Room ${pickup.room}` : ''}</p>
+                          {pickup.landmark && <p className="text-ink-secondary text-xs">{pickup.landmark}</p>}
+                          <p className="text-primary font-semibold flex items-center gap-1 mt-1">
                             <Phone className="w-3 h-3" /> {pickup.phone}
                           </p>
                         </div>
                       ) : (
                         <div className="text-sm space-y-0.5">
-                          <p className="font-semibold text-gray-800">{order.deliveryHostel}, Room {order.deliveryRoom}</p>
-                          {order.deliveryLandmark && <p className="text-gray-500 text-xs">{order.deliveryLandmark}</p>}
-                          <p className="text-blue-700 font-semibold flex items-center gap-1 mt-1">
+                          <p className="font-semibold text-ink">{order.deliveryHostel}, Room {order.deliveryRoom}</p>
+                          {order.deliveryLandmark && <p className="text-ink-secondary text-xs">{order.deliveryLandmark}</p>}
+                          <p className="text-primary font-semibold flex items-center gap-1 mt-1">
                             <Phone className="w-3 h-3" /> {order.deliveryPhone}
                           </p>
                         </div>
                       )}
                     </div>
 
-                    <div className="mb-3 p-3 bg-emerald-50 rounded-xl">
+                    <div className="mb-3 p-3 bg-success/10 rounded-xl">
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                        <p className="text-xs font-bold text-emerald-700 uppercase">Return to seller</p>
+                        <MapPin className="w-3.5 h-3.5 text-success" />
+                        <p className="text-xs font-semibold text-success uppercase">Return to seller</p>
                       </div>
                       <div className="text-sm space-y-0.5">
-                        <p className="font-semibold text-gray-800">
+                        <p className="font-semibold text-ink">
                           {order.seller?.hostelName || order.product?.hostelName || 'Seller hostel not set'}
                           {order.seller?.roomNumber ? `, Room ${order.seller.roomNumber}` : ''}
                         </p>
-                        {order.seller?.landmark && <p className="text-gray-500 text-xs">{order.seller.landmark}</p>}
+                        {order.seller?.landmark && <p className="text-ink-secondary text-xs">{order.seller.landmark}</p>}
                         {order.seller?.phone && (
-                          <p className="text-emerald-700 font-semibold flex items-center gap-1 mt-1">
+                          <p className="text-success font-semibold flex items-center gap-1 mt-1">
                             <Phone className="w-3 h-3" /> {order.seller.phone}
                           </p>
                         )}
-                        <p className="text-[11px] text-gray-500 mt-1">
-                          Seller: <span className="font-semibold text-gray-700">{order.seller?.name || 'N/A'}</span>
+                        <p className="text-[11px] text-ink-secondary mt-1">
+                          Seller: <span className="font-semibold text-ink-secondary">{order.seller?.name || 'N/A'}</span>
                         </p>
                       </div>
                     </div>
@@ -721,7 +725,7 @@ export default function RiderDashboardPage() {
                       <button
                         onClick={() => markDisputePickedUp(order.id)}
                         disabled={actionLoading[`dispute-pickup-${order.id}`]}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-danger hover:brightness-95 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
                       >
                         {actionLoading[`dispute-pickup-${order.id}`]
                           ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
@@ -734,7 +738,7 @@ export default function RiderDashboardPage() {
                       <button
                         onClick={() => updateStatus(order.id, 'ON_THE_WAY')}
                         disabled={actionLoading[`status-${order.id}`]}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-primary hover:brightness-95 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
                       >
                         {actionLoading[`status-${order.id}`]
                           ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
@@ -747,7 +751,7 @@ export default function RiderDashboardPage() {
                       <button
                         onClick={() => updateStatus(order.id, 'DELIVERED')}
                         disabled={actionLoading[`status-${order.id}`]}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-success hover:brightness-95 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
                       >
                         {actionLoading[`status-${order.id}`]
                           ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
@@ -757,7 +761,7 @@ export default function RiderDashboardPage() {
                     )}
 
                     {order.status === 'DELIVERED' && (
-                      <div className="w-full py-3 px-3 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold text-center">
+                      <div className="w-full py-3 px-3 rounded-xl bg-success/10 text-success text-xs font-semibold text-center">
                         Return delivered. Waiting for seller confirmation.
                       </div>
                     )}
@@ -771,7 +775,7 @@ export default function RiderDashboardPage() {
         {/* ── My Active Batches ─────────────────────────────────────────── */}
         {myBatches.length > 0 && (
           <div>
-            <h2 className="text-base font-black text-gray-900 mb-3">
+            <h2 className="text-base font-semibold text-ink mb-3">
               My Active Batch{myBatches.length > 1 ? 'es' : ''}
             </h2>
             <div className="space-y-4">
@@ -780,40 +784,40 @@ export default function RiderDashboardPage() {
                 const totalCount     = batch.orders.length
 
                 return (
-                  <div key={batch.id} className="bg-white rounded-2xl border-2 border-BATAMART-primary/20 shadow-sm overflow-hidden">
+                  <div key={batch.id} className="bg-white rounded-2xl border-2 border-primary/20 shadow-soft overflow-hidden">
                     {/* Batch header */}
-                    <div className="bg-BATAMART-primary/5 px-5 py-3 flex items-center justify-between">
+                    <div className="bg-primary/5 px-5 py-3 flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-black text-BATAMART-primary uppercase tracking-wide">
+                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
                           Active Batch · {totalCount} order{totalCount > 1 ? 's' : ''}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">#{batch.batchNumber}</p>
+                        <p className="text-xs text-ink-muted mt-0.5">#{batch.batchNumber}</p>
                       </div>
                       <div className="text-right">
-                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-full">
                           {deliveredCount}/{totalCount} delivered
                         </span>
-                        <p className="text-xs font-black text-BATAMART-primary mt-1">
+                        <p className="text-xs font-semibold text-primary mt-1">
                           ₦{(totalCount * 560).toLocaleString()} total
                         </p>
                       </div>
                     </div>
 
                     {/* Delivery address (one buyer, same for all) */}
-                    <div className="px-5 py-3 border-b border-gray-50">
-                      <div className="flex items-start gap-2 bg-blue-50 rounded-xl p-3">
-                        <MapPin className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="px-5 py-3 border-b border-border">
+                      <div className="flex items-start gap-2 bg-primary/10 rounded-xl p-3">
+                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-blue-700">
+                          <p className="text-xs font-semibold text-primary">
                             {batch.buyer.hostelName}
                             {batch.buyer.roomNumber ? ` — Room ${batch.buyer.roomNumber}` : ''}
                           </p>
                           {batch.buyer.landmark && (
-                            <p className="text-xs text-blue-500 mt-0.5">{batch.buyer.landmark}</p>
+                            <p className="text-xs text-primary mt-0.5">{batch.buyer.landmark}</p>
                           )}
                           <div className="flex items-center gap-1 mt-1">
-                            <Phone className="w-3 h-3 text-blue-400" />
-                            <span className="text-xs font-semibold text-blue-600">{batch.buyer.phone}</span>
+                            <Phone className="w-3 h-3 text-primary" />
+                            <span className="text-xs font-semibold text-primary">{batch.buyer.phone}</span>
                           </div>
                         </div>
                       </div>
@@ -822,45 +826,45 @@ export default function RiderDashboardPage() {
                     {/* Individual orders */}
                     <div className="p-4 space-y-3">
                       {batch.orders.map((order: any, idx: number) => (
-                        <div key={order.id} className="border border-gray-100 rounded-xl overflow-hidden">
+                        <div key={order.id} className="border border-border rounded-xl overflow-hidden">
                           {/* Order info row */}
                           <div className="flex items-center gap-3 p-3">
                             {order.product.images?.[0] ? (
                               <img
                                 src={order.product.images[0]}
                                 alt={order.product.name}
-                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface"
                               />
                             ) : (
-                              <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                <ShoppingBag className="w-5 h-5 text-gray-400" />
+                              <div className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                                <ShoppingBag className="w-5 h-5 text-ink-muted" />
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-gray-800 truncate">{order.product.name}</p>
-                              <p className="text-xs text-gray-400 truncate">
-                                Pickup from: <span className="text-gray-600 font-semibold">{order.seller.name}</span>
+                              <p className="text-xs font-semibold text-ink truncate">{order.product.name}</p>
+                              <p className="text-xs text-ink-muted truncate">
+                                Pickup from: <span className="text-ink-secondary font-semibold">{order.seller.name}</span>
                               </p>
-                              {order.orderNote && <p className="text-xs text-indigo-600 truncate">Note: {order.orderNote}</p>}
+                              {order.orderNote && <p className="text-xs text-primary truncate">Note: {order.orderNote}</p>}
                               {(order.product.estimatedWeightKg || order.product.dimensionsCm) && (
-                                <p className="text-[11px] text-gray-500 truncate">
+                                <p className="text-[11px] text-ink-secondary truncate">
                                   {order.product.estimatedWeightKg ? `${order.product.estimatedWeightKg}kg` : ''}
                                   {order.product.estimatedWeightKg && order.product.dimensionsCm ? ' · ' : ''}
                                   {order.product.dimensionsCm ? `${order.product.dimensionsCm.length || '-'}x${order.product.dimensionsCm.width || '-'}x${order.product.dimensionsCm.height || '-'}cm` : ''}
                                 </p>
                               )}
                               {order.product.hostelName && (
-                                <p className="text-xs text-gray-400 truncate">{order.product.hostelName}</p>
+                                <p className="text-xs text-ink-muted truncate">{order.product.hostelName}</p>
                               )}
                               {order.seller.phone && (
-                                <p className="text-xs text-gray-400 flex items-center gap-1">
+                                <p className="text-xs text-ink-muted flex items-center gap-1">
                                   <Phone className="w-2.5 h-2.5" /> {order.seller.phone}
                                 </p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                               <StatusBadge status={order.status} />
-                              <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                              <span className="text-[10px] font-semibold text-ink-muted">#{idx + 1}</span>
                             </div>
                           </div>
 
@@ -869,7 +873,7 @@ export default function RiderDashboardPage() {
                             <div className="px-3 pb-3">
                               {order.status === 'RIDER_ASSIGNED' && (
                                 <div className="space-y-2">
-                                  <label className="w-full py-2.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 flex items-center justify-center gap-1.5 cursor-pointer hover:bg-gray-50">
+                                  <label className="w-full py-2.5 border border-border rounded-lg text-xs font-semibold text-ink-secondary flex items-center justify-center gap-1.5 cursor-pointer hover:bg-surface">
                                     {actionLoading[`proof-${order.id}`]
                                       ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading proof...</>
                                       : <><Upload className="w-3.5 h-3.5" /> {oversizedProofByOrder[order.id] ? 'Replace Oversized Proof Photo' : 'Upload Oversized Proof Photo (Optional)'}</>
@@ -883,12 +887,12 @@ export default function RiderDashboardPage() {
                                     />
                                   </label>
                                   {oversizedProofByOrder[order.id] && (
-                                    <p className="text-[11px] text-emerald-600 truncate">Proof attached</p>
+                                    <p className="text-[11px] text-success truncate">Proof attached</p>
                                   )}
                                   <button
                                     onClick={() => updateStatus(order.id, 'PICKED_UP')}
                                     disabled={actionLoading[`status-${order.id}`]}
-                                    className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-bold
+                                    className="w-full py-2.5 bg-primary hover:brightness-95 text-white rounded-lg text-xs font-semibold
                                                flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
                                   >
                                     {actionLoading[`status-${order.id}`]
@@ -899,7 +903,7 @@ export default function RiderDashboardPage() {
                                   <button
                                     onClick={() => declineOversized(order.id)}
                                     disabled={actionLoading[`oversized-${order.id}`]}
-                                    className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold
+                                    className="w-full py-2.5 bg-danger hover:brightness-95 text-white rounded-lg text-xs font-semibold
                                                flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
                                   >
                                     {actionLoading[`oversized-${order.id}`]
@@ -913,7 +917,7 @@ export default function RiderDashboardPage() {
                                 <button
                                   onClick={() => updateStatus(order.id, 'ON_THE_WAY')}
                                   disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold
+                                  className="w-full py-2.5 bg-warning hover:brightness-95 text-white rounded-lg text-xs font-semibold
                                              flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
                                 >
                                   {actionLoading[`status-${order.id}`]
@@ -926,7 +930,7 @@ export default function RiderDashboardPage() {
                                 <button
                                   onClick={() => updateStatus(order.id, 'DELIVERED')}
                                   disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold
+                                  className="w-full py-2.5 bg-success hover:brightness-95 text-white rounded-lg text-xs font-semibold
                                              flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
                                 >
                                   {actionLoading[`status-${order.id}`]
@@ -940,8 +944,8 @@ export default function RiderDashboardPage() {
 
                           {order.status === 'DELIVERED' && (
                             <div className="px-3 pb-3">
-                              <div className="w-full py-2 bg-emerald-50 rounded-lg text-center text-xs font-bold text-emerald-600 flex items-center justify-center gap-1.5">
-                                <CheckCircle className="w-3.5 h-3.5" /> Delivered ✓
+                              <div className="w-full py-2 bg-success/10 rounded-lg text-center text-xs font-semibold text-success flex items-center justify-center gap-1.5">
+                                <CheckCircle className="w-3.5 h-3.5" /> Delivered
                               </div>
                             </div>
                           )}
@@ -957,63 +961,63 @@ export default function RiderDashboardPage() {
 
         {/* ── Available Batches ─────────────────────────────────────────── */}
         <div>
-          <h2 className="text-base font-black text-gray-900 mb-3">
+          <h2 className="text-base font-semibold text-ink mb-3">
             Available Batches ({availableBatches.length})
           </h2>
 
           {hasDisputePickupPending && (
-            <div className="mb-3 p-3 bg-yellow-50 border border-yellow-300 rounded-xl text-sm text-yellow-800 flex items-center gap-2">
+            <div className="mb-3 p-3 bg-warning/10 border border-warning/30 rounded-xl text-sm text-warning flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               New batches are locked until you complete the return pickup above.
             </div>
           )}
 
           {availableBatches.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-              <Bike className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-gray-400 font-semibold text-sm">No available batches right now</p>
-              <p className="text-gray-300 text-xs mt-1">Check back soon</p>
+            <div className="bg-white rounded-2xl border border-border p-8 text-center">
+              <Bike className="w-10 h-10 text-border mx-auto mb-2" />
+              <p className="text-ink-muted font-semibold text-sm">No available batches right now</p>
+              <p className="text-ink-muted text-xs mt-1">Check back soon</p>
             </div>
           ) : (
             <div className="space-y-4">
               {availableBatches.map((batch: any) => (
                 <div
                   key={batch.id}
-                  className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${
+                  className={`bg-white rounded-2xl border border-border shadow-soft overflow-hidden ${
                     hasDisputePickupPending ? 'opacity-50 pointer-events-none' : ''
                   }`}
                 >
                   {/* Batch header */}
-                  <div className="bg-gray-50 px-5 py-3 flex items-center justify-between border-b border-gray-100">
+                  <div className="bg-surface px-5 py-3 flex items-center justify-between border-b border-border">
                     <div>
-                      <span className="text-xs font-black text-BATAMART-primary bg-BATAMART-primary/10 px-2.5 py-1 rounded-full">
+                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
                         {batch.orders.length} ORDER{batch.orders.length > 1 ? 'S' : ''} · 1 BATCH
                       </span>
-                      <p className="text-xs text-gray-400 mt-1">#{batch.batchNumber}</p>
+                      <p className="text-xs text-ink-muted mt-1">#{batch.batchNumber}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-black text-emerald-600">
+                      <p className="text-sm font-semibold text-success">
                         ₦{(batch.orders.length * 560).toLocaleString()}
                       </p>
-                      <p className="text-[10px] text-gray-400">you earn</p>
+                      <p className="text-[10px] text-ink-muted">you earn</p>
                     </div>
                   </div>
 
                   {/* Delivery address */}
-                  <div className="px-5 py-3 border-b border-gray-50">
+                  <div className="px-5 py-3 border-b border-border">
                     <div className="flex items-start gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-ink-muted mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-bold text-gray-700">
+                        <p className="text-xs font-semibold text-ink-secondary">
                           Deliver to: {batch.buyer.hostelName}
                           {batch.buyer.roomNumber ? ` — Room ${batch.buyer.roomNumber}` : ''}
                         </p>
                         {batch.buyer.landmark && (
-                          <p className="text-xs text-gray-400">{batch.buyer.landmark}</p>
+                          <p className="text-xs text-ink-muted">{batch.buyer.landmark}</p>
                         )}
                         <div className="flex items-center gap-1 mt-0.5">
-                          <Phone className="w-2.5 h-2.5 text-gray-400" />
-                          <span className="text-xs text-gray-500">{batch.buyer.phone}</span>
+                          <Phone className="w-2.5 h-2.5 text-ink-muted" />
+                          <span className="text-xs text-ink-secondary">{batch.buyer.phone}</span>
                         </div>
                       </div>
                     </div>
@@ -1027,21 +1031,21 @@ export default function RiderDashboardPage() {
                           <img
                             src={order.product.images[0]}
                             alt={order.product.name}
-                            className="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-gray-100"
+                            className="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-surface"
                           />
                         ) : (
-                          <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                            <Package className="w-4 h-4 text-gray-400" />
+                          <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                            <Package className="w-4 h-4 text-ink-muted" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-800 truncate">{order.product.name}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs font-semibold text-ink truncate">{order.product.name}</p>
+                          <p className="text-xs text-ink-muted">
                             From: {order.seller.name}
                             {order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
                           </p>
                         </div>
-                        <span className="text-xs font-bold text-gray-400 flex-shrink-0">#{idx + 1}</span>
+                        <span className="text-xs font-semibold text-ink-muted flex-shrink-0">#{idx + 1}</span>
                       </div>
                     ))}
                   </div>
@@ -1051,8 +1055,8 @@ export default function RiderDashboardPage() {
                     <button
                       onClick={() => acceptBatch(batch.id)}
                       disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending}
-                      className="w-full py-3 bg-BATAMART-primary hover:bg-BATAMART-dark text-white rounded-xl
-                                 font-bold text-sm shadow-md shadow-BATAMART-primary/20
+                      className="w-full py-3 bg-primary hover:brightness-95 text-white rounded-xl
+                                 font-semibold text-sm shadow-soft shadow-primary/20
                                  flex items-center justify-center gap-2
                                  disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >

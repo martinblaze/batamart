@@ -4,18 +4,19 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Mail, MessageCircle, HelpCircle, Clock, MapPin, Send, CheckCircle, Loader2
+  Mail, MessageCircle, HelpCircle, Clock, MapPin, Send, CheckCircle, Loader2,
+  ShoppingBag, Wallet, Bike, ChevronDown, ArrowRight
 } from 'lucide-react'
 
 const CATEGORIES = [
-  { value: 'PAYMENT_ISSUE', label: '💳 Payment Issue' },
-  { value: 'ORDER_PROBLEM', label: '📦 Order Problem' },
-  { value: 'ACCOUNT_ISSUE', label: '👤 Account Issue' },
-  { value: 'DISPUTE_HELP', label: '⚖️ Dispute Help' },
-  { value: 'SELLER_ISSUE', label: '🛍️ Seller Issue' },
-  { value: 'RIDER_ISSUE', label: '🚴 Rider Issue' },
-  { value: 'BUG_REPORT', label: '🐛 Bug Report' },
-  { value: 'OTHER', label: '💬 Other' },
+  { value: 'PAYMENT_ISSUE', label: 'Payment Issue' },
+  { value: 'ORDER_PROBLEM', label: 'Order Problem' },
+  { value: 'ACCOUNT_ISSUE', label: 'Account Issue' },
+  { value: 'DISPUTE_HELP', label: 'Dispute Help' },
+  { value: 'SELLER_ISSUE', label: 'Seller Issue' },
+  { value: 'RIDER_ISSUE', label: 'Rider Issue' },
+  { value: 'BUG_REPORT', label: 'Bug Report' },
+  { value: 'OTHER', label: 'Other' },
 ]
 
 const faqs = [
@@ -133,20 +134,20 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4">
+      <section className="bg-primary text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full mb-6">
             <HelpCircle className="w-5 h-5" />
             <span className="font-semibold">Contact Us</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">We're Here to Help</h1>
+          <h1 className="text-4xl md:text-5xl font-semibold mb-6">We're Here to Help</h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
             Have questions? Need support? Get in touch with the BATAMART team.
             We're committed to helping you have the best experience.
@@ -158,32 +159,32 @@ export default function ContactPage() {
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-            <p className="text-gray-600">Choose your preferred way to reach us</p>
+            <h2 className="text-3xl font-semibold text-ink mb-4">Get in Touch</h2>
+            <p className="text-ink-secondary">Choose your preferred way to reach us</p>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <a href="mailto:support@BATAMART.com"
-              className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 group">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              className="bg-white p-8 rounded-2xl border border-border hover:shadow-soft transition-all duration-300 group">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Mail className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Email Support</h3>
-              <p className="text-gray-600 mb-4">Get help via email</p>
+              <h3 className="text-2xl font-semibold text-ink mb-2">Email Support</h3>
+              <p className="text-ink-secondary mb-4">Get help via email</p>
               <div className="flex items-center justify-between">
-                <span className="text-BATAMART-primary font-semibold text-lg">support@BATAMART.com</span>
-                <span className="text-BATAMART-primary group-hover:translate-x-2 transition-transform duration-300">→</span>
+                <span className="text-primary font-semibold text-lg">support@BATAMART.com</span>
+                <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </a>
             <a href="https://wa.me/234XXXXXXXXXX" target="_blank" rel="noopener noreferrer"
-              className="bg-white p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-all duration-300 group">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              className="bg-white p-8 rounded-2xl border border-border hover:shadow-soft transition-all duration-300 group">
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <MessageCircle className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">WhatsApp</h3>
-              <p className="text-gray-600 mb-4">Chat with us on WhatsApp</p>
+              <h3 className="text-2xl font-semibold text-ink mb-2">WhatsApp</h3>
+              <p className="text-ink-secondary mb-4">Chat with us on WhatsApp</p>
               <div className="flex items-center justify-between">
-                <span className="text-BATAMART-primary font-semibold text-lg">+234 XXX XXX XXXX</span>
-                <span className="text-BATAMART-primary group-hover:translate-x-2 transition-transform duration-300">→</span>
+                <span className="text-primary font-semibold text-lg">+234 XXX XXX XXXX</span>
+                <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform duration-300" />
               </div>
             </a>
           </div>
@@ -194,21 +195,21 @@ export default function ContactPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">Send Us a Message</h2>
-            <p className="text-gray-600">Fill in the form below and we'll get back to you within 24–48 hours.</p>
+            <h2 className="text-3xl font-semibold text-ink mb-3">Send Us a Message</h2>
+            <p className="text-ink-secondary">Fill in the form below and we'll get back to you within 24–48 hours.</p>
           </div>
 
           {status === 'success' ? (
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-10 text-center">
-              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="bg-success/10 border border-success/30 rounded-2xl p-10 text-center">
+              <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
+              <h3 className="text-2xl font-semibold text-ink mb-2">Message Sent!</h3>
+              <p className="text-ink-secondary mb-6">
                 We've received your message and sent a confirmation to <strong>{form.email}</strong>.
                 Our team will get back to you within 24–48 hours.
               </p>
-              <div className="bg-white border border-green-200 rounded-xl p-4 inline-block mb-6">
-                <p className="text-sm text-gray-500 mb-1">Your ticket reference</p>
-                <p className="text-2xl font-black text-BATAMART-primary tracking-widest">{ticketRef}</p>
+              <div className="bg-white border border-success/30 rounded-xl p-4 inline-block mb-6">
+                <p className="text-sm text-ink-secondary mb-1">Your ticket reference</p>
+                <p className="text-2xl font-semibold text-primary tracking-widest">{ticketRef}</p>
               </div>
               <br />
               <button
@@ -216,45 +217,45 @@ export default function ContactPage() {
                   setStatus('idle')
                   setForm(f => ({ ...f, category: 'OTHER', message: '' }))
                 }}
-                className="text-BATAMART-primary font-semibold hover:underline"
+                className="text-primary font-semibold hover:underline"
               >
                 Submit another message
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6 shadow-sm">
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-border p-8 space-y-6 shadow-soft">
 
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                  <label className="block text-sm font-semibold text-ink-secondary mb-2">Full Name *</label>
                   <input
                     type="text"
                     required
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="Your name"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-BATAMART-primary focus:border-transparent"
+                    className="w-full px-4 py-3 border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address *</label>
+                  <label className="block text-sm font-semibold text-ink-secondary mb-2">Email Address *</label>
                   <input
                     type="email"
                     required
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     placeholder="your@email.com"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-BATAMART-primary focus:border-transparent"
+                    className="w-full px-4 py-3 border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Category *</label>
+                <label className="block text-sm font-semibold text-ink-secondary mb-2">Category *</label>
                 <select
                   value={form.category}
                   onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-BATAMART-primary bg-white"
+                  className="w-full px-4 py-3 border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40 bg-white"
                 >
                   {CATEGORIES.map(c => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -263,20 +264,20 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Message *</label>
+                <label className="block text-sm font-semibold text-ink-secondary mb-2">Message *</label>
                 <textarea
                   required
                   rows={5}
                   value={form.message}
                   onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                   placeholder="Describe your issue or question in detail..."
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-BATAMART-primary resize-none"
+                  className="w-full px-4 py-3 border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
                 />
-                <p className="text-xs text-gray-400 mt-1">{form.message.length} characters — minimum 10</p>
+                <p className="text-xs text-ink-muted mt-1">{form.message.length} characters — minimum 10</p>
               </div>
 
               {status === 'error' && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-xl text-sm">
                   {errorMsg}
                 </div>
               )}
@@ -284,7 +285,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-60 text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:brightness-95 disabled:opacity-60 text-white py-4 rounded-xl font-semibold text-lg transition-colors flex items-center justify-center gap-2"
               >
                 {status === 'loading' ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Sending...</>
@@ -298,19 +299,19 @@ export default function ContactPage() {
       </section>
 
       {/* Support Hours */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-BATAMART-light to-white p-8 md:p-12 rounded-3xl border-2 border-BATAMART-primary/20">
+          <div className="bg-primary/5 p-8 md:p-12 rounded-3xl border-2 border-primary/20">
             <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                 <Clock className="w-10 h-10 text-white" />
               </div>
               <div className="text-center md:text-left flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Support Hours</h3>
-                <p className="text-gray-600 text-lg mb-4">Our team is available to help you during these hours:</p>
-                <div className="space-y-2 text-gray-700">
-                  <p className="font-semibold">📅 Monday – Friday: <span className="text-BATAMART-primary">8:00 AM – 8:00 PM</span></p>
-                  <p className="font-semibold">📅 Saturday – Sunday: <span className="text-BATAMART-primary">10:00 AM – 6:00 PM</span></p>
+                <h3 className="text-2xl font-semibold text-ink mb-2">Support Hours</h3>
+                <p className="text-ink-secondary text-lg mb-4">Our team is available to help you during these hours:</p>
+                <div className="space-y-2 text-ink-secondary">
+                  <p className="font-semibold">Monday – Friday: <span className="text-primary">8:00 AM – 8:00 PM</span></p>
+                  <p className="font-semibold">Saturday – Sunday: <span className="text-primary">10:00 AM – 6:00 PM</span></p>
                 </div>
               </div>
             </div>
@@ -321,29 +322,29 @@ export default function ContactPage() {
       {/* Location */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <MapPin className="w-8 h-8 text-purple-600" />
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <MapPin className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Serving Global University Community</h2>
-          <p className="text-xl text-gray-600 mb-8">We deliver across all areas in your CAMPUS</p>
+          <h2 className="text-3xl font-semibold text-ink mb-4">Serving Global University Community</h2>
+          <p className="text-xl text-ink-secondary mb-8">We deliver across all areas in your CAMPUS</p>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-gray-600">Quick answers to common questions</p>
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-4">Frequently Asked Questions</h2>
+            <p className="text-ink-secondary">Quick answers to common questions</p>
           </div>
           <div className="space-y-4">
             {faqs.map((faq, i) => (
-              <details key={i} className="bg-white p-6 rounded-2xl border border-gray-100 hover:shadow-md transition-shadow group">
-                <summary className="font-bold text-lg text-gray-900 cursor-pointer list-none flex items-center justify-between">
+              <details key={i} className="bg-white p-6 rounded-2xl border border-border hover:shadow-soft transition-shadow group">
+                <summary className="font-semibold text-lg text-ink cursor-pointer list-none flex items-center justify-between">
                   <span className="pr-4">{faq.question}</span>
-                  <span className="text-BATAMART-primary group-open:rotate-180 transition-transform duration-300">▼</span>
+                  <ChevronDown className="w-5 h-5 text-primary group-open:rotate-180 transition-transform duration-300 flex-shrink-0" />
                 </summary>
-                <p className="mt-4 text-gray-600 leading-relaxed pl-4 border-l-4 border-BATAMART-primary/20">{faq.answer}</p>
+                <p className="mt-4 text-ink-secondary leading-relaxed pl-4 border-l-4 border-primary/20">{faq.answer}</p>
               </details>
             ))}
           </div>
@@ -353,18 +354,18 @@ export default function ContactPage() {
       {/* Quick Links */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <h3 className="text-2xl font-bold text-center text-gray-900 mb-8">Quick Links</h3>
+          <h3 className="text-2xl font-semibold text-center text-ink mb-8">Quick Links</h3>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { href: '/marketplace', emoji: '🛍️', title: 'Browse Marketplace', desc: 'Explore products from students' },
-              { href: '/sell', emoji: '💰', title: 'Start Selling', desc: 'List your products for free' },
-              { href: '/contact', emoji: '🚴', title: 'Rider Interest', desc: 'Contact support for rider opportunities' },
+              { href: '/marketplace', icon: ShoppingBag, title: 'Browse Marketplace', desc: 'Explore products from students' },
+              { href: '/sell', icon: Wallet, title: 'Start Selling', desc: 'List your products for free' },
+              { href: '/contact', icon: Bike, title: 'Rider Interest', desc: 'Contact support for rider opportunities' },
             ].map(l => (
               <Link key={l.href} href={l.href}
-                className="bg-gray-50 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-all text-center group">
-                <div className="text-4xl mb-3">{l.emoji}</div>
-                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-BATAMART-primary transition-colors">{l.title}</h4>
-                <p className="text-sm text-gray-600">{l.desc}</p>
+                className="bg-surface p-6 rounded-xl border border-border hover:shadow-soft transition-all text-center group">
+                <l.icon className="w-8 h-8 text-primary mx-auto mb-3" strokeWidth={1.75} />
+                <h4 className="font-semibold text-ink mb-2 group-hover:text-primary transition-colors">{l.title}</h4>
+                <p className="text-sm text-ink-secondary">{l.desc}</p>
               </Link>
             ))}
           </div>
@@ -372,17 +373,17 @@ export default function ContactPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-4 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white">
+      <section className="py-16 px-4 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Still Have Questions?</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold mb-6">Still Have Questions?</h2>
           <p className="text-xl mb-8 text-white/90">Don't hesitate to reach out. We're always happy to help students!</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="mailto:support@BATAMART.com"
-              className="bg-white text-BATAMART-primary hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg inline-flex items-center justify-center gap-2">
+              className="bg-white text-primary hover:bg-surface px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-soft inline-flex items-center justify-center gap-2">
               <Mail className="w-5 h-5" /> Email Us
             </a>
             <a href="https://wa.me/234XXXXXXXXXX" target="_blank" rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg inline-flex items-center justify-center gap-2">
+              className="bg-white/10 hover:bg-white/20 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold text-lg transition-all inline-flex items-center justify-center gap-2">
               <MessageCircle className="w-5 h-5" /> WhatsApp Us
             </a>
           </div>

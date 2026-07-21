@@ -2,7 +2,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Shield, Lock, Mail, AlertCircle } from 'lucide-react'
+import { Shield, Lock, Mail, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Logo } from '@/components/layout/Logo'
 
 export default function AdminLoginPage() {
   const [formData, setFormData] = useState({
@@ -48,40 +49,40 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4 shadow-2xl">
-            <Shield className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-2xl mb-4">
+            <Shield className="w-8 h-8 text-primary" strokeWidth={1.75} />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Portal</h1>
-          <p className="text-gray-400">BATAMART Marketplace Management</p>
+          <h1 className="text-[28px] font-semibold text-ink mb-2">Admin portal</h1>
+          <p className="text-ink-secondary">BataMart marketplace management</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700 p-8 shadow-2xl">
+        <div className="bg-white rounded-2xl border border-border p-8 shadow-soft">
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-danger flex-shrink-0" strokeWidth={1.75} />
+              <p className="text-sm text-danger">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Admin Email
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
+                Admin email
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-900/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="admin@BATAMART.com"
+                  className="w-full h-11 pl-11 pr-4 bg-surface border border-border rounded-lg text-[15px] text-ink focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  placeholder="admin@batamart.com"
                   required
                 />
               </div>
@@ -89,16 +90,16 @@ export default function AdminLoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-900/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full h-11 pl-11 pr-4 bg-surface border border-border rounded-lg text-[15px] text-ink focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                   placeholder="••••••••"
                   required
                 />
@@ -109,16 +110,17 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              className="w-full h-11 bg-primary hover:brightness-95 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing In...' : 'Sign In to Admin Portal'}
+              {loading ? 'Signing in…' : 'Sign in to admin portal'}
             </button>
           </form>
 
           {/* Warning */}
-          <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/50 rounded-xl">
-            <p className="text-xs text-yellow-400 text-center">
-              🔒 This area is restricted to authorized administrators only.
+          <div className="mt-6 p-4 bg-warning/10 border border-warning/30 rounded-lg flex items-start gap-2.5">
+            <Lock className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+            <p className="text-xs text-warning">
+              This area is restricted to authorized administrators only.
               All access attempts are logged.
             </p>
           </div>
@@ -126,8 +128,8 @@ export default function AdminLoginPage() {
 
         {/* Back Link */}
         <div className="text-center mt-6">
-          <a href="/marketplace" className="text-gray-400 hover:text-white text-sm transition-colors">
-            ← Back to Marketplace
+          <a href="/marketplace" className="text-ink-secondary hover:text-primary text-sm transition-colors inline-flex items-center gap-1.5">
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} /> Back to marketplace
           </a>
         </div>
       </div>

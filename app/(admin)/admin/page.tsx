@@ -35,12 +35,12 @@ function UniversitySwitcher({
   onChange: (v: string) => void
 }) {
   return (
-    <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2">
-      <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+    <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
+      <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="bg-transparent text-white text-sm font-medium focus:outline-none cursor-pointer"
+        className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
       >
         <option value="all">All Universities</option>
         {universities.map(u => (
@@ -185,48 +185,48 @@ export default function AdminDashboardPage() {
       value: stats?.totalUsers || 0,
       change: `+${stats?.newUsersToday || 0} today`,
       icon: Users,
-      bgColor: 'bg-blue-500/10',
-      textColor: 'text-blue-400',
+      bgColor: 'bg-primary/10',
+      textColor: 'text-primary',
     },
     {
       title: 'Total Products',
       value: stats?.totalProducts || 0,
       change: 'Active listings',
       icon: Package,
-      bgColor: 'bg-green-500/10',
-      textColor: 'text-green-400',
+      bgColor: 'bg-success/10',
+      textColor: 'text-success',
     },
     {
       title: 'Total Orders',
       value: stats?.totalOrders || 0,
       change: `+${stats?.ordersToday || 0} today`,
       icon: ShoppingBag,
-      bgColor: 'bg-purple-500/10',
-      textColor: 'text-purple-400',
+      bgColor: 'bg-primary/10',
+      textColor: 'text-primary',
     },
     {
       title: 'Total Revenue',
       value: `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
       change: 'All time GMV',
       icon: DollarSign,
-      bgColor: 'bg-yellow-500/10',
-      textColor: 'text-yellow-400',
+      bgColor: 'bg-warning/10',
+      textColor: 'text-warning',
     },
     {
       title: 'Pending Disputes',
       value: stats?.pendingDisputes || 0,
       change: 'Needs attention',
       icon: AlertTriangle,
-      bgColor: 'bg-orange-500/10',
-      textColor: 'text-orange-400',
+      bgColor: 'bg-warning/10',
+      textColor: 'text-warning',
     },
     {
       title: 'Active Reports',
       value: stats?.activeReports || 0,
       change: 'Awaiting review',
       icon: Flag,
-      bgColor: 'bg-red-500/10',
-      textColor: 'text-red-400',
+      bgColor: 'bg-danger/10',
+      textColor: 'text-danger',
     },
   ]
 
@@ -234,9 +234,9 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            Showing stats for <span className="text-white font-medium">{selectedUniName}</span>
+          <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">
+            Showing stats for <span className="text-ink font-medium">{selectedUniName}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export default function AdminDashboardPage() {
           />
           <button
             onClick={refreshAll}
-            className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 hover:text-white transition-colors"
+            className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink transition-colors"
             title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
@@ -255,19 +255,19 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="bg-white border border-border rounded-2xl p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-white font-bold text-lg">Checkout Payments</p>
-          <p className="text-sm text-gray-400 mt-1">Turn the checkout payment button on or off for everyone.</p>
-          <p className={`text-xs font-semibold mt-2 ${paymentsEnabled ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <p className="text-ink font-semibold text-lg">Checkout Payments</p>
+          <p className="text-sm text-ink-secondary mt-1">Turn the checkout payment button on or off for everyone.</p>
+          <p className={`text-xs font-semibold mt-2 ${paymentsEnabled ? 'text-success' : 'text-warning'}`}>
             {paymentsLoading ? 'Loading status...' : paymentsEnabled ? 'Status: ON' : 'Status: OFF'}
           </p>
         </div>
         <button
           onClick={togglePaymentSetting}
           disabled={paymentsLoading || paymentsSaving}
-          className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-colors disabled:opacity-60 ${
-            paymentsEnabled ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+          className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60 ${
+            paymentsEnabled ? 'bg-warning hover:brightness-95 text-white' : 'bg-success hover:brightness-95 text-white'
           }`}
         >
           {paymentsSaving ? 'Saving...' : paymentsEnabled ? 'Disable Payments' : 'Enable Payments'}
@@ -277,10 +277,10 @@ export default function AdminDashboardPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-gray-800 border border-gray-700 rounded-2xl p-6 animate-pulse">
-              <div className="h-12 w-12 rounded-xl bg-gray-700 mb-4" />
-              <div className="h-4 w-24 bg-gray-700 rounded mb-2" />
-              <div className="h-8 w-16 bg-gray-700 rounded" />
+            <div key={i} className="bg-white border border-border rounded-2xl p-6 animate-pulse">
+              <div className="h-12 w-12 rounded-xl bg-surface mb-4" />
+              <div className="h-4 w-24 bg-surface rounded mb-2" />
+              <div className="h-8 w-16 bg-surface rounded" />
             </div>
           ))}
         </div>
@@ -291,50 +291,50 @@ export default function AdminDashboardPage() {
             return (
               <div
                 key={index}
-                className="bg-gray-800 border border-gray-700 rounded-2xl p-6 hover:border-gray-600 transition-all"
+                className="bg-white border border-border rounded-2xl p-6 hover:border-border transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className={`p-3 rounded-xl ${stat.bgColor}`}>
                     <Icon className={`w-6 h-6 ${stat.textColor}`} />
                   </div>
-                  <span className="text-xs text-gray-500 bg-gray-700/50 px-2 py-1 rounded-full">Live</span>
+                  <span className="text-xs text-ink-muted bg-surface px-2 py-1 rounded-full">Live</span>
                 </div>
-                <h3 className="text-gray-400 text-sm font-medium mb-1">{stat.title}</h3>
-                <p className="text-3xl font-bold text-white mb-2">{stat.value}</p>
-                <p className="text-sm text-gray-500">{stat.change}</p>
+                <h3 className="text-ink-secondary text-sm font-medium mb-1">{stat.title}</h3>
+                <p className="text-3xl font-semibold text-ink mb-2">{stat.value}</p>
+                <p className="text-sm text-ink-muted">{stat.change}</p>
               </div>
             )
           })}
         </div>
       )}
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-white mb-6">Recent Activity</h2>
+      <div className="bg-white border border-border rounded-2xl p-6">
+        <h2 className="text-xl font-semibold text-ink mb-6">Recent Activity</h2>
         <div className="space-y-4">
           {recentActivity.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No recent activity</p>
+            <p className="text-ink-secondary text-center py-8">No recent activity</p>
           ) : (
             recentActivity.map((activity, index) => (
               <div
                 key={index}
-                className="flex items-center gap-4 p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-colors"
+                className="flex items-center gap-4 p-4 bg-surface rounded-xl hover:bg-surface transition-colors"
               >
                 <div className={`p-2 rounded-lg ${
-                  activity.type === 'order' ? 'bg-green-500/10' :
-                  activity.type === 'dispute' ? 'bg-orange-500/10' :
-                  activity.type === 'report' ? 'bg-red-500/10' :
-                  'bg-blue-500/10'
+                  activity.type === 'order' ? 'bg-success/10' :
+                  activity.type === 'dispute' ? 'bg-warning/10' :
+                  activity.type === 'report' ? 'bg-danger/10' :
+                  'bg-primary/10'
                 }`}>
-                  {activity.type === 'order' && <CheckCircle className="w-5 h-5 text-green-400" />}
-                  {activity.type === 'dispute' && <AlertTriangle className="w-5 h-5 text-orange-400" />}
-                  {activity.type === 'report' && <Flag className="w-5 h-5 text-red-400" />}
-                  {activity.type === 'user' && <Users className="w-5 h-5 text-blue-400" />}
+                  {activity.type === 'order' && <CheckCircle className="w-5 h-5 text-success" />}
+                  {activity.type === 'dispute' && <AlertTriangle className="w-5 h-5 text-warning" />}
+                  {activity.type === 'report' && <Flag className="w-5 h-5 text-danger" />}
+                  {activity.type === 'user' && <Users className="w-5 h-5 text-primary" />}
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-medium">{activity.message}</p>
-                  <p className="text-sm text-gray-400">{activity.timestamp}</p>
+                  <p className="text-ink font-medium">{activity.message}</p>
+                  <p className="text-sm text-ink-secondary">{activity.timestamp}</p>
                 </div>
-                <Clock className="w-4 h-4 text-gray-600" />
+                <Clock className="w-4 h-4 text-ink-muted" />
               </div>
             ))
           )}

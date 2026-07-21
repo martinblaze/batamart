@@ -128,12 +128,12 @@ export default function AdminDisputeDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
       </div>
     )
   }
 
-  if (!dispute) return <div className="text-center py-12 text-gray-400">Dispute not found</div>
+  if (!dispute) return <div className="text-center py-12 text-ink-secondary">Dispute not found</div>
 
   const stage = getPickupStage(dispute)
   const rider = dispute.order?.rider
@@ -149,76 +149,76 @@ export default function AdminDisputeDetailPage() {
     <div className="max-w-5xl mx-auto space-y-6">
 
       {/* ── Overview ──────────────────────────────────────────────────────── */}
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
+      <div className="bg-white border border-border rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-5">
-          <div className="p-3 bg-orange-500/10 rounded-xl">
-            <AlertTriangle className="w-6 h-6 text-orange-400" />
+          <div className="p-3 bg-warning/10 rounded-xl">
+            <AlertTriangle className="w-6 h-6 text-warning" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Dispute #{dispute.id.slice(0, 8).toUpperCase()}</h1>
-            <p className="text-gray-400 text-sm">Order #{dispute.order?.orderNumber}</p>
+            <h1 className="text-2xl font-semibold text-ink">Dispute #{dispute.id.slice(0, 8).toUpperCase()}</h1>
+            <p className="text-ink-secondary text-sm">Order #{dispute.order?.orderNumber}</p>
           </div>
           <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-semibold ${
-            isFullyDone ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'
+            isFullyDone ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
           }`}>
             {isFullyDone ? 'Resolved' : dispute.status.replace(/_/g, ' ')}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-          <div className="p-4 bg-gray-700/30 rounded-xl">
+          <div className="p-4 bg-surface rounded-xl">
             <div className="flex items-center gap-2 mb-2">
-              <User className="w-4 h-4 text-blue-400" />
-              <p className="text-gray-400 text-xs uppercase tracking-wide">Buyer</p>
+              <User className="w-4 h-4 text-primary" />
+              <p className="text-ink-secondary text-xs uppercase tracking-wide">Buyer</p>
             </div>
-            <p className="text-white font-semibold">{dispute.buyer?.name}</p>
-            <p className="text-gray-400 text-sm">{dispute.buyer?.email}</p>
+            <p className="text-ink font-semibold">{dispute.buyer?.name}</p>
+            <p className="text-ink-secondary text-sm">{dispute.buyer?.email}</p>
           </div>
 
-          <div className="p-4 bg-gray-700/30 rounded-xl">
+          <div className="p-4 bg-surface rounded-xl">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-yellow-400" />
-              <p className="text-gray-400 text-xs uppercase tracking-wide">Order Amount</p>
+              <DollarSign className="w-4 h-4 text-warning" />
+              <p className="text-ink-secondary text-xs uppercase tracking-wide">Order Amount</p>
             </div>
-            <p className="text-white font-semibold text-xl">₦{orderTotal.toLocaleString()}</p>
-            <p className="text-gray-500 text-xs mt-1">After 10% fee → buyer gets ₦{netRefund.toLocaleString()}</p>
+            <p className="text-ink font-semibold text-xl">₦{orderTotal.toLocaleString()}</p>
+            <p className="text-ink-muted text-xs mt-1">After 10% fee → buyer gets ₦{netRefund.toLocaleString()}</p>
           </div>
 
-          <div className="p-4 bg-gray-700/30 rounded-xl">
+          <div className="p-4 bg-surface rounded-xl">
             <div className="flex items-center gap-2 mb-2">
-              <Truck className="w-4 h-4 text-purple-400" />
-              <p className="text-gray-400 text-xs uppercase tracking-wide">Original Rider</p>
+              <Truck className="w-4 h-4 text-primary" />
+              <p className="text-ink-secondary text-xs uppercase tracking-wide">Original Rider</p>
             </div>
             {rider ? (
               <>
-                <p className="text-white font-semibold">{rider.name}</p>
-                <p className="text-gray-400 text-sm flex items-center gap-1">
+                <p className="text-ink font-semibold">{rider.name}</p>
+                <p className="text-ink-secondary text-sm flex items-center gap-1">
                   <Phone className="w-3 h-3" />{rider.phone}
                 </p>
               </>
             ) : (
-              <p className="text-gray-500 text-sm">No rider on record</p>
+              <p className="text-ink-muted text-sm">No rider on record</p>
             )}
           </div>
         </div>
 
-        <div className="p-4 bg-gray-700/30 rounded-xl mb-4">
-          <p className="text-gray-400 text-xs uppercase tracking-wide mb-2">Buyer's Complaint</p>
-          <p className="text-white">{dispute.reason}</p>
+        <div className="p-4 bg-surface rounded-xl mb-4">
+          <p className="text-ink-secondary text-xs uppercase tracking-wide mb-2">Buyer's Complaint</p>
+          <p className="text-ink">{dispute.reason}</p>
         </div>
 
         {/* Fee breakdown */}
-        <div className="p-4 bg-gray-900 rounded-xl border border-gray-700 text-sm space-y-1.5">
-          <div className="flex justify-between text-gray-400">
+        <div className="p-4 bg-surface rounded-xl border border-border text-sm space-y-1.5">
+          <div className="flex justify-between text-ink-secondary">
             <span>Order total</span><span>₦{orderTotal.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-orange-400">
+          <div className="flex justify-between text-warning">
             <span>Processing fee (10%)</span><span>− ₦{processingFee.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-green-400 font-bold border-t border-gray-700 pt-1.5">
+          <div className="flex justify-between text-success font-semibold border-t border-border pt-1.5">
             <span>Buyer receives</span><span>₦{netRefund.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-blue-400">
+          <div className="flex justify-between text-primary">
             <span>Rider pickup pay</span><span>₦560</span>
           </div>
         </div>
@@ -226,14 +226,14 @@ export default function AdminDisputeDetailPage() {
 
       {/* ── Action panel ──────────────────────────────────────────────────── */}
       {!isFullyDone && (
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white mb-5">Actions</h2>
+        <div className="bg-white border border-border rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-ink mb-5">Actions</h2>
 
           {actionFeedback && (
             <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
               actionFeedback.startsWith('Error')
-                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                ? 'bg-danger/10 text-danger border border-danger/20'
+                : 'bg-success/10 text-success border border-success/20'
             }`}>
               {actionFeedback}
             </div>
@@ -253,14 +253,14 @@ export default function AdminDisputeDetailPage() {
               return (
                 <div key={step.key} className="flex items-center gap-2 flex-shrink-0">
                   <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                    done   ? 'bg-green-500/20 text-green-400' :
-                    active ? 'bg-yellow-500/20 text-yellow-400' :
-                             'bg-gray-700 text-gray-500'
+                    done   ? 'bg-success/10 text-success' :
+                    active ? 'bg-warning/10 text-warning' :
+                             'bg-surface text-ink-muted'
                   }`}>
                     {done && <CheckCircle className="w-3 h-3" />}
                     {step.label}
                   </div>
-                  {i < arr.length - 1 && <span className="text-gray-600 text-xs">→</span>}
+                  {i < arr.length - 1 && <span className="text-ink-muted text-xs">→</span>}
                 </div>
               )
             })}
@@ -270,13 +270,13 @@ export default function AdminDisputeDetailPage() {
           {stage === 'INITIAL' && (
             <div className="space-y-4">
               {rider ? (
-                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
                   <div className="flex items-start gap-3 mb-4">
-                    <Truck className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                    <Truck className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-white font-semibold">Send original rider to collect item</p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        <span className="text-blue-300 font-medium">{rider.name}</span> ({rider.phone}) will
+                      <p className="text-ink font-semibold">Send original rider to collect item</p>
+                      <p className="text-ink-secondary text-sm mt-1">
+                        <span className="text-primary font-medium">{rider.name}</span> ({rider.phone}) will
                         receive a notification to go back to the buyer and collect the item. They'll earn ₦560 once confirmed.
                       </p>
                     </div>
@@ -284,7 +284,7 @@ export default function AdminDisputeDetailPage() {
                   <button
                     onClick={() => doPickupAction('send_rider')}
                     disabled={actionLoading === 'send_rider'}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-primary hover:brightness-95 text-white rounded-xl font-semibold transition-colors disabled:opacity-50"
                   >
                     {actionLoading === 'send_rider'
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Notifying Rider...</>
@@ -293,21 +293,21 @@ export default function AdminDisputeDetailPage() {
                   </button>
                 </div>
               ) : (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                <div className="p-4 bg-danger/10 border border-danger/20 rounded-xl text-danger text-sm">
                   No rider is linked to this order. You may need to arrange pickup manually.
                 </div>
               )}
 
               {/* Collapse for dismiss/favour seller */}
               <details className="group">
-                <summary className="text-gray-400 text-sm cursor-pointer hover:text-gray-300 select-none py-2">
+                <summary className="text-ink-secondary text-sm cursor-pointer hover:text-ink-secondary select-none py-2">
                   Or resolve without pickup (dismiss / no refund) ▾
                 </summary>
-                <div className="mt-3 space-y-4 pt-4 border-t border-gray-700">
+                <div className="mt-3 space-y-4 pt-4 border-t border-border">
                   <select
                     value={resolution.status}
                     onChange={(e) => setResolution({ ...resolution, status: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
                   >
                     <option value="RESOLVED_SELLER_FAVOR">No Refund (Favour Seller)</option>
                     <option value="DISMISSED">Dismiss</option>
@@ -315,7 +315,7 @@ export default function AdminDisputeDetailPage() {
                   <textarea
                     value={resolution.resolution}
                     onChange={(e) => setResolution({ ...resolution, resolution: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-h-24 resize-none"
+                    className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-24 resize-none"
                     placeholder="Explain your decision to the buyer..."
                   />
                   <label className="flex items-center gap-3 cursor-pointer">
@@ -323,14 +323,14 @@ export default function AdminDisputeDetailPage() {
                       type="checkbox"
                       checked={resolution.penalizeBuyer}
                       onChange={(e) => setResolution({ ...resolution, penalizeBuyer: e.target.checked })}
-                      className="w-4 h-4 rounded border-gray-600 text-red-500"
+                      className="w-4 h-4 rounded border-border text-danger"
                     />
-                    <span className="text-gray-300 text-sm">Issue warning to buyer (false dispute)</span>
+                    <span className="text-ink-secondary text-sm">Issue warning to buyer (false dispute)</span>
                   </label>
                   <button
                     onClick={handleDirectResolve}
                     disabled={resolving}
-                    className="w-full px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-bold disabled:opacity-50"
+                    className="w-full px-5 py-3 bg-danger text-white rounded-xl font-semibold hover:brightness-95 disabled:opacity-50"
                   >
                     {resolving ? 'Resolving...' : 'Submit Resolution'}
                   </button>
@@ -342,14 +342,14 @@ export default function AdminDisputeDetailPage() {
           {/* STEP 2 — Waiting for pickup */}
           {stage === 'RIDER_SENT' && (
             <div className="space-y-4">
-              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+              <div className="p-4 bg-warning/10 border border-warning/20 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
-                  <Truck className="w-5 h-5 text-yellow-400" />
-                  <p className="text-yellow-300 font-semibold">
+                  <Truck className="w-5 h-5 text-warning" />
+                  <p className="text-warning font-semibold">
                     Waiting for {rider?.name || 'rider'} return progress
                   </p>
                 </div>
-                <p className="text-gray-400 text-sm">
+                <p className="text-ink-secondary text-sm">
                   Rider updates return status (picked up → on the way → delivered).
                   Buyer refund now releases when seller confirms return receipt.
                 </p>
@@ -360,48 +360,48 @@ export default function AdminDisputeDetailPage() {
           {/* STEP 3 — Release refund + rider pay (two independent buttons) */}
           {(stage === 'ITEM_RECEIVED' || stage === 'REFUND_RELEASED') && (
             <div className="space-y-4">
-              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-sm text-green-400 flex items-center gap-2">
+              <div className="p-3 bg-success/10 border border-success/20 rounded-xl text-sm text-success flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" /> Item confirmed received. Release payments below.
               </div>
 
               {/* Refund to buyer */}
               <div className={`p-4 rounded-xl border ${
                 stage === 'REFUND_RELEASED'
-                  ? 'bg-gray-700/10 border-gray-700 opacity-50'
-                  : 'bg-gray-700/30 border-gray-600'
+                  ? 'bg-surface border-border opacity-50'
+                  : 'bg-surface border-border'
               }`}>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-white font-semibold flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-400" />
+                    <p className="text-ink font-semibold flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-success" />
                       Buyer Refund Release
                     </p>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-ink-secondary text-sm mt-1">
                       Seller confirms return in order page, then buyer refund is released automatically.
                     </p>
                   </div>
-                  <span className="px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-full text-xs font-semibold flex-shrink-0">
+                  <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-semibold flex-shrink-0">
                     Seller confirmation required
                   </span>
                 </div>
               </div>
 
               {/* Rider pay */}
-              <div className="p-4 bg-gray-700/30 border border-gray-600 rounded-xl">
+              <div className="p-4 bg-surface border border-border rounded-xl">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-white font-semibold flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-blue-400" />
+                    <p className="text-ink font-semibold flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-primary" />
                       Release Rider Pickup Pay
                     </p>
-                    <p className="text-gray-400 text-sm mt-1">
+                    <p className="text-ink-secondary text-sm mt-1">
                       ₦560 → {rider?.name}'s wallet
                     </p>
                   </div>
                   <button
                     onClick={() => doPickupAction('release_rider_pay')}
                     disabled={actionLoading === 'release_rider_pay'}
-                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
+                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-primary hover:brightness-95 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
                   >
                     {actionLoading === 'release_rider_pay'
                       ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -417,39 +417,39 @@ export default function AdminDisputeDetailPage() {
 
       {/* ── Resolved summary ──────────────────────────────────────────────── */}
       {isFullyDone && (
-        <div className="bg-gray-800 border border-green-500/30 rounded-2xl p-6">
+        <div className="bg-white border border-success/30 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-3">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <h2 className="text-lg font-bold text-white">Dispute Resolved</h2>
+            <CheckCircle className="w-5 h-5 text-success" />
+            <h2 className="text-lg font-semibold text-ink">Dispute Resolved</h2>
           </div>
-          <p className="text-gray-400">
-            Status: <span className="text-white font-semibold">{dispute.status.replace(/_/g, ' ')}</span>
+          <p className="text-ink-secondary">
+            Status: <span className="text-ink font-semibold">{dispute.status.replace(/_/g, ' ')}</span>
           </p>
           {dispute.refundAmount > 0 && (
-            <p className="text-gray-400 mt-1">
-              Refund paid: <span className="text-green-400 font-semibold">₦{dispute.refundAmount.toLocaleString()}</span>
+            <p className="text-ink-secondary mt-1">
+              Refund paid: <span className="text-success font-semibold">₦{dispute.refundAmount.toLocaleString()}</span>
             </p>
           )}
         </div>
       )}
 
       {/* ── Chat ──────────────────────────────────────────────────────────── */}
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6">
+      <div className="bg-white border border-border rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
-          <MessageSquare className="w-5 h-5 text-blue-400" />
-          <h2 className="text-lg font-bold text-white">Chat with Buyer</h2>
+          <MessageSquare className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold text-ink">Chat with Buyer</h2>
         </div>
 
         <div className="space-y-3 max-h-72 overflow-y-auto mb-4 pr-1">
           {messages.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-6">No messages yet</p>
+            <p className="text-ink-muted text-sm text-center py-6">No messages yet</p>
           ) : (
             messages.map((msg: any) => {
               const isAdmin = msg.senderType === 'ADMIN'
               return (
                 <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-sm px-4 py-3 rounded-2xl text-sm ${
-                    isAdmin ? 'bg-red-500/80 text-white rounded-br-sm' : 'bg-gray-700 text-gray-100 rounded-bl-sm'
+                    isAdmin ? 'bg-primary text-white rounded-br-sm' : 'bg-surface text-ink rounded-bl-sm'
                   }`}>
                     <p className="text-xs opacity-60 mb-1 font-semibold">{isAdmin ? 'You (Admin)' : 'Buyer'}</p>
                     <p>{msg.message}</p>
@@ -470,13 +470,13 @@ export default function AdminDisputeDetailPage() {
               value={adminMessage}
               onChange={(e) => setAdminMessage(e.target.value)}
               placeholder="Message the buyer..."
-              className="flex-1 px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex-1 px-4 py-2.5 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               disabled={sendingMsg}
             />
             <button
               type="submit"
               disabled={sendingMsg || !adminMessage.trim()}
-              className="px-4 py-2.5 bg-red-500/80 hover:bg-red-500 text-white rounded-xl text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+              className="px-4 py-2.5 bg-danger/100/80 hover:bg-danger/100 text-ink rounded-xl text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
             >
               {sendingMsg ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               Send

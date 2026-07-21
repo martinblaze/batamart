@@ -7,10 +7,12 @@ import {
   X, Plus, AlertCircle, Camera, Upload, CheckCircle2,
   Sparkles, Tag, MapPin, Package, ChevronRight, Zap,
   Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2, RefreshCw,
+  Lightbulb, Ban, ShoppingBag,
 } from 'lucide-react'
 import {
   CATEGORY_TREE, getCategoryDisplayInfo, getCategoryList, getSubcategoryList,
 } from '@/lib/variants'
+import { getCategoryIcon } from '@/lib/category-icons'
 
 const SELL_CSS = `
   @keyframes fadeUp {
@@ -31,9 +33,9 @@ const SELL_CSS = `
   }
 
   @keyframes pulse-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.3); }
-    70%  { box-shadow: 0 0 0 8px rgba(99,102,241,0); }
-    100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+    0%   { box-shadow: 0 0 0 0 rgba(30,144,255,0.3); }
+    70%  { box-shadow: 0 0 0 8px rgba(30,144,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(30,144,255,0); }
   }
   .pulse-ring:focus-within { animation: pulse-ring 1.5s ease-out; }
 
@@ -41,8 +43,8 @@ const SELL_CSS = `
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
   .step-card:focus-within {
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(30,144,255,0.1);
   }
 
   .tag-pill {
@@ -53,57 +55,50 @@ const SELL_CSS = `
   .img-slot {
     transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
   }
-  .img-slot:hover { border-color: #6366f1; background: #f5f3ff; transform: scale(1.02); }
+  .img-slot:hover { border-color: var(--color-primary); background: var(--color-surface); transform: scale(1.02); }
 
   .suggestion-chip {
     transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
   }
   .suggestion-chip:hover {
-    background: #6366f1;
+    background: var(--color-primary);
     color: white;
     border-color: transparent;
-    transform: scale(1.04) translateY(-1px);
-    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
   }
   .suggestion-chip:active { transform: scale(0.97); }
 
   .submit-btn {
-    transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease;
-    background: linear-gradient(135deg, #6366f1 0%, #4c1d95 100%);
+    transition: filter 0.15s ease-out;
+    background: var(--color-primary);
   }
   .submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 40px rgba(99,102,241,0.4);
+    filter: brightness(0.95);
   }
   .submit-btn:active:not(:disabled) { transform: scale(0.98); }
 
   .section-number {
-    background: linear-gradient(135deg, #6366f1, #7c3aed);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--color-primary);
   }
 
   .header-gradient {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    background: var(--color-primary);
   }
 
   .cat-card {
-    transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
+    transition: transform 0.15s ease-out;
     cursor: pointer;
   }
-  .cat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.12); }
+  .cat-card:hover { transform: translateY(-2px); }
   .cat-card-active {
-    border-color: #6366f1 !important;
-    background: linear-gradient(135deg, #f0f0ff, #ede9fe) !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    border-color: var(--color-primary) !important;
+    background: color-mix(in srgb, var(--color-primary) 8%, white) !important;
   }
 
   .chip {
     transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
   }
   .chip:hover {
-    background: #6366f1;
+    background: var(--color-primary);
     color: white;
     border-color: transparent;
     transform: scale(1.04) translateY(-1px);
@@ -134,73 +129,75 @@ function ConfirmListingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="scale-in relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 z-10 max-h-[85vh] overflow-y-auto mx-4">
+      <div className="scale-in relative bg-white rounded-3xl shadow-soft w-full max-w-md p-6 z-10 max-h-[85vh] overflow-y-auto mx-4">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-5 h-5 text-amber-500" />
+          <div className="w-11 h-11 rounded-2xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-900">Before you list</h3>
-            <p className="text-xs text-gray-400">Review fees and confirm availability</p>
+            <h3 className="text-lg font-semibold text-ink">Before you list</h3>
+            <p className="text-xs text-ink-muted">Review fees and confirm availability</p>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-2xl p-4 mb-4 border border-indigo-100">
-          <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-3">Fee Breakdown</p>
+        <div className="bg-primary/5 rounded-2xl p-4 mb-4 border border-primary/20">
+          <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Fee Breakdown</p>
           {!hasStructuredVariants ? (
             <>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Your listed price</span>
-                  <span className="font-bold text-gray-900">{fmt(price)}</span>
+                  <span className="text-ink-secondary">Your listed price</span>
+                  <span className="font-semibold text-ink">{fmt(price)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Platform fee (5%)</span>
-                  <span className="font-bold text-red-500">− {fmt(fee)}</span>
+                  <span className="text-ink-secondary">Platform fee (5%)</span>
+                  <span className="font-semibold text-danger">− {fmt(fee)}</span>
                 </div>
-                <div className="border-t border-indigo-200 pt-2 flex justify-between">
-                  <span className="font-bold text-gray-800">You receive</span>
-                  <span className="font-black text-emerald-600 text-base">{fmt(receive)}</span>
+                <div className="border-t border-primary/20 pt-2 flex justify-between">
+                  <span className="font-semibold text-ink">You receive</span>
+                  <span className="font-semibold text-success text-base">{fmt(receive)}</span>
                 </div>
               </div>
-              <p className="text-[11px] text-indigo-500 mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed">
-                💡 To receive exactly <strong>{fmt(price)}</strong>, list at <strong>{fmt(Math.ceil(price / 0.95))}</strong>
+              <p className="text-[11px] text-primary mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+                <span>To receive exactly <strong>{fmt(price)}</strong>, list at <strong>{fmt(Math.ceil(price / 0.95))}</strong></span>
               </p>
             </>
           ) : (
             <>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Lowest variant price</span>
-                  <span className="font-bold text-gray-900">{fmt(minVariantPrice)}</span>
+                  <span className="text-ink-secondary">Lowest variant price</span>
+                  <span className="font-semibold text-ink">{fmt(minVariantPrice)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Highest variant price</span>
-                  <span className="font-bold text-gray-900">{fmt(maxVariantPrice)}</span>
+                  <span className="text-ink-secondary">Highest variant price</span>
+                  <span className="font-semibold text-ink">{fmt(maxVariantPrice)}</span>
                 </div>
-                <div className="border-t border-indigo-200 pt-2 flex justify-between">
-                  <span className="font-bold text-gray-800">You receive (range)</span>
-                  <span className="font-black text-emerald-600 text-base">
+                <div className="border-t border-primary/20 pt-2 flex justify-between">
+                  <span className="font-semibold text-ink">You receive (range)</span>
+                  <span className="font-semibold text-success text-base">
                     {fmt(minVariantPrice * 0.95)} – {fmt(maxVariantPrice * 0.95)}
                   </span>
                 </div>
               </div>
-              <p className="text-[11px] text-indigo-500 mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed">
-                💡 Variant rows use their own prices and stock. Base price is fallback only.
+              <p className="text-[11px] text-primary mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
+                <span>Variant rows use their own prices and stock. Base price is fallback only.</span>
               </p>
             </>
           )}
         </div>
 
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-5">
+        <div className="bg-danger/10 border border-danger/30 rounded-2xl p-4 mb-5">
           <div className="flex items-start gap-2.5 mb-3">
-            <span className="text-xl flex-shrink-0">🚫</span>
+            <Ban className="w-5 h-5 flex-shrink-0 text-danger" strokeWidth={1.75} />
             <div>
-              <p className="text-sm font-black text-red-700 mb-1">Product Availability Policy</p>
-              <p className="text-xs text-red-600 leading-relaxed">
+              <p className="text-sm font-semibold text-danger mb-1">Product availability policy</p>
+              <p className="text-xs text-danger leading-relaxed">
                 The product <strong>must be physically with you right now.</strong> Listing items you plan to source after sale is <strong>strictly prohibited</strong> and will result in account suspension.
               </p>
-              <p className="text-xs text-red-600 leading-relaxed mt-2">
+              <p className="text-xs text-danger leading-relaxed mt-2">
                 Illegal, explicit, counterfeit, weapon, trafficking, or controlled-drug listings are not allowed. Uploading bad products can lead to immediate removal and indefinite account suspension.
               </p>
             </div>
@@ -208,11 +205,11 @@ function ConfirmListingModal({
           <label className="flex items-start gap-2.5 cursor-pointer">
             <div
               onClick={() => setAgreed(!agreed)}
-              className={`w-5 h-5 rounded-lg flex-shrink-0 mt-0.5 cursor-pointer border-2 flex items-center justify-center transition-all ${agreed ? 'bg-red-500 border-red-500' : 'border-red-300 bg-white'}`}
+              className={`w-5 h-5 rounded-lg flex-shrink-0 mt-0.5 cursor-pointer border-2 flex items-center justify-center transition-all ${agreed ? 'bg-danger border-danger' : 'border-danger/40 bg-white'}`}
             >
               {agreed && <CheckCircle2 className="w-3 h-3 text-white" />}
             </div>
-            <span className="text-xs text-red-700 font-semibold leading-relaxed">
+            <span className="text-xs text-danger font-semibold leading-relaxed">
               I confirm this product is in my possession and ready for pickup. I understand violations result in account penalties.
             </span>
           </label>
@@ -221,17 +218,17 @@ function ConfirmListingModal({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors"
+            className="flex-1 py-3 rounded-2xl border-2 border-border text-ink-secondary font-semibold text-sm hover:bg-surface transition-colors"
           >
             Go Back
           </button>
           <button
             onClick={onConfirm}
             disabled={!agreed}
-            className="flex-1 py-3 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: agreed ? 'linear-gradient(135deg, #6366f1, #4c1d95)' : '#9ca3af' }}
+            className="flex-1 py-3 rounded-2xl font-semibold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: agreed ? 'var(--color-primary)' : 'var(--color-border)' }}
           >
-            List Product ✨
+            List Product
           </button>
         </div>
       </div>
@@ -243,17 +240,19 @@ function ConfirmListingModal({
 function BecomeSellerGate({ appMode }: { appMode: boolean }) {
   const router = useRouter()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-violet-900 to-purple-950 flex items-center justify-center px-4">
-      <div className="fade-up bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full text-center border border-white/20 shadow-2xl">
-        <div className="text-6xl mb-5">🛍️</div>
-        <h1 className="text-2xl font-black text-white mb-2">Want to sell on BataMart?</h1>
+    <div className="min-h-screen bg-ink flex items-center justify-center px-4">
+      <div className="fade-up bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full text-center border border-white/20 shadow-soft">
+        <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-5">
+          <ShoppingBag className="w-7 h-7 text-white" strokeWidth={1.75} />
+        </div>
+        <h1 className="text-2xl font-semibold text-white mb-2">Want to sell on BataMart?</h1>
         <p className="text-white/60 text-sm mb-7 leading-relaxed">
           You're signed in as a buyer. Upgrade to a seller account - it's free and takes 10 seconds.
         </p>
         <button
           onClick={() => router.push(appMode ? '/become-seller?app=true' : '/become-seller')}
-          className="w-full py-4 rounded-2xl font-black text-white text-base shadow-xl mb-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
-          style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)' }}
+          className="w-full py-4 rounded-2xl font-semibold text-white text-base shadow-soft mb-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          style={{ background: 'var(--color-primary)' }}
         >
           Become a Seller →
         </button>
@@ -272,12 +271,12 @@ function BecomeSellerGate({ appMode }: { appMode: boolean }) {
 function StepHeader({ num, title, subtitle }: { num: string; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
-        <span className="section-number text-sm font-black">{num}</span>
+      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+        <span className="section-number text-sm font-semibold">{num}</span>
       </div>
       <div>
-        <h3 className="text-sm font-black text-gray-900">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
+        {subtitle && <p className="text-xs text-ink-muted">{subtitle}</p>}
       </div>
     </div>
   )
@@ -304,30 +303,30 @@ function VariantRow({
   const handleCustomAdd = () => { addValue(customInput); setCustomInput('') }
 
   return (
-    <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50">
-      <p className="text-sm font-bold text-gray-700 mb-3">{field.label}</p>
+    <div className="border border-border rounded-2xl p-4 bg-surface/50">
+      <p className="text-sm font-semibold text-ink-secondary mb-3">{field.label}</p>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {field.suggestions.map(s => (
           <button
             key={s}
             type="button"
             onClick={() => values.includes(s) ? removeValue(s) : addValue(s)}
-            className={`chip text-xs px-3 py-1.5 rounded-xl border font-semibold ${
+            className={`chip text-xs px-3 py-1.5 rounded-xl border font-semibold inline-flex items-center gap-1 ${
               values.includes(s)
-                ? 'bg-indigo-600 text-white border-transparent'
-                : 'bg-white text-gray-600 border-gray-200'
+                ? 'bg-primary text-white border-transparent'
+                : 'bg-white text-ink-secondary border-border'
             }`}
           >
-            {values.includes(s) ? '✓ ' : '+ '}{s}
+            {values.includes(s) ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}{s}
           </button>
         ))}
       </div>
       {values.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {values.map(v => (
-            <span key={v} className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">
+            <span key={v} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
               {v}
-              <button type="button" onClick={() => removeValue(v)} className="hover:text-indigo-900 ml-0.5">
+              <button type="button" onClick={() => removeValue(v)} className="hover:text-primary ml-0.5">
                 <X className="w-3 h-3" />
               </button>
             </span>
@@ -342,13 +341,13 @@ function VariantRow({
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCustomAdd() } }}
           maxLength={SELL_LIMITS.variantValue}
           placeholder={`Add custom ${field.label.toLowerCase()}...`}
-          className="flex-1 text-xs px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200"
+          className="flex-1 text-xs px-3 py-2 rounded-xl border border-border bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30"
         />
         <button
           type="button"
           onClick={handleCustomAdd}
           disabled={!customInput.trim()}
-          className="px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold disabled:opacity-40 hover:bg-indigo-700 transition-colors"
+          className="px-3 py-2 bg-primary text-white rounded-xl text-xs font-semibold disabled:opacity-40 hover:brightness-95 transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
@@ -1114,15 +1113,15 @@ export default function SellPage() {
   }
 
   const fmt = (n: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n)
-  const catIcon = categoryKey ? CATEGORY_TREE[categoryKey]?.icon : ''
+  const CatIcon = categoryKey ? getCategoryIcon(categoryKey) : null
 
   if (checkingAuth) return (
-    <div className="min-h-screen bg-[#f0f2f5] flex items-center justify-center">
+    <div className="min-h-screen bg-surface flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-4">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
-        <p className="text-gray-500 font-semibold">Checking authentication...</p>
+        <p className="text-ink-secondary font-semibold">Checking authentication...</p>
       </div>
     </div>
   )
@@ -1130,7 +1129,7 @@ export default function SellPage() {
   if (isBuyer) return <BecomeSellerGate appMode={appMode} />
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5]">
+    <div className="min-h-screen bg-surface">
       {showConfirmModal && (
         <ConfirmListingModal
           price={parseFloat(formData.price) || 0}
@@ -1143,7 +1142,7 @@ export default function SellPage() {
       )}
 
       {/* ── Header ── */}
-      <header className="header-gradient sticky top-0 z-40 shadow-xl">
+      <header className="header-gradient sticky top-0 z-40 shadow-soft">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-4">
             <Link href={appMode ? '/marketplace?app=true' : '/marketplace'}
@@ -1151,23 +1150,23 @@ export default function SellPage() {
               <ArrowLeft className="w-4 h-4 text-white" />
             </Link>
             <div className="flex-1">
-              <h1 className="text-lg font-black text-white leading-tight">List a Product</h1>
+              <h1 className="text-lg font-semibold text-white leading-tight">List a Product</h1>
               <p className="text-white/50 text-xs">Sell to your campus community</p>
             </div>
             <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
-              {catIcon ? <span className="text-base">{catIcon}</span> : <Sparkles className="w-3.5 h-3.5 text-violet-300" />}
-              <span className="text-[11px] font-bold text-white/80">5% platform fee</span>
+              {CatIcon ? <CatIcon className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} /> : <Sparkles className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} />}
+              <span className="text-[11px] font-semibold text-white/80">5% platform fee</span>
             </div>
           </div>
         </div>
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4">
-        <div className="fade-up bg-red-50 border border-red-200 rounded-2xl px-4 py-3 flex items-start gap-3">
-          <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="fade-up bg-danger/10 border border-danger/30 rounded-2xl px-4 py-3 flex items-start gap-3">
+          <Shield className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-black text-red-700">Prohibited listings are removed</p>
-            <p className="text-xs text-red-600 leading-relaxed mt-1">
+            <p className="text-sm font-semibold text-danger">Prohibited listings are removed</p>
+            <p className="text-xs text-danger leading-relaxed mt-1">
               Do not upload illegal drugs, explicit content, weapons, counterfeit goods, trafficking content, or anything illegal. Violations can result in indefinite account suspension.
             </p>
           </div>
@@ -1175,24 +1174,24 @@ export default function SellPage() {
 
         {/* Price preview banner */}
         {formData.price && parseFloat(formData.price) > 0 && (
-          <div className="fade-up bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 text-emerald-600" />
+          <div className="fade-up bg-success/10 border border-success/30 rounded-2xl px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-4 h-4 text-success" />
             </div>
             <div className="text-sm">
               {!hasStructuredVariants ? (
                 <>
-                  <span className="text-gray-500">You'll receive </span>
-                  <span className="font-black text-emerald-600">{fmt(parseFloat(formData.price) * 0.95)}</span>
-                  <span className="text-gray-400 text-xs"> after 5% fee</span>
+                  <span className="text-ink-secondary">You'll receive </span>
+                  <span className="font-semibold text-success">{fmt(parseFloat(formData.price) * 0.95)}</span>
+                  <span className="text-ink-muted text-xs"> after 5% fee</span>
                 </>
               ) : (
                 <>
-                  <span className="text-gray-500">Variant payout range </span>
-                  <span className="font-black text-emerald-600">
+                  <span className="text-ink-secondary">Variant payout range </span>
+                  <span className="font-semibold text-success">
                     {minVariantPrice > 0 ? fmt(minVariantPrice * 0.95) : '—'}{maxVariantPrice > 0 ? ` - ${fmt(maxVariantPrice * 0.95)}` : ''}
                   </span>
-                  <span className="text-gray-400 text-xs"> after 5% fee</span>
+                  <span className="text-ink-muted text-xs"> after 5% fee</span>
                 </>
               )}
             </div>
@@ -1200,12 +1199,12 @@ export default function SellPage() {
         )}
 
         {/* ── STEP 1: Basic Info ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <div className="mb-4">
             <button
               type="button"
               onClick={clearSellForm}
-              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 transition-colors"
+              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-danger/30 hover:bg-danger/10 hover:text-danger transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Clear all fields
@@ -1214,20 +1213,20 @@ export default function SellPage() {
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Product Name *</label>
+              <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Product Name *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: limitText(e.target.value, SELL_LIMITS.productName) })}
                 required
                 maxLength={SELL_LIMITS.productName}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder='e.g. "iPhone 13 Pro Max 256GB"'
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">
                   {hasStructuredVariants ? 'Base Price (Fallback) (₦) *' : 'Price (₦) *'}
                 </label>
                 <input
@@ -1235,23 +1234,23 @@ export default function SellPage() {
                   value={formData.price}
                   onChange={e => setFormData({ ...formData, price: limitDecimalInput(e.target.value, MAX_PRICE) })}
                   required min="0" max={MAX_PRICE} inputMode="decimal" step="0.01"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="50000"
                 />
                 {hasStructuredVariants && (
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-ink-muted mt-1">
                     Variant row prices are used at checkout. This is only fallback/base.
                   </p>
                 )}
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Qty in Stock *</label>
+                <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Qty in Stock *</label>
                 <input
                   type="number"
                   value={formData.quantity}
                   onChange={e => setFormData({ ...formData, quantity: limitIntegerInput(e.target.value, MAX_STOCK, 1) })}
                   required min="1" max={MAX_STOCK} inputMode="numeric"
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="1"
                 />
               </div>
@@ -1260,35 +1259,38 @@ export default function SellPage() {
         </div>
 
         {/* ── STEP 2: Category ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader num="2" title="Category *" subtitle="Select the most relevant category" />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {categories.map(cat => (
+            {categories.map(cat => {
+              const CategoryIcon = getCategoryIcon(cat.key)
+              return (
               <button
                 key={cat.key}
                 type="button"
                 onClick={() => setCategoryKey(cat.key)}
                 className={`cat-card text-left p-3 rounded-xl border-2 ${
-                  categoryKey === cat.key ? 'cat-card-active' : 'border-gray-100 bg-gray-50 hover:border-indigo-200'
+                  categoryKey === cat.key ? 'cat-card-active' : 'border-border bg-surface hover:border-primary/20'
                 }`}
               >
-                <div className="text-xl mb-1">{cat.icon}</div>
-                <p className="text-xs font-bold text-gray-700 leading-tight">{cat.label}</p>
+                <CategoryIcon className="w-5 h-5 mb-1.5 text-ink-secondary" strokeWidth={1.75} />
+                <p className="text-xs font-semibold text-ink-secondary leading-tight">{cat.label}</p>
               </button>
-            ))}
+              )
+            })}
           </div>
         </div>
 
         {/* ── STEP 3: Subcategory ── */}
         {categoryKey && (
-          <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
             <StepHeader num="3" title="Subcategory *" subtitle="Get more specific" />
-            <div className="mb-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 text-sm font-semibold text-indigo-700">
+            <div className="mb-3 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">
               <span className="mr-2">Selected:</span>
               <span>{selectedCategoryDisplay.category || 'Choose a category'}</span>
               {selectedCategoryDisplay.subcategory ? (
                 <>
-                  <span className="mx-2 text-indigo-400">•</span>
+                  <span className="mx-2 text-primary">•</span>
                   <span>{selectedCategoryDisplay.subcategory}</span>
                 </>
               ) : null}
@@ -1299,10 +1301,10 @@ export default function SellPage() {
                   key={sub.key}
                   type="button"
                   onClick={() => setSubcategoryKey(sub.key)}
-                  className={`cat-card text-left px-3 py-2.5 rounded-xl border-2 text-xs font-bold ${
+                  className={`cat-card text-left px-3 py-2.5 rounded-xl border-2 text-xs font-semibold ${
                     subcategoryKey === sub.key
-                      ? 'bg-indigo-600 text-white border-transparent'
-                      : 'border-gray-100 bg-gray-50 text-gray-600 hover:border-indigo-200'
+                      ? 'bg-primary text-white border-transparent'
+                      : 'border-border bg-surface text-ink-secondary hover:border-primary/20'
                   }`}
                 >
                   {sub.label}
@@ -1314,7 +1316,7 @@ export default function SellPage() {
 
         {/* ── STEP 4: Category Attributes ── */}
         {categoryAttributes.length > 0 && (
-          <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
             <StepHeader num="4" title="Category Details" subtitle="Structured attributes for smarter search and filters" />
             <div className="space-y-4">
               {categoryAttributes.map((attr) => {
@@ -1322,7 +1324,7 @@ export default function SellPage() {
                 const value = attributeValues[attr.key]
                 return (
                   <div key={attr.id}>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">
                       {attr.label} {attr.required ? '*' : ''}
                     </label>
                     {attr.type === 'select' && (
@@ -1336,13 +1338,13 @@ export default function SellPage() {
                                   key={opt}
                                   type="button"
                                   onClick={() => toggleDetailAttributeOption(attr.key, opt)}
-                                  className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all ${
+                                  className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all inline-flex items-center gap-1 ${
                                     active
-                                      ? 'bg-indigo-600 text-white border-transparent'
-                                      : 'bg-white text-gray-600 border-gray-200'
+                                      ? 'bg-primary text-white border-transparent'
+                                      : 'bg-white text-ink-secondary border-border'
                                   }`}
                                 >
-                                  {active ? '✓ ' : '+ '}{opt}
+                                  {active ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}{opt}
                                 </button>
                               )
                             })}
@@ -1351,12 +1353,12 @@ export default function SellPage() {
                         {toStringArray(value).length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {toStringArray(value).map((selected) => (
-                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">
+                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
                                 {selected}
                                 <button
                                   type="button"
                                   onClick={() => toggleDetailAttributeOption(attr.key, selected)}
-                                  className="text-indigo-500 hover:text-indigo-800"
+                                  className="text-primary hover:text-primary"
                                   aria-label={`Remove ${selected}`}
                                 >
                                   ×
@@ -1376,7 +1378,7 @@ export default function SellPage() {
                                 addCustomSelectAttribute(attr.key)
                               }
                             }}
-                            className="flex-1 px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                            className="flex-1 px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                             placeholder={`Add custom ${attr.label.toLowerCase()}...`}
                             maxLength={SELL_LIMITS.attributeText}
                           />
@@ -1384,7 +1386,7 @@ export default function SellPage() {
                             type="button"
                             onClick={() => addCustomSelectAttribute(attr.key)}
                             disabled={!(attributeCustomInput[attr.key] || '').trim()}
-                            className="w-12 rounded-xl bg-indigo-300 text-white font-black disabled:opacity-50 hover:bg-indigo-500 transition-colors"
+                            className="w-12 rounded-xl bg-primary/60 text-white font-semibold disabled:opacity-50 hover:brightness-95 transition-colors"
                           >
                             +
                           </button>
@@ -1402,7 +1404,7 @@ export default function SellPage() {
                                 type="button"
                                 onClick={() => toggleDetailAttributeOption(attr.key, opt)}
                                 className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all ${
-                                  active ? 'bg-indigo-600 text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'
+                                  active ? 'bg-primary text-white border-transparent' : 'bg-white text-ink-secondary border-border'
                                 }`}
                               >
                                 {opt}
@@ -1413,12 +1415,12 @@ export default function SellPage() {
                         {toStringArray(value).length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {toStringArray(value).map((selected) => (
-                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">
+                              <span key={selected} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
                                 {selected}
                                 <button
                                   type="button"
                                   onClick={() => toggleDetailAttributeOption(attr.key, selected)}
-                                  className="text-indigo-500 hover:text-indigo-800"
+                                  className="text-primary hover:text-primary"
                                   aria-label={`Remove ${selected}`}
                                 >
                                   ×
@@ -1437,17 +1439,17 @@ export default function SellPage() {
                         min="0"
                         max={SELL_LIMITS.attributeNumber}
                         inputMode="decimal"
-                        className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                        className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
                     )}
                     {attr.type === 'boolean' && (
-                      <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <label className="inline-flex items-center gap-2 text-sm font-semibold text-ink-secondary">
                         <input
                           type="checkbox"
                           checked={Boolean(value)}
                           onChange={(e) => setAttributeValue(attr.key, e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary/40"
                         />
                         Yes
                       </label>
@@ -1458,7 +1460,7 @@ export default function SellPage() {
                         value={value ?? ''}
                         onChange={(e) => setAttributeValue(attr.key, e.target.value)}
                         maxLength={SELL_LIMITS.attributeText}
-                        className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                        className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
                     )}
@@ -1471,23 +1473,23 @@ export default function SellPage() {
 
         {/* ── STEP 5: Variants ── */}
         {variantFields.length > 0 && (
-          <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
             <StepHeader num="5" title="Product Variants" subtitle="Turn on if this product has options like color, size or storage" />
             <button
               type="button"
               onClick={() => setVariantsEnabledToggle((v) => !v)}
               className={`w-full mb-4 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                variantsEnabledToggle ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-gray-50 hover:border-indigo-200'
+                variantsEnabledToggle ? 'border-primary bg-primary/10' : 'border-border bg-surface hover:border-primary/20'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-gray-900">Has variants</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-semibold text-ink">Has variants</p>
+                  <p className="text-xs text-ink-secondary">
                     {variantsEnabledToggle ? 'Variant section expanded' : 'Tap to add variants'}
                   </p>
                 </div>
-                <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${variantsEnabledToggle ? 'bg-indigo-600' : 'bg-gray-300'}`}>
+                <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${variantsEnabledToggle ? 'bg-primary' : 'bg-border'}`}>
                   <div className={`h-5 w-5 rounded-full bg-white transition-transform ${variantsEnabledToggle ? 'translate-x-4' : 'translate-x-0'}`} />
                 </div>
               </div>
@@ -1505,19 +1507,19 @@ export default function SellPage() {
               </div>
             )}
             {variantsEnabledToggle && variantCombinations.length > 0 && (
-              <div className="mt-5 border border-gray-100 rounded-2xl overflow-hidden">
-                <div className="px-3 py-2.5 bg-gray-50 border-b border-gray-100">
-                  <p className="text-xs font-bold text-gray-600">Variant Inventory</p>
+              <div className="mt-5 border border-border rounded-2xl overflow-hidden">
+                <div className="px-3 py-2.5 bg-surface border-b border-border">
+                  <p className="text-xs font-semibold text-ink-secondary">Variant Inventory</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-white border-b border-gray-100">
+                      <tr className="bg-white border-b border-border">
                         {variantKeysForMatrix.map(key => (
-                          <th key={key} className="text-left px-3 py-2 font-bold text-gray-500 capitalize">{key.replace(/_/g, ' ')}</th>
+                          <th key={key} className="text-left px-3 py-2 font-semibold text-ink-secondary capitalize">{key.replace(/_/g, ' ')}</th>
                         ))}
-                        <th className="text-left px-3 py-2 font-bold text-gray-500">Price</th>
-                        <th className="text-left px-3 py-2 font-bold text-gray-500">Stock</th>
+                        <th className="text-left px-3 py-2 font-semibold text-ink-secondary">Price</th>
+                        <th className="text-left px-3 py-2 font-semibold text-ink-secondary">Stock</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1525,9 +1527,9 @@ export default function SellPage() {
                         const key = comboKey(combo)
                         const row = variantPricing[key] || { price: formData.price, stock: formData.quantity || '1' }
                         return (
-                          <tr key={key} className="border-b border-gray-50 last:border-0">
+                          <tr key={key} className="border-b border-border last:border-0">
                             {variantKeysForMatrix.map(k => (
-                              <td key={`${key}-${k}`} className="px-3 py-2 font-semibold text-gray-700">{combo[k]}</td>
+                              <td key={`${key}-${k}`} className="px-3 py-2 font-semibold text-ink-secondary">{combo[k]}</td>
                             ))}
                             <td className="px-3 py-2">
                               <input
@@ -1538,7 +1540,7 @@ export default function SellPage() {
                                 step="0.01"
                                 value={row.price}
                                 onChange={e => updateVariantPrice(key, row, e.target.value)}
-                                className="w-24 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
+                                className="w-24 px-2 py-1 rounded-lg border border-border focus:outline-none focus:border-primary"
                               />
                             </td>
                             <td className="px-3 py-2">
@@ -1550,7 +1552,7 @@ export default function SellPage() {
                                 step="1"
                                 value={row.stock}
                                 onChange={e => updateVariantStock(key, row, e.target.value)}
-                                className="w-20 px-2 py-1 rounded-lg border border-gray-200 focus:outline-none focus:border-indigo-400"
+                                className="w-20 px-2 py-1 rounded-lg border border-border focus:outline-none focus:border-primary"
                               />
                             </td>
                           </tr>
@@ -1565,7 +1567,7 @@ export default function SellPage() {
         )}
 
         {/* ── STEP 5: Description ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader
             num="5"
             title="Product Description"
@@ -1573,7 +1575,7 @@ export default function SellPage() {
           />
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-ink-secondary leading-relaxed">
                 We fill this automatically from your name, category and details. You can edit it, or hit regenerate to get a fresh version.
               </p>
               <button
@@ -1588,7 +1590,7 @@ export default function SellPage() {
                   setDescription(auto)
                   setDescriptionEdited(false)
                 }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-white text-xs font-semibold text-ink-secondary hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Regenerate
@@ -1604,9 +1606,9 @@ export default function SellPage() {
               maxLength={500}
               rows={5}
               placeholder="Describe the product in a few clear words..."
-              className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium min-h-[140px] resize-none"
+              className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium min-h-[140px] resize-none"
             />
-            <div className="flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center justify-between text-xs text-ink-muted">
               <span>{countWords(description)}/{DESCRIPTION_WORD_LIMIT} words</span>
               <span>{descriptionEdited ? 'Edited manually' : 'Auto-filled'}</span>
             </div>
@@ -1614,7 +1616,7 @@ export default function SellPage() {
         </div>
 
         {/* ── STEP 6: Images ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader
             num="6"
             title="Product Photos"
@@ -1622,7 +1624,7 @@ export default function SellPage() {
           />
           <div className="grid grid-cols-3 gap-3">
             {images.map((img, i) => (
-              <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 border-2 border-gray-200">
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-surface border-2 border-border">
                 <img src={img.preview} alt="" className="w-full h-full object-cover" />
                 {img.uploading && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -1630,7 +1632,7 @@ export default function SellPage() {
                   </div>
                 )}
                 {!img.uploading && img.url && (
-                  <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="absolute top-1.5 left-1.5 w-5 h-5 bg-success/100 rounded-full flex items-center justify-center">
                     <CheckCircle2 className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -1638,18 +1640,18 @@ export default function SellPage() {
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute top-1.5 right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                    className="absolute top-1.5 right-1.5 w-5 h-5 bg-danger hover:brightness-95 rounded-full flex items-center justify-center transition-colors"
                   >
                     <X className="w-3 h-3 text-white" />
                   </button>
                 )}
                 {i === 0 && !img.uploading && (
-                  <span className="absolute bottom-1.5 left-1.5 bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full">MAIN</span>
+                  <span className="absolute bottom-1.5 left-1.5 bg-primary text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">MAIN</span>
                 )}
               </div>
             ))}
             {images.length < 3 && (
-              <label className="img-slot aspect-square rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 cursor-pointer bg-gray-50">
+              <label className="img-slot aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer bg-surface">
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -1657,50 +1659,50 @@ export default function SellPage() {
                   onChange={handleImageUpload}
                   className="hidden"
                 />
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-indigo-400" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-[11px] font-bold text-gray-400">Add Photo</span>
+                <span className="text-[11px] font-semibold text-ink-muted">Add Photo</span>
               </label>
             )}
             {Array.from({ length: Math.max(0, 2 - images.length) }).map((_, i) => (
-              <div key={i} className="aspect-square rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/50 flex items-center justify-center">
-                <ImageIcon className="w-6 h-6 text-gray-200" />
+              <div key={i} className="aspect-square rounded-xl border-2 border-dashed border-border bg-surface/50 flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-border" />
               </div>
             ))}
           </div>
           {images.some(img => img.uploading) && (
-            <div className="flex items-center gap-2 mt-3 text-xs text-indigo-500 font-semibold">
+            <div className="flex items-center gap-2 mt-3 text-xs text-primary font-semibold">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading images, please wait...
             </div>
           )}
         </div>
 
         {/* ── STEP 6: Tags ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader
             num="7"
             title="Product Tags"
             subtitle="Auto-generated · helps buyers find your product"
           />
-          <div className="p-3 bg-gray-50 border-2 border-gray-100 rounded-xl">
+          <div className="p-3 bg-surface border-2 border-border rounded-xl">
             {tags.length > 0 ? (
               <div className="flex flex-wrap gap-2 items-center">
                 {tags.map((tag, i) => (
-                  <span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">
+                  <span key={i} className="tag-pill inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
                     {tag}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-400 italic">Tags will be auto-generated from your category, subcategory, and variants</p>
+              <p className="text-xs text-ink-muted italic">Tags will be auto-generated from your category, subcategory, and variants</p>
             )}
           </div>
-          {tags.length > 0 && <p className="text-xs text-gray-400 mt-2">{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated</p>}
+          {tags.length > 0 && <p className="text-xs text-ink-muted mt-2">{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated</p>}
         </div>
 
         {/* ── STEP 7: Location ── */}
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader
             num="8"
             title="Pickup Location"
@@ -1708,31 +1710,31 @@ export default function SellPage() {
           />
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Hostel / Lodge *</label>
+              <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Hostel / Lodge *</label>
               <input
                 type="text"
                 value={formData.hostelName}
                 onChange={e => setFormData({ ...formData, hostelName: limitText(e.target.value, SELL_LIMITS.location) })}
                 required
                 maxLength={SELL_LIMITS.location}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Python Hall, Aroma Lodge, Block C"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Room Number *</label>
+              <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Room Number *</label>
               <input
                 type="text"
                 value={formData.roomNumber}
                 onChange={e => setFormData({ ...formData, roomNumber: limitText(e.target.value, SELL_LIMITS.roomNumber) })}
                 required
                 maxLength={SELL_LIMITS.roomNumber}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                 placeholder="e.g., Room 12, Block A"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">
                 Landmark / Delivery Area *
               </label>
               {deliveryAreas.length > 0 ? (
@@ -1740,7 +1742,7 @@ export default function SellPage() {
                   value={formData.landmark}
                   onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium appearance-none"
+                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium appearance-none"
                 >
                   <option value="">Select delivery area</option>
                   {deliveryAreas.map(area => <option key={area} value={area}>{area}</option>)}
@@ -1752,32 +1754,32 @@ export default function SellPage() {
                   onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
                   maxLength={SELL_LIMITS.landmark}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
                   placeholder="e.g., Near the water dispenser"
                 />
               )}
-              <p className="flex items-center gap-1 text-xs text-gray-400 mt-1.5">
+              <p className="flex items-center gap-1 text-xs text-ink-muted mt-1.5">
                 <MapPin className="w-3 h-3" /> The area where the rider will come to collect
               </p>
             </div>
           </div>
         </div>
 
-        <div className="step-card bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
           <StepHeader
             num="9"
             title="Motorcycle Delivery Check"
             subtitle="Required for rider safety and reliable fulfillment"
           />
           <div className="grid sm:grid-cols-3 gap-3 mb-4">
-            <input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
-            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(limitText(e.target.value, SELL_LIMITS.deliveryEstimate))} maxLength={SELL_LIMITS.deliveryEstimate} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:border-indigo-400 focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="text" value={deliveryEstimate} onChange={(e) => setDeliveryEstimate(limitText(e.target.value, SELL_LIMITS.deliveryEstimate))} maxLength={SELL_LIMITS.deliveryEstimate} placeholder="Estimated delivery time (e.g. 3 days)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
           </div>
-          <label className="flex items-start gap-3 text-sm text-red-600">
-            <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+          <label className="flex items-start gap-3 text-sm text-danger">
+            <input type="checkbox" checked={deliveryAgreementChecked} onChange={(e) => setDeliveryAgreementChecked(e.target.checked)} className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary/40" />
             <span>
               I confirm this product can be safely and reasonably delivered by a motorcycle rider. Oversized items are prohibited on Batamart. Listings reported as undeliverable may be removed and repeated violations can lead to account suspension.
             </span>
@@ -1786,7 +1788,7 @@ export default function SellPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="fade-up flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3.5 rounded-2xl text-sm">
+          <div className="fade-up flex items-start gap-3 bg-danger/10 border border-danger/30 text-danger px-4 py-3.5 rounded-2xl text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -1796,7 +1798,7 @@ export default function SellPage() {
         <button
           type="submit"
           disabled={loading || (!allUploaded && images.length > 0)}
-          className="submit-btn w-full py-4 rounded-2xl font-black text-white text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="submit-btn w-full py-4 rounded-2xl font-semibold text-white text-base shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -1813,7 +1815,7 @@ export default function SellPage() {
           )}
         </button>
 
-        <p className="text-center text-xs text-gray-400 pb-4">
+        <p className="text-center text-xs text-ink-muted pb-4">
           By listing, you agree to BataMart's seller terms and availability policy
         </p>
       </form>

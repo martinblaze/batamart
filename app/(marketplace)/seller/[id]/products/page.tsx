@@ -22,17 +22,17 @@ import {
 export const dynamic = 'force-dynamic'
 
 const TRUST_CONFIG: Record<string, { label: string; text: string; bg: string; border: string }> = {
-  VERIFIED: { label: 'Verified', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  GOLD: { label: 'Gold', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
-  SILVER: { label: 'Silver', text: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200' },
-  BRONZE: { label: 'Bronze', text: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200' },
+  VERIFIED: { label: 'Verified', text: 'text-success', bg: 'bg-success/10', border: 'border-success/30' },
+  GOLD: { label: 'Gold', text: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/30' },
+  SILVER: { label: 'Silver', text: 'text-ink-secondary', bg: 'bg-surface', border: 'border-border' },
+  BRONZE: { label: 'Bronze', text: 'text-ink-secondary', bg: 'bg-surface', border: 'border-border' },
 }
 
 function TrustPill({ level }: { level: string }) {
   const config = TRUST_CONFIG[level] || TRUST_CONFIG.BRONZE
   const icon = level === 'VERIFIED' ? <Shield className="w-3 h-3" /> : null
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black border ${config.text} ${config.bg} ${config.border}`}>
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${config.text} ${config.bg} ${config.border}`}>
       {icon}
       {config.label}
     </span>
@@ -77,17 +77,17 @@ function ProductCard({
 
   const stockClass =
     product.quantity === 0
-      ? 'bg-red-50 text-red-700 border-red-200'
+      ? 'bg-danger/10 text-danger border-danger/30'
       : product.quantity < 5
-        ? 'bg-amber-50 text-amber-700 border-amber-200'
-        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        ? 'bg-warning/10 text-warning border-warning/30'
+        : 'bg-success/10 text-success border-success/30'
 
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+      className="group overflow-hidden rounded-3xl border border-border bg-white shadow-soft transition hover:-translate-y-1 hover:shadow-soft"
     >
-      <div className="relative aspect-square bg-gray-50">
+      <div className="relative aspect-square bg-surface">
         <img
           src={product.images[0] || '/placeholder.png'}
           alt={product.name}
@@ -95,19 +95,19 @@ function ProductCard({
         />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           {product.isDeal && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-1 text-[10px] font-black text-white shadow-lg">
+            <span className="inline-flex items-center gap-1 rounded-full bg-danger/100 px-2.5 py-1 text-[10px] font-semibold text-white shadow-soft">
               <Flame className="h-3 w-3" />
               Deal
             </span>
           )}
           {product.conditionType && (
-            <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-gray-700 shadow-sm backdrop-blur">
+            <span className="rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-ink-secondary shadow-soft backdrop-blur">
               {product.conditionType}
             </span>
           )}
         </div>
         <div className="absolute bottom-3 right-3">
-          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black ${stockClass}`}>
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold ${stockClass}`}>
             {stockLabel}
           </span>
         </div>
@@ -115,42 +115,42 @@ function ProductCard({
 
       <div className="p-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 line-clamp-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted line-clamp-1">
             {(() => {
               const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
               return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
             })()}
           </p>
-          <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+          <div className="flex items-center gap-1 text-[10px] font-semibold text-ink-secondary">
+            <Star className="h-3 w-3 fill-warning text-warning" />
             {Number(product.avgRating || 0).toFixed(1)}
           </div>
         </div>
 
-        <h3 className="mt-1 text-sm font-black leading-snug text-gray-900 line-clamp-2 group-hover:text-indigo-700">
+        <h3 className="mt-1 text-sm font-semibold leading-snug text-ink line-clamp-2 group-hover:text-primary">
           {product.name}
         </h3>
 
         <div className="mt-3 flex items-center justify-between gap-2">
-          <p className="text-lg font-black text-indigo-600">{fmt(product.price)}</p>
+          <p className="text-lg font-semibold text-primary">{fmt(product.price)}</p>
           {product.discountPercent ? (
-            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700">
+            <span className="rounded-full bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">
               -{product.discountPercent}%
             </span>
           ) : null}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1 text-[10px] font-bold text-gray-600">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">
             <ShoppingBag className="h-3 w-3" />
             {product.totalReviews} reviews
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2.5 py-1 text-[10px] font-bold text-gray-600">
+          <span className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">
             <Package className="h-3 w-3" />
             {product.viewCount} views
           </span>
           {product.deliveryEstimate && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
               <Clock3 className="h-3 w-3" />
               {product.deliveryEstimate}
             </span>
@@ -256,10 +256,10 @@ export default async function SellerProductsPage({
   const sellThrough = seller.completedOrders || 0
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5]">
-      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#1e1b4b_0%,#312e81_50%,#4c1d95_100%)]">
+    <div className="min-h-screen bg-surface">
+      <div className="relative overflow-hidden bg-primary">
         <div className="absolute -top-12 -right-12 h-56 w-56 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
 
         <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-14">
           <div className="flex items-center gap-2 text-sm text-white/45">
@@ -276,18 +276,18 @@ export default async function SellerProductsPage({
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div className="flex gap-4">
-              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl border border-white/15 bg-white/10 shadow-2xl">
+              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl border border-white/15 bg-white/10 shadow-soft">
                 {seller.profilePhoto ? (
                   <img src={seller.profilePhoto} alt={seller.name} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-black text-white/80">
+                  <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-white/80">
                     {seller.name?.[0]?.toUpperCase() || '?'}
                   </div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-3xl font-black text-white sm:text-4xl">{seller.name}</h1>
+                  <h1 className="text-3xl font-semibold text-white sm:text-4xl">{seller.name}</h1>
                   <TrustPill level={seller.trustLevel} />
                 </div>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
@@ -301,7 +301,7 @@ export default async function SellerProductsPage({
                     </span>
                   )}
                   <span className="inline-flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    <Star className="h-3 w-3 fill-warning text-warning" />
                     {Number(seller.avgRating || 0).toFixed(1)} rating
                   </span>
                   <span className="inline-flex items-center gap-1">
@@ -314,16 +314,16 @@ export default async function SellerProductsPage({
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-black tabular-nums">{activeProducts}</p>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-white/55">Active products</p>
+                <p className="text-2xl font-semibold tabular-nums">{activeProducts}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Active products</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-black tabular-nums">{lowStock}</p>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-white/55">Low stock</p>
+                <p className="text-2xl font-semibold tabular-nums">{lowStock}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Low stock</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-black tabular-nums">{seller.totalReviews || 0}</p>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-white/55">Reviews</p>
+                <p className="text-2xl font-semibold tabular-nums">{seller.totalReviews || 0}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Reviews</p>
               </div>
             </div>
           </div>
@@ -332,57 +332,57 @@ export default async function SellerProductsPage({
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3">
+          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
               <Package className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-black text-gray-900">{activeProducts}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-0.5">Listings</p>
+            <p className="text-2xl font-semibold text-ink">{activeProducts}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Listings</p>
           </div>
-          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3">
+          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success mb-3">
               <BadgeCheck className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-black text-gray-900">{seller.avgRating.toFixed(1)}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-0.5">Seller rating</p>
+            <p className="text-2xl font-semibold text-ink">{seller.avgRating.toFixed(1)}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Seller rating</p>
           </div>
-          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-3">
+          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+            <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning mb-3">
               <TrendingUp className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-black text-gray-900">{sellThrough}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-0.5">Completed orders</p>
+            <p className="text-2xl font-semibold text-ink">{sellThrough}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Completed orders</p>
           </div>
-          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 mb-3">
+          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
               <Sparkles className="w-5 h-5" />
             </div>
-            <p className="text-2xl font-black text-gray-900">{seller.totalReviews || 0}</p>
-            <p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-0.5">Buyer reviews</p>
+            <p className="text-2xl font-semibold text-ink">{seller.totalReviews || 0}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Buyer reviews</p>
           </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
           <aside className="space-y-4">
-            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-white p-5 shadow-soft">
               <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Filter className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-gray-900">Filter products</h2>
-                  <p className="text-xs text-gray-400">Search and sort this seller’s listings</p>
+                  <h2 className="text-base font-semibold text-ink">Filter products</h2>
+                  <p className="text-xs text-ink-muted">Search and sort this seller’s listings</p>
                 </div>
               </div>
 
               <form action={`/seller/${seller.id}/products`} method="get" className="mt-4 space-y-3">
-                <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2.5">
-                  <Search className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-3 py-2.5">
+                  <Search className="h-4 w-4 text-ink-muted" />
                   <input
                     name="q"
                     defaultValue={resolved.q || ''}
                     placeholder="Search products"
-                    className="w-full bg-transparent text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                    className="w-full bg-transparent text-sm font-medium text-ink placeholder:text-ink-muted focus:outline-none"
                   />
                 </div>
 
@@ -390,7 +390,7 @@ export default async function SellerProductsPage({
                   <select
                     name="sort"
                     defaultValue={sort}
-                    className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="rounded-2xl border border-border bg-white px-3 py-2.5 text-sm font-semibold text-ink-secondary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <option value="newest">Newest</option>
                     <option value="top-rated">Top rated</option>
@@ -402,7 +402,7 @@ export default async function SellerProductsPage({
                   <select
                     name="category"
                     defaultValue={category}
-                    className="rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="rounded-2xl border border-border bg-white px-3 py-2.5 text-sm font-semibold text-ink-secondary focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <option value="all">All categories</option>
                     {categories.map((cat) => (
@@ -415,7 +415,7 @@ export default async function SellerProductsPage({
 
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-indigo-600/20 transition hover:scale-[1.01]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-soft shadow-soft transition hover:scale-[1.01]"
                 >
                   Apply filters
                 </button>
@@ -424,41 +424,41 @@ export default async function SellerProductsPage({
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   href={`/seller/${seller.id}/products`}
-                  className="rounded-full bg-gray-100 px-3 py-1.5 text-[11px] font-black text-gray-600 transition hover:bg-gray-200"
+                  className="rounded-full bg-surface px-3 py-1.5 text-[11px] font-semibold text-ink-secondary transition hover:bg-border"
                 >
                   Reset
                 </Link>
                 <Link
                   href={`/seller/${seller.id}`}
-                  className="rounded-full bg-indigo-50 px-3 py-1.5 text-[11px] font-black text-indigo-700 transition hover:bg-indigo-100"
+                  className="rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/15"
                 >
                   Seller profile
                 </Link>
                 <Link
                   href={`/sellers/${seller.id}/reviews`}
-                  className="rounded-full bg-amber-50 px-3 py-1.5 text-[11px] font-black text-amber-700 transition hover:bg-amber-100"
+                  className="rounded-full bg-warning/10 px-3 py-1.5 text-[11px] font-semibold text-warning transition hover:bg-warning/10"
                 >
                   Reviews
                 </Link>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
-              <h2 className="text-base font-black text-gray-900">Seller snapshot</h2>
-              <div className="mt-4 space-y-3 text-sm text-gray-600">
+            <div className="rounded-3xl border border-border bg-white p-5 shadow-soft">
+              <h2 className="text-base font-semibold text-ink">Seller snapshot</h2>
+              <div className="mt-4 space-y-3 text-sm text-ink-secondary">
                 {seller.bio && <p className="leading-relaxed">{seller.bio}</p>}
                 <p className="inline-flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-gray-400" />
+                  <MapPin className="h-4 w-4 text-ink-muted" />
                   {seller.hostelName || 'Campus seller'}{seller.landmark ? ` · ${seller.landmark}` : ''}
                 </p>
                 <p className="inline-flex items-center gap-2">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star className="h-4 w-4 fill-warning text-warning" />
                   {seller.avgRating.toFixed(1)} average from {seller.totalReviews || 0} reviews
                 </p>
               </div>
-              <div className="mt-4 rounded-2xl bg-[linear-gradient(135deg,#eef2ff_0%,#fdf2f8_100%)] p-4">
-                <p className="text-sm font-black text-gray-900">Why it feels native</p>
-                <p className="mt-1 text-xs leading-relaxed text-gray-600">
+              <div className="mt-4 rounded-2xl bg-primary/5 p-4">
+                <p className="text-sm font-semibold text-ink">Why it feels native</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-secondary">
                   The palette, rounded cards, and strong status chips match the existing marketplace UI so the seller view feels like part of the same product.
                 </p>
               </div>
@@ -466,17 +466,17 @@ export default async function SellerProductsPage({
           </aside>
 
           <section className="space-y-4">
-            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="rounded-3xl border border-border bg-white p-5 shadow-soft">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-black text-gray-900">
+                  <h2 className="text-lg font-semibold text-ink">
                     {filteredProducts.length} product{filteredProducts.length === 1 ? '' : 's'}
                   </h2>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-ink-secondary">
                     {q || category !== 'all' ? 'Filtered catalog view' : 'All active product listings from this seller'}
                   </p>
                 </div>
-                <Link href={`/seller/${seller.id}`} className="inline-flex items-center gap-1 text-sm font-black text-indigo-600 hover:underline">
+                <Link href={`/seller/${seller.id}`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
                   <ArrowLeft className="h-4 w-4" />
                   Back to profile
                 </Link>
@@ -490,12 +490,12 @@ export default async function SellerProductsPage({
                 ))}
               </div>
             ) : (
-              <div className="rounded-3xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
-                  <Package className="h-8 w-8 text-gray-300" />
+              <div className="rounded-3xl border border-dashed border-border bg-white px-6 py-16 text-center shadow-soft">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface">
+                  <Package className="h-8 w-8 text-ink-muted" />
                 </div>
-                <h3 className="text-xl font-black text-gray-900">No products match this filter</h3>
-                <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">
+                <h3 className="text-xl font-semibold text-ink">No products match this filter</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-ink-secondary">
                   Try another search term or switch the category filter back to all products.
                 </p>
               </div>

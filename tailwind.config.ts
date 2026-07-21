@@ -9,22 +9,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // BATAMART Brand Colors
-        BATAMART: {
-          primary: '#6366F1',      // Purple
-          secondary: '#8B5CF6',    // Lighter purple
-          accent: '#A78BFA',       // Light purple
-          dark: '#4C1D95',         // Dark purple
-          light: '#EDE9FE',        // Very light purple
+        // BataMart Design Bible tokens (see BATAMART_DESIGN_BIBLE.md section 2)
+        // Backed by CSS custom properties in styles/globals.css so light/dark stay in sync.
+        primary: 'var(--color-primary)',           // --color-primary #1E90FF — the only accent color
+        background: 'var(--color-background)',     // --color-background
+        surface: 'var(--color-surface)',            // --color-surface
+        border: 'var(--color-border)',               // --color-border
+        ink: {
+          DEFAULT: 'var(--color-text-primary)',      // --color-text-primary
+          secondary: 'var(--color-text-secondary)',  // --color-text-secondary
+          muted: 'var(--color-text-muted)',           // --color-text-muted
         },
-        // Light mode colors
-        light: {
-          primary: '#6366F1',
-          secondary: '#8B5CF6',
-          accent: '#A78BFA',
-          background: '#F9FAFB',
-          surface: '#FFFFFF',
-        },
+        success: 'var(--color-success)',
+        danger: 'var(--color-danger)',
+        warning: 'var(--color-warning)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -88,11 +86,8 @@ module.exports = {
         '44': '44px', // Touch-friendly minimum for mobile
       },
       boxShadow: {
-        'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
-        'medium': '0 4px 12px rgba(0, 0, 0, 0.1)',
-        'strong': '0 8px 24px rgba(0, 0, 0, 0.12)',
-        'glow': '0 0 20px rgba(99, 102, 241, 0.3)',
-        'glow-lg': '0 0 40px rgba(99, 102, 241, 0.4)',
+        // Design bible section 5: one soft shadow token, no glow/colored shadows.
+        'soft': '0 1px 2px rgba(17,24,39,0.06), 0 1px 3px rgba(17,24,39,0.08)',
       },
       scale: {
         '98': '0.98',
@@ -144,12 +139,6 @@ module.exports = {
         },
         '.overscroll-contain': {
           'overscroll-behavior': 'contain',
-        },
-        '.gradient-primary': {
-          background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-        },
-        '.gradient-secondary': {
-          background: 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
         },
       };
       addUtilities(newUtilities);

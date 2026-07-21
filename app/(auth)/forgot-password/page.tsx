@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Logo } from '@/components/layout/Logo'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -104,53 +105,44 @@ export default function ForgotPasswordPage() {
     }
   }
 
-  const BATAMARTLogo = () => (
-    <div className="text-center mb-8">
-      <div className="inline-flex items-center space-x-2 mb-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg">
-          <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M3 3h18v4H3V3zm0 6h18v12H3V9zm2 2v8h14v-8H5zm2 2h10v4H7v-4z" />
-          </svg>
-        </div>
-        <span className="font-bold text-2xl bg-gradient-to-r from-BATAMART-primary to-BATAMART-secondary bg-clip-text text-transparent">BATAMART</span>
-      </div>
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-      <p className="text-gray-500">Step {step} of 3</p>
-    </div>
-  )
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-        <BATAMARTLogo />
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center mb-4">
+            <Logo size={40} />
+          </div>
+          <h1 className="text-[28px] font-semibold text-ink mb-2">Reset password</h1>
+          <p className="text-ink-secondary">Step {step} of 3</p>
+        </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
 
           {/* Step 1: Email input */}
           {step === 1 && (
             <form onSubmit={handleSendOTP} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="you@example.com"
                 />
-                <p className="text-xs text-gray-500 mt-1">We'll send a reset code to this email</p>
+                <p className="text-xs text-ink-muted mt-1">We&apos;ll send a reset code to this email</p>
               </div>
 
-              {error && <p className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>}
+              {error && <p className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">{error}</p>}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
+                className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
               >
-                {loading ? 'Sending...' : 'Send Reset Code'}
+                {loading ? 'Sending…' : 'Send reset code'}
               </button>
             </form>
           )}
@@ -159,13 +151,13 @@ export default function ForgotPasswordPage() {
           {step === 2 && (
             <div className="space-y-6">
               <div className="text-center">
-                <p className="text-gray-600 text-sm">
-                  Code sent to <span className="font-semibold text-gray-900">{email}</span>
+                <p className="text-ink-secondary text-sm">
+                  Code sent to <span className="font-medium text-ink">{email}</span>
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-4 text-center">Enter 6-Digit Code</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-4 text-center">Enter 6-digit code</label>
                 <div className="flex justify-center gap-2">
                   {otp.map((digit, i) => (
                     <input
@@ -177,34 +169,34 @@ export default function ForgotPasswordPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(i, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                      className="w-12 h-14 text-center text-2xl font-semibold border border-border rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                     />
                   ))}
                 </div>
               </div>
 
-              {error && <p className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm text-center">{error}</p>}
+              {error && <p className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm text-center">{error}</p>}
 
               <button
                 onClick={handleVerifyOTP}
-                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg"
+                className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] transition-all"
               >
-                Verify Code
+                Verify code
               </button>
 
               <div className="text-center">
                 <button
                   onClick={() => { setStep(1); setOtp(['', '', '', '', '', '']); setError('') }}
-                  className="text-sm text-gray-500 hover:text-BATAMART-primary"
+                  className="text-sm text-ink-secondary hover:text-primary"
                 >
-              Use different email
+                  Use different email
                 </button>
               </div>
 
               {/* Dev helper */}
               {!process.env.NEXT_PUBLIC_PRODUCTION && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <p className="text-xs text-yellow-800 text-center">Dev mode: Check terminal for OTP code</p>
+                <div className="bg-warning/5 border border-warning/20 rounded-lg p-3">
+                  <p className="text-xs text-warning text-center">Dev mode: check terminal for OTP code</p>
                 </div>
               )}
             </div>
@@ -214,43 +206,43 @@ export default function ForgotPasswordPage() {
           {step === 3 && (
             <form onSubmit={handleResetPassword} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">New password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="Min 8 characters, include a number"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Confirm password</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="Repeat your password"
                 />
               </div>
 
-              {error && <p className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</p>}
+              {error && <p className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">{error}</p>}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50"
+                className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
               >
-                {loading ? 'Resetting...' : 'Reset Password'}
+                {loading ? 'Resetting…' : 'Reset password'}
               </button>
             </form>
           )}
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-gray-500 hover:text-BATAMART-primary">
-              Back to Login
+            <Link href="/login" className="text-sm text-ink-secondary hover:text-primary">
+              Back to login
             </Link>
           </div>
         </div>
@@ -258,4 +250,3 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-

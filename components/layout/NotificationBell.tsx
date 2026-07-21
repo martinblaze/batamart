@@ -4,7 +4,11 @@
 // Real-time notification bell with polling, mark-as-read, and delete.
 
 import { useState, useEffect, useCallback } from 'react'
-import { Bell, X, Trash2, CheckCheck } from 'lucide-react'
+import {
+  Bell, X, Trash2, CheckCheck, ShoppingCart, Bike, Package, Truck,
+  CheckCircle2, Star, AlertTriangle, MessageCircle, Ban, Banknote, Gift,
+  type LucideIcon,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface Notification {
@@ -22,27 +26,38 @@ interface Notification {
   metadata?: any
 }
 
-const NOTIFICATION_ICONS: Record<string, string> = {
-  ORDER_PLACED: '🛒',
-  RIDER_ASSIGNED: '🚴',
-  ORDER_PICKED_UP: '📦',
-  ORDER_ON_THE_WAY: '🛵',
-  ORDER_DELIVERED: '✅',
-  ORDER_COMPLETED: '🎉',
-  PRODUCT_REVIEWED: '⭐',
-  SELLER_REVIEWED: '⭐',
-  RIDER_REVIEWED: '⭐',
-  DISPUTE_OPENED: '⚠️',
-  DISPUTE_MESSAGE: '💬',
-  DISPUTE_RESOLVED: '✅',
-  REPORT_SUBMITTED: '⚠️',
-  REPORT_RESOLVED: '✅',
-  PENALTY_ISSUED: '🚫',
-  PAYMENT_RECEIVED: '💰',
-  WITHDRAWAL_PROCESSED: '💸',
-  ACCOUNT_SUSPENDED: '🚫',
-  ACCOUNT_UNSUSPENDED: '✅',
-  REFERRAL_REWARD: '🎁',
+// Design bible section 6 — lucide-react only, no emoji. Status-colored icons
+// use the matching status token; everything else inherits ink-secondary.
+const NOTIFICATION_ICONS: Record<string, { icon: LucideIcon; tone: 'primary' | 'success' | 'warning' | 'danger' }> = {
+  ORDER_PLACED: { icon: ShoppingCart, tone: 'primary' },
+  RIDER_ASSIGNED: { icon: Bike, tone: 'primary' },
+  ORDER_PICKED_UP: { icon: Package, tone: 'primary' },
+  ORDER_ON_THE_WAY: { icon: Truck, tone: 'primary' },
+  ORDER_DELIVERED: { icon: CheckCircle2, tone: 'success' },
+  ORDER_COMPLETED: { icon: CheckCircle2, tone: 'success' },
+  PRODUCT_REVIEWED: { icon: Star, tone: 'warning' },
+  SELLER_REVIEWED: { icon: Star, tone: 'warning' },
+  RIDER_REVIEWED: { icon: Star, tone: 'warning' },
+  DISPUTE_OPENED: { icon: AlertTriangle, tone: 'warning' },
+  DISPUTE_MESSAGE: { icon: MessageCircle, tone: 'primary' },
+  DISPUTE_RESOLVED: { icon: CheckCircle2, tone: 'success' },
+  REPORT_SUBMITTED: { icon: AlertTriangle, tone: 'warning' },
+  REPORT_RESOLVED: { icon: CheckCircle2, tone: 'success' },
+  PENALTY_ISSUED: { icon: Ban, tone: 'danger' },
+  PAYMENT_RECEIVED: { icon: Banknote, tone: 'success' },
+  WITHDRAWAL_PROCESSED: { icon: Banknote, tone: 'primary' },
+  ACCOUNT_SUSPENDED: { icon: Ban, tone: 'danger' },
+  ACCOUNT_UNSUSPENDED: { icon: CheckCircle2, tone: 'success' },
+  REFERRAL_REWARD: { icon: Gift, tone: 'primary' },
+}
+
+const DEFAULT_NOTIFICATION_ICON: { icon: LucideIcon; tone: 'primary' | 'success' | 'warning' | 'danger' } = { icon: Bell, tone: 'primary' }
+
+const toneClasses: Record<'primary' | 'success' | 'warning' | 'danger', string> = {
+  primary: 'bg-primary/10 text-primary',
+  success: 'bg-success/10 text-success',
+  warning: 'bg-warning/10 text-warning',
+  danger: 'bg-danger/10 text-danger',
 }
 
 function getNotificationLink(notification: Notification, currentUserId: string | null): string {
@@ -189,12 +204,12 @@ export default function NotificationBell() {
       {/* ── Bell button ── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+        className="relative p-2 text-ink-secondary hover:text-ink hover:bg-surface rounded-full transition-colors"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
       >
-        <Bell className="w-6 h-6" />
+        <Bell className="w-6 h-6" strokeWidth={1.75} />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 min-w-[20px] h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 leading-none">
+          <span className="absolute top-0 right-0 min-w-[20px] h-5 bg-danger text-white text-[10px] font-medium rounded-full flex items-center justify-center px-1 leading-none">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -206,15 +221,15 @@ export default function NotificationBell() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-          <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[384px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 flex flex-col overflow-hidden"
+          <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[384px] bg-white rounded-2xl shadow-soft border border-border z-50 flex flex-col overflow-hidden"
             style={{ maxHeight: '75vh' }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
-              <h3 className="font-black text-gray-900 text-base">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
+              <h3 className="font-semibold text-ink text-base">
                 Notifications
                 {unreadCount > 0 && (
-                  <span className="ml-2 text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">
+                  <span className="ml-2 text-xs font-medium text-white bg-danger px-2 py-0.5 rounded-full">
                     {unreadCount} new
                   </span>
                 )}
@@ -223,18 +238,19 @@ export default function NotificationBell() {
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                    className="flex items-center gap-1 text-xs font-medium text-primary hover:brightness-90 px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors"
                     title="Mark all as read"
                   >
-                    <CheckCheck className="w-3.5 h-3.5" />
+                    <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
                     All read
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-1.5 hover:bg-surface rounded-full transition-colors"
+                  aria-label="Close notifications"
                 >
-                  <X className="w-4 h-4 text-gray-500" />
+                  <X className="w-4 h-4 text-ink-secondary" strokeWidth={1.75} />
                 </button>
               </div>
             </div>
@@ -243,37 +259,39 @@ export default function NotificationBell() {
             <div className="overflow-y-auto flex-1">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                  <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-3 ring-1 ring-gray-100">
-                    <Bell className="w-7 h-7 text-gray-300" />
+                  <div className="w-12 h-12 bg-surface border border-border rounded-full flex items-center justify-center mb-3">
+                    <Bell className="w-6 h-6 text-ink-muted" strokeWidth={1.75} />
                   </div>
-                  <p className="font-bold text-gray-700 text-sm">No notifications yet</p>
-                  <p className="text-xs text-gray-400 mt-1">You're all caught up!</p>
+                  <p className="font-medium text-ink text-sm">No notifications yet</p>
+                  <p className="text-xs text-ink-muted mt-1">You&apos;re all caught up</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50">
-                  {notifications.map((notification) => (
+                <div className="divide-y divide-border">
+                  {notifications.map((notification) => {
+                    const { icon: Icon, tone } = NOTIFICATION_ICONS[notification.type] || DEFAULT_NOTIFICATION_ICON
+                    return (
                     <Link
                       key={notification.id}
                       href={getNotificationLink(notification, currentUserId)}
                       onClick={() => handleClick(notification)}
-                      className={`flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50 group ${
-                        !notification.isRead ? 'bg-blue-50/60' : ''
+                      className={`flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface group ${
+                        !notification.isRead ? 'bg-primary/5' : ''
                       }`}
                     >
                       {/* Icon */}
-                      <span className="text-xl flex-shrink-0 mt-0.5">
-                        {NOTIFICATION_ICONS[notification.type] || '🔔'}
+                      <span className={`flex-shrink-0 mt-0.5 w-8 h-8 rounded-full flex items-center justify-center ${toneClasses[tone]}`}>
+                        <Icon className="w-4 h-4" strokeWidth={1.75} />
                       </span>
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm leading-snug ${!notification.isRead ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
+                        <p className={`text-sm leading-snug ${!notification.isRead ? 'font-semibold text-ink' : 'font-medium text-ink-secondary'}`}>
                           {notification.title}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-ink-secondary mt-0.5 line-clamp-2 leading-relaxed">
                           {notification.message}
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-1 font-medium">
+                        <p className="text-[10px] text-ink-muted mt-1 font-medium">
                           {timeAgo(notification.createdAt)}
                         </p>
                       </div>
@@ -281,29 +299,30 @@ export default function NotificationBell() {
                       {/* Unread dot + delete */}
                       <div className="flex flex-col items-center gap-2 flex-shrink-0">
                         {!notification.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                         )}
                         <button
                           onClick={(e) => deleteNotification(notification.id, e)}
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded-full transition-all"
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-border rounded-full transition-all"
                           title="Delete"
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-gray-400" />
+                          <Trash2 className="w-3.5 h-3.5 text-ink-muted" strokeWidth={1.75} />
                         </button>
                       </div>
                     </Link>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="px-4 py-3 border-t border-gray-100 flex-shrink-0 text-center">
+              <div className="px-4 py-3 border-t border-border flex-shrink-0 text-center">
                 <Link
                   href="/notifications"
                   onClick={() => setIsOpen(false)}
-                  className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                  className="text-sm font-medium text-primary hover:brightness-90 transition-colors"
                 >
                   View all notifications →
                 </Link>

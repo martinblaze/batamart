@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { MapPin, ChevronRight, Home, Hash, Phone } from 'lucide-react'
+import { MapPin, ChevronRight, Home, Hash, Phone, Mail, Gift } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import { SIGNUP_REOPENS_AT_ISO, hasSignupAccessCode, normalizeSignupAccessCode } from '@/lib/signup-access'
 
@@ -82,9 +82,7 @@ interface University {
 }
 
 // ── Shared UI helpers — defined OUTSIDE SignupForm so they don't remount ──
-const bgStyle  = { background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }
-const btnStyle = { background: 'linear-gradient(135deg,#3D95E8,#4DABFF)' }
-
+// Design bible: flat surfaces only, single primary accent, no gradients.
 const PageShell = ({
   children,
   selectedUniversity,
@@ -92,15 +90,15 @@ const PageShell = ({
   children: React.ReactNode
   selectedUniversity: University | null
 }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={bgStyle}>
+  <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-surface">
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-black text-white tracking-tight">BATAMART</h1>
-        <p className="text-blue-300 text-sm mt-1">Campus Marketplace</p>
+        <h1 className="text-[28px] font-semibold text-ink tracking-tight">BataMart</h1>
+        <p className="text-ink-secondary text-sm mt-1">Campus marketplace</p>
         {selectedUniversity && (
-          <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30">
-            <MapPin className="w-3.5 h-3.5 text-blue-300" />
-            <span className="text-blue-300 text-xs font-semibold">
+          <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+            <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
+            <span className="text-primary text-xs font-medium">
               {selectedUniversity.shortName} — {selectedUniversity.location}
             </span>
           </div>
@@ -113,7 +111,7 @@ const PageShell = ({
 
 const ErrorBox = ({ error }: { error: string }) =>
   error ? (
-    <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
+    <div className="mb-4 p-3 rounded-lg bg-danger/5 border border-danger/20 text-sm text-danger">
       {error}
     </div>
   ) : null
@@ -124,9 +122,7 @@ const StepDots = ({ current }: { current: number }) => (
       <div
         key={s}
         className={`h-1.5 rounded-full transition-all ${
-          s < current  ? 'w-6 bg-blue-500' :
-          s === current ? 'w-6 bg-blue-400' :
-          'w-3 bg-gray-200'
+          s <= current ? 'w-6 bg-primary' : 'w-3 bg-border'
         }`}
       />
     ))}
@@ -466,29 +462,29 @@ function SignupForm() {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+          <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-primary font-medium mb-1">Countdown</p>
+              <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
+              <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={btnStyle}>
-              <MapPin className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 bg-primary">
+              <MapPin className="w-7 h-7 text-white" strokeWidth={1.75} />
             </div>
-            <h2 className="text-xl font-black text-gray-900">Select Your Campus</h2>
-              <p className="text-sm text-gray-500 mt-1">
+            <h2 className="text-[20px] font-semibold text-ink">Select your campus</h2>
+              <p className="text-sm text-ink-secondary mt-1">
               You will only see buyers, sellers, and riders from your campus.
             </p>
           </div>
 
           {uniLoading ? (
             <div className="flex justify-center py-8">
-              <svg className="w-6 h-6 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
               </svg>
@@ -502,22 +498,22 @@ function SignupForm() {
                     setSelectedUniversity(uni)
                     setSelectedUniversityId(uni.id)
                   }}
-                  className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
+                  className={`w-full text-left p-4 rounded-xl border transition-all ${
                     effectiveSelectedUniversity?.id === uni.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-100 hover:border-blue-200 hover:bg-gray-50'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/40 hover:bg-surface'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-gray-900 text-sm">{uni.shortName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{uni.name}</p>
-                      <p className="text-xs text-blue-500 mt-0.5">{uni.location}</p>
+                      <p className="font-medium text-ink text-sm">{uni.shortName}</p>
+                      <p className="text-xs text-ink-secondary mt-0.5">{uni.name}</p>
+                      <p className="text-xs text-primary mt-0.5">{uni.location}</p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                       effectiveSelectedUniversity?.id === uni.id
-                        ? 'border-blue-500 bg-blue-500'
-                        : 'border-gray-300'
+                        ? 'border-primary bg-primary'
+                        : 'border-border'
                     }`}>
                       {effectiveSelectedUniversity?.id === uni.id && (
                         <div className="w-2 h-2 rounded-full bg-white" />
@@ -527,7 +523,7 @@ function SignupForm() {
                 </button>
               ))}
               {universities.length === 0 && (
-                <p className="text-center text-gray-400 text-sm py-4">No campuses available yet.</p>
+                <p className="text-center text-ink-muted text-sm py-4">No campuses available yet.</p>
               )}
             </div>
           )}
@@ -535,16 +531,15 @@ function SignupForm() {
           <button
             onClick={() => { if (effectiveSelectedUniversity) setStep(1) }}
             disabled={!effectiveSelectedUniversity}
-            className="w-full mt-6 py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-40 flex items-center justify-center gap-2"
-            style={btnStyle}
+            className="w-full mt-6 h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
           >
             Continue with {effectiveSelectedUniversity?.shortName ?? 'your campus'}
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5" strokeWidth={1.75} />
           </button>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-sm text-ink-secondary mt-4">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-blue-600">Sign in</Link>
+            <Link href="/login" className="font-medium text-primary">Sign in</Link>
           </p>
         </div>
       </PageShell>
@@ -558,19 +553,19 @@ function SignupForm() {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+          <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-primary font-medium mb-1">Countdown</p>
+              <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
+              <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={1} />
-          <h2 className="text-xl font-black text-gray-900 mb-1">Create account</h2>
-          <p className="text-sm text-gray-500 mb-6">Join the {effectiveSelectedUniversity?.shortName} marketplace</p>
+          <h2 className="text-[20px] font-semibold text-ink mb-1">Create account</h2>
+          <p className="text-sm text-ink-secondary mb-6">Join the {effectiveSelectedUniversity?.shortName} marketplace</p>
 
           <ErrorBox error={error} />
 
@@ -608,61 +603,59 @@ function SignupForm() {
             />
           </div>
 
-          <p className="text-center text-xs text-gray-400 mb-5">
-            Recommended / No password needed / Fast setup
+          <p className="text-center text-xs text-ink-muted mb-5">
+            Recommended — no password needed, fast setup
           </p>
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-px bg-gray-200 flex-1" />
-            <span className="text-xs text-gray-400 font-semibold">or sign up with email</span>
-            <div className="h-px bg-gray-200 flex-1" />
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-ink-muted font-medium">or sign up with email</span>
+            <div className="h-px bg-border flex-1" />
           </div>
 
           {/* ── SECONDARY: Email form (collapsed by default) ── */}
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
-              className="w-full py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:border-gray-300 hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-lg border border-border text-ink-secondary font-medium text-sm hover:bg-surface transition-all flex items-center justify-center gap-2"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Use email &amp; password instead
+              <Mail className="w-4 h-4" strokeWidth={1.75} />
+              Use email & password instead
             </button>
           ) : (
             <form onSubmit={handleSendOTP} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Full Name</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Full Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
                   placeholder="Your full name"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone Number</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Phone Number</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   required
                   placeholder="08012345678"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
 
@@ -671,30 +664,29 @@ function SignupForm() {
                   which redirects them to /become-seller to upgrade their account. */}
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Referral Code (Optional)</label>
+                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Referral Code (Optional)</label>
                 <input
                   type="text"
                   value={referralCode}
                   onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
                   placeholder="e.g. BATAMART-ABC123"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink uppercase outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
-                <p className="text-xs text-gray-400 mt-1">Paste a code from a friend or use their referral link.</p>
+                <p className="text-xs text-ink-muted mt-1">Paste a code from a friend or use their referral link.</p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-2xl text-white font-bold text-base transition-all disabled:opacity-60"
-                style={btnStyle}
+                className="w-full h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 transition-all disabled:opacity-60"
               >
-                {loading ? 'Sending OTP...' : 'Continue'}
+                {loading ? 'Sending OTP…' : 'Continue'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowEmailForm(false)}
-                className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                className="w-full text-center text-xs text-ink-muted hover:text-ink-secondary transition-colors"
               >
                 Back to Google Sign-Up
               </button>
@@ -708,13 +700,13 @@ function SignupForm() {
               setSelectedUniversityId('')
               setStep(0)
             }}
-            className="w-full mt-4 text-sm text-gray-400 hover:text-gray-600"
+            className="w-full mt-4 text-sm text-ink-muted hover:text-ink-secondary"
           >
             Change campus
           </button>
-          <p className="text-center text-sm text-gray-500 mt-4">
+          <p className="text-center text-sm text-ink-secondary mt-4">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-blue-600">Sign in</Link>
+            <Link href="/login" className="font-medium text-primary">Sign in</Link>
           </p>
         </div>
       </PageShell>
@@ -728,19 +720,19 @@ function SignupForm() {
     return (
         <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+          <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-primary font-medium mb-1">Countdown</p>
+              <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
+              <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={2} />
-          <h2 className="text-xl font-black text-gray-900 mb-1">Verify your email</h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <h2 className="text-[20px] font-semibold text-ink mb-1">Verify your email</h2>
+          <p className="text-sm text-ink-secondary mb-6">
             Enter the 6-digit code sent to <strong>{email}</strong>
           </p>
 
@@ -759,7 +751,7 @@ function SignupForm() {
                 onChange={e => handleOtpChange(i, e.target.value)}
                 onPaste={e => handleOtpPaste(i, e)}
                 onKeyDown={e => handleKeyDown(i, e)}
-                className="w-12 h-12 text-center text-xl font-bold border-2 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="w-12 h-12 text-center text-xl font-semibold border border-border rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
               />
             ))}
           </div>
@@ -767,13 +759,12 @@ function SignupForm() {
           <button
             onClick={handleVerifyOTP}
             disabled={loading || otp.join('').length !== 6}
-            className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
-            style={btnStyle}
+            className="w-full h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 disabled:opacity-60"
           >
             {loading ? 'Verifying...' : 'Verify Code'}
           </button>
 
-          <button onClick={() => setStep(1)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
+          <button onClick={() => setStep(1)} className="w-full mt-3 text-sm text-ink-muted hover:text-ink-secondary">
             ← Back
           </button>
         </div>
@@ -792,50 +783,51 @@ function SignupForm() {
     return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
         {countdown && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+          <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
             <div className="bg-white rounded-xl px-4 py-3 inline-block">
-              <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-              <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-              <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
+              <p className="text-xs text-primary font-medium mb-1">Countdown</p>
+              <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
+              <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={3} />
 
           <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={btnStyle}>
-              <MapPin className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 bg-primary">
+              <MapPin className="w-6 h-6 text-white" strokeWidth={1.75} />
             </div>
-            <h2 className="text-xl font-black text-gray-900">Your Delivery Location</h2>
-            <p className="text-sm text-gray-500 mt-1">So riders can find you when you order</p>
+            <h2 className="text-[20px] font-semibold text-ink">Your delivery location</h2>
+            <p className="text-sm text-ink-secondary mt-1">So riders can find you when you order</p>
           </div>
 
           <ErrorBox error={error} />
 
           {referralCode && (
-            <div className="mb-4 p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              🎁 Referral code <strong>{referralCode}</strong> applied
+            <div className="mb-4 p-3 bg-success/5 rounded-lg border border-success/20 text-sm text-success flex items-center gap-2">
+              <Gift className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
+              Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
           <form onSubmit={handleLocationContinue} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-2">Select Your Area</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-2">Select your area</label>
               <div className="flex flex-wrap gap-2">
                 {areas.map(area => (
                   <button
                     type="button"
                     key={area}
                     onClick={() => { setSelectedArea(area); setError('') }}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border-2 transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-all ${
                       selectedArea === area
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border bg-surface text-ink-secondary hover:border-primary/40 hover:bg-primary/5'
                     }`}
                   >
-                    <span className="text-base">📍</span>
+                    <MapPin className="w-3.5 h-3.5" strokeWidth={1.75} />
                     {area}
                   </button>
                 ))}
@@ -843,63 +835,61 @@ function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Lodge Name / Landmark</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Lodge Name / Landmark</label>
               <div className="relative">
-                <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
                   type="text"
                   value={hostelName}
                   onChange={e => setHostelName(e.target.value)}
                   required
                   placeholder="e.g. Goshen Lodge, Favour Hostel"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Room Number</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Room Number</label>
               <div className="relative">
-                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
                   type="text"
                   value={roomNumber}
                   onChange={e => setRoomNumber(e.target.value)}
                   required
                   placeholder="e.g. Room 12, Block B"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone for Delivery</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Phone for Delivery</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
                   type="tel"
                   value={deliveryPhone}
                   onChange={e => setDeliveryPhone(e.target.value)}
                   required
                   placeholder="08012345678"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Riders will call this number when they arrive</p>
+              <p className="text-xs text-ink-muted mt-1">Riders will call this number when they arrive</p>
             </div>
 
-            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-              <p className="text-xs text-blue-700">
-              <p className="text-xs text-blue-700">Tip: You can update your delivery location anytime from your profile settings.</p>
-              </p>
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <p className="text-xs text-primary">Tip: you can update your delivery location anytime from your profile settings.</p>
             </div>
 
-            <button type="submit" className="w-full py-4 rounded-2xl text-white font-bold text-base" style={btnStyle}>
-              Continue →
+            <button type="submit" className="w-full h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95">
+              Continue
             </button>
           </form>
 
-          <button onClick={() => setStep(2)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
+          <button onClick={() => setStep(2)} className="w-full mt-3 text-sm text-ink-muted hover:text-ink-secondary">
             ← Back
           </button>
         </div>
@@ -913,92 +903,90 @@ function SignupForm() {
   return (
       <PageShell selectedUniversity={effectiveSelectedUniversity}>
       {countdown && (
-        <div className="mb-6 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200 text-center">
+        <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
           <div className="bg-white rounded-xl px-4 py-3 inline-block">
-            <p className="text-xs text-blue-600 font-semibold mb-1">Countdown</p>
-            <p className="text-2xl font-black text-blue-600 font-mono">{countdown}</p>
-            <p className="text-xs text-blue-500 mt-1">June 22, 2026</p>
+            <p className="text-xs text-primary font-medium mb-1">Countdown</p>
+            <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
+            <p className="text-xs text-primary mt-1">June 22, 2026</p>
           </div>
         </div>
       )}
-      <div className="bg-white dark:bg-[#0f1115] border border-transparent dark:border-[#272b33] rounded-3xl p-8 shadow-2xl">
+      <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
         <StepDots current={4} />
-        <h2 className="text-xl font-black text-gray-900 mb-1">Set your password</h2>
-        <p className="text-sm text-gray-500 mb-6">Almost done, {name}!</p>
+        <h2 className="text-[20px] font-semibold text-ink mb-1">Set your password</h2>
+        <p className="text-sm text-ink-secondary mb-6">Almost done, {name}!</p>
 
         <ErrorBox error={error} />
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Password</label>
+            <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               placeholder="Min 8 characters, include a number"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Confirm Password</label>
+            <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Confirm Password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               required
               placeholder="Repeat password"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
 
           {referralCode && (
-            <div className="p-3 bg-green-50 rounded-xl border border-green-100 text-sm text-green-700">
-              🎁 Referral code <strong>{referralCode}</strong> applied
+            <div className="p-3 bg-success/5 rounded-lg border border-success/20 text-sm text-success flex items-center gap-2">
+              <Gift className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
+              Referral code <strong>{referralCode}</strong> applied
             </div>
           )}
 
-          <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-xl">
+          <div className="flex items-start gap-2 p-3 bg-surface rounded-lg">
             <input
               type="checkbox"
               id="terms"
               checked={agreedToTerms}
               onChange={e => setAgreedToTerms(e.target.checked)}
-              className="w-4 h-4 rounded accent-blue-600 mt-0.5"
+              className="w-4 h-4 rounded accent-primary mt-0.5"
             />
-            <label htmlFor="terms" className="text-sm text-gray-700">
+            <label htmlFor="terms" className="text-sm text-ink-secondary">
               I agree to the{' '}
-              <Link href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold">Terms of Service</Link>
+              <Link href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary font-medium">Terms of Service</Link>
               {' '}and{' '}
-              <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold">Privacy Policy</Link>
+              <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary font-medium">Privacy Policy</Link>
             </label>
           </div>
 
           <button
             type="submit"
             disabled={loading || !agreedToTerms}
-            className="w-full py-4 rounded-2xl text-white font-bold text-base disabled:opacity-60"
-            style={btnStyle}
+            className="w-full h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 disabled:opacity-60"
           >
-            {loading ? 'Creating account…' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'} 🎉`}
+            {loading ? 'Creating account…' : `Join ${effectiveSelectedUniversity?.shortName ?? 'your campus'}`}
           </button>
         </form>
 
-        <button onClick={() => setStep(3)} className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600">
+        <button onClick={() => setStep(3)} className="w-full mt-3 text-sm text-ink-muted hover:text-ink-secondary">
           ← Back
         </button>
       </div>
     </PageShell>
   )
 }
-// nothing really
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ background: 'linear-gradient(180deg,#000000,#070a10 46%,#000000)' }}>
-        <div className="text-white text-xl font-bold">Loading…</div>
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="text-ink text-[20px] font-semibold">Loading…</div>
       </div>
     }>
       <SignupForm />

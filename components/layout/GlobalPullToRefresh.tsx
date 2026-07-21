@@ -100,9 +100,10 @@ export function GlobalPullToRefresh() {
       className="fixed left-1/2 top-3 z-[9999] -translate-x-1/2 pointer-events-none"
       style={{ transform: `translate(-50%, ${Math.max(0, pullDistance - 48)}px)` }}
     >
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-700">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-soft border border-border">
         <RefreshCw
-          className={`h-5 w-5 text-BATAMART-primary ${refreshing ? 'animate-spin' : ''}`}
+          className={`h-5 w-5 text-primary ${refreshing ? 'animate-spin' : ''}`}
+          strokeWidth={1.75}
           style={{ transform: refreshing ? undefined : `rotate(${pullDistance * 2}deg)` }}
         />
       </div>

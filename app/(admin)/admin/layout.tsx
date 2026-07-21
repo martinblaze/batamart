@@ -7,20 +7,24 @@ import {
   LayoutDashboard, Users, Package, AlertTriangle,
   FileText, DollarSign, BarChart3, LogOut, Menu, X, Send, MessageSquare, Navigation, Database,
 } from 'lucide-react'
+import { Logo } from '@/components/layout/Logo'
 
+// Design bible section 10 — admin is a data-dense SaaS shell matching the
+// /my-shop sidebar pattern: flat, bordered, single primary accent, no
+// per-item color variety.
 const adminRoutes = [
-  { label: 'Dashboard', icon: LayoutDashboard, href: '/admin',           color: 'text-blue-400' },
-  { label: 'Users',     icon: Users,           href: '/admin/users',     color: 'text-violet-400' },
-  { label: 'Products',  icon: Package,         href: '/admin/products',  color: 'text-green-400' },
-  { label: 'Disputes',  icon: AlertTriangle,   href: '/admin/disputes',  color: 'text-orange-400' },
-  { label: 'Reports',   icon: FileText,        href: '/admin/reports',   color: 'text-red-400' },
-  { label: 'Oversized', icon: AlertTriangle,   href: '/admin/oversized', color: 'text-amber-400' },
-  { label: 'Revenue',   icon: DollarSign,      href: '/admin/revenue',   color: 'text-emerald-400' },
-  { label: 'Analytics', icon: BarChart3,       href: '/admin/analytics', color: 'text-cyan-400' },
-  { label: 'Usage',     icon: Database,        href: '/admin/usage',     color: 'text-indigo-400' },
-  { label: 'Support',   icon: MessageSquare,   href: '/admin/support',   color: 'text-pink-400' },
-  { label: 'Push Test', icon: Send,           href: '/admin/push',      color: 'text-rose-400' },
-  { label: 'Rider GPS', icon: Navigation,      href: '/admin/rider-tracking', color: 'text-sky-400' },
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+  { label: 'Users',     icon: Users,           href: '/admin/users' },
+  { label: 'Products',  icon: Package,         href: '/admin/products' },
+  { label: 'Disputes',  icon: AlertTriangle,   href: '/admin/disputes' },
+  { label: 'Reports',   icon: FileText,        href: '/admin/reports' },
+  { label: 'Oversized', icon: AlertTriangle,   href: '/admin/oversized' },
+  { label: 'Revenue',   icon: DollarSign,      href: '/admin/revenue' },
+  { label: 'Analytics', icon: BarChart3,       href: '/admin/analytics' },
+  { label: 'Usage',     icon: Database,        href: '/admin/usage' },
+  { label: 'Support',   icon: MessageSquare,   href: '/admin/support' },
+  { label: 'Push test', icon: Send,            href: '/admin/push' },
+  { label: 'Rider GPS', icon: Navigation,      href: '/admin/rider-tracking' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -60,28 +64,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     : 'translateX(0)'
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-surface">
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-gray-800 border-b border-gray-700">
-        <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">B</span>
-          </div>
-          <h1 className="text-lg font-bold text-white">BATAMART Admin</h1>
-        </Link>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-white border-b border-border">
+        <Logo size={28} href="/admin" />
         <button
           onClick={() => setSidebarOpen(prev => !prev)}
-          className="text-gray-400 hover:text-white p-2"
+          className="text-ink-secondary hover:text-ink p-2"
+          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
         >
-          {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {sidebarOpen ? <X className="h-6 w-6" strokeWidth={1.75} /> : <Menu className="h-6 w-6" strokeWidth={1.75} />}
         </button>
       </div>
 
       {/* Overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-gray-900/80"
+          className="fixed inset-0 z-[60] bg-ink/50"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -92,19 +92,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           transform: sidebarTransform,
           transition: 'transform 300ms ease-in-out',
         }}
-        className="fixed top-0 left-0 z-[70] h-full w-64 bg-gray-800 border-r border-gray-700"
+        className="fixed top-0 left-0 z-[70] h-full w-64 bg-white border-r border-border"
       >
         <div className="flex flex-col h-full">
 
           {/* Logo — desktop */}
-          <div className="hidden md:flex items-center h-16 px-4 border-b border-gray-700">
+          <div className="hidden md:flex items-center h-16 px-4 border-b border-border">
             <Link href="/admin" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">B</span>
-              </div>
+              <Logo size={28} showWordmark={false} />
               <div>
-                <h1 className="text-xl font-bold text-white">BATAMART</h1>
-                <p className="text-xs text-gray-400">Admin Panel</p>
+                <h1 className="text-[16px] font-semibold text-ink leading-none">BataMart</h1>
+                <p className="text-xs text-ink-muted mt-0.5">Admin panel</p>
               </div>
             </Link>
           </div>
@@ -119,15 +117,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <button
                   key={route.href}
                   onClick={() => handleNavClick(route.href)}
-                  className={`
-                    w-full group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all text-left
-                    ${isActive
-                      ? 'bg-gray-700 text-white shadow-lg'
-                      : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
-                    }
-                  `}
+                  className={`w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all text-left ${
+                    isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-ink-secondary hover:bg-surface hover:text-ink'
+                  }`}
                 >
-                  <Icon className={`mr-3 h-5 w-5 shrink-0 ${isActive ? route.color : 'text-gray-500 group-hover:text-gray-400'}`} />
+                  <Icon className="mr-3 h-5 w-5 shrink-0" strokeWidth={1.75} />
                   {route.label}
                 </button>
               )
@@ -135,12 +131,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-4 border-t border-border">
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-red-400 bg-gray-700/50 rounded-lg hover:bg-red-500/10 hover:text-red-300 transition-all"
+              className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-danger bg-danger/10 rounded-lg hover:bg-danger/20 transition-all"
             >
-              <LogOut className="mr-3 h-5 w-5" />
+              <LogOut className="mr-2 h-5 w-5" strokeWidth={1.75} />
               Logout
             </button>
           </div>

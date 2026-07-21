@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { NotificationPrompt } from '@/hooks/usePushSubscription'
 import { SuspensionGuard } from '@/components/layout/SuspensionGuard'
 
-// 🔥 PWA + UX
+// PWA + UX
 import PWARegister from '@/components/PWARegister'
 import SplashScreen from '@/components/SplashScreen'
 import InstallPrompt from '@/components/InstallPrompt'
@@ -90,7 +90,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#0ea5e9',
+  themeColor: '#1E90FF',
   interactiveWidget: 'resizes-visual',
 }
 

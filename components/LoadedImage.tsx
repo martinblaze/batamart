@@ -19,7 +19,7 @@ export default function LoadedImage({
   alt,
   className = '',
   wrapperClassName = '',
-  placeholderClassName = 'bg-gray-100 dark:bg-[#141821]',
+  placeholderClassName = 'bg-surface',
   priority = false,
   width = IMAGE_SIZES.card,
 }: LoadedImageProps) {

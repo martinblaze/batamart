@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { AlertTriangle, Bike } from 'lucide-react'
 
 function RiderLoginForm() {
   const router = useRouter()
@@ -62,39 +63,31 @@ function RiderLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center space-x-2 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-secondary rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <circle cx="5.5" cy="17.5" r="3.5" />
-                <circle cx="18.5" cy="17.5" r="3.5" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 6h-4l-2 5.5M9 17.5h5.5l2-5.5H19" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6l1.5 5.5" />
-              </svg>
+          <div className="inline-flex items-center mb-4">
+            <div className="w-11 h-11 bg-primary rounded-xl flex items-center justify-center">
+              <Bike className="w-6 h-6 text-white" strokeWidth={1.75} />
             </div>
-            <span className="font-bold text-2xl bg-gradient-to-r from-BATAMART-primary to-BATAMART-secondary bg-clip-text text-transparent">
-              BATAMART
-            </span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Rider Login</h1>
-          <p className="text-gray-600">Log in to see available deliveries</p>
+          <h1 className="text-[28px] font-semibold text-ink mb-2">Rider login</h1>
+          <p className="text-ink-secondary">Log in to see available deliveries</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
           {wasForceLoggedOut && (
-            <div className="mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-              <span className="text-amber-500 text-xl flex-shrink-0">Warning</span>
+            <div className="mb-5 bg-warning/5 border border-warning/20 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" strokeWidth={1.75} />
               <div>
-                <p className="font-semibold text-amber-900 text-sm">Access Denied</p>
-                <p className="text-amber-700 text-sm mt-1">
-                  Rider accounts can only access the Rider Dashboard, Wallet, and Notifications.
+                <p className="font-medium text-ink text-sm">Access denied</p>
+                <p className="text-ink-secondary text-sm mt-1">
+                  Rider accounts can only access the rider dashboard, wallet, and notifications.
                   You have been logged out. Please use a regular account to access the marketplace.
                 </p>
                 <Link
                   href="/login"
-                  className="inline-block mt-2 text-sm text-amber-800 font-semibold underline hover:no-underline"
+                  className="inline-block mt-2 text-sm text-warning font-medium underline hover:no-underline"
                 >
                   Use a regular account
                 </Link>
@@ -104,33 +97,33 @@ function RiderLoginForm() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email address</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 autoComplete="email"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
+                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors"
                 placeholder="Email address"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
               <input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-BATAMART-primary focus:outline-none transition-colors"
+                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors"
                 placeholder="Password"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -138,23 +131,23 @@ function RiderLoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-BATAMART-primary hover:bg-BATAMART-dark text-white py-3.5 rounded-lg font-bold text-lg disabled:opacity-50 transition-all shadow-md"
+              className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                  Logging in...
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Logging in…
                 </span>
               ) : (
-                'Log In as Rider'
+                'Log in as rider'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-500 text-sm">
+            <p className="text-ink-secondary text-sm">
               Not a rider?{' '}
-              <Link href="/login" className="text-gray-500 hover:underline">
+              <Link href="/login" className="text-primary hover:underline font-medium">
                 Regular login
               </Link>
             </p>
@@ -168,8 +161,8 @@ function RiderLoginForm() {
 export default function RiderLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
       </div>
     }>
       <RiderLoginForm />

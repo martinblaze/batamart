@@ -41,9 +41,9 @@ function delta(val: number, good: 'up' | 'down' = 'up') {
 function SectionHeader({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 mb-4">
-      <div className="text-red-500">{icon}</div>
-      <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-gray-400">{label}</span>
-      <div className="flex-1 h-px bg-gray-700/60" />
+      <div className="text-primary">{icon}</div>
+      <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-ink-secondary">{label}</span>
+      <div className="flex-1 h-px bg-border" />
     </div>
   )
 }
@@ -56,16 +56,18 @@ function KpiCard({
   accent?: 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'cyan' | 'pink'
   trendNA?: boolean  // show "N/A" instead of a percentage
 }) {
+  // Design bible: admin charts/stats use --color-primary plus status colors only —
+  // every accent name collapses onto one of the four tokens, no rainbow variety.
   const accentMap: Record<string, string> = {
-    red: 'border-red-500/30 bg-red-500/5', blue: 'border-blue-500/30 bg-blue-500/5',
-    green: 'border-emerald-500/30 bg-emerald-500/5', yellow: 'border-yellow-500/30 bg-yellow-500/5',
-    purple: 'border-purple-500/30 bg-purple-500/5', orange: 'border-orange-500/30 bg-orange-500/5',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5', pink: 'border-pink-500/30 bg-pink-500/5',
+    red: 'border-danger/30 bg-danger/5', blue: 'border-primary/30 bg-primary/5',
+    green: 'border-success/30 bg-success/5', yellow: 'border-warning/30 bg-warning/5',
+    purple: 'border-primary/30 bg-primary/5', orange: 'border-warning/30 bg-warning/5',
+    cyan: 'border-primary/30 bg-primary/5', pink: 'border-primary/30 bg-primary/5',
   }
   const iconMap: Record<string, string> = {
-    red: 'text-red-400', blue: 'text-blue-400', green: 'text-emerald-400',
-    yellow: 'text-yellow-400', purple: 'text-purple-400', orange: 'text-orange-400',
-    cyan: 'text-cyan-400', pink: 'text-pink-400',
+    red: 'text-danger', blue: 'text-primary', green: 'text-success',
+    yellow: 'text-warning', purple: 'text-primary', orange: 'text-warning',
+    cyan: 'text-primary', pink: 'text-primary',
   }
 
   const hasTrend = trend !== undefined && trend !== null
@@ -74,17 +76,17 @@ function KpiCard({
   return (
     <div className={`border ${accentMap[accent]} rounded-lg p-4 flex flex-col gap-2 relative overflow-hidden`}>
       <div className="flex items-start justify-between">
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-gray-500">{label}</span>
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-ink-muted">{label}</span>
         <span className={iconMap[accent]}>{icon}</span>
       </div>
-      <p className="text-2xl font-black text-white font-mono leading-none tracking-tight">{value}</p>
+      <p className="text-2xl font-semibold text-ink font-mono leading-none tracking-tight">{value}</p>
       <div className="flex items-center justify-between mt-auto">
-        {sub && <span className="text-[11px] text-gray-500">{sub}</span>}
+        {sub && <span className="text-[11px] text-ink-muted">{sub}</span>}
         {trendNA && (
-          <span className="text-[11px] text-gray-600 ml-auto">vs prev: N/A</span>
+          <span className="text-[11px] text-ink-muted ml-auto">vs prev: N/A</span>
         )}
         {hasTrend && !trendNA && (
-          <span className={`flex items-center gap-0.5 text-[11px] font-bold ml-auto ${isGood ? 'text-emerald-400' : 'text-red-400'}`}>
+          <span className={`flex items-center gap-0.5 text-[11px] font-semibold ml-auto ${isGood ? 'text-success' : 'text-danger'}`}>
             {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
             {Math.abs(trend!).toFixed(1)}%
           </span>
@@ -95,16 +97,16 @@ function KpiCard({
 }
 
 function DataRow({ label, value, sub, flag }: { label: string; value: string; sub?: string; flag?: 'ok' | 'warn' | 'danger' }) {
-  const flagColor = flag === 'ok' ? 'bg-emerald-500' : flag === 'warn' ? 'bg-yellow-400' : flag === 'danger' ? 'bg-red-500' : 'bg-transparent'
+  const flagColor = flag === 'ok' ? 'bg-success' : flag === 'warn' ? 'bg-warning' : flag === 'danger' ? 'bg-danger' : 'bg-transparent'
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-gray-800/60 last:border-0">
+    <div className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
       <div className="flex items-center gap-2">
         {flag && <span className={`w-1.5 h-1.5 rounded-full ${flagColor} flex-shrink-0`} />}
-        <span className="text-[12px] text-gray-400">{label}</span>
+        <span className="text-[12px] text-ink-secondary">{label}</span>
       </div>
       <div className="text-right">
-        <span className="text-[13px] text-white font-mono font-semibold">{value}</span>
-        {sub && <p className="text-[10px] text-gray-600">{sub}</p>}
+        <span className="text-[13px] text-ink font-mono font-semibold">{value}</span>
+        {sub && <p className="text-[10px] text-ink-muted">{sub}</p>}
       </div>
     </div>
   )
@@ -151,7 +153,7 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-red-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
       </div>
     )
   }
@@ -164,19 +166,19 @@ export default function AnalyticsPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Analytics</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            <span className="text-white font-medium">{selectedUniName}</span>
+          <h1 className="text-2xl font-semibold text-ink">Analytics</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">
+            <span className="text-ink font-medium">{selectedUniName}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* University switcher */}
-          <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2">
-            <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
+            <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
             <select
               value={selectedUni}
               onChange={e => setSelectedUni(e.target.value)}
-              className="bg-transparent text-white text-sm font-medium focus:outline-none cursor-pointer"
+              className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
             >
               <option value="all">All Universities</option>
               {universities.map(u => (
@@ -185,15 +187,15 @@ export default function AnalyticsPage() {
             </select>
           </div>
           {/* Range selector */}
-          <div className="flex bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+          <div className="flex bg-white border border-border rounded-xl overflow-hidden">
             {[['7days', '7D'], ['30days', '30D'], ['90days', '90D'], ['all', 'All']].map(([v, label]) => (
               <button
                 key={v}
                 onClick={() => setRange(v)}
-                className={`px-3 py-2 text-xs font-bold transition-colors ${
+                className={`px-3 py-2 text-xs font-semibold transition-colors ${
                   range === v
-                    ? 'bg-red-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    ? 'bg-danger text-white'
+                    : 'text-ink-secondary hover:text-ink hover:bg-surface'
                 }`}
               >
                 {label}
@@ -202,7 +204,7 @@ export default function AnalyticsPage() {
           </div>
           <button
             onClick={fetchAnalytics}
-            className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 hover:text-white transition-colors"
+            className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -210,7 +212,7 @@ export default function AnalyticsPage() {
       </div>
 
       {!data ? (
-        <p className="text-gray-400 text-center py-12">No data available</p>
+        <p className="text-ink-secondary text-center py-12">No data available</p>
       ) : (
         <>
           {/* ── Growth ── */}
@@ -254,7 +256,7 @@ export default function AnalyticsPage() {
           <div>
             <SectionHeader label="Engagement" icon={<Activity className="w-4 h-4" />} />
             {/* FIX #7: DAU/WAU/MAU labels clarified as rolling windows (not period-scoped) */}
-            <p className="text-[11px] text-gray-600 mb-3 -mt-2">
+            <p className="text-[11px] text-ink-muted mb-3 -mt-2">
               DAU / WAU / MAU are rolling windows (last 24h / 7d / 30d), not scoped to the selected range.
             </p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -268,7 +270,7 @@ export default function AnalyticsPage() {
 
           {/* ── Marketplace Health + Logistics ── */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+            <div className="bg-surface border border-border rounded-2xl p-5">
               <SectionHeader label="Marketplace health" icon={<BarChart2 className="w-4 h-4" />} />
               {/* FIX #5: activeSellers = sellers who received completed orders (not just listed) */}
               <DataRow label="Active sellers (with orders)"  value={fmt(d.activeSellers)}    flag={d.activeSellers > 10 ? 'ok' : 'warn'} />
@@ -278,7 +280,7 @@ export default function AnalyticsPage() {
               {/* FIX #4: retentionDay1 is buyer activation rate — renamed for clarity */}
               <DataRow label="New buyer activation rate"     value={fmtPct(d.retentionDay1)} sub="new buyers who placed an order" />
             </div>
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+            <div className="bg-surface border border-border rounded-2xl p-5">
               <SectionHeader label="Logistics" icon={<Bike className="w-4 h-4" />} />
               {/* FIX #2: avgDeliveryMinutes now uses deliveredAt (actual delivery time) */}
               <DataRow label="Avg delivery time (order→delivery)" value={fmtMin(d.avgDeliveryMinutes)} flag={d.avgDeliveryMinutes < 60 ? 'ok' : d.avgDeliveryMinutes < 120 ? 'warn' : 'danger'} />
@@ -290,23 +292,23 @@ export default function AnalyticsPage() {
           </div>
 
           {/* ── Top Categories ── */}
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+          <div className="bg-surface border border-border rounded-2xl p-5">
             {/* FIX #8: topCategories is now period-scoped — label updated */}
             <SectionHeader label={`Top categories (${range === 'all' ? 'all time' : range})`} icon={<Target className="w-4 h-4" />} />
             <div className="space-y-3">
               {d.topCategories.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center py-4">No product listings in this period</p>
+                <p className="text-ink-muted text-sm text-center py-4">No product listings in this period</p>
               ) : d.topCategories.map((c) => {
                 const max = d.topCategories[0]?.count || 1
                 return (
                   <div key={c.category} className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-300">{c.category}</span>
-                      <span className="text-white font-mono">{fmt(c.count)}</span>
+                      <span className="text-ink-secondary">{c.category}</span>
+                      <span className="text-ink font-mono">{fmt(c.count)}</span>
                     </div>
-                    <div className="h-1.5 bg-gray-800 rounded-full">
+                    <div className="h-1.5 bg-white rounded-full">
                       <div
-                        className="h-full bg-red-500 rounded-full transition-all duration-700"
+                        className="h-full bg-danger rounded-full transition-all duration-700"
                         style={{ width: `${(c.count / max) * 100}%` }}
                       />
                     </div>

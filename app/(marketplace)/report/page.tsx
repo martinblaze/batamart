@@ -4,7 +4,10 @@ export const dynamic = 'force-dynamic'
 
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, Upload, X, Link, User, Package, Shield, Clock, MessageSquare, CheckCircle } from 'lucide-react'
+import {
+    AlertCircle, Upload, X, Link, User, Package, Shield, Clock, MessageSquare, CheckCircle,
+    Ban, FileText, Star, Pin, Frown, type LucideIcon,
+} from 'lucide-react'
 
 // Separate the component that uses useSearchParams
 function ReportFormContent() {
@@ -34,19 +37,19 @@ function ReportFormContent() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
 
-    const reportReasons = {
+    const reportReasons: Record<string, { value: string; label: string; icon: LucideIcon }[]> = {
         PRODUCT: [
-            { value: 'FAKE_PRODUCT', label: 'Fake or Counterfeit Product', icon: '🚫' },
-            { value: 'WRONG_DESCRIPTION', label: 'Misleading Description', icon: '📝' },
-            { value: 'POOR_QUALITY', label: 'Poor Quality', icon: '⭐' },
-            { value: 'INAPPROPRIATE_CONTENT', label: 'Inappropriate Content', icon: '⚠️' },
-            { value: 'OTHER', label: 'Other', icon: '📌' }
+            { value: 'FAKE_PRODUCT', label: 'Fake or counterfeit product', icon: Ban },
+            { value: 'WRONG_DESCRIPTION', label: 'Misleading description', icon: FileText },
+            { value: 'POOR_QUALITY', label: 'Poor quality', icon: Star },
+            { value: 'INAPPROPRIATE_CONTENT', label: 'Inappropriate content', icon: AlertCircle },
+            { value: 'OTHER', label: 'Other', icon: Pin }
         ],
         RIDER: [
-            { value: 'DELAYED_DELIVERY', label: 'Delayed Delivery', icon: '⏰' },
-            { value: 'RUDE_BEHAVIOR', label: 'Rude or Unprofessional', icon: '😠' },
-            { value: 'DAMAGED_PRODUCT', label: 'Damaged Product', icon: '📦' },
-            { value: 'OTHER', label: 'Other', icon: '📌' }
+            { value: 'DELAYED_DELIVERY', label: 'Delayed delivery', icon: Clock },
+            { value: 'RUDE_BEHAVIOR', label: 'Rude or unprofessional', icon: Frown },
+            { value: 'DAMAGED_PRODUCT', label: 'Damaged product', icon: Package },
+            { value: 'OTHER', label: 'Other', icon: Pin }
         ]
     }
 
@@ -84,7 +87,7 @@ function ReportFormContent() {
             const data = await response.json()
 
             if (response.ok) {
-                alert('✅ Report submitted successfully! Our team will review it within 24-48 hours.')
+                alert('Report submitted successfully. Our team will review it within 24-48 hours.')
                 router.push('/orders')
             } else {
                 setError(data.error || 'Failed to submit report')
@@ -98,17 +101,17 @@ function ReportFormContent() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4">
+        <div className="min-h-screen bg-surface py-8 px-4">
             <div className="max-w-3xl mx-auto">
                 {/* Header Card */}
-                <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
+                <div className="bg-danger rounded-2xl shadow-soft p-8 mb-8 text-white">
                     <div className="flex items-center gap-4 mb-4">
                         <div className="bg-white/20 p-3 rounded-xl">
                             <Shield className="w-8 h-8" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold">Report an Issue</h1>
-                            <p className="text-red-100 opacity-90">Help us maintain a safe and trustworthy marketplace</p>
+                            <h1 className="text-3xl font-semibold">Report an Issue</h1>
+                            <p className="text-white/80 opacity-90">Help us maintain a safe and trustworthy marketplace</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
@@ -120,10 +123,10 @@ function ReportFormContent() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Form */}
                     <div className="lg:col-span-2">
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
+                        <div className="bg-white rounded-2xl shadow-soft p-6">
                             {(productName || riderName) && (
-                                <div className="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                                    <div className="flex items-center gap-2 text-blue-800">
+                                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl">
+                                    <div className="flex items-center gap-2 text-primary">
                                         <AlertCircle className="w-4 h-4" />
                                         <span className="font-medium">
                                             {productName && `Reporting product: ${productName}`}
@@ -134,8 +137,8 @@ function ReportFormContent() {
                             )}
 
                             {error && (
-                                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                                    <div className="flex items-center gap-2 text-red-800">
+                                <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-xl">
+                                    <div className="flex items-center gap-2 text-danger">
                                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                                         <span className="text-sm">{error}</span>
                                     </div>
@@ -145,7 +148,7 @@ function ReportFormContent() {
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {/* Report Type Selection */}
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-semibold text-gray-700">
+                                    <label className="block text-sm font-semibold text-ink-secondary">
                                         What would you like to report? *
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
@@ -159,16 +162,16 @@ function ReportFormContent() {
                                                 productLink: ''
                                             })}
                                             className={`p-4 rounded-xl border-2 transition-all duration-200 ${formData.type === 'PRODUCT'
-                                                ? 'border-red-500 bg-red-50 shadow-sm'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                ? 'border-danger bg-danger/10 shadow-soft'
+                                                : 'border-border hover:border-border hover:bg-surface'}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${formData.type === 'PRODUCT' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                                                <div className={`p-2 rounded-lg ${formData.type === 'PRODUCT' ? 'bg-danger/10 text-danger' : 'bg-surface text-ink-secondary'}`}>
                                                     <Package className="w-5 h-5" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <div className="font-medium text-gray-900">Product</div>
-                                                    <div className="text-xs text-gray-500">Report a product issue</div>
+                                                    <div className="font-medium text-ink">Product</div>
+                                                    <div className="text-xs text-ink-secondary">Report a product issue</div>
                                                 </div>
                                             </div>
                                         </button>
@@ -183,16 +186,16 @@ function ReportFormContent() {
                                                 productLink: ''
                                             })}
                                             className={`p-4 rounded-xl border-2 transition-all duration-200 ${formData.type === 'RIDER'
-                                                ? 'border-red-500 bg-red-50 shadow-sm'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                ? 'border-danger bg-danger/10 shadow-soft'
+                                                : 'border-border hover:border-border hover:bg-surface'}`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${formData.type === 'RIDER' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}>
+                                                <div className={`p-2 rounded-lg ${formData.type === 'RIDER' ? 'bg-danger/10 text-danger' : 'bg-surface text-ink-secondary'}`}>
                                                     <User className="w-5 h-5" />
                                                 </div>
                                                 <div className="text-left">
-                                                    <div className="font-medium text-gray-900">Rider</div>
-                                                    <div className="text-xs text-gray-500">Report delivery issues</div>
+                                                    <div className="font-medium text-ink">Rider</div>
+                                                    <div className="text-xs text-ink-secondary">Report delivery issues</div>
                                                 </div>
                                             </div>
                                         </button>
@@ -202,7 +205,7 @@ function ReportFormContent() {
                                 {/* Dynamic Input Fields */}
                                 {formData.type === 'RIDER' && (
                                     <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-gray-700">
+                                        <label className="block text-sm font-semibold text-ink-secondary">
                                             Rider's Name *
                                         </label>
                                         <div className="relative">
@@ -210,18 +213,18 @@ function ReportFormContent() {
                                                 type="text"
                                                 value={formData.riderName}
                                                 onChange={(e) => setFormData({ ...formData, riderName: e.target.value })}
-                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                                                className="w-full pl-12 pr-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger transition-all"
                                                 placeholder="Enter the rider's full name or ID..."
                                                 required
                                             />
-                                            <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-muted" />
                                         </div>
                                     </div>
                                 )}
 
                                 {formData.type === 'PRODUCT' && (
                                     <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-gray-700">
+                                        <label className="block text-sm font-semibold text-ink-secondary">
                                             Product Link *
                                         </label>
                                         <div className="relative">
@@ -229,11 +232,11 @@ function ReportFormContent() {
                                                 type="url"
                                                 value={formData.productLink}
                                                 onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
-                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                                                className="w-full pl-12 pr-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger transition-all"
                                                 placeholder="https://yourstore.com/products/..."
                                                 required
                                             />
-                                            <Link className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                            <Link className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-muted" />
                                         </div>
                                     </div>
                                 )}
@@ -241,7 +244,7 @@ function ReportFormContent() {
                                 {/* Reason Selection */}
                                 {formData.type && (
                                     <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-gray-700">
+                                        <label className="block text-sm font-semibold text-ink-secondary">
                                             Select the main reason *
                                         </label>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -250,13 +253,13 @@ function ReportFormContent() {
                                                     key={r.value}
                                                     type="button"
                                                     onClick={() => setFormData({ ...formData, reason: r.value })}
-                                                    className={`p-3 rounded-lg border text-left transition-all duration-200 ${formData.reason === r.value
-                                                        ? 'border-red-500 bg-red-50 shadow-sm'
-                                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                    className={`p-3 rounded-lg border text-left transition-all duration-150 ${formData.reason === r.value
+                                                        ? 'border-danger bg-danger/10'
+                                                        : 'border-border hover:bg-surface'}`}
                                                 >
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-lg">{r.icon}</span>
-                                                        <span className="text-sm font-medium text-gray-900">{r.label}</span>
+                                                        <r.icon className="w-4 h-4 text-ink-secondary" strokeWidth={1.75} />
+                                                        <span className="text-sm font-medium text-ink">{r.label}</span>
                                                     </div>
                                                 </button>
                                             ))}
@@ -267,14 +270,14 @@ function ReportFormContent() {
                                 {/* Description */}
                                 {formData.type && (
                                     <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-gray-700">
+                                        <label className="block text-sm font-semibold text-ink-secondary">
                                             Please describe the issue in detail *
                                         </label>
                                         <div className="relative">
                                             <textarea
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-32 resize-y transition-all"
+                                                className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger min-h-32 resize-y transition-all"
                                                 placeholder={
                                                     formData.type === 'PRODUCT'
                                                         ? "• What specifically is wrong with the product?\n• How does it differ from the description?\n• When did you discover the issue?"
@@ -282,9 +285,9 @@ function ReportFormContent() {
                                                 }
                                                 required
                                             />
-                                            <MessageSquare className="absolute right-4 top-4 w-5 h-5 text-gray-400" />
+                                            <MessageSquare className="absolute right-4 top-4 w-5 h-5 text-ink-muted" />
                                         </div>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-ink-secondary">
                                             Be as specific as possible. Include dates, times, and any relevant details.
                                         </p>
                                     </div>
@@ -293,14 +296,14 @@ function ReportFormContent() {
                                 {/* Evidence Upload */}
                                 {formData.type && (
                                     <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-gray-700">
+                                        <label className="block text-sm font-semibold text-ink-secondary">
                                             Add Evidence (Optional)
                                         </label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                            <p className="text-sm font-medium text-gray-600 mb-1">Upload screenshots or photos</p>
-                                            <p className="text-xs text-gray-400">Drag & drop or click to browse</p>
-                                            <p className="text-xs text-gray-400 mt-2">Max file size: 5MB • Supported: JPG, PNG, PDF</p>
+                                        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-surface hover:bg-surface transition-colors cursor-pointer">
+                                            <Upload className="w-12 h-12 text-ink-muted mx-auto mb-3" />
+                                            <p className="text-sm font-medium text-ink-secondary mb-1">Upload screenshots or photos</p>
+                                            <p className="text-xs text-ink-muted">Drag & drop or click to browse</p>
+                                            <p className="text-xs text-ink-muted mt-2">Max file size: 5MB • Supported: JPG, PNG, PDF</p>
                                         </div>
                                     </div>
                                 )}
@@ -311,7 +314,7 @@ function ReportFormContent() {
                                         <button
                                             type="button"
                                             onClick={() => router.back()}
-                                            className="flex-1 px-6 py-3.5 border-2 border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-all"
+                                            className="flex-1 px-6 py-3.5 border-2 border-border rounded-xl font-medium text-ink-secondary hover:bg-surface transition-all"
                                             disabled={loading}
                                         >
                                             Cancel
@@ -319,7 +322,7 @@ function ReportFormContent() {
                                         <button
                                             type="submit"
                                             disabled={loading || !formData.type || !formData.reason || !formData.description}
-                                            className="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="flex-1 px-6 py-3.5 bg-danger hover:brightness-95 text-white rounded-xl font-semibold shadow-soft hover:shadow-soft transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
                                             {loading ? (
                                                 <>
@@ -342,80 +345,80 @@ function ReportFormContent() {
                     {/* Sidebar Info */}
                     <div className="space-y-6">
                         {/* Process Steps */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-red-500" />
+                        <div className="bg-white rounded-2xl shadow-soft p-6">
+                            <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
+                                <Clock className="w-5 h-5 text-danger" />
                                 Review Process
                             </h3>
                             <div className="space-y-4">
                                 <div className="flex items-start gap-3">
-                                    <div className="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                                         1
                                     </div>
                                     <div>
-                                        <p className="font-medium text-gray-900">Report Submission</p>
-                                        <p className="text-sm text-gray-600">Your report is securely submitted</p>
+                                        <p className="font-medium text-ink">Report Submission</p>
+                                        <p className="text-sm text-ink-secondary">Your report is securely submitted</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                                         2
                                     </div>
                                     <div>
-                                        <p className="font-medium text-gray-900">Team Review</p>
-                                        <p className="text-sm text-gray-600">Our team reviews within 24-48 hours</p>
+                                        <p className="font-medium text-ink">Team Review</p>
+                                        <p className="text-sm text-ink-secondary">Our team reviews within 24-48 hours</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                                         3
                                     </div>
                                     <div>
-                                        <p className="font-medium text-gray-900">Action Taken</p>
-                                        <p className="text-sm text-gray-600">Appropriate action if violations found</p>
+                                        <p className="font-medium text-ink">Action Taken</p>
+                                        <p className="text-sm text-ink-secondary">Appropriate action if violations found</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
                                         4
                                     </div>
                                     <div>
-                                        <p className="font-medium text-gray-900">Notification</p>
-                                        <p className="text-sm text-gray-600">You'll be notified of the outcome</p>
+                                        <p className="font-medium text-ink">Notification</p>
+                                        <p className="text-sm text-ink-secondary">You'll be notified of the outcome</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Important Note */}
-                        <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-6">
-                            <h3 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
+                        <div className="bg-warning/10 border border-warning/20 rounded-2xl p-6">
+                            <h3 className="font-semibold text-warning mb-2 flex items-center gap-2">
                                 <AlertCircle className="w-5 h-5" />
                                 Important
                             </h3>
-                            <p className="text-sm text-yellow-800">
+                            <p className="text-sm text-warning">
                                 False reports may result in account penalties. Please ensure your report is accurate and truthful. All reports are confidential.
                             </p>
                         </div>
 
                         {/* Quick Tips */}
-                        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
-                            <h3 className="font-bold text-blue-900 mb-3">📝 Tips for Effective Reports</h3>
-                            <ul className="space-y-2 text-sm text-blue-800">
+                        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
+                            <h3 className="font-semibold text-primary mb-3">Tips for effective reports</h3>
+                            <ul className="space-y-2 text-sm text-primary">
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                                     <span>Include specific dates and times</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                                     <span>Provide clear, factual information</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                                     <span>Attach screenshots if available</span>
                                 </li>
                                 <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                                     <span>Stay objective and avoid emotional language</span>
                                 </li>
                             </ul>
@@ -430,15 +433,15 @@ function ReportFormContent() {
 // Loading fallback component
 function ReportPageLoading() {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4">
+        <div className="min-h-screen bg-surface py-8 px-4">
             <div className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-lg p-8 animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3 mb-8"></div>
+                <div className="bg-white rounded-2xl shadow-soft p-8 animate-pulse">
+                    <div className="h-8 bg-border rounded w-1/3 mb-4"></div>
+                    <div className="h-4 bg-border rounded w-2/3 mb-8"></div>
                     <div className="space-y-4">
-                        <div className="h-12 bg-gray-200 rounded"></div>
-                        <div className="h-12 bg-gray-200 rounded"></div>
-                        <div className="h-32 bg-gray-200 rounded"></div>
+                        <div className="h-12 bg-border rounded"></div>
+                        <div className="h-12 bg-border rounded"></div>
+                        <div className="h-32 bg-border rounded"></div>
                     </div>
                 </div>
             </div>

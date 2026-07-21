@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { FileText, AlertCircle, CheckCircle, XCircle, Scale, ShieldCheck } from 'lucide-react'
+import { FileText, AlertCircle, CheckCircle, XCircle, Scale, ShieldCheck, ClipboardList, Copyright, AlertTriangle, Megaphone } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -117,15 +117,15 @@ export default function TermsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4">
+      <section className="bg-primary text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full mb-6">
             <FileText className="w-5 h-5" />
             <span className="font-semibold">Terms of Service</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="text-4xl md:text-5xl font-semibold mb-6">
             Terms & Conditions
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
@@ -139,14 +139,14 @@ export default function TermsPage() {
       </section>
 
       {/* Dispute Flow */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dispute Flow (How It Works)</h2>
+          <div className="bg-white rounded-2xl border border-border p-8 shadow-soft">
+            <h2 className="text-2xl font-semibold text-ink mb-4">Dispute Flow (How It Works)</h2>
             <ul className="space-y-2">
               {disputeFlow.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-BATAMART-primary font-bold mt-1">•</span>
+                <li key={idx} className="flex items-start gap-2 text-ink-secondary">
+                  <span className="text-primary font-semibold mt-1">•</span>
                   <span>{item}</span>
                 </li>
               ))}
@@ -158,12 +158,12 @@ export default function TermsPage() {
       {/* Referral Flow */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Referral Flow (How It Works)</h2>
+          <div className="bg-surface rounded-2xl border border-border p-8">
+            <h2 className="text-2xl font-semibold text-ink mb-4">Referral Flow (How It Works)</h2>
             <ul className="space-y-2">
               {referralFlow.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-BATAMART-primary font-bold mt-1">•</span>
+                <li key={idx} className="flex items-start gap-2 text-ink-secondary">
+                  <span className="text-primary font-semibold mt-1">•</span>
                   <span>{item}</span>
                 </li>
               ))}
@@ -175,11 +175,11 @@ export default function TermsPage() {
       {/* Introduction */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl">
-            <h2 className="text-xl font-bold text-blue-900 mb-3">
-              📋 Agreement to Terms
+          <div className="bg-primary/10 border-l-4 border-primary p-6 rounded-r-xl">
+            <h2 className="text-xl font-semibold text-ink mb-3 flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-primary" strokeWidth={1.75} /> Agreement to Terms
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-ink-secondary leading-relaxed">
               These Terms of Service ("Terms") govern your use of BATAMART, the student-to-student
               marketplace platform for University students. By creating
               an account or using our services, you enter into a legally binding agreement with us.
@@ -192,19 +192,19 @@ export default function TermsPage() {
       <section className="py-12 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
           {sections.map((section, index) => (
-            <div key={index} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-BATAMART-light to-white p-6 border-b border-gray-100">
+            <div key={index} className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="bg-primary/5 p-6 border-b border-border">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
                     <section.icon className="w-6 h-6 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-semibold text-ink">
                     {section.title}
                   </h2>
                 </div>
               </div>
               <div className="p-6">
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-ink-secondary leading-relaxed">
                   {section.content}
                 </p>
               </div>
@@ -214,28 +214,28 @@ export default function TermsPage() {
       </section>
 
       {/* User Responsibilities */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-semibold text-ink mb-4">
               Your Responsibilities
             </h2>
-            <p className="text-gray-600">
+            <p className="text-ink-secondary">
               As a BATAMART user, you agree to the following obligations
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             {userResponsibilities.map((section, index) => (
-              <div key={index} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-BATAMART-primary" />
+              <div key={index} className="bg-white rounded-2xl border border-border p-6 shadow-soft hover:shadow-soft transition-shadow duration-300">
+                <h3 className="text-xl font-semibold text-ink mb-4 flex items-center gap-2">
+                  <Scale className="w-5 h-5 text-primary" />
                   {section.title}
                 </h3>
                 <ul className="space-y-2">
                   {section.items.map((item, itemIndex) => (
-                    <li key={itemIndex} className="flex items-start gap-2 text-gray-700">
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    <li key={itemIndex} className="flex items-start gap-2 text-ink-secondary">
+                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                       <span className="text-sm">{item}</span>
                     </li>
                   ))}
@@ -250,24 +250,24 @@ export default function TermsPage() {
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-semibold text-ink mb-4">
               Platform Policies
             </h2>
-            <p className="text-gray-600">
+            <p className="text-ink-secondary">
               Key policies governing how BATAMART operates
             </p>
           </div>
 
           <div className="space-y-6">
             {platformPolicies.map((policy, index) => (
-              <div key={index} className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <div key={index} className="bg-surface rounded-2xl border border-border p-6">
+                <h3 className="text-xl font-semibold text-ink mb-4">
                   {policy.title}
                 </h3>
                 <ul className="space-y-2">
                   {policy.points.map((point, pointIndex) => (
-                    <li key={pointIndex} className="flex items-start gap-2 text-gray-700">
-                      <span className="text-BATAMART-primary font-bold mt-1">•</span>
+                    <li key={pointIndex} className="flex items-start gap-2 text-ink-secondary">
+                      <span className="text-primary font-semibold mt-1">•</span>
                       <span>{point}</span>
                     </li>
                   ))}
@@ -279,41 +279,41 @@ export default function TermsPage() {
       </section>
 
       {/* Account Termination */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl border border-red-200 p-8">
+          <div className="bg-white rounded-2xl border border-danger/30 p-8">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <XCircle className="w-7 h-7 text-red-600" />
+              <div className="w-12 h-12 bg-danger/10 rounded-xl flex items-center justify-center">
+                <XCircle className="w-7 h-7 text-danger" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-semibold text-ink">
                 Account Suspension & Termination
               </h2>
             </div>
-            <div className="space-y-4 text-gray-700">
+            <div className="space-y-4 text-ink-secondary">
               <p>
                 BATAMART reserves the right to suspend or terminate accounts that violate these Terms.
                 Violations include but are not limited to:
               </p>
               <ul className="space-y-2 pl-6">
                 <li className="flex items-start gap-2">
-                  <span className="text-red-500">•</span>
+                  <span className="text-danger">•</span>
                   <span>Selling prohibited or illegal items</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-500">•</span>
+                  <span className="text-danger">•</span>
                   <span>Fraudulent activities or scamming other users</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-500">•</span>
+                  <span className="text-danger">•</span>
                   <span>Harassment or abusive behavior toward others</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-500">•</span>
+                  <span className="text-danger">•</span>
                   <span>Multiple violations of platform policies</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-red-500">•</span>
+                  <span className="text-danger">•</span>
                   <span>Attempting to circumvent platform fees or rules</span>
                 </li>
               </ul>
@@ -328,11 +328,11 @@ export default function TermsPage() {
       {/* Intellectual Property */}
       <section className="py-12 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-purple-50 border-l-4 border-purple-500 p-6 rounded-r-xl">
-            <h3 className="text-xl font-bold text-purple-900 mb-3">
-              📝 Intellectual Property
+          <div className="bg-primary/5 border-l-4 border-primary p-6 rounded-r-xl">
+            <h3 className="text-xl font-semibold text-ink mb-3 flex items-center gap-2">
+              <Copyright className="w-5 h-5 text-primary" strokeWidth={1.75} /> Intellectual Property
             </h3>
-            <div className="text-gray-700 space-y-2">
+            <div className="text-ink-secondary space-y-2">
               <p>
                 All content on BATAMART, including the logo, design, text, graphics, and software, is owned by
                 BATAMART or its licensors and protected by copyright and trademark laws.
@@ -347,13 +347,13 @@ export default function TermsPage() {
       </section>
 
       {/* Limitation of Liability */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-xl">
-            <h3 className="text-xl font-bold text-yellow-900 mb-3">
-              ⚠️ Limitation of Liability
+          <div className="bg-warning/10 border-l-4 border-warning p-6 rounded-r-xl">
+            <h3 className="text-xl font-semibold text-ink mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" strokeWidth={1.75} /> Limitation of Liability
             </h3>
-            <div className="text-gray-700 space-y-2">
+            <div className="text-ink-secondary space-y-2">
               <p>
                 BATAMART provides a platform for students to trade but does not guarantee the quality, safety,
                 or legality of items listed. We are not responsible for:
@@ -374,13 +374,13 @@ export default function TermsPage() {
       </section>
 
       {/* Changes to Terms */}
-      <section className="py-12 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-12 px-4 bg-surface">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              📢 Changes to These Terms
+          <div className="bg-white p-8 rounded-2xl border border-border shadow-soft">
+            <h2 className="text-2xl font-semibold text-ink mb-4 flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-primary" strokeWidth={1.75} /> Changes to These Terms
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-ink-secondary leading-relaxed">
               We may modify these Terms at any time. We will notify users of significant changes via
               email or platform notification. Continued use of BATAMART after changes constitutes acceptance
               of the revised Terms. If you do not agree to the changes, you must stop using the platform.
@@ -390,9 +390,9 @@ export default function TermsPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white">
+      <section className="py-16 px-4 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-semibold mb-4">
             Questions About These Terms?
           </h2>
           <p className="text-xl text-white/90 mb-8">
@@ -401,13 +401,13 @@ export default function TermsPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="mailto:support@BATAMART.com"
-              className="bg-white text-BATAMART-primary hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
+              className="bg-white text-primary hover:bg-surface px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-soft hover:shadow-soft"
             >
               Email: support@BATAMART.com
             </a>
             <Link
               href="/contact"
-              className="bg-BATAMART-dark/50 hover:bg-BATAMART-dark text-white border-2 border-white px-8 py-4 rounded-xl font-bold text-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold text-lg transition-all"
             >
               Contact Support
             </Link>

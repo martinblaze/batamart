@@ -52,42 +52,21 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
           from { opacity: 0; transform: translateY(-10px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes bellPulse {
-          0%,100% { transform: rotate(0deg) scale(1); }
-          15%      { transform: rotate(14deg) scale(1.05); }
-          30%      { transform: rotate(-10deg) scale(1.05); }
-          45%      { transform: rotate(8deg); }
-          60%      { transform: rotate(-5deg); }
-          75%      { transform: rotate(3deg); }
-        }
-        .notif-banner-enter { animation: bannerSlideDown 0.38s cubic-bezier(0.34,1.2,0.64,1) forwards; }
-        .bell-pulse         { animation: bellPulse 1.8s ease 0.5s both; }
+        .notif-banner-enter { animation: bannerSlideDown 0.2s ease-out forwards; }
       `}</style>
 
       <div className="notif-banner-enter mb-4 w-full">
 
         {postPayment ? (
           /* ── POST-PAYMENT ─────────────────────────────────────────────── */
-          <div
-            className="relative w-full rounded-2xl overflow-hidden"
-            style={{
-              background: 'linear-gradient(135deg,#3D95E8 0%,#3D95E8 55%,#4DABFF 100%)',
-              boxShadow: '0 4px 24px rgba(26,63,143,0.28)',
-            }}
-          >
-            {/* shimmer top line */}
-            <div className="absolute inset-x-0 top-0 h-px"
-              style={{ background: 'linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)' }}
-            />
-
+          <div className="relative w-full rounded-2xl overflow-hidden bg-primary">
             {/* Dismiss sits absolutely so it never squeezes the content */}
             <button
               onClick={handleDismiss}
               aria-label="Dismiss"
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10 transition-colors"
-              style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}
+              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
 
             {/* All content — right-padded to clear the dismiss button */}
@@ -95,37 +74,25 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
 
               {/* Icon + headline row */}
               <div className="flex items-center gap-3 mb-2">
-                <div
-                  className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bell-pulse"
-                  style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)' }}
-                >
-                  <Bell className="w-5 h-5 text-white" />
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-white/15">
+                  <Bell className="w-5 h-5 text-white" strokeWidth={1.75} />
                 </div>
-                <p className="font-bold text-white text-sm leading-snug">
-                  🎉 Order placed! Track it with notifications.
+                <p className="font-medium text-white text-sm leading-snug">
+                  Order placed — track it with notifications
                 </p>
               </div>
 
               {/* Subtext */}
-              <p className="text-xs leading-relaxed mb-3"
-                style={{ color: 'rgba(255,255,255,0.75)' }}
-              >
+              <p className="text-xs leading-relaxed mb-3 text-white/80">
                 Get real-time alerts when your order is picked up, on the way,
                 and delivered — even when the app is closed.
               </p>
 
               {/* Chips — wrap naturally on any width */}
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {[
-                  { icon: '📦', text: 'Pickup alert' },
-                  { icon: '🛵', text: 'On the way' },
-                  { icon: '✅', text: 'Delivered' },
-                ].map(({ icon, text }) => (
-                  <span key={text}
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.92)' }}
-                  >
-                    {icon} {text}
+                {['Pickup alert', 'On the way', 'Delivered'].map((text) => (
+                  <span key={text} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/15 text-white">
+                    {text}
                   </span>
                 ))}
               </div>
@@ -135,30 +102,19 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                 <button
                   onClick={handleEnable}
                   disabled={isBusy}
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 rounded-xl text-sm font-bold transition-all disabled:opacity-60 active:scale-95"
-                  style={{
-                    background: 'rgba(255,255,255,0.96)',
-                    color: '#3D95E8',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-                    minHeight: '44px',
-                  }}
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 h-11 rounded-lg text-sm font-medium bg-white text-primary transition-all disabled:opacity-60 active:scale-[0.98]"
                 >
                   {isBusy
-                    ? <><Loader2 className="w-4 h-4 animate-spin" />Enabling…</>
-                    : <><Bell className="w-4 h-4" />Enable Notifications</>
+                    ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />Enabling…</>
+                    : <><Bell className="w-4 h-4" strokeWidth={1.75} />Enable notifications</>
                   }
                 </button>
 
                 <button
                   onClick={handleDismiss}
-                  className="flex items-center justify-center w-full sm:w-auto px-4 rounded-xl text-sm font-medium transition-colors active:scale-95"
-                  style={{
-                    background: 'rgba(255,255,255,0.13)',
-                    color: 'rgba(255,255,255,0.82)',
-                    minHeight: '44px',
-                  }}
+                  className="flex items-center justify-center w-full sm:w-auto px-4 h-11 rounded-lg text-sm font-medium bg-white/10 text-white/90 transition-colors active:scale-[0.98]"
                 >
-                  Maybe Later
+                  Maybe later
                 </button>
               </div>
             </div>
@@ -166,36 +122,27 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
 
         ) : (
           /* ── PASSIVE ──────────────────────────────────────────────────── */
-          <div
-            className="relative w-full rounded-2xl overflow-hidden"
-            style={{
-              background: '#eef3ff',
-              border: '1px solid rgba(59,130,246,0.18)',
-            }}
-          >
+          <div className="relative w-full rounded-2xl overflow-hidden bg-primary/5 border border-primary/20">
             {/* Dismiss sits absolutely */}
             <button
               onClick={handleDismiss}
               aria-label="Dismiss"
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10 transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10 text-ink-muted hover:text-ink-secondary hover:bg-surface transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
 
             <div className="p-4 pr-12">
               {/* Icon + text */}
               <div className="flex items-center gap-3 mb-3">
-                <div
-                  className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: 'rgba(26,63,143,0.1)' }}
-                >
-                  <BellOff className="w-4 h-4" style={{ color: '#3D95E8' }} />
+                <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
+                  <BellOff className="w-4 h-4 text-primary" strokeWidth={1.75} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-800 leading-tight">
+                  <p className="text-sm font-medium text-ink leading-tight">
                     Notifications are off
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5 leading-snug">
+                  <p className="text-xs text-ink-secondary mt-0.5 leading-snug">
                     Enable to never miss an order update.
                   </p>
                 </div>
@@ -205,16 +152,11 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
               <button
                 onClick={handleEnable}
                 disabled={isBusy}
-                className="w-full flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg,#3D95E8,#4DABFF)',
-                  boxShadow: '0 2px 8px rgba(26,63,143,0.25)',
-                  minHeight: '44px',
-                }}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-medium text-white bg-primary transition-all disabled:opacity-60 active:scale-[0.98]"
               >
                 {isBusy
-                  ? <><Loader2 className="w-4 h-4 animate-spin" />Enabling…</>
-                  : <><Bell className="w-4 h-4" />Enable Notifications</>
+                  ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />Enabling…</>
+                  : <><Bell className="w-4 h-4" strokeWidth={1.75} />Enable notifications</>
                 }
               </button>
             </div>

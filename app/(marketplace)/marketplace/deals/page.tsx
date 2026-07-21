@@ -7,7 +7,9 @@ import {
   Flame, ChevronLeft, Percent, Star, BadgeCheck, Tag,
   Truck, Timer, SlidersHorizontal, X, Search, Loader2,
   CheckCircle, ShoppingBag, Sparkles, Heart, Eye, ArrowUpDown,
-  ChevronDown, Filter,
+  ChevronDown, Filter, LayoutGrid, Smartphone, Laptop, Shirt, Home,
+  UtensilsCrossed, Dumbbell, Car, BookOpen, Ticket, Baby, Palette,
+  Zap, TrendingDown, Trophy, Wallet, type LucideIcon,
 } from 'lucide-react'
 
 // ─────────────────────────────────────────────
@@ -23,21 +25,20 @@ const DEALS_CSS = `
   }
   .dc-enter { opacity: 0; animation: fadeSlideUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
 
-  @keyframes shimmer {
-    0%   { background-position: -600px 0; }
-    100% { background-position:  600px 0; }
-  }
   .dc-shimmer {
-    background: linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%);
-    background-size: 1200px 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    background: var(--color-surface);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
   }
 
   .dc-card {
     transition: transform 0.3s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.3s ease;
     will-change: transform;
   }
-  .dc-card:hover { transform: translateY(-4px) scale(1.015); box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(239,68,68,0.08); }
+  .dc-card:hover { transform: translateY(-2px); }
   .dc-card:active { transform: scale(0.97); transition: transform 0.1s ease; }
   .dc-card:hover .dc-img { transform: scale(1.08); }
   .dc-img { transition: transform 0.5s cubic-bezier(0.22,1,0.36,1); }
@@ -67,32 +68,20 @@ const DEALS_CSS = `
     transition: max-height 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.25s ease;
   }
 
-  .dc-range-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #ef4444;
-    cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(239,68,68,0.4);
-  }
   input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; }
   input[type=range] { -webkit-appearance:none; appearance:none; background:transparent; }
   input[type=range]::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 2px;
-    background: linear-gradient(to right, #ef4444 var(--val, 50%), #e5e7eb var(--val, 50%));
+    background: color-mix(in srgb, var(--color-primary) var(--val, 50%), var(--color-border) 0%);
   }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 18px; height: 18px;
     border-radius: 50%;
-    background: #ef4444;
+    background: var(--color-primary);
     cursor: pointer;
     border: 2px solid white;
-    box-shadow: 0 2px 6px rgba(239,68,68,0.4);
     margin-top: -7px;
   }
 
@@ -100,20 +89,12 @@ const DEALS_CSS = `
   .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
 
   .dc-pill {
-    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s cubic-bezier(0.34,1.4,0.64,1);
+    transition: background 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
   }
-  .dc-pill:hover { transform: scale(1.04); }
-  .dc-pill:active { transform: scale(0.96); }
 
   .dc-hero {
-    background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 40%, #f97316 100%);
+    background: var(--color-primary);
   }
-
-  @keyframes viewerCount {
-    0%,100% { color:#ef4444; }
-    50%      { color:#f97316; }
-  }
-  .dc-viewer { animation: viewerCount 2.5s ease-in-out infinite; }
 `
 
 // ─────────────────────────────────────────────
@@ -134,9 +115,9 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 }
 
 function getDiscountTier(pct: number): { label: string; color: string; bg: string; ring: string } {
-  if (pct >= 30) return { label: `${pct}% OFF`, color: 'text-red-700', bg: 'bg-red-100', ring: 'ring-red-300' }
-  if (pct >= 20) return { label: `${pct}% OFF`, color: 'text-orange-700', bg: 'bg-orange-100', ring: 'ring-orange-300' }
-  return { label: `${pct}% OFF`, color: 'text-amber-700', bg: 'bg-amber-100', ring: 'ring-amber-300' }
+  if (pct >= 30) return { label: `${pct}% OFF`, color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30' }
+  if (pct >= 20) return { label: `${pct}% OFF`, color: 'text-warning', bg: 'bg-warning/10', ring: 'ring-warning/30' }
+  return { label: `${pct}% OFF`, color: 'text-warning', bg: 'bg-warning/10', ring: 'ring-warning/30' }
 }
 
 const CATEGORIES = [
@@ -146,11 +127,11 @@ const CATEGORIES = [
   'Kids & Baby', 'Arts & Crafts',
 ]
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'All': '🛍️', 'Electronics': '📱', 'Computing': '💻', 'Fashion': '👔', 'Home & Kitchen': '🏠',
-  'Food & Groceries': '🍔', 'Beauty & Health': '💄', 'Sports & Fitness': '⚽',
-  'Vehicles & Transport': '🚗', 'Books & Stationery': '📚', 'Tickets & Events': '🎟️',
-  'Kids & Baby': '🧸', 'Arts & Crafts': '🎨',
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  'All': LayoutGrid, 'Electronics': Smartphone, 'Computing': Laptop, 'Fashion': Shirt, 'Home & Kitchen': Home,
+  'Food & Groceries': UtensilsCrossed, 'Beauty & Health': Sparkles, 'Sports & Fitness': Dumbbell,
+  'Vehicles & Transport': Car, 'Books & Stationery': BookOpen, 'Tickets & Events': Ticket,
+  'Kids & Baby': Baby, 'Arts & Crafts': Palette,
 }
 
 // ─────────────────────────────────────────────
@@ -160,16 +141,16 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <Star key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
+        <Star key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-warning fill-warning' : 'text-border fill-border'}`} />
       ))}
-      <span className="text-xs font-semibold text-gray-400 ml-0.5">{rating.toFixed(1)}</span>
+      <span className="text-xs font-semibold text-ink-muted ml-0.5">{rating.toFixed(1)}</span>
     </div>
   )
 }
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+    <div className="bg-white rounded-2xl overflow-hidden border border-border shadow-soft">
       <div className="aspect-square dc-shimmer" />
       <div className="p-3 space-y-2">
         <div className="h-2.5 dc-shimmer rounded-full w-1/2" />
@@ -194,19 +175,19 @@ function DealCard({ product, onClick, delay = 0 }: { product: any; onClick: () =
   return (
     <div
       onClick={onClick}
-      className="dc-card dc-enter bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer flex flex-col group"
+      className="dc-card dc-enter bg-white rounded-2xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      <div className="relative aspect-square bg-surface overflow-hidden">
         <img src={product.images?.[0] || '/placeholder.png'} alt={product.name} className="dc-img w-full h-full object-cover" />
 
-        {/* Discount badge — floating animated */}
+        {/* Discount badge */}
         {discount > 0 && (
-          <div className="dc-float absolute top-2.5 right-2.5">
-            <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-orange-500 shadow-lg ring-2 ring-white">
-              <span className="text-white font-black text-[13px] leading-none">-{discount}%</span>
-              <span className="text-white/80 font-bold text-[8px] leading-none mt-0.5">OFF</span>
+          <div className="absolute top-2.5 right-2.5">
+            <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-primary">
+              <span className="text-white font-semibold text-[13px] leading-none">-{discount}%</span>
+              <span className="text-white/80 font-medium text-[8px] leading-none mt-0.5">OFF</span>
             </div>
           </div>
         )}
@@ -214,76 +195,76 @@ function DealCard({ product, onClick, delay = 0 }: { product: any; onClick: () =
         {/* Label badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
           {isHot && !product.isDeal && (
-            <span className="dc-badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
-              🔥 HOT
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT
             </span>
           )}
           {discount >= 30 && (
-            <span className="dc-badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-red-600 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
-              🔥 MEGA DEAL
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> MEGA DEAL
             </span>
           )}
           {discount >= 20 && discount < 30 && (
-            <span className="dc-badge-pulse inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-black rounded-lg shadow-md">
-              ⚡ HOT DEAL
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Zap className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT DEAL
             </span>
           )}
           {discount >= 12 && discount < 20 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-400 text-white text-[10px] font-black rounded-lg shadow-md">
-              🏷️ DEAL
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
+              <Tag className="w-2.5 h-2.5" strokeWidth={1.75} /> DEAL
             </span>
           )}
         </div>
 
         {product.images?.length > 1 && (
-          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-bold backdrop-blur-sm">
+          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-semibold backdrop-blur-sm">
             {product.images.length} photos
           </div>
         )}
 
         {/* Quick actions */}
         <div className="dc-quick absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 bg-white/95 hover:bg-red-50 rounded-lg flex items-center justify-center shadow-sm transition-colors">
-            <Heart className="w-3.5 h-3.5 text-gray-500 hover:text-red-500" />
+          <button onClick={e => e.stopPropagation()} className="w-7 h-7 bg-white/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+            <Heart className="w-3.5 h-3.5 text-ink-secondary hover:text-primary" />
           </button>
-          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-sm transition-colors">
-            <Eye className="w-3.5 h-3.5 text-gray-500" />
+          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+            <Eye className="w-3.5 h-3.5 text-ink-secondary" />
           </button>
         </div>
       </div>
 
       {/* Info */}
       <div className="p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+        <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-0.5">
           {(() => {
             const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
             return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
           })()}
         </p>
-        <h3 className="font-bold text-gray-900 line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
+        <h3 className="font-semibold text-ink line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
 
         {/* Savings pill */}
         {savings > 0 && (
-          <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full ring-1 ${tier.bg} ${tier.color} ${tier.ring} text-[10px] font-black self-start`}>
+          <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full ring-1 ${tier.bg} ${tier.color} ${tier.ring} text-[10px] font-semibold self-start`}>
             <Tag className="w-2.5 h-2.5" /> Save {fmt(savings)}
           </div>
         )}
 
         {/* Price row */}
         <div className="mt-2 flex items-baseline gap-2 flex-wrap">
-          <span className="text-red-600 font-black text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
+          <span className="text-primary font-semibold text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
           {originalPrice && (
-            <span className="text-gray-400 font-medium text-[11px] line-through">{fmt(originalPrice)}</span>
+            <span className="text-ink-muted font-medium text-[11px] line-through">{fmt(originalPrice)}</span>
           )}
         </div>
 
         <StarRating rating={product.seller?.avgRating || 0} />
 
         {/* Seller row */}
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-gray-50">
+        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-border">
           <div className="flex items-center gap-1 min-w-0">
-            <span className="text-[10px] font-semibold text-gray-500 truncate">{product.seller?.name}</span>
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-bold ring-1 ring-blue-100 flex-shrink-0">
+            <span className="text-[10px] font-semibold text-ink-secondary truncate">{product.seller?.name}</span>
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-semibold ring-1 ring-primary/20 flex-shrink-0">
               <BadgeCheck className="w-2.5 h-2.5" /> Verified
             </span>
           </div>
@@ -333,58 +314,61 @@ function FilterPanel({
   const set = (key: keyof Filters, val: string | number) => onChange({ ...filters, [key]: val })
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-5">
+    <div className="bg-white rounded-2xl border border-border shadow-soft p-5 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-red-500" />
-          <span className="font-black text-gray-900 text-sm">Filter Deals</span>
+          <SlidersHorizontal className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-ink text-sm">Filter Deals</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => onChange(DEFAULT_FILTERS)}
-            className="text-[11px] font-bold text-gray-400 hover:text-red-500 transition-colors"
+            className="text-[11px] font-semibold text-ink-muted hover:text-primary transition-colors"
           >
             Reset all
           </button>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
-            <X className="w-3.5 h-3.5 text-gray-500" />
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg bg-surface hover:bg-border transition-colors">
+            <X className="w-3.5 h-3.5 text-ink-secondary" />
           </button>
         </div>
       </div>
 
       {/* Category */}
       <div>
-        <p className="text-xs font-black text-gray-700 mb-2">Category</p>
+        <p className="text-xs font-semibold text-ink-secondary mb-2">Category</p>
         <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map(cat => (
+          {CATEGORIES.map(cat => {
+            const Icon = CATEGORY_ICONS[cat] || LayoutGrid
+            return (
             <button
               key={cat}
               onClick={() => set('category', cat)}
-              className={`dc-pill flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-all ${
+              className={`dc-pill flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
                 filters.category === cat
-                  ? 'bg-red-500 text-white border-red-500 shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-red-300 hover:text-red-600'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-ink-secondary border-border hover:border-primary/30 hover:text-primary'
               }`}
             >
-              <span>{CATEGORY_ICONS[cat] || '🛍️'}</span>
+              <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
               <span className="hidden sm:inline">{cat}</span>
               <span className="sm:hidden">{cat.split(' ')[0]}</span>
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
 
       {/* Price range */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-black text-gray-700">Price Range</p>
-          <span className="text-[11px] font-bold text-red-500">
+          <p className="text-xs font-semibold text-ink-secondary">Price Range</p>
+          <span className="text-[11px] font-semibold text-primary">
             {fmt(filters.minPrice)} — {filters.maxPrice >= maxPossiblePrice ? 'Any' : fmt(filters.maxPrice)}
           </span>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-[10px] font-semibold text-gray-400 mb-1 block">Min price</label>
+            <label className="text-[10px] font-semibold text-ink-muted mb-1 block">Min price</label>
             <input
               type="range"
               min={0}
@@ -393,11 +377,11 @@ function FilterPanel({
               value={filters.minPrice}
               onChange={e => set('minPrice', Number(e.target.value))}
               style={{ '--val': `${(filters.minPrice / maxPossiblePrice) * 100}%` } as React.CSSProperties}
-              className="w-full h-1 accent-red-500"
+              className="w-full h-1 accent-primary"
             />
           </div>
           <div>
-            <label className="text-[10px] font-semibold text-gray-400 mb-1 block">Max price</label>
+            <label className="text-[10px] font-semibold text-ink-muted mb-1 block">Max price</label>
             <input
               type="range"
               min={0}
@@ -406,7 +390,7 @@ function FilterPanel({
               value={filters.maxPrice}
               onChange={e => set('maxPrice', Number(e.target.value))}
               style={{ '--val': `${(filters.maxPrice / maxPossiblePrice) * 100}%` } as React.CSSProperties}
-              className="w-full h-1 accent-red-500"
+              className="w-full h-1 accent-primary"
             />
           </div>
         </div>
@@ -416,10 +400,10 @@ function FilterPanel({
             <button
               key={v}
               onClick={() => onChange({ ...filters, minPrice: 0, maxPrice: v })}
-              className={`dc-pill px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+              className={`dc-pill px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
                 filters.maxPrice === v && filters.minPrice === 0
-                  ? 'bg-red-500 text-white border-red-500'
-                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-red-300'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-ink-secondary border-border hover:border-primary/30'
               }`}
             >
               Under {fmt(v)}
@@ -431,14 +415,14 @@ function FilterPanel({
       {/* Discount range */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-black text-gray-700">Discount Range</p>
-          <span className="text-[11px] font-bold text-red-500">
+          <p className="text-xs font-semibold text-ink-secondary">Discount Range</p>
+          <span className="text-[11px] font-semibold text-primary">
             {filters.minDiscount}% — {filters.maxDiscount >= maxPossibleDiscount ? 'Max' : `${filters.maxDiscount}%`} OFF
           </span>
         </div>
         <div className="space-y-3">
           <div>
-            <label className="text-[10px] font-semibold text-gray-400 mb-1 block">Min discount</label>
+            <label className="text-[10px] font-semibold text-ink-muted mb-1 block">Min discount</label>
             <input
               type="range"
               min={HOT_DEAL_MIN_PERCENT}
@@ -447,11 +431,11 @@ function FilterPanel({
               value={filters.minDiscount}
               onChange={e => set('minDiscount', Number(e.target.value))}
               style={{ '--val': `${((filters.minDiscount - HOT_DEAL_MIN_PERCENT) / (maxPossibleDiscount - HOT_DEAL_MIN_PERCENT)) * 100}%` } as React.CSSProperties}
-              className="w-full h-1 accent-red-500"
+              className="w-full h-1 accent-primary"
             />
           </div>
           <div>
-            <label className="text-[10px] font-semibold text-gray-400 mb-1 block">Max discount</label>
+            <label className="text-[10px] font-semibold text-ink-muted mb-1 block">Max discount</label>
             <input
               type="range"
               min={HOT_DEAL_MIN_PERCENT}
@@ -460,7 +444,7 @@ function FilterPanel({
               value={filters.maxDiscount}
               onChange={e => set('maxDiscount', Number(e.target.value))}
               style={{ '--val': `${((filters.maxDiscount - HOT_DEAL_MIN_PERCENT) / (maxPossibleDiscount - HOT_DEAL_MIN_PERCENT)) * 100}%` } as React.CSSProperties}
-              className="w-full h-1 accent-red-500"
+              className="w-full h-1 accent-primary"
             />
           </div>
         </div>
@@ -475,10 +459,10 @@ function FilterPanel({
             <button
               key={p.label}
               onClick={() => onChange({ ...filters, minDiscount: p.min, maxDiscount: p.max })}
-              className={`dc-pill px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+              className={`dc-pill px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
                 filters.minDiscount === p.min && filters.maxDiscount === p.max
-                  ? 'bg-red-500 text-white border-red-500'
-                  : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-red-300'
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-ink-secondary border-border hover:border-primary/30'
               }`}
             >
               {p.label}
@@ -503,13 +487,14 @@ function DealsStatsStrip({ deals }: { deals: any[] }) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {[
-        { label: 'Deals Live', value: deals.length.toString(), sub: 'active right now', icon: '🔥' },
-        { label: 'Avg Discount', value: `${avgDiscount}%`, sub: 'off market price', icon: '📉' },
-        { label: 'Max Deal',  value: `${maxDiscount}%`, sub: 'biggest saving', icon: '🏆' },
+        { label: 'Deals live', value: deals.length.toString(), sub: 'active right now', icon: Flame },
+        { label: 'Avg discount', value: `${avgDiscount}%`, sub: 'off market price', icon: TrendingDown },
+        { label: 'Max deal',  value: `${maxDiscount}%`, sub: 'biggest saving', icon: Trophy },
       ].map(s => (
-        <div key={s.label} className="bg-white/15 border border-white/20 rounded-2xl p-3 text-center">
-          <p className="text-lg font-black text-white">{s.icon} {s.value}</p>
-          <p className="text-[10px] font-bold text-white/70 mt-0.5">{s.sub}</p>
+        <div key={s.label} className="bg-white/15 border border-white/20 rounded-xl p-3 text-center">
+          <s.icon className="w-4 h-4 text-white mx-auto mb-1" strokeWidth={1.75} />
+          <p className="text-lg font-semibold text-white">{s.value}</p>
+          <p className="text-[10px] font-medium text-white/70 mt-0.5">{s.sub}</p>
         </div>
       ))}
     </div>
@@ -628,14 +613,14 @@ export default function DealsPage() {
   ].filter(Boolean).length
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5]">
+    <div className="min-h-screen bg-surface">
       {/* ── Hero ── */}
       <div className="dc-hero">
         {/* Back nav */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-bold text-sm"
+            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-semibold text-sm"
           >
             <ChevronLeft className="w-4 h-4" /> Back to Marketplace
           </button>
@@ -648,7 +633,7 @@ export default function DealsPage() {
               <Flame className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">Hot Deals</h1>
+              <h1 className="text-2xl font-semibold text-white tracking-tight">Hot Deals</h1>
               <p className="text-white/70 text-sm font-medium">Campus discounts — 12% to 50%+ off</p>
             </div>
           </div>
@@ -682,16 +667,16 @@ export default function DealsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowFilters(v => !v)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm border transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm border transition-all ${
               showFilters || activeFilterCount > 0
-                ? 'bg-red-500 text-white border-red-500 shadow-sm'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:text-red-600'
+                ? 'bg-primary text-white border-primary shadow-soft'
+                : 'bg-white text-ink-secondary border-border hover:border-primary/30 hover:text-primary'
             }`}
           >
             <Filter className="w-4 h-4" />
             Filters
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-white text-red-500 text-[10px] font-black flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-white text-primary text-[10px] font-semibold flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -699,31 +684,31 @@ export default function DealsPage() {
 
           {/* Active filter chips */}
           {filters.category !== 'All' && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm">
-              {CATEGORY_ICONS[filters.category]} {filters.category}
-              <button onClick={() => setFilters(f => ({ ...f, category: 'All' }))} className="text-gray-400 hover:text-red-500 ml-0.5">
-                <X className="w-3 h-3" />
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
+              {filters.category}
+              <button onClick={() => setFilters(f => ({ ...f, category: 'All' }))} className="text-ink-muted hover:text-primary ml-0.5">
+                <X className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </span>
           )}
           {(filters.minPrice > 0 || filters.maxPrice < 500000) && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm">
-              💰 {fmt(filters.minPrice)} — {fmt(filters.maxPrice)}
-              <button onClick={() => setFilters(f => ({ ...f, minPrice: 0, maxPrice: 500000 }))} className="text-gray-400 hover:text-red-500 ml-0.5">
-                <X className="w-3 h-3" />
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
+              {fmt(filters.minPrice)} - {fmt(filters.maxPrice)}
+              <button onClick={() => setFilters(f => ({ ...f, minPrice: 0, maxPrice: 500000 }))} className="text-ink-muted hover:text-primary ml-0.5">
+                <X className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </span>
           )}
           {(filters.minDiscount > HOT_DEAL_MIN_PERCENT || filters.maxDiscount < 100) && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl border border-gray-200 text-[11px] font-bold text-gray-700 shadow-sm">
-              <Percent className="w-3 h-3 text-red-500" /> {filters.minDiscount}% — {filters.maxDiscount}% OFF
-              <button onClick={() => setFilters(f => ({ ...f, minDiscount: HOT_DEAL_MIN_PERCENT, maxDiscount: 100 }))} className="text-gray-400 hover:text-red-500 ml-0.5">
-                <X className="w-3 h-3" />
+            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
+              <Percent className="w-3 h-3 text-primary" strokeWidth={1.75} /> {filters.minDiscount}% - {filters.maxDiscount}% OFF
+              <button onClick={() => setFilters(f => ({ ...f, minDiscount: HOT_DEAL_MIN_PERCENT, maxDiscount: 100 }))} className="text-ink-muted hover:text-primary ml-0.5">
+                <X className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </span>
           )}
 
-          <div className="ml-auto text-[11px] text-gray-400 font-medium">
+          <div className="ml-auto text-[11px] text-ink-muted font-medium">
             {loading ? 'Loading…' : `${filteredDeals.length} deal${filteredDeals.length !== 1 ? 's' : ''}`}
           </div>
         </div>
@@ -744,13 +729,13 @@ export default function DealsPage() {
             {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : filteredDeals.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <div className="text-5xl mb-4">🏷️</div>
-            <p className="text-gray-700 font-black text-lg mb-1">No deals match your filters</p>
-            <p className="text-gray-400 text-sm mb-5">Try adjusting the category, price or discount range</p>
+          <div className="text-center py-20 bg-white rounded-xl border border-border">
+            <Tag className="w-10 h-10 text-ink-muted mx-auto mb-4" strokeWidth={1.75} />
+            <p className="text-ink-secondary font-semibold text-lg mb-1">No deals match your filters</p>
+            <p className="text-ink-muted text-sm mb-5">Try adjusting the category, price or discount range</p>
             <button
               onClick={() => { setFilters(DEFAULT_FILTERS); setSearchInput('') }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm shadow-md hover:bg-red-600 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft hover:brightness-95 transition-colors"
             >
               <X className="w-4 h-4" /> Clear all filters
             </button>
@@ -758,10 +743,16 @@ export default function DealsPage() {
         ) : (
           <>
             {/* Discount tier legend */}
-            <div className="flex gap-2 flex-wrap text-[10px] font-bold">
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 rounded-full ring-1 ring-red-300">🔥 MEGA DEAL = 30%+ off</span>
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full ring-1 ring-orange-300">⚡ HOT DEAL = 20–29% off</span>
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full ring-1 ring-amber-300">🏷️ DEAL = 12–19% off</span>
+            <div className="flex gap-2 flex-wrap text-[10px] font-semibold">
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full">
+                <Flame className="w-3 h-3" strokeWidth={1.75} /> MEGA DEAL = 30%+ off
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full">
+                <Zap className="w-3 h-3" strokeWidth={1.75} /> HOT DEAL = 20-29% off
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full">
+                <Tag className="w-3 h-3" strokeWidth={1.75} /> DEAL = 12-19% off
+              </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -779,18 +770,18 @@ export default function DealsPage() {
             {/* Infinite scroll sentinel */}
             <div ref={loaderRef} className="flex justify-center items-center py-8">
               {loadingMore ? (
-                <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
+                <div className="flex items-center gap-2 text-ink-muted text-sm font-medium">
                   <Loader2 className="w-4 h-4 dc-spin" /> Loading more deals…
                 </div>
               ) : hasMore ? (
                 <div className="w-full h-4" />
               ) : (
-                <div className="flex flex-col items-center gap-1 text-gray-300">
+                <div className="flex flex-col items-center gap-1 text-ink-muted">
                   <CheckCircle className="w-5 h-5" />
                   <p className="text-xs font-semibold">You&apos;ve seen all the deals!</p>
                   <button
                     onClick={() => router.back()}
-                    className="mt-2 text-xs font-bold text-red-500 hover:underline flex items-center gap-1"
+                    className="mt-2 text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                   >
                     <ChevronLeft className="w-3 h-3" /> Back to Marketplace
                   </button>

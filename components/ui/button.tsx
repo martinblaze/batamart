@@ -14,19 +14,22 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
+// Design bible section 8 — Buttons. Primary/secondary/ghost/danger are the
+// canonical variants; `success` is an extra status-colored variant reused
+// consistently wherever a confirm/complete action needs it.
 const variantStyles = {
-  primary: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm hover:shadow-md',
-  secondary: 'bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white shadow-sm hover:shadow-md',
-  outline: 'border-2 border-gray-300 hover:bg-gray-50 text-gray-700',
-  ghost: 'hover:bg-gray-100 text-gray-700',
-  danger: 'bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-sm hover:shadow-md',
-  success: 'bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-sm hover:shadow-md',
+  primary: 'bg-primary text-white hover:brightness-95 active:brightness-90',
+  secondary: 'bg-white text-ink border border-border hover:bg-surface',
+  outline: 'bg-transparent text-primary border border-primary hover:bg-primary hover:text-white',
+  ghost: 'bg-transparent text-ink-secondary hover:bg-surface',
+  danger: 'bg-danger text-white hover:brightness-95 active:brightness-90',
+  success: 'bg-success text-white hover:brightness-95 active:brightness-90',
 };
 
 const sizeStyles = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
+  sm: 'h-9 px-3 text-sm',
+  md: 'h-11 px-4 text-[15px]',
+  lg: 'h-11 px-6 text-[15px]',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -54,10 +57,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         className={cn(
           'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-          'transition-all duration-200 ease-in-out',
-          'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none',
-          'active:scale-98',
+          'transition-all duration-150 ease-out',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+          'disabled:opacity-40 disabled:pointer-events-none',
+          'active:scale-[0.98]',
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && 'w-full',
@@ -65,7 +68,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+        {isLoading && <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />}
         {!isLoading && leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
         <span>{isLoading && loadingText ? loadingText : children}</span>
         {!isLoading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
@@ -90,11 +93,11 @@ export function IconButton({
       title={label}
       className={cn(
         'inline-flex items-center justify-center rounded-lg',
-        'transition-all duration-200 ease-in-out',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'transition-all duration-150 ease-out',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        'disabled:opacity-40 disabled:pointer-events-none',
         'active:scale-95',
-        'p-2 hover:bg-gray-100',
+        'p-2 text-ink-secondary hover:bg-surface',
         props.className
       )}
       {...props}
@@ -106,7 +109,7 @@ export function IconButton({
 
 export function ButtonGroup({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('inline-flex rounded-lg shadow-sm', className)} role="group">
+    <div className={cn('inline-flex rounded-lg border border-border overflow-hidden', className)} role="group">
       {children}
     </div>
   );

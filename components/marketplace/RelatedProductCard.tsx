@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { useMemo } from 'react'
-import { ArrowDownRight, ShoppingCart, Sparkles, Star, Truck } from 'lucide-react'
+import { ShoppingCart, Sparkles, Star, Truck } from 'lucide-react'
+import { Badge } from '@/components/ui/Badge'
 
 export type RelatedProductCardProduct = {
   id: string
@@ -31,6 +31,9 @@ function formatPrice(value: number) {
   }).format(Number(value || 0))
 }
 
+// Thin sibling of components/ProductCard.tsx tuned for narrow related-product
+// rails. Same flat design-bible tokens; kept separate because the data shape
+// (matchReason, discountPercent) differs from the main product card.
 export default function RelatedProductCard({
   product,
   onOpen,
@@ -49,8 +52,8 @@ export default function RelatedProductCard({
   }, [product.discountPercent, product.price])
 
   const card = (
-    <div className={`group relative overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#272b33] dark:bg-[#0f1115] ${compact ? 'w-40 sm:w-full' : 'w-full'}`}>
-      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-[#0b0d12]">
+    <div className={`group relative overflow-hidden rounded-xl border border-border bg-white transition-transform duration-150 ease-out hover:-translate-y-0.5 ${compact ? 'w-40 sm:w-full' : 'w-full'}`}>
+      <div className="relative aspect-square overflow-hidden bg-surface">
         {product.images?.[0] ? (
           <img
             src={product.images[0]}
@@ -60,17 +63,17 @@ export default function RelatedProductCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <Sparkles className="h-8 w-8 text-gray-300" />
+            <Sparkles className="h-8 w-8 text-ink-muted" strokeWidth={1.75} />
           </div>
         )}
         {product.isHot && (
-          <span className="absolute left-2 top-2 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-black text-white shadow-lg shadow-orange-500/20">
-            Hot
+          <span className="absolute left-2 top-2">
+            <Badge status="warning">Hot</Badge>
           </span>
         )}
         {(product.isDeal || (product.discountPercent ?? 0) > 0) && (
-          <span className="absolute right-2 top-2 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-black text-white shadow-lg shadow-rose-500/20">
-            {product.discountPercent ? `${product.discountPercent}% OFF` : 'Deal'}
+          <span className="absolute right-2 top-2">
+            <Badge status="danger">{product.discountPercent ? `${product.discountPercent}% off` : 'Deal'}</Badge>
           </span>
         )}
         {onAddToCart && (
@@ -81,49 +84,49 @@ export default function RelatedProductCard({
               event.stopPropagation()
               onAddToCart()
             }}
-            className="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-gray-900 shadow-lg ring-1 ring-black/5 transition hover:bg-indigo-50 hover:text-indigo-700"
+            className="absolute bottom-2 right-2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-ink border border-border transition-colors hover:bg-surface"
             aria-label="Add to cart"
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4" strokeWidth={1.75} />
           </button>
         )}
       </div>
 
       <div className="space-y-2 p-3">
         {product.matchReason && (
-          <div className="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-600 dark:bg-white/5 dark:text-[#cbd5e1]">
+          <div className="inline-flex rounded-md bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-secondary">
             {product.matchReason}
           </div>
         )}
-        <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-gray-900 dark:text-[#e5e7eb]">
+        <p className="line-clamp-2 text-[13px] font-medium leading-5 text-ink">
           {product.name}
         </p>
         <div className="flex items-center gap-1.5">
-          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          <span className="text-[11px] font-semibold text-gray-600 dark:text-[#94a3b8]">
+          <Star className="h-3.5 w-3.5 fill-warning text-warning" strokeWidth={1.75} />
+          <span className="text-[11px] font-medium text-ink-secondary">
             {(product.avgRating || 0).toFixed(1)}
           </span>
-          <span className="text-[11px] text-gray-400 dark:text-[#64748b]">·</span>
-          <span className="text-[11px] text-gray-500 dark:text-[#94a3b8]">
+          <span className="text-[11px] text-ink-muted">·</span>
+          <span className="text-[11px] text-ink-secondary">
             {product.totalReviews || 0} reviews
           </span>
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+          <span className="text-sm font-semibold text-ink">
             {product.priceDisplay || formatPrice(product.price)}
           </span>
           {originalPrice && (
-            <span className="text-[11px] text-gray-400 line-through">
+            <span className="text-[11px] text-ink-muted line-through">
               {formatPrice(originalPrice)}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-[#94a3b8]">
-          <Truck className="h-3.5 w-3.5 text-emerald-500" />
+        <div className="flex items-center gap-1 text-[11px] text-ink-secondary">
+          <Truck className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
           <span>{product.deliveryEstimate || 'Delivery info available'}</span>
         </div>
         {product.seller?.name && (
-          <p className="truncate text-[11px] text-gray-400 dark:text-[#64748b]">
+          <p className="truncate text-[11px] text-ink-muted">
             Sold by {product.seller.name}
           </p>
         )}

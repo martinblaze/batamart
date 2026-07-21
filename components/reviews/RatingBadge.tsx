@@ -36,10 +36,10 @@ export default function RatingBadge({
   };
 
   const trustLevelColors = {
-    BRONZE: 'bg-orange-100 text-orange-800 border-orange-200',
-    SILVER: 'bg-gray-100 text-gray-800 border-gray-300',
-    GOLD: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    VERIFIED: 'bg-green-100 text-green-800 border-green-300',
+    BRONZE: 'bg-surface text-ink-secondary border-border',
+    SILVER: 'bg-surface text-ink-secondary border-border',
+    GOLD: 'bg-warning/10 text-warning border-warning/30',
+    VERIFIED: 'bg-success/10 text-success border-success/30',
   };
 
   const classes = sizeClasses[size];
@@ -48,11 +48,11 @@ export default function RatingBadge({
     <div className="flex items-center gap-2 flex-wrap">
       {/* Rating */}
       <div className="flex items-center gap-1">
-        <Star className={`${classes.star} fill-yellow-400 text-yellow-400`} />
+        <Star className={`${classes.star} fill-warning text-warning`} />
         <span className={`font-semibold ${classes.text}`}>
           {rating.toFixed(1)}
         </span>
-        <span className={`text-gray-500 ${classes.text}`}>
+        <span className={`text-ink-muted ${classes.text}`}>
           ({reviewCount})
         </span>
       </div>

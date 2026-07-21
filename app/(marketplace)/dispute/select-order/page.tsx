@@ -62,42 +62,42 @@ export default function SelectOrderForDisputePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000] pb-24">
+    <div className="min-h-screen bg-surface dark:bg-[#000000] pb-24">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <h1 className="text-2xl font-bold text-gray-900">Open a Dispute</h1>
+            <AlertTriangle className="w-5 h-5 text-warning" />
+            <h1 className="text-2xl font-semibold text-ink">Open a Dispute</h1>
           </div>
-          <p className="text-gray-500 text-sm">
+          <p className="text-ink-secondary text-sm">
             Select the delivered order you want to dispute. Disputes must be opened within 48 hours of delivery.
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
+          <div className="bg-danger/10 border border-danger/30 text-danger rounded-xl px-4 py-3 mb-4 text-sm">
             {error}
           </div>
         )}
 
         {/* Eligible orders */}
         {eligibleOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-            <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No eligible orders</p>
-            <p className="text-gray-400 text-sm mt-1">
+          <div className="bg-white rounded-2xl border border-border p-8 text-center">
+            <ShoppingBag className="w-10 h-10 text-ink-muted mx-auto mb-3" />
+            <p className="text-ink-secondary font-medium">No eligible orders</p>
+            <p className="text-ink-muted text-sm mt-1">
               Only delivered or completed orders within 48 hours can be disputed.
             </p>
             <Link
               href="/orders"
-              className="inline-block mt-4 text-indigo-600 text-sm font-semibold hover:underline"
+              className="inline-block mt-4 text-primary text-sm font-semibold hover:underline"
             >
               View all orders →
             </Link>
@@ -112,10 +112,10 @@ export default function SelectOrderForDisputePage() {
                     `/orders/${order.id}/dispute${isApp ? '?app=true' : ''}`
                   )
                 }
-                className="w-full bg-white border border-gray-200 rounded-2xl p-4 flex items-center gap-4 hover:border-indigo-400 hover:shadow-md transition-all text-left"
+                className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-4 hover:border-primary/50 hover:shadow-soft transition-all text-left"
               >
                 {/* Product image */}
-                <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                   {order.product.images?.[0] ? (
                     <img
                       src={order.product.images[0]}
@@ -123,19 +123,19 @@ export default function SelectOrderForDisputePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Package className="w-6 h-6 text-gray-300 m-auto mt-4" />
+                    <Package className="w-6 h-6 text-ink-muted m-auto mt-4" />
                   )}
                 </div>
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
+                  <p className="font-semibold text-ink truncate">
                     {order.product.name}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-ink-secondary">
                     Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-ink-muted">
                     ₦{order.totalAmount.toLocaleString()} ·{' '}
                     {new Date(
                       order.deliveredAt ?? order.completedAt ?? order.createdAt
@@ -143,7 +143,7 @@ export default function SelectOrderForDisputePage() {
                   </p>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <ChevronRight className="w-5 h-5 text-ink-muted flex-shrink-0" />
               </button>
             ))}
           </div>
@@ -152,7 +152,7 @@ export default function SelectOrderForDisputePage() {
         {/* Already disputed orders */}
         {disputedOrders.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider mb-3">
               Existing Disputes
             </h2>
             <div className="space-y-3">
@@ -160,9 +160,9 @@ export default function SelectOrderForDisputePage() {
                 <Link
                   key={order.id}
                   href={`/orders/${order.id}`}
-                  className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl p-4 hover:border-gray-300 transition-all"
+                  className="flex items-center gap-4 bg-white border border-border rounded-2xl p-4 hover:border-border transition-all"
                 >
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
                     {order.product.images?.[0] ? (
                       <img
                         src={order.product.images[0]}
@@ -170,21 +170,21 @@ export default function SelectOrderForDisputePage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Package className="w-6 h-6 text-gray-300 m-auto mt-4" />
+                      <Package className="w-6 h-6 text-ink-muted m-auto mt-4" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">
+                    <p className="font-semibold text-ink truncate">
                       {order.product.name}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-ink-secondary">
                       Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
                     </p>
-                    <span className="inline-block text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full mt-1">
+                    <span className="inline-block text-xs font-semibold text-danger bg-danger/10 px-2 py-0.5 rounded-full mt-1">
                       Disputed
                     </span>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-5 h-5 text-ink-muted flex-shrink-0" />
                 </Link>
               ))}
             </div>

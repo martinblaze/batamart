@@ -261,8 +261,8 @@ export default function UsersPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${
-          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-ink text-sm font-medium shadow-soft ${
+          toast.type === 'success' ? 'bg-success' : 'bg-danger'
         }`}>
           {toast.message}
         </div>
@@ -271,19 +271,19 @@ export default function UsersPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Users</h1>
-          <p className="text-sm text-gray-400 mt-0.5">
-            {total.toLocaleString()} users · <span className="text-white font-medium">{selectedUniName}</span>
+          <h1 className="text-2xl font-semibold text-ink">Users</h1>
+          <p className="text-sm text-ink-secondary mt-0.5">
+            {total.toLocaleString()} users · <span className="text-ink font-medium">{selectedUniName}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* University switcher */}
-          <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2">
-            <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
+            <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
             <select
               value={selectedUni}
               onChange={e => setSelectedUni(e.target.value)}
-              className="bg-transparent text-white text-sm font-medium focus:outline-none cursor-pointer"
+              className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
             >
               <option value="all">All Universities</option>
               {universities.map(u => (
@@ -293,7 +293,7 @@ export default function UsersPage() {
           </div>
           <button
             onClick={() => setShowCreateRider(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-danger hover:brightness-95 text-white text-sm font-semibold rounded-xl transition-colors"
           >
             <UserPlus className="w-4 h-4" />
             Add Rider
@@ -304,20 +304,20 @@ export default function UsersPage() {
       {/* ── Filters ── */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-secondary" />
           <input
             type="text"
             placeholder="Search by name, email, or phone…"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKey}
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-red-500"
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-border rounded-xl text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-primary"
           />
         </div>
         <select
           value={filterRole}
           onChange={e => setFilterRole(e.target.value)}
-          className="px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none cursor-pointer"
+          className="px-4 py-2.5 bg-white border border-border rounded-xl text-ink text-sm focus:outline-none cursor-pointer"
         >
           <option value="ALL">All Roles</option>
           <option value="BUYER">Buyers</option>
@@ -326,93 +326,93 @@ export default function UsersPage() {
         </select>
         <button
           onClick={() => fetchUsers(1)}
-          className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-xl transition-colors"
+          className="px-4 py-2.5 bg-surface hover:bg-border text-ink text-sm rounded-xl transition-colors"
         >
           Search
         </button>
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-border rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent" />
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
           </div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">No users found</div>
+          <div className="text-center py-16 text-ink-secondary">No users found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Role</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">University</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Trust</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Activity</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                <tr className="border-b border-border">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">User</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Role</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">University</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Trust</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Activity</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700/50">
+              <tbody className="divide-y divide-border/50">
                 {users.map(user => (
-                  <tr key={user.id} className="hover:bg-gray-700/30 transition-colors">
+                  <tr key={user.id} className="hover:bg-surface/30 transition-colors">
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-white font-medium text-sm">{user.name}</p>
-                        <p className="text-gray-400 text-xs">{user.email || user.phone}</p>
+                        <p className="text-ink font-medium text-sm">{user.name}</p>
+                        <p className="text-ink-secondary text-xs">{user.email || user.phone}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.role === 'SELLER' ? 'bg-green-500/20 text-green-400' :
-                        user.role === 'RIDER'  ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-gray-600/50 text-gray-300'
+                        user.role === 'SELLER' ? 'bg-success/10 text-success' :
+                        user.role === 'RIDER'  ? 'bg-primary/10 text-primary' :
+                        'bg-surface text-ink-secondary'
                       }`}>
                         {user.role}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-gray-300 text-xs">{user.university?.shortName ?? '—'}</span>
+                      <span className="text-ink-secondary text-xs">{user.university?.shortName ?? '—'}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.trustLevel === 'GOLD'     ? 'bg-yellow-500/20 text-yellow-400' :
-                        user.trustLevel === 'SILVER'   ? 'bg-gray-400/20 text-gray-300' :
-                        user.trustLevel === 'VERIFIED' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-orange-500/20 text-orange-400'
+                        user.trustLevel === 'GOLD'     ? 'bg-warning/10 text-warning' :
+                        user.trustLevel === 'SILVER'   ? 'bg-surface text-ink-secondary' :
+                        user.trustLevel === 'VERIFIED' ? 'bg-primary/10 text-primary' :
+                        'bg-warning/10 text-warning'
                       }`}>
                         {user.trustLevel}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-400">
+                    <td className="px-4 py-3 text-xs text-ink-secondary">
                       {user._count.ordersAsBuyer} orders · {user._count.products} products
                     </td>
                     <td className="px-4 py-3">
                       {user.isSuspended ? (
-                        <span className="flex items-center gap-1 text-red-400 text-xs">
+                        <span className="flex items-center gap-1 text-danger text-xs">
                           <XCircle className="w-3 h-3" /> Suspended
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-green-400 text-xs">
+                        <span className="flex items-center gap-1 text-success text-xs">
                           <CheckCircle className="w-3 h-3" /> Active
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       {actionLoading === user.id ? (
-                        <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       ) : user.isSuspended ? (
                         <button
                           onClick={() => setUnsuspendTarget({ userId: user.id, userName: user.name })}
-                          className="text-xs text-green-400 hover:text-green-300 font-medium"
+                          className="text-xs text-success hover:text-success font-medium"
                         >
                           Unsuspend
                         </button>
                       ) : (
                         <button
                           onClick={() => setSuspendDialog({ userId: user.id, userName: user.name, reason: '', days: '30' })}
-                          className="text-xs text-red-400 hover:text-red-300 font-medium"
+                          className="text-xs text-danger hover:text-danger font-medium"
                         >
                           Suspend
                         </button>
@@ -429,21 +429,21 @@ export default function UsersPage() {
       {/* ── Pagination ── */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-ink-secondary">
             Page {page} of {totalPages} · {total.toLocaleString()} total
           </p>
           <div className="flex gap-2">
             <button
               disabled={page <= 1}
               onClick={() => setPage(p => p - 1)}
-              className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 hover:text-white disabled:opacity-40"
+              className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink disabled:opacity-40"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(p => p + 1)}
-              className="p-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 hover:text-white disabled:opacity-40"
+              className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink disabled:opacity-40"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -455,37 +455,37 @@ export default function UsersPage() {
       {suspendDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setSuspendDialog(null)} />
-          <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-sm z-10">
-            <h3 className="text-lg font-bold text-white mb-1">Suspend User</h3>
-            <p className="text-sm text-gray-400 mb-4">{suspendDialog.userName}</p>
+          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-sm z-10">
+            <h3 className="text-lg font-semibold text-ink mb-1">Suspend User</h3>
+            <p className="text-sm text-ink-secondary mb-4">{suspendDialog.userName}</p>
             <div className="space-y-3 mb-5">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Reason</label>
+                <label className="block text-xs text-ink-secondary mb-1">Reason</label>
                 <textarea
                   value={suspendDialog.reason}
                   onChange={e => setSuspendDialog({ ...suspendDialog, reason: e.target.value })}
                   rows={3}
                   placeholder="Reason for suspension…"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500 resize-none"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:border-primary resize-none"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Duration (days)</label>
+                <label className="block text-xs text-ink-secondary mb-1">Duration (days)</label>
                 <input
                   type="number"
                   value={suspendDialog.days}
                   onChange={e => setSuspendDialog({ ...suspendDialog, days: e.target.value })}
                   min="1"
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                  className="w-full px-3 py-2 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:border-primary"
                 />
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setSuspendDialog(null)} className="flex-1 py-2.5 border border-gray-600 rounded-xl text-gray-300 text-sm hover:bg-gray-700">Cancel</button>
+              <button onClick={() => setSuspendDialog(null)} className="flex-1 py-2.5 border border-border rounded-xl text-ink-secondary text-sm hover:bg-surface">Cancel</button>
               <button
                 onClick={handleSuspendSubmit}
                 disabled={!suspendDialog.reason.trim()}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-40 rounded-xl text-white text-sm font-semibold"
+                className="flex-1 py-2.5 bg-danger hover:brightness-95 disabled:opacity-40 rounded-xl text-white text-sm font-semibold"
               >
                 Suspend
               </button>
@@ -498,12 +498,12 @@ export default function UsersPage() {
       {unsuspendTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setUnsuspendTarget(null)} />
-          <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-sm z-10">
-            <h3 className="text-lg font-bold text-white mb-2">Unsuspend User</h3>
-            <p className="text-sm text-gray-400 mb-5">Remove suspension from <span className="text-white">{unsuspendTarget.userName}</span>?</p>
+          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-sm z-10">
+            <h3 className="text-lg font-semibold text-ink mb-2">Unsuspend User</h3>
+            <p className="text-sm text-ink-secondary mb-5">Remove suspension from <span className="text-ink">{unsuspendTarget.userName}</span>?</p>
             <div className="flex gap-3">
-              <button onClick={() => setUnsuspendTarget(null)} className="flex-1 py-2.5 border border-gray-600 rounded-xl text-gray-300 text-sm hover:bg-gray-700">Cancel</button>
-              <button onClick={handleUnsuspend} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 rounded-xl text-white text-sm font-semibold">Unsuspend</button>
+              <button onClick={() => setUnsuspendTarget(null)} className="flex-1 py-2.5 border border-border rounded-xl text-ink-secondary text-sm hover:bg-surface">Cancel</button>
+              <button onClick={handleUnsuspend} className="flex-1 py-2.5 bg-success hover:brightness-95 rounded-xl text-white text-sm font-semibold">Unsuspend</button>
             </div>
           </div>
         </div>
@@ -513,55 +513,55 @@ export default function UsersPage() {
       {showCreateRider && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={closeCreateRider} />
-          <div className="relative bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
             {createdCredentials ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
+                  <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-success" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Rider Created!</h3>
-                    <p className="text-xs text-gray-400">{createdCredentials.university}</p>
+                    <h3 className="text-lg font-semibold text-ink">Rider Created!</h3>
+                    <p className="text-xs text-ink-secondary">{createdCredentials.university}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-400 mb-4">Share these login credentials securely with the rider:</p>
+                <p className="text-sm text-ink-secondary mb-4">Share these login credentials securely with the rider:</p>
                 <div className="space-y-3 mb-5">
                   {[
                     { label: 'Name',     value: createdCredentials.name,     field: 'name' },
                     { label: 'Email',    value: createdCredentials.email,    field: 'email' },
                     { label: 'Password', value: createdCredentials.password, field: 'password' },
                   ].map(({ label, value, field }) => (
-                    <div key={field} className="flex items-center justify-between bg-gray-700 rounded-xl px-4 py-3">
+                    <div key={field} className="flex items-center justify-between bg-surface rounded-xl px-4 py-3">
                       <div>
-                        <p className="text-xs text-gray-400">{label}</p>
-                        <p className="text-white font-mono text-sm">{value}</p>
+                        <p className="text-xs text-ink-secondary">{label}</p>
+                        <p className="text-ink font-mono text-sm">{value}</p>
                       </div>
-                      <button onClick={() => copyToClipboard(value, field)} className="text-gray-400 hover:text-white">
-                        {copiedField === field ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                      <button onClick={() => copyToClipboard(value, field)} className="text-ink-secondary hover:text-ink">
+                        {copiedField === field ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
                   ))}
                 </div>
-                <button onClick={closeCreateRider} className="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-white text-sm font-semibold">Done</button>
+                <button onClick={closeCreateRider} className="w-full py-3 bg-surface hover:bg-border rounded-xl text-ink text-sm font-semibold">Done</button>
               </>
             ) : (
               <>
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg font-bold text-white">Create Rider Account</h3>
-                  <button onClick={closeCreateRider} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
+                  <h3 className="text-lg font-semibold text-ink">Create Rider Account</h3>
+                  <button onClick={closeCreateRider} className="text-ink-secondary hover:text-ink"><X className="w-5 h-5" /></button>
                 </div>
                 {createError && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">{createError}</div>
+                  <div className="mb-4 p-3 bg-danger/10 border border-danger/30 rounded-xl text-danger text-sm">{createError}</div>
                 )}
                 <form onSubmit={handleCreateRider} className="space-y-4">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">University</label>
+                    <label className="block text-xs text-ink-secondary mb-1">University</label>
                     <select
                       value={riderForm.universityId}
                       onChange={e => setRiderForm({ ...riderForm, universityId: e.target.value })}
                       required
-                      className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                      className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:border-primary"
                     >
                       <option value="">Select university…</option>
                       {universities.map(u => (
@@ -571,19 +571,19 @@ export default function UsersPage() {
                   </div>
                   {RIDER_FIELDS.map(({ label, field, type, placeholder }) => (
                     <div key={field}>
-                      <label className="block text-xs text-gray-400 mb-1">{label}</label>
+                      <label className="block text-xs text-ink-secondary mb-1">{label}</label>
                       <input
                         type={type}
                         value={riderForm[field]}
                         onChange={e => setRiderForm({ ...riderForm, [field]: e.target.value })}
                         placeholder={placeholder}
                         required
-                        className="w-full px-3 py-2.5 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                        className="w-full px-3 py-2.5 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:border-primary"
                       />
                     </div>
                   ))}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Password</label>
+                    <label className="block text-xs text-ink-secondary mb-1">Password</label>
                     <div className="relative">
                       <input
                         type={showPassword ? 'text' : 'password'}
@@ -591,9 +591,9 @@ export default function UsersPage() {
                         onChange={e => setRiderForm({ ...riderForm, password: e.target.value })}
                         placeholder="Min 8 chars, at least 1 number"
                         required
-                        className="w-full px-3 py-2.5 pr-10 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:border-red-500"
+                        className="w-full px-3 py-2.5 pr-10 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:border-primary"
                       />
-                      <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                      <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-secondary">
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
@@ -601,7 +601,7 @@ export default function UsersPage() {
                   <button
                     type="submit"
                     disabled={createLoading}
-                    className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:opacity-50 rounded-xl text-white text-sm font-semibold transition-colors"
+                    className="w-full py-3 bg-danger hover:brightness-95 disabled:opacity-50 rounded-xl text-white text-sm font-semibold transition-colors"
                   >
                     {createLoading ? 'Creating…' : 'Create Rider'}
                   </button>

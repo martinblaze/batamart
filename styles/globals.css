@@ -31,21 +31,46 @@ html.splash-pending body > div > * {
 
 @layer base {
   :root {
-    --primary: #6366F1;
-    --secondary: #8B5CF6;
-    --accent: #A78BFA;
-    --background: #F9FAFB;
-    --surface: #FFFFFF;
-    --text: #111827;
+    /* BataMart Design Bible tokens — see BATAMART_DESIGN_BIBLE.md section 2 */
+    --color-primary: #1E90FF;
+    --color-background: #FFFFFF;
+    --color-surface: #F8FAFC;
+    --color-border: #E5E7EB;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6B7280;
+    --color-text-muted: #9CA3AF;
+    --color-success: #22C55E;
+    --color-danger: #EF4444;
+    --color-warning: #F59E0B;
+
+    /* Legacy aliases kept for CSS still referencing the old var names below */
+    --primary: var(--color-primary);
+    --background: var(--color-background);
+    --surface: var(--color-surface);
+    --text: var(--color-text-primary);
+    --muted: var(--color-text-muted);
+    --border: var(--color-border);
+    --surface-elevated: var(--color-surface);
   }
 
   .dark {
-    --primary: #60A5FA;
-    --background: #000000;
-    --surface: #0f1115;
-    --text: #e5e7eb;
-    --muted: #98a2b3;
-    --border: #272b33;
+    --color-primary: #4DABFF;
+    --color-background: #000000;
+    --color-surface: #0f1115;
+    --color-border: #272b33;
+    --color-text-primary: #e5e7eb;
+    --color-text-secondary: #98a2b3;
+    --color-text-muted: #72819a;
+    --color-success: #22C55E;
+    --color-danger: #EF4444;
+    --color-warning: #F59E0B;
+
+    --primary: var(--color-primary);
+    --background: var(--color-background);
+    --surface: var(--color-surface);
+    --text: var(--color-text-primary);
+    --muted: var(--color-text-secondary);
+    --border: var(--color-border);
     --surface-elevated: #151922;
   }
 
@@ -128,8 +153,8 @@ html.splash-pending body > div > * {
   .dark .text-indigo-300,
   .dark .text-indigo-400,
   .dark .text-indigo-500,
-  .dark .text-BATAMART-primary {
-    color: #4DABFF !important;
+  .dark .text-primary {
+    color: var(--color-primary) !important;
   }
 
   .dark .from-gray-50 {
@@ -236,13 +261,12 @@ html.splash-pending body > div > * {
   }
 
   * {
-    @apply border-gray-200 dark:border-gray-700;
+    @apply border-border;
   }
 
   body {
-    @apply bg-light-surface text-gray-900 dark:text-gray-100;
-    background-color: var(--background);
-    color: var(--text);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
     font-family: 'Inter', system-ui, sans-serif;
     /* Prevent WebView momentum scroll from dragging fixed elements */
     -webkit-overflow-scrolling: auto;
@@ -251,54 +275,47 @@ html.splash-pending body > div > * {
 }
 
 @layer components {
+  /* Design bible section 8 — canonical flat component classes. Prefer the
+     components/ui/* React components; these exist for the few places that
+     still need a plain CSS class (e.g. server-rendered strings). */
   .btn-primary {
-    @apply bg-BATAMART-primary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-200 shadow-md hover:shadow-lg;
+    @apply h-11 px-6 rounded-lg font-medium bg-primary text-white transition-all duration-150 ease-out hover:brightness-95 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-secondary {
-    @apply bg-BATAMART-secondary text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all duration-200;
+    @apply h-11 px-6 rounded-lg font-medium bg-white text-ink border border-border transition-all duration-150 ease-out hover:bg-surface active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .btn-outline {
-    @apply border-2 border-BATAMART-primary text-BATAMART-primary px-6 py-3 rounded-lg font-semibold hover:bg-BATAMART-primary hover:text-white transition-all duration-200;
+    @apply h-11 px-6 rounded-lg font-medium border border-primary text-primary bg-transparent transition-all duration-150 ease-out hover:bg-primary hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-40 disabled:pointer-events-none;
   }
 
   .card {
-    @apply bg-white rounded-xl shadow-lg p-6 transition-all duration-200 hover:shadow-xl;
+    @apply bg-white border border-border rounded-xl p-4 md:p-6 transition-transform duration-150 ease-out;
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-300 bg-white text-gray-900 focus:border-light-primary focus:outline-none transition-colors duration-200;
+    @apply w-full h-11 px-4 rounded-lg border border-border bg-surface text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors duration-150;
   }
 
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
+    @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium;
   }
 
   .badge-bronze {
-    @apply bg-amber-100 text-amber-800;
+    @apply bg-warning/10 text-warning;
   }
 
   .badge-silver {
-    @apply bg-gray-100 text-gray-800;
+    @apply bg-ink-secondary/10 text-ink-secondary;
   }
 
   .badge-gold {
-    @apply bg-yellow-100 text-yellow-800;
+    @apply bg-warning/10 text-warning;
   }
 
   .badge-verified {
-    @apply bg-blue-100 text-blue-800;
-  }
-}
-
-@layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-BATAMART-primary to-BATAMART-secondary bg-clip-text text-transparent;
-  }
-
-  .glass-effect {
-    @apply backdrop-blur-md bg-white/30;
+    @apply bg-primary/10 text-primary;
   }
 }
 
@@ -330,11 +347,11 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-BATAMART-primary dark:bg-indigo-500 rounded-full;
+  @apply bg-primary rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-BATAMART-dark dark:bg-indigo-400 rounded-full;
+  @apply bg-primary rounded-full opacity-80;
 }
 
 /* ── FIXED NAV STABILITY ────────────────────────────────────────────────────
@@ -393,9 +410,10 @@ nav[class*="fixed"][class*="bottom-0"] {
   }
 }
 
-/* App-mode polish: keeps PWA feeling native without changing app logic */
+/* App-mode polish: keeps PWA feeling native without changing app logic.
+   Flat surfaces only (design bible section 2 — gradients banned everywhere). */
 html.app-mode body {
-  background: #e7ebf2 !important;
+  background: var(--color-surface) !important;
 }
 
 html.dark.app-mode body {
@@ -404,47 +422,39 @@ html.dark.app-mode body {
 
 html.app-mode #page-scroll-container,
 html.app-mode #ios-scroll-area {
-  background:
-    radial-gradient(120% 60% at 50% -10%, rgba(59, 130, 246, 0.14), transparent 55%),
-    linear-gradient(180deg, #ecf1f7 0%, #e7ebf2 100%);
+  background: var(--color-surface);
 }
 
 html.dark.app-mode #page-scroll-container,
 html.dark.app-mode #ios-scroll-area {
-  background:
-    radial-gradient(130% 60% at 50% -8%, rgba(99, 102, 241, 0.2), transparent 56%),
-    linear-gradient(180deg, #000000 0%, #090b10 100%);
+  background: var(--color-background);
 }
 
 html.app-mode .bg-white.rounded-2xl {
-  border-radius: 1.15rem;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
-  border-color: rgba(255, 255, 255, 0.72) !important;
+  border-radius: 1rem;
+  border-color: var(--color-border) !important;
 }
 
 html.dark.app-mode .bg-white.rounded-2xl {
-  border-color: rgba(71, 85, 105, 0.7) !important;
-  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.5);
+  border-color: var(--color-border) !important;
 }
 
 html.app-mode .bg-white.rounded-xl {
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-  border-color: rgba(255, 255, 255, 0.7) !important;
+  border-color: var(--color-border) !important;
 }
 
 html.dark.app-mode .bg-white.rounded-xl {
-  border-color: rgba(71, 85, 105, 0.65) !important;
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.44);
+  border-color: var(--color-border) !important;
 }
 
 html.app-mode nav[class*="fixed"][class*="bottom-0"] {
-  border-top-color: rgba(255, 255, 255, 0.86) !important;
-  box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.1) !important;
+  border-top-color: var(--color-border) !important;
+  box-shadow: 0 1px 2px rgba(17,24,39,0.06), 0 1px 3px rgba(17,24,39,0.08) !important;
 }
 
 html.dark.app-mode nav[class*="fixed"][class*="bottom-0"] {
-  border-top-color: rgba(51, 65, 85, 0.95) !important;
-  box-shadow: 0 -8px 26px rgba(2, 6, 23, 0.48) !important;
+  border-top-color: var(--color-border) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.4) !important;
 }
 
 /* Phase 3: app-like motion + touch feel */
@@ -477,23 +487,17 @@ html.app-mode .btn-press:active {
   transform: scale(0.96);
 }
 
-/* Phase 4: marketplace app-screen treatment (visual-only) */
+/* Phase 4: marketplace app-screen treatment (visual-only) — flat surfaces only */
 html.app-mode .marketplace-shell {
-  background:
-    radial-gradient(140% 80% at 50% -15%, rgba(99, 102, 241, 0.16), transparent 54%),
-    linear-gradient(180deg, #edf2f8 0%, #e7ebf2 42%, #e3e9f1 100%) !important;
+  background: var(--color-surface) !important;
 }
 
 html.dark.app-mode .marketplace-shell {
-  background:
-    radial-gradient(140% 80% at 50% -15%, rgba(99, 102, 241, 0.22), transparent 54%),
-    linear-gradient(180deg, #000000 0%, #0c0f15 45%, #000000 100%) !important;
+  background: var(--color-background) !important;
 }
 
 .dark .marketplace-shell {
-  background:
-    radial-gradient(120% 70% at 50% -10%, rgba(99, 102, 241, 0.2), transparent 55%),
-    linear-gradient(180deg, #000000 0%, #0c0f15 50%, #000000 100%) !important;
+  background: var(--color-background) !important;
 }
 
 html.app-mode .marketplace-header {
@@ -510,10 +514,7 @@ html.app-mode .marketplace-top-row {
 }
 
 html.app-mode .marketplace-search-input {
-  border-radius: 0.95rem;
-  box-shadow:
-    0 10px 22px rgba(15, 23, 42, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  border-radius: 0.5rem;
 }
 
 html.app-mode .marketplace-categories {
@@ -521,11 +522,11 @@ html.app-mode .marketplace-categories {
 }
 
 html.app-mode .marketplace-categories .cat-btn {
-  border-radius: 0.72rem;
+  border-radius: 0.5rem;
 }
 
 html.app-mode .marketplace-categories .cat-btn.cat-active {
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.22);
+  box-shadow: none;
 }
 
 html.app-mode .marketplace-feed {
@@ -537,13 +538,11 @@ html.dark.app-mode .marketplace-feed {
 }
 
 html.app-mode .marketplace-feed > div {
-  gap: 1.05rem;
+  gap: 1rem;
 }
 
 html.app-mode .marketplace-feed .bg-white.rounded-xl,
 html.app-mode .marketplace-feed .bg-white.rounded-2xl {
-  box-shadow:
-    0 12px 26px rgba(15, 23, 42, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1px 2px rgba(17,24,39,0.06), 0 1px 3px rgba(17,24,39,0.08);
 }
 

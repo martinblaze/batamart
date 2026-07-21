@@ -34,8 +34,8 @@ function NavbarContent() {
   if (isAndroid) return <Navbar />
 
   // App mode (PWA / standalone) — ONE spacer only for the fixed top bar (h-14 = 56px)
-  // ❌ DO NOT add h-16 here — that was causing the giant gap at the top
-  // ✅ Bottom nav spacing belongs inside each page's content, not here
+  // DO NOT add h-16 here — that was causing the giant gap at the top.
+  // Bottom nav spacing belongs inside each page's content, not here.
   if (isApp) {
     return (
       <>

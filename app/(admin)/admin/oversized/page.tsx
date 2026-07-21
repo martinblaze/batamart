@@ -30,42 +30,42 @@ export default function AdminOversizedPage() {
     fetchData()
   }
 
-  if (loading) return <div className="text-gray-300">Loading oversized reports...</div>
+  if (loading) return <div className="text-ink-secondary">Loading oversized reports...</div>
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Oversized Product Management</h1>
+      <h1 className="text-2xl font-semibold text-ink">Oversized Product Management</h1>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
-        <h2 className="text-white font-bold mb-3">Decline Evidence</h2>
+      <div className="bg-white border border-border rounded-2xl p-5">
+        <h2 className="text-ink font-semibold mb-3">Decline Evidence</h2>
         <div className="space-y-3">
           {(data?.declines || []).map((d: any) => (
-            <div key={d.id} className="bg-gray-700/30 rounded-xl p-3 text-sm text-gray-200">
+            <div key={d.id} className="bg-surface rounded-xl p-3 text-sm text-ink-secondary">
               <p><span className="font-semibold">Product:</span> {productsById[d.productId]?.name || d.productId}</p>
               <p><span className="font-semibold">Seller:</span> {usersById[d.sellerId] || d.sellerId} | <span className="font-semibold">Rider:</span> {usersById[d.riderId] || d.riderId}</p>
               <p><span className="font-semibold">Reason:</span> {d.reason}</p>
-              {d.proofImageUrl && <a className="text-blue-300 underline" href={d.proofImageUrl} target="_blank">View Proof Photo</a>}
+              {d.proofImageUrl && <a className="text-primary underline" href={d.proofImageUrl} target="_blank">View Proof Photo</a>}
               <div className="mt-2 flex gap-2">
-                <button onClick={() => moderate(d.productId, 'APPROVE')} className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold">Approve Listing</button>
-                <button onClick={() => moderate(d.productId, 'REMOVE')} className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold">Remove Listing</button>
+                <button onClick={() => moderate(d.productId, 'APPROVE')} className="px-3 py-1.5 rounded-lg bg-success text-white text-xs font-semibold">Approve Listing</button>
+                <button onClick={() => moderate(d.productId, 'REMOVE')} className="px-3 py-1.5 rounded-lg bg-danger text-white text-xs font-semibold">Remove Listing</button>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
-        <h2 className="text-white font-bold mb-3">Seller Strike History</h2>
-        <div className="space-y-2 text-sm text-gray-200">
+      <div className="bg-white border border-border rounded-2xl p-5">
+        <h2 className="text-ink font-semibold mb-3">Seller Strike History</h2>
+        <div className="space-y-2 text-sm text-ink-secondary">
           {(data?.strikes || []).map((s: any) => (
             <p key={s.id}>{usersById[s.sellerId] || s.sellerId} - Strike #{s.strikeCount} - {s.reason}</p>
           ))}
         </div>
       </div>
 
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5">
-        <h2 className="text-white font-bold mb-3">Suspended Sellers</h2>
-        <div className="space-y-2 text-sm text-gray-200">
+      <div className="bg-white border border-border rounded-2xl p-5">
+        <h2 className="text-ink font-semibold mb-3">Suspended Sellers</h2>
+        <div className="space-y-2 text-sm text-ink-secondary">
           {(data?.suspendedSellers || []).map((u: any) => (
             <p key={u.id}>{u.name} - {u.suspensionReason || 'Suspended'} {u.suspendedUntil ? `(until ${new Date(u.suspendedUntil).toLocaleDateString()})` : '(permanent)'}</p>
           ))}

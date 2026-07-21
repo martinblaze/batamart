@@ -79,16 +79,16 @@ export default function ReviewModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">
+          <h2 className="text-xl font-semibold">
             Rate {type === 'SELLER' ? 'Seller' : 'Rider'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-ink-muted hover:text-ink"
           >
             <X className="w-6 h-6" />
           </button>
@@ -114,15 +114,15 @@ export default function ReviewModal({
                   <Star
                     className={`w-10 h-10 ${
                       star <= (hoveredRating || rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
+                        ? 'fill-warning text-warning'
+                        : 'text-border'
                     }`}
                   />
                 </button>
               ))}
             </div>
             {rating > 0 && (
-              <p className="text-center mt-2 text-sm text-gray-600">
+              <p className="text-center mt-2 text-sm text-ink-secondary">
                 {rating === 1 && 'Poor'}
                 {rating === 2 && 'Fair'}
                 {rating === 3 && 'Good'}
@@ -140,18 +140,18 @@ export default function ReviewModal({
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full border rounded-lg p-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border rounded-lg p-3 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/40"
               placeholder="Tell us about your experience..."
               maxLength={500}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-ink-muted mt-1">
               {comment.length}/500 characters
             </p>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded">
               {error}
             </div>
           )}

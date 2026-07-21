@@ -7,24 +7,17 @@ import { useCartStore } from '@/lib/cart-store'
 import NotificationBell from '@/components/layout/NotificationBell'
 import {
   ChevronDown, User, LogOut, Store, ShoppingBag, Wallet,
-  Package, AlertTriangle, PlusCircle, Globe, Plus,
+  Package, AlertTriangle, PlusCircle, Globe, Plus, Bike,
+  LayoutGrid, Bell as BellIcon, Menu, X,
 } from 'lucide-react'
 
 import { isSplashPending } from '@/components/SplashScreen'
 import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider'
+import { Logo } from '@/components/layout/Logo'
 
 function BATAMARTLogo({ appMode = false }: { appMode?: boolean }) {
   const href = appMode ? '/marketplace?app=true' : '/'
-  return (
-    <Link href={href} className="flex items-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/BATAMART - logo.png"
-        alt="BATAMART"
-        style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
-      />
-    </Link>
-  )
+  return <Logo href={href} size={30} />
 }
 
 function AppTopBar({
@@ -35,16 +28,16 @@ function AppTopBar({
   cartCount: number
 }) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/88 backdrop-blur-xl border-b border-white/70 shadow-[0_6px_22px_rgba(15,23,42,0.08)]">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between h-14 px-4">
         <BATAMARTLogo appMode />
         <div className="flex items-center gap-2">
           {isLoggedIn ? (
             <>
-              <Link href="/cart?app=true" className="relative p-2 text-gray-600">
-                <ShoppingBag className="w-6 h-6" />
+              <Link href="/cart?app=true" className="relative p-2 text-ink-secondary">
+                <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
                 {cartCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
+                  <span className="absolute top-0.5 right-0.5 bg-primary text-white text-[10px] font-medium w-4 h-4 rounded-full flex items-center justify-center leading-none">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
@@ -54,8 +47,7 @@ function AppTopBar({
           ) : (
             <Link
               href="/login?app=true"
-              className="px-4 py-1.5 rounded-lg text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-primary hover:brightness-95 transition-all"
             >
               Login
             </Link>
@@ -74,33 +66,23 @@ function RiderTopBar({
   userName: string
 }) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-gray-800"
-      style={{ background: 'linear-gradient(135deg, #121212, #1E1E1E)' }}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
-          >
-            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <circle cx="5.5" cy="17.5" r="3.5" />
-              <circle cx="18.5" cy="17.5" r="3.5" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 6h-4l-2 5.5M9 17.5h5.5l2-5.5H19" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6l1.5 5.5" />
-            </svg>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary">
+            <Bike className="w-4 h-4 text-white" strokeWidth={1.75} />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-none">BataMart</p>
-            <p className="text-blue-400 text-[10px] font-medium leading-none mt-0.5">Rider Mode</p>
+            <p className="text-ink font-semibold text-sm leading-none">BataMart</p>
+            <p className="text-primary text-[10px] font-medium leading-none mt-0.5">Rider mode</p>
           </div>
         </div>
         {isLoggedIn && userName && (
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-300 text-xs font-bold">
+            <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-xs font-semibold">
               {userName.charAt(0).toUpperCase()}
             </div>
-            <span className="text-gray-300 text-xs font-medium">{userName.split(' ')[0]}</span>
+            <span className="text-ink-secondary text-xs font-medium">{userName.split(' ')[0]}</span>
           </div>
         )}
       </div>
@@ -159,26 +141,13 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
       href: '/rider-dashboard?app=true&rider=true',
       label: 'Dashboard',
       match: '/rider-dashboard',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <rect x="3" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="14" y="3" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="3" y="14" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-          <rect x="14" y="14" width="7" height="7" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
+      icon: <LayoutGrid className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
     {
       href: '/rider-dashboard?app=true&rider=true&tab=deliveries',
       label: 'Deliveries',
       match: '/rider-dashboard',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-          <rect x="9" y="3" width="6" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h4" />
-        </svg>
-      ),
+      icon: <Package className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
@@ -187,24 +156,15 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
       href: '/wallet?app=true&rider=true',
       label: 'Earnings',
       match: '/wallet',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8h18v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8V6a2 2 0 012-2h14a2 2 0 012 2v2" />
-          <circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none" />
-        </svg>
-      ),
+      icon: <Wallet className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 border-t transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
-          background: '#121212',
-          borderColor: '#343434',
-          boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
@@ -227,13 +187,11 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 href={href}
                 onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-                  active ? 'text-blue-400' : 'text-gray-500'
+                  active ? 'text-primary' : 'text-ink-muted'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
-                  />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -244,35 +202,20 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
           })}
 
           <div className="flex-1 flex items-center justify-center relative">
-            <div className="absolute inset-0" style={{ background: '#121212' }} />
             <button
               onClick={toggleAvailability}
               disabled={toggling || isAvailable === null}
               className="relative z-10 flex flex-col items-center justify-center -mt-5"
             >
               <div
-                className="w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95"
-                style={{
-                  background: isAvailable
-                    ? 'linear-gradient(135deg, #059669, #10b981)'
-                    : 'linear-gradient(135deg, #374151, #4b5563)',
-                  boxShadow: isAvailable
-                    ? '0 4px 20px rgba(5,150,105,0.5)'
-                    : '0 4px 20px rgba(0,0,0,0.4)',
-                  opacity: toggling ? 0.7 : 1,
-                }}
+                className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-95 shadow-soft ${
+                  isAvailable ? 'bg-success' : 'bg-ink-muted'
+                }`}
+                style={{ opacity: toggling ? 0.7 : 1 }}
               >
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="5.5" cy="17.5" r="3.5" />
-                  <circle cx="18.5" cy="17.5" r="3.5" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 6h-4l-2 5.5M9 17.5h5.5l2-5.5H19" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6l1.5 5.5" />
-                </svg>
+                <Bike className="w-6 h-6 text-white" strokeWidth={1.75} />
               </div>
-              <span
-                className="text-[10px] font-semibold mt-1 leading-none"
-                style={{ color: isAvailable ? '#10b981' : '#6b7280' }}
-              >
+              <span className={`text-[10px] font-medium mt-1 leading-none ${isAvailable ? 'text-success' : 'text-ink-muted'}`}>
                 {isAvailable === null ? '…' : isAvailable ? 'Online' : 'Offline'}
               </span>
             </button>
@@ -286,13 +229,11 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 href={href}
                 onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-                  active ? 'text-blue-400' : 'text-gray-500'
+                  active ? 'text-primary' : 'text-ink-muted'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full"
-                    style={{ background: 'linear-gradient(90deg, #3D95E8, #4DABFF)' }}
-                  />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -305,11 +246,11 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
           <button
             onClick={() => setProfileOpen(true)}
             className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-              profileOpen ? 'text-blue-400' : 'text-gray-500'
+              profileOpen ? 'text-primary' : 'text-ink-muted'
             }`}
           >
-            <div className="w-[26px] h-[26px] rounded-full bg-blue-900/40 border border-blue-700/40 flex items-center justify-center">
-              <User className="w-3.5 h-3.5 text-blue-400" />
+            <div className="w-[26px] h-[26px] rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
+              <User className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
             </div>
             <span className="text-[10px] font-medium leading-none">Profile</span>
           </button>
@@ -319,41 +260,31 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
       {profileOpen && (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[60] bg-ink/40"
             onClick={() => setProfileOpen(false)}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl shadow-2xl border-t border-gray-800"
+            className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-2xl shadow-soft border-t border-border bg-white"
             style={{
-              background: '#121212',
               paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))',
             }}
           >
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-gray-700 rounded-full" />
+              <div className="w-10 h-1 bg-border rounded-full" />
             </div>
             <div className="px-4 py-2">
               {[
-                { href: '/rider-dashboard?app=true&rider=true', icon: () => (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
-                  </svg>
-                ), label: 'Dashboard' },
+                { href: '/rider-dashboard?app=true&rider=true', icon: LayoutGrid, label: 'Dashboard' },
                 { href: '/wallet?app=true&rider=true', icon: Wallet, label: 'Earnings' },
-                { href: '/notifications?app=true&rider=true', icon: () => (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                ), label: 'Notifications' },
+                { href: '/notifications?app=true&rider=true', icon: BellIcon, label: 'Notifications' },
               ].map(({ href, icon: Icon, label }) => (
                 <Link
                   key={label}
                   href={href}
                   onClick={() => setProfileOpen(false)}
-                  className="flex items-center gap-3 px-2 py-3.5 text-gray-300 hover:text-blue-400 border-b border-gray-800 last:border-0"
+                  className="flex items-center gap-3 px-2 py-3.5 text-ink hover:text-primary border-b border-border last:border-0"
                 >
-                  <Icon className="w-5 h-5 text-gray-500" />
+                  <Icon className="w-5 h-5 text-ink-muted" strokeWidth={1.75} />
                   <span className="font-medium text-sm">{label}</span>
                 </Link>
               ))}
@@ -361,9 +292,9 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
             <div className="px-6 pt-3">
               <button
                 onClick={() => { setProfileOpen(false); onLogout() }}
-                className="flex items-center justify-center w-full gap-2 bg-red-950/60 text-red-400 font-semibold py-3 rounded-xl border border-red-900/40"
+                className="flex items-center justify-center w-full gap-2 bg-danger/10 text-danger font-medium py-3 rounded-lg border border-danger/20"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5" strokeWidth={1.75} />
                 Logout
               </button>
             </div>
@@ -418,24 +349,13 @@ function AppBottomNav({
       href: '/marketplace?app=true',
       label: 'Market',
       match: '/marketplace',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 21V12h6v9" />
-        </svg>
-      ),
+      icon: <Store className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
     {
       href: isLoggedIn ? '/orders?app=true' : '/login?app=true',
       label: 'Orders',
       match: '/orders',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-          <rect x="9" y="3" width="6" height="4" rx="1" strokeLinecap="round" strokeLinejoin="round" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h4" />
-        </svg>
-      ),
+      icon: <Package className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
@@ -444,22 +364,15 @@ function AppBottomNav({
       href: isLoggedIn ? '/wallet?app=true' : '/login?app=true',
       label: 'Wallet',
       match: '/wallet',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="w-[22px] h-[22px]">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8h18v11a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 8V6a2 2 0 012-2h14a2 2 0 012 2v2" />
-          <circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none" />
-        </svg>
-      ),
+      icon: <Wallet className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-white/80 transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
-          boxShadow: '0 -8px 28px rgba(15,23,42,0.10)',
           willChange: 'transform',
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
@@ -480,11 +393,11 @@ function AppBottomNav({
                 href={href}
                 onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-                  active ? 'text-blue-600' : 'text-gray-400'
+                  active ? 'text-primary' : 'text-ink-muted'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-blue-600 rounded-b-full" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-primary rounded-b-full" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -500,16 +413,10 @@ function AppBottomNav({
               onClick={handleTabPress(sellHref, isActive('/sell') || isActive('/become-seller'))}
               className="relative z-10 flex flex-col items-center justify-center -mt-5"
             >
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center transition-transform active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg, #3D95E8, #4DABFF)',
-                  boxShadow: '0 4px 20px rgba(26,63,143,0.45)',
-                }}
-              >
-                <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+              <div className="w-14 h-14 rounded-full flex items-center justify-center bg-primary shadow-soft transition-transform active:scale-95">
+                <Plus className="w-7 h-7 text-white" strokeWidth={1.75} />
               </div>
-              <span className="text-[10px] font-semibold text-blue-800 mt-1 leading-none">Sell</span>
+              <span className="text-[10px] font-medium text-primary mt-1 leading-none">Sell</span>
             </Link>
           </div>
 
@@ -521,11 +428,11 @@ function AppBottomNav({
                 href={href}
                 onClick={handleTabPress(href, active)}
                 className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-                  active ? 'text-blue-600' : 'text-gray-400'
+                  active ? 'text-primary' : 'text-ink-muted'
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-blue-600 rounded-b-full" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-primary rounded-b-full" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -538,19 +445,19 @@ function AppBottomNav({
           <button
             onClick={() => setProfileOpen(true)}
             className={`flex-1 flex flex-col items-center justify-center gap-[3px] relative transition-all duration-200 ease-out active:scale-[0.98] ${
-              profileOpen ? 'text-blue-600' : 'text-gray-400'
+              profileOpen ? 'text-primary' : 'text-ink-muted'
             }`}
           >
             <div
-              className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              className={`w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
                 isLoggedIn
-                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-primary/10 text-primary border border-primary/30'
+                  : 'bg-surface text-ink-muted'
               }`}
             >
               {isLoggedIn && userName
                 ? userName.charAt(0).toUpperCase()
-                : <User className="w-3.5 h-3.5" />}
+                : <User className="w-3.5 h-3.5" strokeWidth={1.75} />}
             </div>
             <span className="text-[10px] font-medium leading-none">
               {isLoggedIn ? 'Profile' : 'Login'}
@@ -562,27 +469,27 @@ function AppBottomNav({
       {profileOpen && (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[60] bg-ink/40"
             onClick={() => setProfileOpen(false)}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-3xl shadow-2xl"
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-2xl shadow-soft"
             style={{ paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))' }}
           >
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              <div className="w-10 h-1 bg-border rounded-full" />
             </div>
 
             {isLoggedIn ? (
               <>
-                <div className="px-6 py-4 border-b border-gray-100">
+                <div className="px-6 py-4 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center text-blue-700 text-lg font-bold">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-lg font-semibold">
                       {userName.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{userName}</p>
-                      <p className="text-xs text-gray-400 capitalize">{userRole.toLowerCase()}</p>
+                      <p className="font-medium text-ink">{userName}</p>
+                      <p className="text-xs text-ink-muted capitalize">{userRole.toLowerCase()}</p>
                     </div>
                   </div>
                 </div>
@@ -599,9 +506,9 @@ function AppBottomNav({
                         key={label}
                         href={href}
                         onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-3 px-2 py-3.5 text-gray-700 hover:text-blue-600 border-b border-gray-50 last:border-0"
+                        className="flex items-center gap-3 px-2 py-3.5 text-ink hover:text-primary border-b border-border last:border-0"
                       >
-                        <Icon className="w-5 h-5 text-gray-400" />
+                        <Icon className="w-5 h-5 text-ink-muted" strokeWidth={1.75} />
                         <span className="font-medium text-sm">{label}</span>
                       </Link>
                     ))}
@@ -609,55 +516,53 @@ function AppBottomNav({
 
                 <div className="px-6 pt-2 space-y-3">
                   {(userRole === 'SELLER' || userRole === 'ADMIN') && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex items-center justify-between px-4 py-3 bg-surface rounded-lg border border-border">
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">Mode</p>
-                        <p className="text-xs text-gray-400">{isSellerMode ? 'You are selling' : 'You are buying'}</p>
+                        <p className="text-sm font-medium text-ink">Mode</p>
+                        <p className="text-xs text-ink-muted">{isSellerMode ? 'You are selling' : 'You are buying'}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Buying</span>
+                        <span className="text-xs text-ink-secondary">Buying</span>
                         <button
                           onClick={() => { onToggleMode() }}
-                          className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
-                          style={{ background: isSellerMode ? 'linear-gradient(135deg,#3D95E8,#4DABFF)' : '#d1d5db' }}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                               isSellerMode ? 'translate-x-6' : 'translate-x-1'
                             }`}
                           />
                         </button>
-                        <span className="text-xs text-gray-500">Selling</span>
+                        <span className="text-xs text-ink-secondary">Selling</span>
                       </div>
                     </div>
                   )}
 
                   <button
                     onClick={() => { setProfileOpen(false); onLogout() }}
-                    className="flex items-center justify-center w-full gap-2 bg-red-50 text-red-600 font-semibold py-3 rounded-xl"
+                    className="flex items-center justify-center w-full gap-2 bg-danger/10 text-danger font-medium py-3 rounded-lg"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-5 h-5" strokeWidth={1.75} />
                     Logout
                   </button>
                 </div>
               </>
             ) : (
               <div className="px-6 py-6 flex flex-col gap-3">
-                <p className="text-center text-gray-500 text-sm mb-2">Sign in to access your account</p>
+                <p className="text-center text-ink-secondary text-sm mb-2">Sign in to access your account</p>
                 <Link
                   href="/login?app=true"
                   onClick={() => setProfileOpen(false)}
-                  className="text-center py-3 border-2 border-blue-900 text-blue-900 rounded-xl font-semibold"
+                  className="text-center h-11 flex items-center justify-center border border-primary text-primary rounded-lg font-medium"
                 >
                   Login
                 </Link>
                 <Link
                   href="/signup?app=true"
                   onClick={() => setProfileOpen(false)}
-                  className="text-center py-3 text-white rounded-xl font-semibold"
-                  style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}
+                  className="text-center h-11 flex items-center justify-center text-white rounded-lg font-medium bg-primary"
                 >
-                  Create Account
+                  Create account
                 </Link>
               </div>
             )}
@@ -878,28 +783,21 @@ export function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#121212]/90 backdrop-blur-md border-b border-gray-200 dark:border-[#343434] shadow-sm transition-transform duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border shadow-soft transition-transform duration-300 ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
 
-          <Link href="/" className="flex items-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/BATAMART - logo.png"
-              alt="BATAMART"
-              style={{ height: '45px', width: 'auto', objectFit: 'contain' }}
-            />
-          </Link>
+          <Logo size={34} />
 
           <div className="hidden md:flex items-center space-x-2">
             {isLoggedIn && (
-              <Link href="/cart" className="relative p-2 text-gray-600 dark:text-[#C8C8C8] hover:text-blue-600 dark:hover:text-[#4DABFF] hover:bg-blue-50 dark:hover:bg-[#2A2A2A] rounded-full transition-all">
-                <ShoppingBag className="w-6 h-6" />
+              <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-primary hover:bg-surface rounded-full transition-all">
+                <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
                 {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="absolute top-0 right-0 bg-primary text-white text-xs font-medium w-5 h-5 rounded-full flex items-center justify-center">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
@@ -910,10 +808,10 @@ export function Navbar() {
               <div className="relative ml-2" ref={dropdownRef}>
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-all"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-surface transition-all"
                 >
                   <div className="flex flex-col items-end">
-                    <span className="text-sm font-medium text-gray-700 dark:text-[#D7D7D7]">Hi, {userName || 'User'}</span>
+                    <span className="text-sm font-medium text-ink">Hi, {userName || 'User'}</span>
                     {userRole === 'SELLER' || userRole === 'ADMIN' ? (
                       isSellerMode ? (
                         <span
@@ -921,131 +819,121 @@ export function Navbar() {
                           tabIndex={0}
                           onClick={(e) => { e.stopPropagation(); router.push('/orders/sales') }}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); router.push('/orders/sales') } }}
-                          className="text-xs text-gray-500 dark:text-[#A0A0A0] hover:text-blue-600 hover:underline cursor-pointer"
+                          className="text-xs text-ink-secondary hover:text-primary hover:underline cursor-pointer"
                         >
                           Selling
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                        <span className="text-xs text-ink-secondary">
                           {userRole === 'ADMIN' ? 'Admin' : 'Buying'}
                         </span>
                       )
                     ) : (
-                      <span className="text-xs text-gray-500 dark:text-[#A0A0A0]">
+                      <span className="text-xs text-ink-secondary">
                         {userRole === 'ADMIN' ? 'Admin' : userRole === 'RIDER' ? 'Rider' : 'Buyer'}
                       </span>
                     )}
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-[#A0A0A0] transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-ink-secondary transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={1.75} />
                 </button>
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#1E1E1E] rounded-xl shadow-2xl border border-gray-200 dark:border-[#343434] py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-soft border border-border py-2 z-50">
                     {/* Rider-specific dropdown */}
                     {userRole === 'RIDER' ? (
                       <>
-                        <Link href="/rider-dashboard" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/rider-dashboard') ? 'bg-indigo-50 text-indigo-600' : ''}`}>
-                          <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                          </svg>
+                        <Link href="/rider-dashboard" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/rider-dashboard') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <LayoutGrid className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
                           <span className="font-medium">Dashboard</span>
                         </Link>
-                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/wallet') ? 'bg-green-50 text-green-600' : ''}`}>
-                          <Wallet className="w-5 h-5 mr-3 text-gray-400" />
+                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/wallet') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Wallet className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
                           <div className="flex items-center justify-between flex-1">
                             <span>Earnings</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-success font-medium">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
-                        <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/notifications') ? 'bg-blue-50 text-blue-600' : ''}`}>
-                          <svg className="w-5 h-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                          </svg>
+                        <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/notifications') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <BellIcon className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
                           <span>Notifications</span>
                         </Link>
                       </>
                     ) : (
                       /* Regular buyer/seller dropdown */
                       <>
-                        <Link href="/myprofile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100">
-                          <User className="w-5 h-5 mr-3 text-gray-400" /><span className="font-medium">My Account</span>
+                        <Link href="/myprofile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors border-b border-border">
+                          <User className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span className="font-medium">My Account</span>
                         </Link>
-                        <Link href="/marketplace" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/marketplace') ? 'bg-blue-50 text-blue-600' : ''}`}>
-                          <Globe className="w-5 h-5 mr-3 text-gray-400" /><span>Marketplace</span>
+                        <Link href="/marketplace" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/marketplace') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Globe className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Marketplace</span>
                         </Link>
-                        <Link href="/my-shop" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/my-shop') ? 'bg-blue-50 text-blue-600' : ''}`}>
-                          <Store className="w-5 h-5 mr-3 text-gray-400" /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
+                        <Link href="/my-shop" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/my-shop') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Store className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                         </Link>
                         {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/sell') ? 'bg-blue-50 text-blue-600' : ''}`}>
-                            <PlusCircle className="w-5 h-5 mr-3 text-gray-400" /><span>Sell</span>
+                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/sell') ? 'bg-primary/10 text-primary' : ''}`}>
+                            <PlusCircle className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Sell</span>
                           </Link>
                         )}
-                        <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/orders') ? 'bg-purple-50 text-purple-600' : ''}`}>
-                          <Package className="w-5 h-5 mr-3 text-gray-400" /><span>Orders</span>
+                        <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/orders') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Package className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
                         </Link>
-                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/wallet') ? 'bg-green-50 text-green-600' : ''}`}>
-                          <Wallet className="w-5 h-5 mr-3 text-gray-400" />
+                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/wallet') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Wallet className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
                           <div className="flex items-center justify-between flex-1">
                             <span>Wallet</span>
-                            {userBalance > 0 && <span className="text-xs text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="text-xs text-success font-medium">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
-                        <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors ${isActive('/dispute') ? 'bg-red-50 text-red-600' : ''}`}>
-                          <AlertTriangle className="w-5 h-5 mr-3 text-gray-400" /><span>Disputes</span>
+                        <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/dispute') ? 'bg-danger/10 text-danger' : ''}`}>
+                          <AlertTriangle className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Disputes</span>
                         </Link>
                         {(userRole === 'SELLER' || userRole === 'ADMIN') && (
-                          <div className="px-4 py-3 border-t border-gray-100">
+                          <div className="px-4 py-3 border-t border-border">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-600">Mode</span>
-                              <button onClick={toggleRoleMode} className="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 transition-colors hover:bg-gray-400">
+                              <span className="text-sm text-ink-secondary">Mode</span>
+                              <button onClick={toggleRoleMode} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSellerMode ? 'translate-x-6' : 'translate-x-1'}`} />
                               </button>
-                              <span className="text-xs text-gray-500">{isSellerMode ? 'Selling' : 'Buying'}</span>
+                              <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
                             </div>
                           </div>
                         )}
                         {userRole === 'BUYER' && (
-                          <Link href="/become-seller" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-blue-600 hover:bg-blue-50 transition-colors border-t border-gray-100">
-                            <PlusCircle className="w-5 h-5 mr-3" /><span className="font-medium">Become a Seller</span>
+                          <Link href="/become-seller" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-primary hover:bg-primary/5 transition-colors border-t border-border">
+                            <PlusCircle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span className="font-medium">Become a seller</span>
                           </Link>
                         )}
                       </>
                     )}
-                    <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">
-                      <LogOut className="w-5 h-5 mr-3" /><span>Logout</span>
+                    <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-danger hover:bg-danger/5 transition-colors border-t border-border">
+                      <LogOut className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Logout</span>
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link href="/login" className="font-semibold text-blue-900 hover:text-blue-700 transition-colors">Login</Link>
-                <Link href="/signup" className="text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg text-sm" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>Sign Up</Link>
+                <Link href="/login" className="font-medium text-ink hover:text-primary transition-colors">Login</Link>
+                <Link href="/signup" className="text-white px-4 py-2 rounded-lg font-medium transition-all text-sm bg-primary hover:brightness-95">Sign up</Link>
               </div>
             )}
           </div>
 
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2A2A2A] transition-colors">
-            <svg className="w-6 h-6 text-gray-700 dark:text-[#D7D7D7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 rounded-lg hover:bg-surface transition-colors" aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}>
+            {isMenuOpen ? <X className="w-6 h-6 text-ink" strokeWidth={1.75} /> : <Menu className="w-6 h-6 text-ink" strokeWidth={1.75} />}
           </button>
         </div>
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 dark:border-[#343434] bg-white dark:bg-[#1E1E1E] max-h-[calc(100dvh-4rem)] overflow-y-auto">
+        <div className="md:hidden border-t border-border bg-white max-h-[calc(100dvh-4rem)] overflow-y-auto">
           <div className="px-4 py-4">
-            <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-gray-200">
+            <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-border">
               {isLoggedIn && userRole !== 'RIDER' && (
-                <Link href="/cart" className="relative p-2 text-gray-600 hover:text-blue-600">
-                  <ShoppingBag className="w-6 h-6" />
+                <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-primary">
+                  <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-medium w-5 h-5 rounded-full flex items-center justify-center">
                       {cartCount > 9 ? '9+' : cartCount}
                     </span>
                   )}
@@ -1058,65 +946,61 @@ export function Navbar() {
                 {userRole === 'RIDER' ? (
                   /* Rider-only mobile menu */
                   <>
-                    <Link href="/rider-dashboard" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/rider-dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                      </svg>
+                    <Link href="/rider-dashboard" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/rider-dashboard') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <LayoutGrid className="w-5 h-5 mr-3" strokeWidth={1.75} />
                       <span>Dashboard</span>
                     </Link>
-                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/wallet') ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <Wallet className="w-5 h-5 mr-3" /><span>Earnings</span>
+                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/wallet') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Wallet className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Earnings</span>
                     </Link>
-                    <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/notifications') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                      </svg>
+                    <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/notifications') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <BellIcon className="w-5 h-5 mr-3" strokeWidth={1.75} />
                       <span>Notifications</span>
                     </Link>
                   </>
                 ) : (
                   /* Regular buyer/seller mobile menu */
                   <>
-                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>
-                      <User className="w-5 h-5 mr-3" /><span className="font-medium">My Account</span>
+                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-lg text-white bg-primary">
+                      <User className="w-5 h-5 mr-3" strokeWidth={1.75} /><span className="font-medium">My Account</span>
                     </Link>
-                    <Link href="/marketplace" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/marketplace') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <Globe className="w-5 h-5 mr-3" /><span>Marketplace</span>
+                    <Link href="/marketplace" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/marketplace') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Globe className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Marketplace</span>
                     </Link>
-                    <Link href="/my-shop" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/my-shop') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <Store className="w-5 h-5 mr-3" /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
+                    <Link href="/my-shop" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/my-shop') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Store className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                     </Link>
                     {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/sell') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}>
-                        <PlusCircle className="w-5 h-5 mr-3" /><span>Sell</span>
+                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/sell') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                        <PlusCircle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Sell</span>
                       </Link>
                     )}
-                    <Link href="/orders" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/orders') ? 'bg-purple-50 text-purple-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <Package className="w-5 h-5 mr-3" /><span>Orders</span>
+                    <Link href="/orders" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/orders') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Package className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Orders</span>
                     </Link>
-                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/wallet') ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <Wallet className="w-5 h-5 mr-3" />
+                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/wallet') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Wallet className="w-5 h-5 mr-3" strokeWidth={1.75} />
                       <div className="flex items-center justify-between flex-1">
                         <span>Wallet</span>
-                        {userBalance > 0 && <span className="text-sm text-green-600 font-bold">₦{userBalance.toLocaleString()}</span>}
+                        {userBalance > 0 && <span className="text-sm text-success font-medium">₦{userBalance.toLocaleString()}</span>}
                       </div>
                     </Link>
-                    <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-xl transition-all ${isActive('/dispute') ? 'bg-red-50 text-red-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                      <AlertTriangle className="w-5 h-5 mr-3" /><span>Disputes</span>
+                    <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/dispute') ? 'bg-danger/10 text-danger' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <AlertTriangle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Disputes</span>
                     </Link>
                   </>
                 )}
 
-                <div className="pt-4 border-t border-gray-200 mt-4">
+                <div className="pt-4 border-t border-border mt-4">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-gray-700 font-medium">Hi, {userName || 'User'}!</div>
-                      <div className="text-sm text-gray-500 capitalize">{userRole.toLowerCase()}</div>
+                      <div className="text-ink font-medium">Hi, {userName || 'User'}!</div>
+                      <div className="text-sm text-ink-secondary capitalize">{userRole.toLowerCase()}</div>
                     </div>
                     {(userRole === 'SELLER' || userRole === 'ADMIN') && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-500">{isSellerMode ? 'Selling' : 'Buying'}</span>
-                        <button onClick={toggleRoleMode} className="relative inline-flex h-5 w-10 items-center rounded-full bg-gray-300">
+                        <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
+                        <button onClick={toggleRoleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSellerMode ? 'translate-x-5' : 'translate-x-1'}`} />
                         </button>
                       </div>
@@ -1124,16 +1008,16 @@ export function Navbar() {
                   </div>
                   <button
                     onClick={() => { handleLogout(); setIsMenuOpen(false) }}
-                    className="flex items-center justify-center w-full space-x-2 bg-red-600 text-white px-4 py-3 rounded-xl font-medium hover:bg-red-700 transition-all"
+                    className="flex items-center justify-center w-full space-x-2 bg-danger text-white px-4 py-3 rounded-lg font-medium hover:brightness-95 transition-all"
                   >
-                    <LogOut className="w-5 h-5" /><span>Logout</span>
+                    <LogOut className="w-5 h-5" strokeWidth={1.75} /><span>Logout</span>
                   </button>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-center py-3 border-2 border-blue-900 text-blue-900 rounded-lg font-medium hover:bg-blue-900 hover:text-white transition-all">Login</Link>
-                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="text-center py-3 text-white rounded-lg font-medium transition-all" style={{ background: 'linear-gradient(135deg, #3D95E8, #4DABFF)' }}>Sign Up</Link>
+                <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-center h-11 flex items-center justify-center border border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-white transition-all">Login</Link>
+                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="text-center h-11 flex items-center justify-center text-white rounded-lg font-medium transition-all bg-primary hover:brightness-95">Sign up</Link>
               </div>
             )}
           </div>

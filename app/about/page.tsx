@@ -69,15 +69,15 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface dark:bg-[#000000]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white py-20 px-4">
+      <section className="bg-primary text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full mb-6">
             <Heart className="w-5 h-5" />
             <span className="font-semibold">About BATAMART</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+          <h1 className="text-4xl md:text-5xl font-semibold mb-6">
             Your Campus Marketplace, Reimagined
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto">
@@ -91,13 +91,13 @@ export default function AboutPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-4">
               Our Story
             </h2>
-            <div className="w-20 h-1 bg-BATAMART-primary mx-auto rounded-full"></div>
+            <div className="w-20 h-1 bg-primary mx-auto rounded-full"></div>
           </div>
 
-          <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
+          <div className="prose prose-lg max-w-none text-ink-secondary space-y-6">
             <p className="text-lg leading-relaxed">
               BATAMART was born from a simple observation: students in UNIVERSITY needed a better way to
               buy and sell items on campus. Traditional online marketplaces were too broad, social
@@ -119,13 +119,13 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-16 px-4 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-4">
               BATAMART by the Numbers
             </h2>
-            <p className="text-gray-600">
+            <p className="text-ink-secondary">
               Growing stronger every day with the UNIVERSITY community
             </p>
           </div>
@@ -133,10 +133,10 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-BATAMART-primary mb-2">
+                <div className="text-4xl md:text-5xl font-semibold text-primary mb-2">
                   {stat.number}
                 </div>
-                <div className="text-gray-600 font-medium">{stat.label}</div>
+                <div className="text-ink-secondary font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -147,10 +147,10 @@ export default function AboutPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-4">
               Why Choose BATAMART?
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-ink-secondary max-w-2xl mx-auto">
               We've built features that make buying and selling on campus simple, safe, and reliable
             </p>
           </div>
@@ -159,15 +159,15 @@ export default function AboutPage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+                className="bg-surface p-6 rounded-2xl border border-border hover:shadow-soft transition-shadow duration-300"
               >
-                <div className="w-14 h-14 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark rounded-xl flex items-center justify-center mb-4">
+                <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mb-4">
                   <feature.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-semibold text-ink mb-3">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-ink-secondary leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -177,13 +177,13 @@ export default function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
+      <section className="py-16 px-4 bg-surface">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-4">
               Our Values
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-ink-secondary max-w-2xl mx-auto">
               The principles that guide everything we do at BATAMART
             </p>
           </div>
@@ -192,17 +192,17 @@ export default function AboutPage() {
             {values.map((value, index) => (
               <div
                 key={index}
-                className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300"
+                className="bg-white p-8 rounded-2xl border border-border shadow-soft hover:shadow-soft transition-shadow duration-300"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-6 h-6 text-success" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    <h3 className="text-xl font-semibold text-ink mb-3">
                       {value.title}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <p className="text-ink-secondary leading-relaxed">
                       {value.description}
                     </p>
                   </div>
@@ -216,14 +216,14 @@ export default function AboutPage() {
       {/* Mission Section */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-BATAMART-light to-white p-12 rounded-3xl border-2 border-BATAMART-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-primary/5 p-12 rounded-3xl border-2 border-primary/20">
+            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl md:text-4xl font-semibold text-ink mb-6">
               Our Mission
             </h2>
-            <p className="text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-xl text-ink-secondary leading-relaxed max-w-3xl mx-auto">
               To empower CAMPUS students with a safe, reliable, and convenient platform for
               campus commerce — making it easy to buy what you need and sell what you don't,
               while building a stronger student community.
@@ -233,9 +233,9 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-BATAMART-primary to-BATAMART-dark text-white">
+      <section className="py-16 px-4 bg-primary text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-semibold mb-6">
             Join the BATAMART Community Today
           </h2>
           <p className="text-xl mb-8 text-white/90">
@@ -245,13 +245,13 @@ export default function AboutPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/signup"
-              className="bg-white text-BATAMART-primary hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl"
+              className="bg-white text-primary hover:bg-surface px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-soft hover:shadow-soft"
             >
               Create Free Account
             </Link>
             <Link
               href="/marketplace"
-              className="bg-BATAMART-dark/50 hover:bg-BATAMART-dark text-white border-2 border-white px-8 py-4 rounded-xl font-bold text-lg transition-all"
+              className="bg-white/10 hover:bg-white/20 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold text-lg transition-all"
             >
               Explore Marketplace
             </Link>

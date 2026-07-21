@@ -205,8 +205,8 @@ export default function CheckoutPage() {
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n)
 
   if (cartItems.length === 0 || !user) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f7f8fa]">
-      <div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" />
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
     </div>
   )
 
@@ -223,20 +223,20 @@ export default function CheckoutPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] pb-20">
+    <div className="min-h-screen bg-surface pb-20">
 
       {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
+      <div className="bg-white border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/cart')}
-            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-BATAMART-primary transition-colors group"
+            className="flex items-center gap-1.5 text-sm font-semibold text-ink-secondary hover:text-primary transition-colors group"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to Cart
           </button>
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-            <Lock className="w-4 h-4 text-emerald-500" />
+          <div className="flex items-center gap-2 text-sm font-semibold text-ink-secondary">
+            <Lock className="w-4 h-4 text-success" />
             Secure Checkout
           </div>
         </div>
@@ -244,7 +244,7 @@ export default function CheckoutPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-7">Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-ink mb-7">Checkout</h1>
 
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
 
@@ -252,31 +252,31 @@ export default function CheckoutPage() {
           <div className="lg:col-span-3 space-y-5">
 
             {/* ── Delivery address ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-BATAMART-primary/10 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-BATAMART-primary" />
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary" />
                   </div>
-                  <h2 className="font-black text-gray-900">Delivery Address</h2>
+                  <h2 className="font-semibold text-ink">Delivery Address</h2>
                 </div>
-                <Link href="/profile/setup" className="text-xs font-bold text-BATAMART-primary hover:text-BATAMART-dark transition-colors flex items-center gap-1">
+                <Link href="/profile/setup" className="text-xs font-semibold text-primary hover:underline transition-colors flex items-center gap-1">
                   Edit <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
 
               <div className="p-5 grid sm:grid-cols-2 gap-4">
                 {[
-                  { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Name', value: user.name },
-                  { icon: <Phone className="w-4 h-4 text-gray-400" />, label: 'Phone', value: user.phone },
-                  { icon: <Home className="w-4 h-4 text-gray-400" />, label: 'Location', value: `${user.hostelName}${user.roomNumber ? `, Room ${user.roomNumber}` : ''}` },
-                  { icon: <MapPin className="w-4 h-4 text-gray-400" />, label: 'Landmark', value: user.landmark || '—' },
+                  { icon: <User className="w-4 h-4 text-ink-muted" />, label: 'Name', value: user.name },
+                  { icon: <Phone className="w-4 h-4 text-ink-muted" />, label: 'Phone', value: user.phone },
+                  { icon: <Home className="w-4 h-4 text-ink-muted" />, label: 'Location', value: `${user.hostelName}${user.roomNumber ? `, Room ${user.roomNumber}` : ''}` },
+                  { icon: <MapPin className="w-4 h-4 text-ink-muted" />, label: 'Landmark', value: user.landmark || '—' },
                 ].map(({ icon, label, value }) => (
-                  <div key={label} className="flex items-start gap-3 bg-gray-50 rounded-xl p-3.5">
+                  <div key={label} className="flex items-start gap-3 bg-surface rounded-xl p-3.5">
                     <div className="mt-0.5 flex-shrink-0">{icon}</div>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-                      <p className="font-bold text-gray-900 text-sm mt-0.5 truncate">{value}</p>
+                      <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-wider">{label}</p>
+                      <p className="font-semibold text-ink text-sm mt-0.5 truncate">{value}</p>
                     </div>
                   </div>
                 ))}
@@ -284,18 +284,18 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Order items + notes ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-gray-50 flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-violet-50 rounded-lg flex items-center justify-center">
-                  <Package className="w-4 h-4 text-violet-600" />
+            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="px-5 py-4 border-b border-border flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Package className="w-4 h-4 text-primary" />
                 </div>
-                <h2 className="font-black text-gray-900">Your Items</h2>
-                <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                <h2 className="font-semibold text-ink">Your Items</h2>
+                <span className="text-xs font-semibold text-ink-muted bg-surface px-2 py-0.5 rounded-full">
                   {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
 
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-border">
                 {cartItems.map((item, index) => {
                   const variantSummary = formatVariantSelection(item.selectedVariants || {})
                   const variantEntries = Object.entries(item.selectedVariants || {})
@@ -303,19 +303,19 @@ export default function CheckoutPage() {
                   return (
                     <div key={index} className="p-5">
                       <div className="flex gap-4 mb-4">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-gray-100 flex-shrink-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-border flex-shrink-0">
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-black text-gray-900 text-sm sm:text-base line-clamp-2">{item.name}</h3>
-                          <p className="text-xs text-gray-400 mt-0.5">by <span className="font-semibold text-gray-600">{item.sellerName}</span></p>
-                          {item.deliveryEstimate && <p className="text-[11px] text-orange-600 font-semibold mt-1">Estimated delivery: {item.deliveryEstimate}</p>}
+                          <h3 className="font-semibold text-ink text-sm sm:text-base line-clamp-2">{item.name}</h3>
+                          <p className="text-xs text-ink-muted mt-0.5">by <span className="font-semibold text-ink-secondary">{item.sellerName}</span></p>
+                          {item.deliveryEstimate && <p className="text-[11px] text-ink-secondary font-semibold mt-1">Estimated delivery: {item.deliveryEstimate}</p>}
 
                           {/* ── NEW: Variant chips ── */}
                           {variantEntries.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {variantEntries.map(([key, val]) => (
-                                <span key={key} className="inline-flex items-center gap-1 text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2.5 py-0.5 rounded-full">
+                                <span key={key} className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary font-semibold px-2.5 py-0.5 rounded-full">
                                   <Tag className="w-2.5 h-2.5" />
                                   {String(val)}
                                 </span>
@@ -324,8 +324,8 @@ export default function CheckoutPage() {
                           )}
 
                           <div className="flex items-center gap-3 mt-2">
-                            <span className="text-BATAMART-primary font-black text-base">{formatPrice(item.price * item.quantity)}</span>
-                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-semibold">
+                            <span className="text-primary font-semibold text-base">{formatPrice(item.price * item.quantity)}</span>
+                            <span className="text-xs text-ink-muted bg-surface px-2 py-0.5 rounded-full font-semibold">
                               Qty: {item.quantity}
                             </span>
                           </div>
@@ -333,19 +333,19 @@ export default function CheckoutPage() {
                       </div>
 
                       {/* ── Order note — LOCKED: do not remove. Auto-fills variant selection. ── */}
-                      <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                      <div className="bg-warning/10 rounded-xl p-4 border border-warning/20">
                         <div className="flex items-start gap-2.5 mb-3">
-                          <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                          <div className="w-7 h-7 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-warning" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-amber-900">Note to Seller</p>
+                            <p className="text-sm font-semibold text-warning">Note to Seller</p>
                             {variantSummary ? (
-                              <p className="text-xs text-amber-700 mt-0.5">
+                              <p className="text-xs text-warning mt-0.5">
                                 Your selection (<strong>{variantSummary}</strong>) is auto-sent to the seller. Add extra info below if needed.
                               </p>
                             ) : (
-                              <p className="text-xs text-amber-700 mt-0.5">
+                              <p className="text-xs text-warning mt-0.5">
                                 Let the seller know your preferences - size, colour, variation, or any special request.
                               </p>
                             )}
@@ -354,8 +354,8 @@ export default function CheckoutPage() {
 
                         {/* Auto-filled variant preview */}
                         {variantSummary && (
-                          <div className="bg-white/70 rounded-lg px-3 py-2 mb-2 border border-amber-100">
-                            Auto-filled: <span className="text-indigo-600">[Order: {variantSummary}]</span>
+                          <div className="bg-white/70 rounded-lg px-3 py-2 mb-2 border border-warning/20">
+                            Auto-filled: <span className="text-primary">[Order: {variantSummary}]</span>
                           </div>
                         )}
 
@@ -365,14 +365,14 @@ export default function CheckoutPage() {
                           placeholder={variantSummary ? 'Add extra instructions (optional)...' : `e.g. "Size M, black colour" or "Size 42 shoe, wider fit preferred."`}
                           rows={3}
                           maxLength={300}
-                          className="w-full text-sm bg-white border border-amber-200 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 resize-none placeholder:text-gray-400 text-gray-800 font-medium"
+                          className="w-full text-sm bg-white border border-warning/30 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-warning/30 focus:border-warning resize-none placeholder:text-ink-muted text-ink font-medium"
                         />
                         <div className="flex items-center justify-between mt-2">
-                          <p className="text-[11px] text-amber-600 font-semibold flex items-center gap-1">
+                          <p className="text-[11px] text-warning font-semibold flex items-center gap-1">
                             <Info className="w-3 h-3" />
                             Seller will be notified immediately
                           </p>
-                          <p className="text-[11px] text-amber-500 font-semibold">
+                          <p className="text-[11px] text-warning font-semibold">
                             {(orderNotes[item.productId] || '').length}/300
                           </p>
                         </div>
@@ -384,12 +384,12 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Escrow info ── */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-border shadow-soft p-5">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-emerald-600" />
+                <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-success" />
                 </div>
-                <h3 className="font-black text-gray-900">Secure Escrow Payment</h3>
+                <h3 className="font-semibold text-ink">Secure Escrow Payment</h3>
               </div>
               <div className="space-y-2.5">
                 {[
@@ -399,8 +399,8 @@ export default function CheckoutPage() {
                   'Rate both seller and rider after your order arrives',
                 ].map(text => (
                   <div key={text} className="flex items-start gap-2.5">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-gray-600 font-medium">{text}</p>
+                    <CheckCircle className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-ink-secondary font-medium">{text}</p>
                   </div>
                 ))}
               </div>
@@ -415,30 +415,32 @@ export default function CheckoutPage() {
               return (
                 <div className={`rounded-xl border px-4 py-4 ${
                   isCheckOrders
-                    ? 'bg-amber-50 border-amber-300'
+                    ? 'bg-warning/10 border-warning/30'
                     : isNotCharged
-                    ? 'bg-blue-50 border-blue-200'
-                    : 'bg-red-50 border-red-200'
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-danger/10 border-danger/30'
                 }`}>
                   <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0 mt-0.5">
-                      {isCheckOrders ? '⚠️' : isNotCharged ? 'ℹ️' : '❌'}
+                    <span className="flex-shrink-0 mt-0.5">
+                      {isCheckOrders ? <AlertCircle className="w-5 h-5 text-warning" strokeWidth={1.75} />
+                        : isNotCharged ? <Info className="w-5 h-5 text-primary" strokeWidth={1.75} />
+                          : <AlertCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />}
                     </span>
                     <div className="flex-1">
-                      <p className={`text-sm font-bold mb-1 ${
-                        isCheckOrders ? 'text-amber-800' : isNotCharged ? 'text-blue-800' : 'text-red-800'
+                      <p className={`text-sm font-semibold mb-1 ${
+                        isCheckOrders ? 'text-warning' : isNotCharged ? 'text-primary' : 'text-danger'
                       }`}>
                         {isCheckOrders ? 'Before You Try Again — Check Your Orders' : isNotCharged ? 'You Were Not Charged' : 'Payment Error'}
                       </p>
                       <p className={`text-sm leading-relaxed ${
-                        isCheckOrders ? 'text-amber-700' : isNotCharged ? 'text-blue-700' : 'text-red-700'
+                        isCheckOrders ? 'text-warning' : isNotCharged ? 'text-primary' : 'text-danger'
                       }`}>
                         {msg}
                       </p>
                       {isCheckOrders && (
                         <a
                           href="/orders"
-                          className="inline-block mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-lg transition-colors"
+                          className="inline-block mt-3 px-4 py-2 bg-warning hover:brightness-95 text-white text-sm font-semibold rounded-lg transition-colors"
                         >
                           Check My Orders →
                         </a>
@@ -452,44 +454,44 @@ export default function CheckoutPage() {
 
           {/* ── RIGHT: Summary + CTA ── */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Order Summary</p>
+            <div className="bg-white rounded-2xl border border-border shadow-soft p-5 sticky top-20">
+              <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-4">Order Summary</p>
 
-              <div className="space-y-3 pb-4 border-b border-gray-50">
+              <div className="space-y-3 pb-4 border-b border-border">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Subtotal ({cartItems.reduce((a, i) => a + i.quantity, 0)} units)</span>
-                  <span className="font-bold text-gray-900">{formatPrice(subtotal)}</span>
+                  <span className="text-ink-secondary">Subtotal ({cartItems.reduce((a, i) => a + i.quantity, 0)} units)</span>
+                  <span className="font-semibold text-ink">{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 flex items-center gap-1.5">
+                  <span className="text-ink-secondary flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5" /> Delivery Fee
                   </span>
                   {/* Shows server fee or seller-based fallback placeholder */}
-                  <span className="font-bold text-gray-900">
+                  <span className="font-semibold text-ink">
                     {serverDeliveryFee !== null ? formatPrice(serverDeliveryFee) : formatPrice(fallbackDeliveryFee)}
                   </span>
                 </div>
               </div>
 
               <div className="flex justify-between mt-4 mb-5">
-                <span className="font-black text-gray-900">Total</span>
-                <span className="font-black text-BATAMART-primary text-xl">{formatPrice(totalAmount)}</span>
+                <span className="font-semibold text-ink">Total</span>
+                <span className="font-semibold text-primary text-xl">{formatPrice(totalAmount)}</span>
               </div>
 
               {hasNotes && (
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5 mb-4">
-                  <MessageSquare className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                  <p className="text-xs font-bold text-amber-800">Order notes will be sent to seller(s)</p>
+                <div className="flex items-center gap-2 bg-warning/10 border border-warning/20 rounded-xl px-3.5 py-2.5 mb-4">
+                  <MessageSquare className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                  <p className="text-xs font-semibold text-warning">Order notes will be sent to seller(s)</p>
                 </div>
               )}
-              <label className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-3 mb-4">
+              <label className="flex items-start gap-2 bg-danger/10 border border-danger/30 rounded-xl px-3.5 py-3 mb-4">
                 <input
                   type="checkbox"
                   checked={deliverySuitabilityConfirmed}
                   onChange={(e) => setDeliverySuitabilityConfirmed(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-BATAMART-primary focus:ring-BATAMART-primary"
+                  className="mt-0.5 w-4 h-4 rounded border-border text-primary focus:ring-primary/40"
                 />
-                <span className="text-xs text-red-600 font-semibold leading-relaxed">
+                <span className="text-xs text-danger font-semibold leading-relaxed">
                   I confirm these products can be delivered by riders. If a rider declines an oversized item, product payment is refunded to wallet but delivery fee is not refunded.
                 </span>
               </label>
@@ -497,7 +499,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed}
-                className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2.5 bg-primary hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-base shadow-soft shadow-primary/25 hover:shadow-soft transition-all active:scale-[0.98]"
               >
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
@@ -510,7 +512,7 @@ export default function CheckoutPage() {
                 )}
               </button>
 
-              <p className="text-[11px] text-center text-gray-400 mt-3 leading-relaxed">
+              <p className="text-[11px] text-center text-ink-muted mt-3 leading-relaxed">
                                 {!paymentsStatusLoaded
                   ? 'Checking payment status. Please wait a moment.'
                   : !paymentsEnabled
@@ -518,15 +520,15 @@ export default function CheckoutPage() {
                   : "By paying, you agree to BATAMART's Terms of Service. Payment secured by Paystack."}
               </p>
 
-              <div className="mt-5 pt-4 border-t border-gray-50 flex items-center justify-center gap-4">
+              <div className="mt-5 pt-4 border-t border-border flex items-center justify-center gap-4">
                 {[
-                  { icon: <Lock className="w-3.5 h-3.5 text-gray-400" />, label: 'SSL Secured' },
-                  { icon: <Shield className="w-3.5 h-3.5 text-gray-400" />, label: 'Escrow Protected' },
-                  { icon: <CheckCircle className="w-3.5 h-3.5 text-gray-400" />, label: 'Verified' },
+                  { icon: <Lock className="w-3.5 h-3.5 text-ink-muted" />, label: 'SSL Secured' },
+                  { icon: <Shield className="w-3.5 h-3.5 text-ink-muted" />, label: 'Escrow Protected' },
+                  { icon: <CheckCircle className="w-3.5 h-3.5 text-ink-muted" />, label: 'Verified' },
                 ].map(({ icon, label }) => (
                   <div key={label} className="flex flex-col items-center gap-1">
                     {icon}
-                    <span className="text-[10px] text-gray-400 font-semibold">{label}</span>
+                    <span className="text-[10px] text-ink-muted font-semibold">{label}</span>
                   </div>
                 ))}
               </div>
