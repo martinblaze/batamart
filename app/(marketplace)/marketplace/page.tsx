@@ -569,7 +569,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
         {deliveryTag && (
           <div className="mt-1.5">
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
-              <Truck className="w-2.5 h-2.5" /> {deliveryTag}
+              <Truck className="w-2.5 h-2.5" /> Delivery: {deliveryTag}
             </span>
           </div>
         )}

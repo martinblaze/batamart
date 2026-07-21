@@ -712,6 +712,17 @@ export default function ProductDetailPage() {
     return !normalizedVariantKeys.has(key) && !normalizedVariantKeys.has(label)
   })
 
+  // Suggest a note built from what the buyer actually picked (or the product's own
+  // specs when it has no variants) — "Make sure it's Black, 128GB" — instead of a
+  // generic example that has nothing to do with this listing.
+  const noteSuggestionValues = variantSummary
+    ? variantSummary.split(' | ').filter(Boolean)
+    : specAttributes
+        .map((attr) => (Array.isArray(attr.value) ? attr.value[0] : attr.value))
+        .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+        .slice(0, 2)
+  const noteSuggestionText = noteSuggestionValues.length > 0 ? `Make sure it's ${noteSuggestionValues.join(', ')}` : ''
+
   const isOptionAvailable = (variantKey: string, value: string) => {
     if (!isStructuredVariantProduct) return true
     return structuredVariants.some(v => {
@@ -1337,12 +1348,21 @@ export default function ProductDetailPage() {
                 <MessageCircle className="w-4 h-4 text-primary" />
                 Note to seller <span className="text-ink-muted font-normal text-xs">(optional)</span>
               </h3>
+              {noteSuggestionText && !noteToSeller && (
+                <button
+                  type="button"
+                  onClick={() => setNoteToSeller(noteSuggestionText)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 rounded-full px-3 py-1.5 transition-colors"
+                >
+                  <Sparkles className="w-3 h-3" /> {noteSuggestionText}
+                </button>
+              )}
               <textarea
                 value={noteToSeller}
                 onChange={(e) => setNoteToSeller(e.target.value.slice(0, 300))}
                 maxLength={300}
                 rows={2}
-                placeholder="e.g. Please deliver after 4pm, or gift-wrap this…"
+                placeholder={noteSuggestionText ? `e.g. ${noteSuggestionText} — confirm before delivery` : 'e.g. Please deliver after 4pm, or gift-wrap this…'}
                 className="w-full text-sm bg-surface rounded-xl p-3 border border-transparent focus:border-primary focus:bg-white outline-none resize-none transition-colors"
               />
               <p className="text-[11px] text-ink-muted text-right">{noteToSeller.length}/300</p>

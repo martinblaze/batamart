@@ -515,7 +515,6 @@ export default function SellPage() {
   const [categoryKey, setCategoryKey]       = useState('')
   const [subcategoryKey, setSubcategoryKey] = useState('')
   const [variantPricing, setVariantPricing] = useState<Record<string, { price: string; stock: string }>>({})
-  const [variantsEnabledToggle, setVariantsEnabledToggle] = useState(false)
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttributeDef[]>([])
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({})
   const [attributeCustomInput, setAttributeCustomInput] = useState<Record<string, string>>({})
@@ -574,7 +573,6 @@ export default function SellPage() {
           }
           setVariantPricing(nextPricing)
         }
-        if (typeof draft?.variantsEnabledToggle === 'boolean') setVariantsEnabledToggle(draft.variantsEnabledToggle)
         if (draft?.attributeValues) {
           const nextAttributes: Record<string, any> = {}
           for (const [key, value] of Object.entries(draft.attributeValues as Record<string, any>)) {
@@ -608,7 +606,6 @@ export default function SellPage() {
           categoryKey,
           subcategoryKey,
           variantPricing,
-          variantsEnabledToggle,
           attributeValues,
           manuallyTouchedAttributes,
           tags,
@@ -943,7 +940,6 @@ export default function SellPage() {
     setCategoryKey('')
     setSubcategoryKey('')
     setVariantPricing({})
-    setVariantsEnabledToggle(false)
     setCategoryAttributes([])
     setAttributeValues({})
     setAttributeCustomInput({})
@@ -974,7 +970,9 @@ export default function SellPage() {
   const comboKey = (combo: Record<string, string>) =>
     variantKeysForMatrix.map(k => `${k}:${combo[k]}`).join('|')
 
-  const hasStructuredVariants = variantsEnabledToggle && variantCombinations.length > 0
+  // Variants are automatic: as soon as a Category Detail attribute has 2+ values,
+  // it becomes a priced variant — no separate toggle to discover or forget.
+  const hasStructuredVariants = variantCombinations.length > 0
   const variantPriceNumbers = hasStructuredVariants
     ? variantCombinations.map(combo => {
         const row = variantPricing[comboKey(combo)]
@@ -1465,42 +1463,25 @@ export default function SellPage() {
           </div>
         )}
 
-        {/* ── STEP 5: Variants ── */}
+        {/* ── STEP 5: Variants — automatic once any Category Detail above has 2+ values ── */}
         {variantFields.length > 0 && (
           <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
-            <StepHeader num="5" title="Product Variants" subtitle="Turn on if this product has options like color, size or storage" />
-            <button
-              type="button"
-              onClick={() => setVariantsEnabledToggle((v) => !v)}
-              className={`w-full mb-4 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                variantsEnabledToggle ? 'border-primary bg-primary/10' : 'border-border bg-surface hover:border-primary/20'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-ink">Has variants</p>
-                  <p className="text-xs text-ink-secondary">
-                    {variantsEnabledToggle ? 'Variant section expanded' : 'Tap to add variants'}
-                  </p>
-                </div>
-                <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${variantsEnabledToggle ? 'bg-primary' : 'bg-border'}`}>
-                  <div className={`h-5 w-5 rounded-full bg-white transition-transform ${variantsEnabledToggle ? 'translate-x-4' : 'translate-x-0'}`} />
-                </div>
-              </div>
-            </button>
-            {variantsEnabledToggle && (
-              <div className="space-y-4">
-                {variantFields.map(field => (
-                  <VariantRow
-                    key={field.key}
-                    field={field}
-                    values={toStringArray(attributeValues[field.key])}
-                    onChange={vals => setAttributeValue(field.key, vals)}
-                  />
-                ))}
-              </div>
-            )}
-            {variantsEnabledToggle && variantCombinations.length > 0 && (
+            <StepHeader
+              num="5"
+              title="Product Variants"
+              subtitle="Picked up automatically from your Category Details above — add or remove options here, then price each combination"
+            />
+            <div className="space-y-4">
+              {variantFields.map(field => (
+                <VariantRow
+                  key={field.key}
+                  field={field}
+                  values={toStringArray(attributeValues[field.key])}
+                  onChange={vals => setAttributeValue(field.key, vals)}
+                />
+              ))}
+            </div>
+            {variantCombinations.length > 0 && (
               <div className="mt-5 border border-border rounded-2xl overflow-hidden">
                 <div className="px-3 py-2.5 bg-surface border-b border-border">
                   <p className="text-xs font-semibold text-ink-secondary">Variant Inventory</p>

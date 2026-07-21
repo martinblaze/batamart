@@ -1,7 +1,7 @@
 'use client'
 
 import LoadedImage from '@/components/LoadedImage'
-import { BadgeCheck, Eye, Flame, Star } from 'lucide-react'
+import { BadgeCheck, Eye, Flame, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 
 type ProductCardProduct = {
@@ -100,7 +100,11 @@ export default function ProductCard({
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              {product.deliveryEstimate && <span className="rounded-md bg-surface px-2.5 py-1 font-medium text-ink-secondary">{product.deliveryEstimate}</span>}
+              {product.deliveryEstimate && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 font-semibold text-success">
+                  <Truck className="h-3 w-3" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+                </span>
+              )}
               {stock === 0 && <Badge status="out-of-stock">Out of stock</Badge>}
               {stock > 0 && stock <= 5 && <Badge status="low-stock">Only {stock} left</Badge>}
             </div>
@@ -126,7 +130,7 @@ export default function ProductCard({
           {product.isDeal && <Badge status="success">Deal</Badge>}
         </div>
         <div className="absolute bottom-3 left-3 rounded-md bg-white/92 px-2.5 py-1 text-[11px] font-medium text-ink-secondary backdrop-blur">
-          {product.deliveryEstimate || (stock > 0 ? `${stock} left` : 'Out of stock')}
+          {stock > 0 ? `${stock} left` : 'Out of stock'}
         </div>
       </button>
 
@@ -149,12 +153,19 @@ export default function ProductCard({
             </div>
           )}
         </div>
+        {product.deliveryEstimate && (
+          <div className="mt-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+              <Truck className="h-2.5 w-2.5" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+            </span>
+          </div>
+        )}
         {stock === 0 ? (
-          <div className="mt-3">
+          <div className="mt-2">
             <Badge status="out-of-stock">Out of stock</Badge>
           </div>
         ) : stock <= 5 ? (
-          <div className="mt-3">
+          <div className="mt-2">
             <Badge status="low-stock">Only {stock} left</Badge>
           </div>
         ) : null}
