@@ -21,6 +21,7 @@ import {
   Building2, Rocket, Tablet, Footprints, BatteryCharging, GraduationCap,
   RotateCcw, ClipboardList, Calculator, Ruler, FlaskConical, Usb, Plug,
   PenTool, Lock, Tv, type LucideIcon,
+  CrownIcon,
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 
@@ -405,7 +406,7 @@ const CATEGORIES = [
   { name: 'Fashion',              icon: Shirt },
   { name: 'Home & Kitchen',       icon: Home },
   { name: 'Food & Groceries',     icon: UtensilsCrossed },
-  { name: 'Beauty & Health',      icon: Sparkles },
+  { name: 'Beauty & Health',      icon: Crown},
   { name: 'Sports & Fitness',     icon: Dumbbell },
   { name: 'Vehicles & Transport', icon: Car },
   { name: 'Books & Stationery',   icon: BookOpen },
@@ -520,7 +521,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
           )}
           {product.isNew && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Sparkles className="w-2.5 h-2.5" strokeWidth={1.75} /> NEW
+              <CrownIcon className="w-2.5 h-2.5" strokeWidth={1.75} /> NEW
             </span>
           )}
           {product.isPersonalised && !product.isTrending && !product.isNew && (
@@ -697,7 +698,7 @@ const PRICE_PANELS = [
       { label: 'Under ₦20k',  max: 20000 },
       { label: 'Under ₦30k',  max: 30000 },
     ],
-    icon: Sparkles,
+    icon: CrownIcon,
   },
   {
     title: 'Food & groceries under budget',
@@ -729,9 +730,9 @@ const BRAND_CHIPS = [
   { label: 'Laptops',     icon: Laptop, cat: 'Computing' },
   { label: 'Power banks', icon: BatteryCharging, cat: 'Electronics' },
   { label: 'Earbuds',     icon: Headphones, cat: 'Electronics' },
-  { label: 'Skincare',    icon: Sparkles, cat: 'Beauty & Health' },
+  { label: 'Skincare',    icon: CrownIcon, cat: 'Beauty & Health' },
   { label: 'Textbooks',   icon: BookOpen, cat: 'Books & Stationery' },
-  { label: 'Wigs',        icon: Sparkles, cat: 'Beauty & Health' },
+  { label: 'Wigs',        icon: CrownIcon, cat: 'Beauty & Health' },
   { label: 'Watches',     icon: Watch, cat: 'Fashion' },
   { label: 'Gaming',      icon: Gamepad2, cat: 'Electronics' },
   { label: 'Food',        icon: UtensilsCrossed, cat: 'Food & Groceries' },
@@ -769,7 +770,7 @@ const MEGA_CATEGORIES: { name: string; icon: LucideIcon; count: string }[] = [
   { name: 'Fashion',              icon: Shirt, count: '380+' },
   { name: 'Home & Kitchen',       icon: Home, count: '240+' },
   { name: 'Food & Groceries',     icon: UtensilsCrossed, count: '320+' },
-  { name: 'Beauty & Health',      icon: Sparkles, count: '290+' },
+  { name: 'Beauty & Health',      icon: CrownIcon, count: '290+' },
   { name: 'Sports & Fitness',     icon: Dumbbell, count: '180+' },
   { name: 'Vehicles & Transport', icon: Car, count: '70+' },
   { name: 'Books & Stationery',   icon: BookOpen, count: '150+' },
@@ -876,7 +877,7 @@ const SHOWCASE_PANELS = [
     title: 'Beauty & health',
     catFilter: 'Beauty & Health',
     subcats: ['Skincare', 'Makeup', 'Hair', 'Wellness'],
-    icon: Sparkles,
+    icon: CrownIcon,
     cta: 'Shop beauty',
   },
 ]
@@ -1151,7 +1152,7 @@ function JustDroppedSection({ allProducts, onProductClick }: {
       <div className="section-stripe-emerald px-5 py-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-5 h-5 text-white" />
+            <CrownIcon className="w-5 h-5 text-white" />
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold text-white">Just Dropped</h2>
@@ -1182,7 +1183,7 @@ function JustDroppedSection({ allProducts, onProductClick }: {
       <div className="bg-white p-4">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <Sparkles className="w-10 h-10 text-border mx-auto mb-3" />
+            <CrownIcon className="w-10 h-10 text-border mx-auto mb-3" />
             <p className="text-ink-muted font-semibold text-sm">No results for &ldquo;{search}&rdquo;</p>
             <button onClick={() => setSearch('')} className="text-primary text-xs font-semibold mt-2 hover:underline">
               Clear search
@@ -2258,7 +2259,7 @@ export default function MarketplacePage() {
                 <ShoppingBag className="w-12 h-12 text-border mx-auto mb-3" />
                 <p className="text-ink-muted font-semibold mb-4">Nothing here yet</p>
                 <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft">
-                  <Sparkles className="w-4 h-4" /> List a Product
+                  <CrownIcon className="w-4 h-4" /> List a Product
                 </Link>
               </div>
             ) : (
@@ -2549,7 +2550,7 @@ export default function MarketplacePage() {
                 <p className="text-ink-secondary font-semibold text-lg mb-1">No products yet</p>
                 <p className="text-ink-muted text-sm mb-6">Be the first seller on your campus!</p>
                 <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft shadow-soft">
-                  <Sparkles className="w-4 h-4" /> List a Product
+                  <CrownIcon className="w-4 h-4" /> List a Product
                 </Link>
               </div>
             )}
@@ -2578,7 +2579,7 @@ export default function MarketplacePage() {
       {!isApp && (
         <div className="fixed bottom-20 right-4 sm:right-6 z-40">
           <Link href="/sell" className="btn-press glow-pulse flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-2xl font-semibold text-sm shadow-soft shadow-soft">
-            <Sparkles className="w-4 h-4" /> Sell
+            Sell
           </Link>
         </div>
       )}

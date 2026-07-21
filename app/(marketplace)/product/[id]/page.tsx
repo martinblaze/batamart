@@ -1175,6 +1175,14 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {product.deliveryEstimate && (
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+                  <Truck className="w-3.5 h-3.5" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+                </span>
+              </div>
+            )}
+
             {/* ── NEW: Variant Selector ──────────────────── */}
             {(variantKeys.length > 0 || specAttributes.length > 0) && (
               <div id="variant-selector" className="bg-white rounded-2xl p-4 ring-1 ring-border space-y-4">

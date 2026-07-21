@@ -57,7 +57,9 @@ function ProductCard({
     quantity: number
     images: string[]
     category: string
+    categoryKey: string | null
     subcategory: string | null
+    subcategoryKey: string | null
     deliveryEstimate: string | null
     avgRating: number
     totalReviews: number
@@ -205,7 +207,9 @@ export default async function SellerProductsPage({
           quantity: true,
           images: true,
           category: true,
+          categoryKey: true,
           subcategory: true,
+          subcategoryKey: true,
           deliveryEstimate: true,
           avgRating: true,
           totalReviews: true,
@@ -355,7 +359,7 @@ export default async function SellerProductsPage({
           </div>
           <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-              <Sparkles className="w-5 h-5" />
+              
             </div>
             <p className="text-2xl font-semibold text-ink">{seller.totalReviews || 0}</p>
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Buyer reviews</p>

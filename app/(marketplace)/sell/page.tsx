@@ -1715,7 +1715,7 @@ export default function SellPage() {
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              <Sparkles className="w-5 h-5" /> List Product on BataMart
+               List Product on BataMart
             </span>
           )}
         </button>
