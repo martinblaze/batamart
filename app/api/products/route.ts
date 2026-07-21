@@ -367,6 +367,23 @@ function buildAttributeKeyClause(key: string, values: string[]) {
   return { OR: orClauses }
 }
 
+// Delivery estimates are free text ("3 days", "48 hours after orders are made", "1 week", …) —
+// matching against fixed substrings like "fast"/"today"/"24" almost never hits real data.
+// Parse the actual duration instead: <=2 days (or <=48 hours) counts as fast.
+function isFastDelivery(estimate: string | null | undefined): boolean {
+  if (!estimate) return false
+  const text = estimate.toLowerCase()
+  if (/\b(week|month)/.test(text)) return false
+  if (/\b(today|same[\s-]?day|instant|immediately)\b/.test(text)) return true
+  const hourMatch = text.match(/(\d+)\s*hour/)
+  if (hourMatch) return parseInt(hourMatch[1], 10) <= 48
+  const dayMatch = text.match(/(\d+)\s*day/)
+  if (dayMatch) return parseInt(dayMatch[1], 10) <= 2
+  const bareNumber = text.match(/^(\d+)$/)
+  if (bareNumber) return parseInt(bareNumber[1], 10) <= 2
+  return false
+}
+
 function enrichProductCategoryMeta(product: any) {
   const { category, subcategory } = getCategoryDisplayInfo(
     product?.categoryKey,
@@ -456,16 +473,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (inStock) where.quantity = { gt: 0 }
-    if (deliveryFast) {
-      where.AND = [...(where.AND || []), {
-        OR: [
-          { deliveryEstimate: { contains: 'fast', mode: 'insensitive' } },
-          { deliveryEstimate: { contains: 'today', mode: 'insensitive' } },
-          { deliveryEstimate: { contains: 'same', mode: 'insensitive' } },
-          { deliveryEstimate: { contains: '24', mode: 'insensitive' } },
-        ],
-      }]
-    }
     if (sellerId) where.sellerId = sellerId
     if (categoryKey && categoryKey !== 'all') {
       const categoryValues = getCategoryQueryValues(requestedCategoryKey || CATEGORY_TREE[categoryKey]?.label || '')
@@ -527,31 +534,47 @@ export async function GET(request: NextRequest) {
     else if (sortBy === 'rating') orderBy = [{ avgRating: 'desc' }, { totalReviews: 'desc' }, { createdAt: 'desc' }]
     else if (sortBy === 'popular') orderBy = [{ viewCount: 'desc' }, { createdAt: 'desc' }]
 
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        include: {
-          seller: {
-            select: {
-              id: true,
-              name: true,
-              avgRating: true,
-              trustLevel: true,
-              completedOrders: true,
-            },
-          },
-          variants: true,
-          attributeValues: true,
-          _count: {
-            select: { orders: true },
-          },
+    const productInclude = {
+      seller: {
+        select: {
+          id: true,
+          name: true,
+          avgRating: true,
+          trustLevel: true,
+          completedOrders: true,
         },
-        orderBy,
-        take: limit,
-        skip,
-      }),
-      prisma.product.count({ where }),
-    ])
+      },
+      variants: true,
+      attributeValues: true,
+      _count: {
+        select: { orders: true },
+      },
+    }
+
+    let products: any[]
+    let total: number
+
+    if (deliveryFast) {
+      // "Fast" depends on parsing free-text delivery estimates ("3 days", "48 hours…"),
+      // which Prisma can't filter at the DB level — fetch all matches and paginate in JS.
+      const allMatches = await prisma.product.findMany({ where, include: productInclude, orderBy, take: 1000 })
+      const filtered = allMatches.filter((p) => isFastDelivery(p.deliveryEstimate))
+      total = filtered.length
+      products = filtered.slice(skip, skip + limit)
+    } else {
+      const [pageProducts, count] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          include: productInclude,
+          orderBy,
+          take: limit,
+          skip,
+        }),
+        prisma.product.count({ where }),
+      ])
+      products = pageProducts
+      total = count
+    }
 
     const enrichedProducts = products.map(enrichProductCategoryMeta)
     const ranked = [...enrichedProducts]

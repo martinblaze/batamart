@@ -209,6 +209,13 @@ function SearchPage() {
     return Object.entries(CATEGORY_TREE[categoryKey]?.subcategories || {}).map(([key, sub]) => ({ key, label: sub.label }))
   }, [categoryKey])
   const dynamicFilters = useMemo(() => availableFilters.filter((f) => f.key !== 'condition' && f.key !== 'conditionType'), [availableFilters])
+  // Condition always shows this fixed set of options, but with real counts from the live data
+  // instead of the hardcoded 0s it used to ship with.
+  const conditionOptions = useMemo(() => {
+    const live = availableFilters.find((f) => f.key === 'condition' || f.key === 'conditionType')
+    const countMap = new Map((live?.options || []).map((o) => [o.value, o.count]))
+    return CONDITION_OPTIONS.map((opt) => ({ value: opt.value, count: countMap.get(opt.value) ?? 0 }))
+  }, [availableFilters])
   const activeCount = countActive(filters, [minPrice, maxPrice], priceBounds, minRating, inStockOnly, deliveryFast)
   const suggestion = didYouMean(query)
   const filterPayload = useMemo(() => buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode }), [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode])
@@ -363,7 +370,7 @@ function SearchPage() {
 
           <PriceRangeSlider min={priceBounds.min} max={priceBounds.max} value={[minPrice || priceBounds.min, maxPrice || priceBounds.max]} onChange={(next) => { setMinPrice(next[0]); setMaxPrice(next[1]); setPage(1) }} />
 
-          <FilterGroup title="Condition" options={CONDITION_OPTIONS} selectedValues={filters.condition || []} onChange={(value) => toggleFilterValue('condition', value)} />
+          <FilterGroup title="Condition" options={conditionOptions} selectedValues={filters.condition || []} onChange={(value) => toggleFilterValue('condition', value)} />
 
           <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
             <div className="mb-3 flex items-center justify-between">
