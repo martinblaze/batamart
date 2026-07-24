@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
         phone: user.phone ?? undefined,
       })
       if (!custOk || custData?.status !== 'success' || !custData.data?.id) {
-        console.error('Flutterwave customer creation failed:', custData)
+        console.error('Flutterwave customer creation failed:', JSON.stringify(custData, null, 2))
         return jsonResponse({ error: 'Failed to set up payment customer' }, { status: 502 })
       }
       customerId = custData.data.id
@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
       nonce: card.nonce,
     })
     if (!pmOk || pmData?.status !== 'success' || !pmData.data?.id) {
-      console.error('Flutterwave payment method creation failed:', pmData)
+      console.error('Flutterwave payment method creation failed:', JSON.stringify(pmData, null, 2))
       return jsonResponse({ error: 'Card details could not be processed. Please check them and try again.' }, { status: 400 })
     }
 
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!chargeOk || chargeData?.status !== 'success' || !chargeData.data?.id) {
-      console.error('Flutterwave charge creation failed:', chargeData)
+      console.error('Flutterwave charge creation failed:', JSON.stringify(chargeData, null, 2))
       return jsonResponse({ error: chargeData?.message || 'Payment could not be started' }, { status: 400 })
     }
 

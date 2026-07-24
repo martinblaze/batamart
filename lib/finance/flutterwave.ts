@@ -84,6 +84,10 @@ function splitFullName(fullName: string): { first: string; middle?: string; last
   return { first: parts[0], middle: parts.slice(1, -1).join(' '), last: parts[parts.length - 1] }
 }
 
+// Flutterwave's /customers schema validates `number` as 7-10 digits — i.e.
+// the LOCAL number WITHOUT the leading 0 (e.g. "8012345678", not
+// "08012345678"). Sending the with-leading-zero form is 11 digits and trips
+// their validator with REQUEST_NOT_VALID.
 function normalizeNigerianPhone(phone: string): { country_code: string; number: string } {
   const digits = phone.replace(/\D/g, '')
   if (!digits) {
@@ -92,14 +96,14 @@ function normalizeNigerianPhone(phone: string): { country_code: string; number: 
 
   if (digits.startsWith('234')) {
     const local = digits.slice(3)
-    return { country_code: '234', number: local.startsWith('0') ? local : '0' + local }
+    return { country_code: '234', number: local.startsWith('0') ? local.slice(1) : local }
   }
 
   if (digits.startsWith('0')) {
-    return { country_code: '234', number: digits }
+    return { country_code: '234', number: digits.slice(1) }
   }
 
-  return { country_code: '234', number: '0' + digits }
+  return { country_code: '234', number: digits }
 }
 
 // -- Customers ------------------------------------------------------------
