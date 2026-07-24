@@ -5,8 +5,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POOLED_DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("DIRECT_URL")
   schemas   = ["public"]
 }
 
@@ -1072,5 +1071,6 @@ enum PaymentMethod {
 
   @@schema("public")
 }
+
 
 
