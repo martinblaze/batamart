@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 import { releaseMaturedSellerEscrowForUser } from '@/lib/escrow'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
-import { createFlutterwaveTransfer } from '@/lib/finance/flutterwave'
+import { flutterwaveRequest } from '@/lib/finance/flutterwave'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -266,15 +266,19 @@ export async function POST(request: NextRequest) {
     let flwStatus: string | null = null
 
     try {
-      // Flutterwave v4's Transfer Orchestrator API is a single call — no
-      // separate "create recipient" step like Paystack requires. Amount is
-      // whole Naira, not kobo.
-      const { ok, data: transferData } = await createFlutterwaveTransfer({
-        reference: transferReference,
-        amountNaira: amount,
-        accountNumber,
-        bankCode,
-        narration: `BATAMART withdrawal - ${accountName}`,
+      // Flutterwave v3's Transfers API is a single call — no separate
+      // "create recipient" step like Paystack requires. Amount is whole
+      // Naira, not kobo.
+      const { ok, data: transferData } = await flutterwaveRequest('/transfers', {
+        body: {
+          account_bank: bankCode,
+          account_number: accountNumber,
+          amount,
+          narration: `BATAMART withdrawal - ${accountName}`,
+          currency: 'NGN',
+          reference: transferReference,
+          debit_currency: 'NGN',
+        },
       })
 
       if (!ok || transferData?.status !== 'success') {

@@ -13,23 +13,11 @@ import Link from 'next/link'
 import { useCartStore } from '@/lib/cart-store'
 import { authFetch } from '@/lib/auth-client'
 import { formatVariantSelection } from '@/lib/variants'
-import { encryptCardFields } from '@/lib/finance/flutterwave-encrypt'
 import {
   ChevronLeft, Lock, Shield, Truck, CheckCircle,
   MapPin, Phone, User, Home, Loader2, AlertCircle,
-  MessageSquare, Info, ArrowRight, Package, Tag, CreditCard,
+  MessageSquare, Info, ArrowRight, Package, Tag,
 } from 'lucide-react'
-
-function formatCardNumber(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 19)
-  return digits.replace(/(.{4})/g, '$1 ').trim()
-}
-
-function formatCardExpiry(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 4)
-  if (digits.length <= 2) return digits
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`
-}
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -47,12 +35,6 @@ export default function CheckoutPage() {
   const [deliverySuitabilityConfirmed, setDeliverySuitabilityConfirmed] = useState(false)
   const [paymentsEnabled, setPaymentsEnabled] = useState(true)
   const [paymentsStatusLoaded, setPaymentsStatusLoaded] = useState(false)
-
-  // Card details — collected on THIS page (Flutterwave v4 has no hosted
-  // checkout yet) and encrypted client-side before ever reaching our server.
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvv, setCardCvv] = useState('')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -168,13 +150,6 @@ export default function CheckoutPage() {
       return
     }
 
-    const cardDigits = cardNumber.replace(/\D/g, '')
-    const [expiryMonth, expiryYear] = cardExpiry.split('/')
-    if (cardDigits.length < 12 || !expiryMonth || !expiryYear || expiryYear.length !== 2 || cardCvv.length < 3) {
-      setError('Please enter a valid card number, expiry date, and CVV.')
-      return
-    }
-
     setLoading(true)
     setError('')
 
@@ -190,28 +165,10 @@ export default function CheckoutPage() {
         buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
       }))
 
-      // Card fields are encrypted right here in the browser — our server
-      // never sees the raw card number or CVV.
-      const encryptedCard = await encryptCardFields({
-        cardNumber: cardDigits,
-        expiryMonth,
-        expiryYear,
-        cvv: cardCvv,
-      })
-
       // ── FIX #4: We do NOT send deliveryFee from the client.
       const response = await authFetch('/api/payments/initialize', {
         method: 'POST',
-        body: JSON.stringify({
-          cartItems: cartItemsWithNotes,
-          card: {
-            nonce: encryptedCard.nonce,
-            encryptedCardNumber: encryptedCard.encryptedCardNumber,
-            encryptedExpiryMonth: encryptedCard.encryptedExpiryMonth,
-            encryptedExpiryYear: encryptedCard.encryptedExpiryYear,
-            encryptedCvv: encryptedCard.encryptedCvv,
-          },
-        }),
+        body: JSON.stringify({ cartItems: cartItemsWithNotes }),
       })
 
       const data = await response.json()
@@ -225,12 +182,9 @@ export default function CheckoutPage() {
         setServerDeliveryFee(data.deliveryFee)
       }
 
-      // requiresAction=true -> Flutterwave 3D Secure page (data.authorizationUrl)
-      // requiresAction=false -> already succeeded, data.redirectUrl points at
-      // our own /api/payments/verify, which creates the orders.
-      const nextUrl = data.redirectUrl ?? data.authorizationUrl ?? data.authorization_url
-      if (nextUrl) {
-        window.location.href = nextUrl
+      const authorizationUrl = data.authorizationUrl ?? data.authorization_url
+      if (authorizationUrl) {
+        window.location.href = authorizationUrl
         return
       }
 
@@ -537,47 +491,6 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div className="mb-4">
-                <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-secondary mb-2">
-                  <CreditCard className="w-3.5 h-3.5" /> Card Details
-                </p>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="cc-number"
-                    placeholder="Card number"
-                    value={cardNumber}
-                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                    maxLength={23}
-                    className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-                  />
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="cc-exp"
-                      placeholder="MM/YY"
-                      value={cardExpiry}
-                      onChange={(e) => setCardExpiry(formatCardExpiry(e.target.value))}
-                      maxLength={5}
-                      className="flex-1 px-3.5 py-3 bg-surface border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    />
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="cc-csc"
-                      placeholder="CVV"
-                      value={cardCvv}
-                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                      maxLength={4}
-                      className="w-24 px-3.5 py-3 bg-surface border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-                    />
-                  </div>
-                </div>
-                <p className="text-[11px] text-ink-muted mt-1.5">Encrypted in your browser before it ever reaches our servers.</p>
-              </div>
-
               <label className="flex items-start gap-2 bg-danger/10 border border-danger/30 rounded-xl px-3.5 py-3 mb-4">
                 <input
                   type="checkbox"
@@ -592,7 +505,7 @@ export default function CheckoutPage() {
 
               <button
                 onClick={handlePayment}
-                disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed || cardNumber.replace(/\D/g, '').length < 12 || !cardExpiry.includes('/') || cardCvv.length < 3}
+                disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed}
                 className="w-full flex items-center justify-center gap-2.5 bg-primary hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-base shadow-soft shadow-primary/25 hover:shadow-soft transition-all active:scale-[0.98]"
               >
                 {loading ? (
