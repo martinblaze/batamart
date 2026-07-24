@@ -17,20 +17,17 @@ export async function GET(request: NextRequest) {
     }
 
     // ── Available batches ──────────────────────────────────────────────────
-    // A batch is available when:
-    //   • status is PENDING (no rider yet)
-    //   • riderId is null
-    //   • all orders inside belong to the rider's campus
-    //   • every order inside has been accepted by its seller (PROCESSING) —
-    //     a rider shouldn't be sent to collect from a seller who hasn't even
-    //     started preparing yet. See app/api/orders/[id]/route.ts for the
-    //     seller-accept transition.
+    // A batch is visible to riders as soon as it's PENDING (payment done) —
+    // riders should see and get notified about a job immediately. Whether
+    // they can actually ACCEPT it yet (i.e. every seller in the batch has
+    // confirmed) is gated separately in app/api/riders/accept-order/route.ts;
+    // each order's `status` here (PENDING vs PROCESSING) is what the rider
+    // dashboard uses to show a "waiting for seller" state per batch.
     const batches = await prisma.deliveryBatch.findMany({
       where: {
         status:       'PENDING',
         riderId:      null,
         universityId: user.universityId,
-        orders:       { none: { status: 'PENDING' } },
       },
       include: {
         buyer: {

@@ -236,6 +236,9 @@ export default function RiderDashboardPage() {
           'success'
         )
         await fetchRiderData()
+      } else if (res.status === 409 && data.blockReason === 'AWAITING_SELLER_ACCEPTANCE') {
+        showToast(data.error || 'Waiting on the seller(s) to accept this order.', 'info')
+        await fetchRiderData()
       } else if (res.status === 409) {
         showToast('Another rider just accepted this batch. Refreshing...', 'info')
         await fetchRiderData()
@@ -1106,29 +1109,45 @@ export default function RiderDashboardPage() {
                             {order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
                           </p>
                         </div>
-                        <span className="text-xs font-semibold text-ink-muted flex-shrink-0">#{idx + 1}</span>
+                        {order.status === 'PENDING' ? (
+                          <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
+                            Awaiting seller
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
+                            Ready
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
 
                   {/* Accept button */}
                   <div className="px-5 pb-5">
-                    <button
-                      onClick={() => acceptBatch(batch.id)}
-                      disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending}
-                      className="w-full py-3 bg-primary hover:brightness-95 text-white rounded-xl
-                                 font-semibold text-sm shadow-soft shadow-primary/20
-                                 flex items-center justify-center gap-2
-                                 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    >
-                      {actionLoading[`accept-${batch.id}`]
-                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
-                        : <>
-                            Accept Batch · ₦{(batch.orders.length * 560).toLocaleString()}
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                      }
-                    </button>
+                    {(() => {
+                      const pendingCount = batch.orders.filter((o: any) => o.status === 'PENDING').length
+                      const awaitingSeller = pendingCount > 0
+                      return (
+                        <button
+                          onClick={() => acceptBatch(batch.id)}
+                          disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending || awaitingSeller}
+                          className="w-full py-3 bg-primary hover:brightness-95 text-white rounded-xl
+                                     font-semibold text-sm shadow-soft shadow-primary/20
+                                     flex items-center justify-center gap-2
+                                     disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          {actionLoading[`accept-${batch.id}`]
+                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
+                            : awaitingSeller
+                              ? <>Waiting on {pendingCount} seller{pendingCount > 1 ? 's' : ''} to accept</>
+                              : <>
+                                  Accept Batch · ₦{(batch.orders.length * 560).toLocaleString()}
+                                  <ArrowRight className="w-4 h-4" />
+                                </>
+                          }
+                        </button>
+                      )
+                    })()}
                   </div>
                 </div>
               ))}

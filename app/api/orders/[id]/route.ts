@@ -234,29 +234,11 @@ export async function PATCH(
       },
     });
 
-    // Seller just accepted this order (PENDING -> PROCESSING). Riders can only
-    // pick up a whole batch at once, so don't notify them until EVERY order
-    // in the batch has been accepted by its seller — otherwise a rider could
-    // be sent to collect from a seller who hasn't even started preparing yet.
-    if (status === 'PROCESSING' && updatedOrder.batchId) {
-      const siblingOrders = await prisma.order.findMany({
-        where: { batchId: updatedOrder.batchId },
-        select: { status: true },
-      });
-      const batchFullyAccepted = siblingOrders.every(o => o.status !== 'PENDING');
-
-      if (batchFullyAccepted) {
-        const batch = await prisma.deliveryBatch.findUnique({
-          where: { id: updatedOrder.batchId },
-          select: { universityId: true },
-        });
-        if (batch?.universityId) {
-          import('@/lib/push/sendPushNotification')
-            .then(({ notifyAvailableRiders }) => notifyAvailableRiders(updatedOrder.orderNumber, batch.universityId))
-            .catch(err => console.error('⚠️  Rider push failed after seller acceptance:', err));
-        }
-      }
-    }
+    // No rider notification needed here — riders were already notified when
+    // the order was placed (see app/api/payments/verify/route.ts) and can
+    // already see this batch on their dashboard. This PENDING -> PROCESSING
+    // transition just unblocks their Accept button (see
+    // app/api/riders/accept-order/route.ts).
 
     return jsonResponse(updatedOrder);
   } catch (error) {

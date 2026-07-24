@@ -396,12 +396,16 @@ export async function GET(request: NextRequest) {
         ).catch(err => console.error(`⚠️  Seller notification failed for ${sellerId}:`, err))
       ),
 
-      // NOTE: riders are deliberately NOT notified here. An order only
-      // becomes available for pickup once its seller accepts it (PENDING ->
-      // PROCESSING) — see app/api/orders/[id]/route.ts, which fires
-      // notifyAvailableRiders once every order in the batch has been
-      // accepted. Notifying at payment time would point riders at orders
-      // they can't actually see or accept yet.
+      // Riders are notified right away — they can see the job on their
+      // dashboard immediately, they just can't tap Accept until every seller
+      // in the batch has confirmed (see app/api/riders/accept-order/route.ts).
+      // Scoped to the buyer's campus — riders elsewhere can't see or accept
+      // this batch anyway (see app/api/riders/available-orders/route.ts).
+      ...(buyer.universityId ? [
+        import('@/lib/push/sendPushNotification')
+          .then(({ notifyAvailableRiders }) => notifyAvailableRiders(orders[0].orderNumber, buyer.universityId!))
+          .catch(err => console.error('⚠️  Rider push failed:', err)),
+      ] : []),
     ]).then(results => {
       results.forEach((r, i) => {
         if (r.status === 'rejected') console.error(`Notification slot ${i} rejected:`, r.reason)

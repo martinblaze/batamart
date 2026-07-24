@@ -94,6 +94,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // ── Seller acceptance gate ─────────────────────────────────────────────
+    // Riders can see and get notified about a batch as soon as it's placed,
+    // but can't claim it until every seller in it has accepted their order
+    // (PENDING -> PROCESSING via app/api/orders/[id]/route.ts) — otherwise a
+    // rider could be sent to collect from a seller who hasn't even started.
+    const notYetAccepted = batch.orders.filter(o => o.status === 'PENDING')
+    if (notYetAccepted.length > 0) {
+      return NextResponse.json({
+        error: `Waiting on ${notYetAccepted.length} seller${notYetAccepted.length > 1 ? 's' : ''} to accept this order. Try again shortly.`,
+        blockReason: 'AWAITING_SELLER_ACCEPTANCE',
+      }, { status: 409 })
+    }
+
     const riderSharePerOrder = 560
     const totalRiderEscrow   = riderSharePerOrder * batch.orders.length
 
