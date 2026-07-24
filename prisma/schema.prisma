@@ -67,6 +67,7 @@ model User {
   withdrawalPin            String?
   withdrawalPinAttempts    Int                 @default(0)
   withdrawalPinLockedUntil DateTime?
+  flutterwaveCustomerId    String?
   universityId             String?
   auditLogs                AuditLog[]
   cart                     Cart?
@@ -99,6 +100,7 @@ model User {
   referrals                User[]              @relation("UserReferrals")
   university               University?         @relation(fields: [universityId], references: [id])
   withdrawalRequests       WithdrawalRequest[]
+  pendingCharges           PendingCharge[]
 
   @@index([role])
   @@index([trustLevel])
@@ -520,6 +522,31 @@ model OTP {
 
   @@index([phone])
   @@index([email])
+  @@schema("public")
+}
+
+// Bridges the gap between creating a Flutterwave v4 charge (which returns a
+// chargeId synchronously) and the buyer landing back on /api/payments/verify
+// after completing a 3D Secure challenge on Flutterwave's page — that's a
+// separate request/serverless invocation with no shared memory, so the
+// reference -> chargeId mapping has to be persisted somewhere. Deleted once
+// the order is created; not meant to be a long-lived audit table (see
+// Transaction/Payment for that).
+model PendingCharge {
+  id            String   @id @default(cuid())
+  userId        String
+  reference     String   @unique
+  chargeId      String
+  amount        Float
+  cartItemsJson Json
+  status        String   @default("PENDING") // PENDING | PROCESSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([reference])
+  @@index([chargeId])
+  @@index([userId])
   @@schema("public")
 }
 

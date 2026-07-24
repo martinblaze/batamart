@@ -56,8 +56,8 @@ export default function RevenuePage() {
   const p           = revenue?.platform      || {}
   const gross       = p.gross                || {}
   const net         = p.net                  || {}
-  const fees        = p.credoFees            || {}
-  const feeConfig    = revenue?.credoFeeConfig || {}
+  const fees        = p.flutterwaveFees            || {}
+  const feeConfig    = revenue?.flutterwaveFeeConfig || {}
   const obligations = revenue?.obligations   || {}
   const withdrawal  = revenue?.withdrawal    || {}
   const referrals   = revenue?.referrals     || {}
@@ -102,7 +102,7 @@ export default function RevenuePage() {
             <ShieldCheck className="w-7 h-7 text-success" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-semibold text-ink mb-1">Safe to Withdraw from Credo-managed balance</h2>
+            <h2 className="text-xl font-semibold text-ink mb-1">Safe to Withdraw from Flutterwave-managed balance</h2>
             <p className="text-ink-secondary text-sm mb-4">
               Your actual profit after ALL deductions — including money still owed to sellers and riders.
               {selectedUni !== 'all' && ` Scoped to ${selectedUniName}.`}
@@ -113,8 +113,8 @@ export default function RevenuePage() {
                 <span className="text-ink">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-ink-secondary">
-                <span>Credo fees (plan-based estimate)</span>
-                <span className="text-danger">− ₦{(breakdown.minusCredoFees || 0).toLocaleString()}</span>
+                <span>Flutterwave fees (2% capped at ₦2,000)</span>
+                <span className="text-danger">− ₦{(breakdown.minusFlutterwaveFees || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-ink-secondary">
                 <span>Referral rewards paid to users</span>
@@ -140,15 +140,15 @@ export default function RevenuePage() {
               <div className="flex items-start gap-2 bg-warning/10 border border-warning/30 rounded-xl p-3 mb-4 text-sm text-warning">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>
-                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Credo-managed balance belongs to sellers/riders who haven't withdrawn yet.
-                  You must leave that amount in Credo-managed balance.
+                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Flutterwave-managed balance belongs to sellers/riders who haven't withdrawn yet.
+                  You must leave that amount in Flutterwave-managed balance.
                 </span>
               </div>
             )}
 
             <div className="flex items-center gap-2 text-success font-semibold text-lg">
               <DollarSign className="w-5 h-5" />
-              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Credo-managed balance
+              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Flutterwave-managed balance
             </div>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function RevenuePage() {
       {/* ── Net Profit Cards ── */}
       <div>
         <h2 className="text-xl font-semibold text-ink mb-1">Net Platform Profit</h2>
-        <p className="text-ink-secondary text-sm mb-4">After Credo fees. Referral payouts + user obligations deducted from all-time.</p>
+        <p className="text-ink-secondary text-sm mb-4">After Flutterwave fees. Referral payouts + user obligations deducted from all-time.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'All time NET',    value: withdrawal.safeToWithdraw || 0, sub: `Gross: ₦${(gross.allTime || 0).toLocaleString()}` },
@@ -178,7 +178,7 @@ export default function RevenuePage() {
       <div className="bg-white border border-border rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-ink mb-1">Money Owed to Users</h3>
         <p className="text-xs text-ink-secondary mb-4 flex items-center gap-1">
-          <Info className="w-3 h-3" /> Keep this amount in Credo-managed balance — it belongs to sellers and riders
+          <Info className="w-3 h-3" /> Keep this amount in Flutterwave-managed balance — it belongs to sellers and riders
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-surface rounded-xl p-4">

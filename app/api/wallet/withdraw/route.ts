@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { releaseMaturedSellerEscrowForUser } from '@/lib/escrow'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
+import { createFlutterwaveTransfer } from '@/lib/finance/flutterwave'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +48,7 @@ async function refundBalance(userId: string, amount: number): Promise<void> {
       where: { id: userId },
       data: { availableBalance: { increment: amount } },
     })
-    console.log(`[withdraw] Refunded ₦${amount} to user ${userId} after Paystack failure`)
+    console.log(`[withdraw] Refunded ₦${amount} to user ${userId} after Flutterwave failure`)
   } catch (err) {
     console.error(`[withdraw] CRITICAL: Failed to refund ₦${amount} to user ${userId}`, err)
   }
@@ -262,62 +263,31 @@ export async function POST(request: NextRequest) {
 
     const transferReference = withdrawalRequest.id
     let transferCode: string | null = null
-    let recipientCode: string | null = null
+    let flwStatus: string | null = null
 
     try {
-      const recipientResponse = await fetch('https://api.paystack.co/transferrecipient', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'nuban',
-          name: accountName,
-          account_number: accountNumber,
-          bank_code: bankCode,
-          currency: 'NGN',
-        }),
+      // Flutterwave v4's Transfer Orchestrator API is a single call — no
+      // separate "create recipient" step like Paystack requires. Amount is
+      // whole Naira, not kobo.
+      const { ok, data: transferData } = await createFlutterwaveTransfer({
+        reference: transferReference,
+        amountNaira: amount,
+        accountNumber,
+        bankCode,
+        narration: `BATAMART withdrawal - ${accountName}`,
       })
-      const recipientData = await recipientResponse.json()
 
-      if (!recipientData.status) {
+      if (!ok || transferData?.status !== 'success') {
         await refundBalance(user.id, amount)
-        await rejectWithdrawalRequest(withdrawalRequest.id, recipientData.message || 'Failed to create transfer recipient')
+        await rejectWithdrawalRequest(withdrawalRequest.id, transferData?.message || 'Transfer initiation failed')
         return NextResponse.json(
-          { error: recipientData.message || 'Failed to create transfer recipient' },
+          { error: transferData?.message || 'Transfer initiation failed' },
           { status: 400 }
         )
       }
 
-      recipientCode = recipientData.data?.recipient_code ?? null
-
-      const transferResponse = await fetch('https://api.paystack.co/transfer', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source: 'balance',
-          amount: amount * 100,
-          recipient: recipientCode,
-          reason: `BATAMART withdrawal - ${accountName}`,
-          reference: transferReference,
-        }),
-      })
-      const transferData = await transferResponse.json()
-
-      if (!transferData.status) {
-        await refundBalance(user.id, amount)
-        await rejectWithdrawalRequest(withdrawalRequest.id, transferData.message || 'Transfer initiation failed')
-        return NextResponse.json(
-          { error: transferData.message || 'Transfer initiation failed' },
-          { status: 400 }
-        )
-      }
-
-      transferCode = transferData.data?.transfer_code ?? null
+      transferCode = transferData.data?.id ? String(transferData.data.id) : null
+      flwStatus = transferData.data?.status ?? null
 
       await prisma.$transaction(async (tx) => {
         await tx.withdrawalRequest.update({
@@ -331,7 +301,7 @@ export async function POST(request: NextRequest) {
               status: 'PROCESSING',
               transferReference,
               transferCode,
-              recipientCode,
+              flutterwaveStatus: flwStatus,
             },
             processedAt: new Date(),
           },
@@ -362,7 +332,7 @@ export async function POST(request: NextRequest) {
               accountName,
               transferReference,
               transferCode,
-              recipientCode,
+              flutterwaveStatus: flwStatus,
               balanceBefore,
               balanceAfter: balanceBefore - amount,
             },
@@ -379,8 +349,8 @@ export async function POST(request: NextRequest) {
         transferCode,
         requestId: withdrawalRequest.id,
       })
-    } catch (paystackErr) {
-      console.error('Paystack error during withdrawal:', paystackErr)
+    } catch (flutterwaveErr) {
+      console.error('Flutterwave error during withdrawal:', flutterwaveErr)
       if (balanceDeducted) {
         await refundBalance(user.id, amount)
       }

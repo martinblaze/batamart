@@ -3,12 +3,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
+import { flutterwaveFeePerOrder } from '@/lib/finance/fees'
 
 const SERVICE_FEE_RATE = 0.03
-
-function calculatePaystackFee(amount: number) {
-  return Math.min(amount * 0.015 + 100, 2000)
-}
 
 async function getUserFromToken(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -51,9 +48,9 @@ export async function POST(
     const subtotal = dispute.order.totalAmount - (dispute.order.riderId ? 800 : 0)
     const sellerEscrowHeld = Math.max(0, subtotal - dispute.order.platformCommission)
 
-    const paystackFee = Math.round(calculatePaystackFee(sellerEscrowHeld) * 100) / 100
+    const gatewayFee = Math.round(flutterwaveFeePerOrder(sellerEscrowHeld) * 100) / 100
     const serviceFee = Math.round(sellerEscrowHeld * SERVICE_FEE_RATE * 100) / 100
-    const netRefund = Math.max(0, Math.round((sellerEscrowHeld - paystackFee - serviceFee) * 100) / 100)
+    const netRefund = Math.max(0, Math.round((sellerEscrowHeld - gatewayFee - serviceFee) * 100) / 100)
 
     await prisma.$transaction(async (tx) => {
       const buyerWallet = await tx.user.findUnique({
@@ -87,8 +84,8 @@ export async function POST(
         data: {
           userId: dispute.sellerId,
           type: 'DEBIT',
-          amount: paystackFee + serviceFee,
-          description: `Dispute fees (Paystack + service) for Order #${dispute.order.orderNumber}`,
+          amount: gatewayFee + serviceFee,
+          description: `Dispute fees (payment gateway + service) for Order #${dispute.order.orderNumber}`,
           reference: `DISPUTE-FEE-SELLER-CONFIRM-${dispute.id}`,
           balanceBefore: 0,
           balanceAfter: 0,
@@ -119,7 +116,7 @@ export async function POST(
             message: `Your dispute refund of ₦${netRefund.toLocaleString()} has been released after return confirmation.`,
             orderId: dispute.orderId,
             disputeId: dispute.id,
-            metadata: { paystackFee, serviceFee, grossRefund: sellerEscrowHeld, netRefund },
+            metadata: { gatewayFee, serviceFee, grossRefund: sellerEscrowHeld, netRefund },
           },
           {
             userId: dispute.sellerId,
@@ -136,7 +133,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: 'Return confirmed. Buyer refund released.',
-      summary: { grossRefund: sellerEscrowHeld, paystackFee, serviceFee, netRefund },
+      summary: { grossRefund: sellerEscrowHeld, gatewayFee, serviceFee, netRefund },
     })
   } catch (error) {
     console.error('Seller return confirmation error:', error)

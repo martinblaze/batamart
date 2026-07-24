@@ -13,7 +13,7 @@ interface AnalyticsData {
   newUsers: number; totalUsers: number; newSellers: number; newRiders: number
   newProducts: number; totalProducts: number; totalOrders: number
   completedOrders: number; completionRate: number; revenue: number
-  platformCommission: number; credoFees: number; netRevenue: number
+  platformCommission: number; flutterwaveFees: number; netRevenue: number
   revenueTrend: number | null   // null when range='all' (not applicable)
   dau: number; wau: number; mau: number
   retentionDay1: number; retentionDay7: number; repeatBuyerPct: number
@@ -240,13 +240,13 @@ export default function AnalyticsPage() {
                 trendNA={d.revenueTrend === null}
               />
               <KpiCard label="Commission"  value={fmtNgn(d.platformCommission)} icon={<CreditCard className="w-4 h-4" />} accent="orange" />
-              {/* FIX #6: net revenue now correctly deducts Credo fees — label updated */}
+              {/* FIX #6: net revenue now correctly deducts Flutterwave fees — label updated */}
               <KpiCard
                 label="Net revenue"
                 value={fmtNgn(d.netRevenue)}
                 icon={<Shield className="w-4 h-4" />}
                 accent="green"
-                sub={`−₦${fmt(Math.round(d.credoFees || 0))} Credo fees`}
+                sub={`−₦${fmt(Math.round(d.flutterwaveFees || 0))} Flutterwave fees`}
               />
               <KpiCard label="Orders" value={fmt(d.totalOrders)} icon={<CheckCircle className="w-4 h-4" />} accent="blue" sub={`${d.completionRate}% completed`} />
             </div>

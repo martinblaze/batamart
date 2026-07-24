@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { credoFeePerOrder, getCredoFeeConfig } from '@/lib/finance/fees'
+import { flutterwaveFeePerOrder, getFlutterwaveFeeConfig } from '@/lib/finance/fees'
 
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -18,11 +18,11 @@ async function verifyAdmin(req: NextRequest) {
   }
 }
 
-// Credo pricing varies by contract. We use the current configured estimate
-// so revenue math stays aligned with the live dashboard, but env overrides can
-// be used if your Credo account is on a different plan.
-const feeForOrder = credoFeePerOrder
-const credoFeeConfig = getCredoFeeConfig()
+// Flutterwave's published Nigeria rate: 2% per transaction, capped at ₦2,000
+// (see lib/finance/fees.ts). Env overrides are available if your Flutterwave
+// account is on a custom/negotiated plan.
+const feeForOrder = flutterwaveFeePerOrder
+const flutterwaveFeeConfig = getFlutterwaveFeeConfig()
 
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       totalAmount: orders.reduce((s, o) => s + (o.totalAmount || 0), 0),
       platformCommission: orders.reduce((s, o) => s + (o.platformCommission || 0), 0),
       count: orders.length,
-      credoFees: orders.reduce((s, o) => s + feeForOrder(o.totalAmount || 0), 0),
+      flutterwaveFees: orders.reduce((s, o) => s + feeForOrder(o.totalAmount || 0), 0),
     })
 
     const allTime = sumOrders(allCompletedOrders)
@@ -109,11 +109,11 @@ export async function GET(req: NextRequest) {
 
     const referralPaidOut = Number(referralStats._sum.amount ?? 0)
 
-    const netAllTime = allTime.platformCommission - allTime.credoFees - referralPaidOut
-    const netThisMonth = thisMonth.platformCommission - thisMonth.credoFees
-    const netLastMonth = lastMonth.platformCommission - lastMonth.credoFees
-    const netToday = today.platformCommission - today.credoFees
-    const netPending = pending.platformCommission - pending.credoFees
+    const netAllTime = allTime.platformCommission - allTime.flutterwaveFees - referralPaidOut
+    const netThisMonth = thisMonth.platformCommission - thisMonth.flutterwaveFees
+    const netLastMonth = lastMonth.platformCommission - lastMonth.flutterwaveFees
+    const netToday = today.platformCommission - today.flutterwaveFees
+    const netPending = pending.platformCommission - pending.flutterwaveFees
 
     const sellersAvailableNow = totalSellersBalance._sum.availableBalance?.toNumber() ?? 0
     const sellersPending = totalSellersBalance._sum.pendingBalance?.toNumber() ?? 0
@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
       netAllTime - sellersAvailableNow - ridersAvailableNow,
     )
 
-    const credoHeldApprox = allTime.totalAmount
+    const flutterwaveHeldApprox = allTime.totalAmount
 
     const topSellers = await Promise.all(
       topSellersRaw.map(async (s) => {
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
       revenue: {
         totalRevenue: allTime.totalAmount,
         totalOrders: allTime.count,
-        credoFeeConfig,
+        flutterwaveFeeConfig,
         platform: {
           gross: {
             allTime: allTime.platformCommission,
@@ -166,12 +166,12 @@ export async function GET(req: NextRequest) {
             today: netToday,
             pending: netPending,
           },
-          credoFees: {
-            allTime: allTime.credoFees,
-            thisMonth: thisMonth.credoFees,
-            lastMonth: lastMonth.credoFees,
-            today: today.credoFees,
-            pending: pending.credoFees,
+          flutterwaveFees: {
+            allTime: allTime.flutterwaveFees,
+            thisMonth: thisMonth.flutterwaveFees,
+            lastMonth: lastMonth.flutterwaveFees,
+            today: today.flutterwaveFees,
+            pending: pending.flutterwaveFees,
           },
         },
         thisMonth: {
@@ -208,10 +208,10 @@ export async function GET(req: NextRequest) {
         },
         withdrawal: {
           safeToWithdraw,
-          credoHeldApprox,
+          flutterwaveHeldApprox,
           breakdown: {
             grossCommission: allTime.platformCommission,
-            minusCredoFees: allTime.credoFees,
+            minusFlutterwaveFees: allTime.flutterwaveFees,
             minusReferralPayouts: referralPaidOut,
             minusSellersAvailable: sellersAvailableNow,
             minusRidersAvailable: ridersAvailableNow,

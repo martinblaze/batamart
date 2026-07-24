@@ -5,6 +5,11 @@ import { prisma } from '@/lib/prisma'
 import { notifyOrderPlaced } from '@/lib/notification'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import {
+  createFlutterwaveCustomer,
+  createFlutterwaveCardPaymentMethod,
+  createFlutterwaveCharge,
+} from '@/lib/finance/flutterwave'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -111,12 +116,21 @@ export async function POST(request: NextRequest) {
         orderNote: z.string().max(300).optional(),
         buyerDeliveryAcknowledged: z.boolean().optional(),
       }).strict()).max(50).optional(),
+      // Card fields are already AES-256-GCM encrypted client-side (see
+      // lib/finance/flutterwave-encrypt.ts) — this route never sees a raw PAN.
+      card: z.object({
+        nonce: z.string().length(12),
+        encryptedCardNumber: z.string().min(1),
+        encryptedExpiryMonth: z.string().min(1),
+        encryptedExpiryYear: z.string().min(1),
+        encryptedCvv: z.string().min(1),
+      }),
     }).strict()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {
       return jsonResponse({ error: 'Invalid request payload' }, { status: 400 })
     }
-    const { productId, cartItems } = parsed.data
+    const { productId, cartItems, card } = parsed.data
 
     type CartItem = {
       productId:  string
@@ -229,7 +243,7 @@ export async function POST(request: NextRequest) {
     const totalDelivery    = perOrderDelivery * distinctSellers
     const subtotal         = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-    // fees here represent the TOTAL for Credo (all orders combined)
+    // fees here represent the TOTAL for Flutterwave (all orders combined)
     const totalSubtotal = subtotal
     const totalAmount   = totalSubtotal + totalDelivery
 
@@ -244,78 +258,100 @@ export async function POST(request: NextRequest) {
     }
 
     const reference   = `BATAMART-${Date.now()}-${user.id.substring(0, 8)}`
-    const callbackUrl = `${APP_URL.replace(/\/$/, '')}/api/payments/verify`
+    const callbackUrl = `${APP_URL.replace(/\/$/, '')}/api/payments/verify?ref=${encodeURIComponent(reference)}`
 
-    const credoBaseUrl = process.env.CREDO_BASE_URL ?? (
-      process.env.NODE_ENV === 'development'
-        ? 'https://api.credodemo.com'
-        : 'https://api.credocentral.com'
-    )
-    const credoPublicKey = process.env.NEXT_PUBLIC_CREDO_PUBLISHABLE_KEY ?? process.env.CREDO_PUBLIC_KEY
-
-    if (!credoPublicKey) {
-      console.error('Credo publishable key is not set in environment variables.')
-      return jsonResponse(
-        { error: 'Server misconfiguration: Credo publishable key is not set.' },
-        { status: 500 }
-      )
-    }
-
-    console.log('Initializing Credo payment - reference:', reference, '| callback:', callbackUrl)
+    console.log('Charging via Flutterwave v4 - reference:', reference, '| callback:', callbackUrl)
     console.log(`Cart: ${items.length} item(s), ${distinctSellers} seller(s), total delivery ₦${totalDelivery}`)
 
-    const credoRes = await fetch(`${credoBaseUrl.replace(/\/$/, '')}/transaction/initialize`, {
-      method:  'POST',
-      headers: {
-        Authorization: credoPublicKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount:     Math.round(totalAmount * 100),
-        email:      user.email || `${user.id}@batamart.app`,
-        currency:   'NGN',
-        callbackUrl,
-        channels:   ['CARD', 'BANK'],
-        metadata: {
-          userId: user.id,
-          cartItems: items,
-          orderReference: reference,
-        },
-      }),
-    })
-
-    const credoData = await credoRes.json()
-
-    if (!credoRes.ok || (credoData?.status !== 200 && credoData?.status !== true)) {
-      console.error('Credo initialization failed:', credoData)
-      return jsonResponse(
-        { error: credoData?.message || credoData?.error || 'Payment initialization failed' },
-        { status: 400 }
-      )
+    // STEP 1: Get or create a Flutterwave customer for this user (reused
+    // across orders — avoids creating a duplicate customer record every time).
+    // getUserFromRequest doesn't select flutterwaveCustomerId, so look it up directly.
+    const userFwRecord = await prisma.user.findUnique({ where: { id: user.id }, select: { flutterwaveCustomerId: true } })
+    let customerId = userFwRecord?.flutterwaveCustomerId
+    if (!customerId) {
+      const { ok: custOk, data: custData } = await createFlutterwaveCustomer({
+        email: user.email || `${user.id}@batamart.app`,
+        name: user.name ?? undefined,
+        phone: user.phone ?? undefined,
+      })
+      if (!custOk || custData?.status !== 'success' || !custData.data?.id) {
+        console.error('Flutterwave customer creation failed:', custData)
+        return jsonResponse({ error: 'Failed to set up payment customer' }, { status: 502 })
+      }
+      customerId = custData.data.id
+      await prisma.user.update({ where: { id: user.id }, data: { flutterwaveCustomerId: customerId } })
     }
 
-    const authorizationUrl = credoData?.data?.authorizationUrl
-    const transRef = credoData?.data?.transRef ?? reference
-
-    if (!authorizationUrl || !transRef) {
-      console.error('Credo returned an incomplete initialization payload:', credoData)
-      return jsonResponse(
-        { error: 'Payment provider returned an incomplete response.' },
-        { status: 502 }
-      )
+    // STEP 2: Create a payment method from the client-encrypted card fields.
+    // Card data is never decrypted or logged here — it's opaque ciphertext
+    // this route just forwards to Flutterwave.
+    const { ok: pmOk, data: pmData } = await createFlutterwaveCardPaymentMethod({
+      encryptedCardNumber: card.encryptedCardNumber,
+      encryptedExpiryMonth: card.encryptedExpiryMonth,
+      encryptedExpiryYear: card.encryptedExpiryYear,
+      encryptedCvv: card.encryptedCvv,
+      nonce: card.nonce,
+    })
+    if (!pmOk || pmData?.status !== 'success' || !pmData.data?.id) {
+      console.error('Flutterwave payment method creation failed:', pmData)
+      return jsonResponse({ error: 'Card details could not be processed. Please check them and try again.' }, { status: 400 })
     }
 
-    console.log('Credo initialized successfully - transRef:', transRef)
-
-    return jsonResponse({
-      success: true,
-      authorizationUrl,
-      authorization_url: authorizationUrl,
-      transRef,
-      reference: transRef,
-      deliveryFee: totalDelivery,
-      totalAmount,
+    // STEP 3: Create the charge. Amount is whole Naira, not kobo.
+    const { ok: chargeOk, data: chargeData } = await createFlutterwaveCharge({
+      reference,
+      amount: totalAmount,
+      currency: 'NGN',
+      customerId,
+      paymentMethodId: pmData.data.id,
+      redirectUrl: callbackUrl,
+      meta: { userId: user.id, orderReference: reference },
     })
+
+    if (!chargeOk || chargeData?.status !== 'success' || !chargeData.data?.id) {
+      console.error('Flutterwave charge creation failed:', chargeData)
+      return jsonResponse({ error: chargeData?.message || 'Payment could not be started' }, { status: 400 })
+    }
+
+    const chargeId = chargeData.data.id
+    const chargeStatus = String(chargeData.data.status ?? '').toLowerCase()
+
+    // Persist the reference -> chargeId mapping regardless of outcome so
+    // /api/payments/verify can resolve it if a 3DS redirect is involved.
+    await prisma.pendingCharge.upsert({
+      where: { reference },
+      create: { userId: user.id, reference, chargeId, amount: totalAmount, cartItemsJson: items as any },
+      update: { chargeId },
+    })
+
+    // CASE A: no 3D Secure challenge needed — charge already succeeded.
+    // Reuse the exact same order-creation path the redirect flow uses, so
+    // there's only one place that turns a paid charge into Orders.
+    if (chargeStatus === 'succeeded' || chargeStatus === 'success') {
+      const APP_URL_CLEAN = APP_URL.replace(/\/$/, '')
+      return jsonResponse({
+        success: true,
+        requiresAction: false,
+        redirectUrl: `${APP_URL_CLEAN}/api/payments/verify?ref=${encodeURIComponent(reference)}`,
+        reference,
+      })
+    }
+
+    // CASE B: Flutterwave needs the buyer to complete 3D Secure on their page.
+    const nextActionUrl = chargeData.data.next_action?.redirect_url?.url
+    if (chargeData.data.next_action?.type === 'redirect_url' && nextActionUrl) {
+      return jsonResponse({
+        success: true,
+        requiresAction: true,
+        authorizationUrl: nextActionUrl,
+        authorization_url: nextActionUrl,
+        reference,
+      })
+    }
+
+    // Anything else (failed, pending with no known next step, etc.)
+    console.error('Unexpected Flutterwave charge status with no next_action:', chargeData)
+    return jsonResponse({ error: 'Payment could not be completed. Please try again.' }, { status: 400 })
   } catch (error) {
     console.error('Payment init error:', error)
     return jsonResponse(
@@ -326,7 +362,7 @@ export async function POST(request: NextRequest) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// createOrders — called ONLY from the verify route after Paystack confirms.
+// createOrders — called ONLY from the verify route after Flutterwave confirms.
 // Creates ONE DeliveryBatch then one Order per seller group.
 // Each order carries a full ₦800 delivery fee — NOT split.
 // ══════════════════════════════════════════════════════════════════════════════

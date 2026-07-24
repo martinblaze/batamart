@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createOrders } from '../initialize/route'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
+import { getFlutterwaveCharge } from '@/lib/finance/flutterwave'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,20 +24,34 @@ function appRedirect(path: string) {
   }
 }
 
+type VerifiedCartItem = {
+  productId:  string
+  variantId?: string | null
+  price:      number
+  quantity:   number
+  sellerId:   string
+  orderNote?: string
+  buyerDeliveryAcknowledged?: boolean
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const transRef = (searchParams.get('transRef') ?? searchParams.get('reference'))?.trim() || null
+  // We set redirect_url ourselves at charge-creation time to include our own
+  // reference (?ref=BATAMART-...) — see app/api/payments/initialize/route.ts.
+  // We don't rely on Flutterwave appending its own params here, since v4's
+  // redirect query shape isn't documented for the direct-charge flow.
+  const transRef = searchParams.get('ref')?.trim() || null
   const ip = getIpKey(request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip'))
 
   console.log('═'.repeat(70))
   console.log('🔥 PAYMENT VERIFICATION STARTED')
   console.log('═'.repeat(70))
-  console.log('🔍 transRef:', transRef)
+  console.log('🔍 reference:', transRef)
   console.log('🔍 Timestamp:', new Date().toISOString())
   console.log('🔍 APP_URL:', process.env.NEXT_PUBLIC_APP_URL ?? '⚠️  NOT SET')
 
   if (!transRef) {
-    console.error('❌ ERROR: No transaction reference in URL')
+    console.error('❌ ERROR: No reference in URL')
     return appRedirect('/checkout?error=no_reference')
   }
   if (!/^[A-Za-z0-9._:-]{6,128}$/.test(transRef)) {
@@ -53,183 +68,84 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // STEP 1: Verify with Credo
-    console.log('\n💾 STEP 1: Verifying with Credo')
+    // STEP 1: Look up the pending charge we persisted at charge-creation time.
+    console.log('\n🧷 STEP 1: Looking up pending charge')
 
-    let verifyData: any
+    const pending = await prisma.pendingCharge.findUnique({ where: { reference: transRef } })
+    if (!pending) {
+      console.error('❌ No pending charge found for reference:', transRef)
+      return appRedirect('/checkout?error=no_reference')
+    }
+
+    // Idempotency: if we already turned this into orders, don't do it again.
+    if (pending.status === 'PROCESSED') {
+      const existingPayment = await prisma.payment.findFirst({
+        where:   { transactionId: transRef },
+        include: { order: { select: { id: true, orderNumber: true } } },
+      })
+      if (existingPayment?.order) {
+        console.log('Already processed - idempotent redirect to:', existingPayment.order.orderNumber)
+        return appRedirect(`/orders?payment=success&order=${existingPayment.order.orderNumber}`)
+      }
+    }
+
+    // STEP 2: Check the charge's final status with Flutterwave.
+    console.log('\n💾 STEP 2: Verifying charge with Flutterwave')
+
+    let chargeData: any
     try {
-      const credoBaseUrl = process.env.CREDO_BASE_URL ?? (
-        process.env.NODE_ENV === 'development'
-          ? 'https://api.credodemo.com'
-          : 'https://api.credocentral.com'
-      )
-      const credoSecretKey = process.env.CREDO_SECRET_KEY ?? process.env.PAYSTACK_SECRET_KEY
-
-      if (!credoSecretKey) {
-        console.error('Credo secret key is not set in environment variables.')
-        return appRedirect('/checkout?error=payment_failed')
-      }
-
-      const verifyRes = await fetch(
-        `${credoBaseUrl.replace(/\/$/, '')}/transaction/${encodeURIComponent(transRef)}/verify`,
-        { headers: { Authorization: credoSecretKey } }
-      )
-      console.log('HTTP Status:', verifyRes.status)
-      verifyData = await verifyRes.json()
+      const { data } = await getFlutterwaveCharge(pending.chargeId)
+      chargeData = data
     } catch (fetchErr) {
-      console.error('Network error calling Credo:', fetchErr)
+      console.error('Network error calling Flutterwave:', fetchErr)
       return appRedirect('/checkout?error=payment_failed')
     }
 
-    console.log('Credo status:', verifyData?.status, '| tx status:', verifyData?.data?.status)
+    const paymentStatus = String(chargeData?.data?.status ?? '').toLowerCase()
+    console.log('Flutterwave charge status:', paymentStatus)
 
-    if (!(verifyData?.status === 200 || verifyData?.status === true)) {
-      console.error('Credo returned a non-success status:', verifyData?.message)
+    if (paymentStatus !== 'successful' && paymentStatus !== 'succeeded' && paymentStatus !== 'success') {
+      console.error('Payment not successful. Status:', chargeData?.data?.status)
       return appRedirect('/checkout?error=payment_failed')
     }
 
-    const paymentStatus = String(verifyData?.data?.status ?? '').toLowerCase()
-    if (paymentStatus !== 'successful' && paymentStatus !== 'success') {
-      console.error('Payment not successful. Status:', verifyData?.data?.status)
-      return appRedirect('/checkout?error=payment_failed')
+    console.log('Payment verified with Flutterwave')
+
+    // STEP 3: Cart items come from OUR OWN db record (set at charge-creation
+    // time, before the card was ever charged) — not round-tripped through
+    // the gateway's metadata, so there's no JSON-in-JSON parsing needed.
+    console.log('\n📦 STEP 3: Loading cart snapshot')
+
+    const meta = {
+      userId: pending.userId,
+      cartItems: (pending.cartItemsJson as unknown as VerifiedCartItem[]) ?? [],
     }
-
-    console.log('Payment verified with Credo')
-
-    // STEP 2: Idempotency guard
-    // If Credo fires the callback twice or the user hits reload, we must
-    // NOT create a second order. We look up by Payment.transactionId (the
-    // Credo transRef stored when createOrders creates the Payment record).
-    console.log('\n🧷 STEP 2: Idempotency check')
-
-    const existingPayment = await prisma.payment.findFirst({
-      where:   { transactionId: transRef },
-      include: { order: { select: { id: true, orderNumber: true } } },
-    })
-
-    if (existingPayment?.order) {
-      console.log('Already processed - idempotent redirect to:', existingPayment.order.orderNumber)
-      return appRedirect(`/orders?payment=success&order=${existingPayment.order.orderNumber}`)
-    }
-
-    console.log('No duplicate - safe to proceed')
-
-    // STEP 3: Extract metadata
-    console.log('\n?? STEP 3: Extracting Metadata')
-
-    type VerifiedCartItem = {
-      productId:  string
-      variantId?: string | null
-      price:      number
-      quantity:   number
-      sellerId:   string
-      orderNote?: string
-      buyerDeliveryAcknowledged?: boolean
-    }
-
-    type MetadataShape = {
-      userId: string
-      cartItems: VerifiedCartItem[]
-    }
-
-    const parseMetadata = (value: unknown): MetadataShape | null => {
-      const normalizeItem = (item: unknown): VerifiedCartItem | null => {
-        if (!item || typeof item !== 'object' || Array.isArray(item)) return null
-        const obj = item as Record<string, unknown>
-
-        const productId = typeof obj.productId === 'string' ? obj.productId : ''
-        const sellerId = typeof obj.sellerId === 'string' ? obj.sellerId : ''
-        const quantity = Number(obj.quantity)
-        const price = Number(obj.price)
-        const variantId = typeof obj.variantId === 'string' && obj.variantId.trim().length > 0
-          ? obj.variantId
-          : null
-        const orderNote = typeof obj.orderNote === 'string' ? obj.orderNote : undefined
-        const buyerDeliveryAcknowledged =
-          obj.buyerDeliveryAcknowledged === true ||
-          obj.buyerDeliveryAcknowledged === 'true' ||
-          obj.buyerDeliveryAcknowledged === 1 ||
-          obj.buyerDeliveryAcknowledged === '1'
-
-        if (!productId || !sellerId || !Number.isFinite(quantity) || !Number.isFinite(price)) return null
-
-        return {
-          productId,
-          variantId,
-          price,
-          quantity: Math.trunc(quantity),
-          sellerId,
-          orderNote,
-          buyerDeliveryAcknowledged,
-        }
-      }
-
-      const normalizeRoot = (input: unknown): MetadataShape | null => {
-        if (!input || typeof input !== 'object' || Array.isArray(input)) return null
-        const obj = input as Record<string, unknown>
-        if (typeof obj.userId !== 'string' || !Array.isArray(obj.cartItems)) return null
-
-        const cartItems = obj.cartItems.map(normalizeItem).filter((item): item is VerifiedCartItem => Boolean(item))
-        if (cartItems.length === 0) return null
-
-        return {
-          userId: obj.userId,
-          cartItems,
-        }
-      }
-
-      if (typeof value === 'string') {
-        try {
-          const parsed = JSON.parse(value)
-          if (typeof parsed === 'string') {
-            try {
-              return normalizeRoot(JSON.parse(parsed))
-            } catch {
-              return null
-            }
-          }
-          return normalizeRoot(parsed)
-        } catch {
-          return null
-        }
-      }
-
-      return normalizeRoot(value)
-    }
-
-    const rawMetadata = verifyData.data.metadata
-    const meta = parseMetadata(rawMetadata)
     const perOrderDelivery = 800
 
-    console.error('Raw payment metadata:', JSON.stringify(verifyData.data.metadata))
-
-    if (!meta || !meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
-      console.error('Invalid/missing metadata:', JSON.stringify(meta))
+    if (!meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
+      console.error('Invalid/missing cart snapshot for reference:', transRef)
       return appRedirect('/checkout?error=invalid_metadata')
-    }
-    if (verifyData?.data?.currency && verifyData.data.currency !== 'NGN') {
-      return appRedirect('/checkout?error=payment_failed')
     }
 
     for (const item of meta.cartItems) {
       if (!item?.productId || !item.sellerId || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 50) {
-        console.error('Invalid cart item in metadata:', item)
+        console.error('Invalid cart item in snapshot:', item)
         return appRedirect('/checkout?error=invalid_metadata')
       }
       if (!Number.isFinite(item.price) || item.price < 0) {
-        console.error('Invalid cart item price in metadata:', item)
+        console.error('Invalid cart item price in snapshot:', item)
         return appRedirect('/checkout?error=invalid_metadata')
       }
     }
 
-    console.log('Metadata OK - User:', meta.userId, '| Items:', meta.cartItems.length)
+    console.log('Cart snapshot OK - User:', meta.userId, '| Items:', meta.cartItems.length)
 
     const distinctSellerCount = new Set(meta.cartItems.map(i => i.sellerId)).size
     const recomputedSubtotal = meta.cartItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
-    const expectedAmountKobo = Math.round((recomputedSubtotal + (distinctSellerCount * perOrderDelivery)) * 100)
-    const paidAmountKobo = Number(verifyData?.data?.amount ?? 0)
-    if (!Number.isFinite(paidAmountKobo) || paidAmountKobo !== expectedAmountKobo) {
-      console.error('? Paid amount mismatch', { expectedAmountKobo, paidAmountKobo })
+    // Flutterwave amounts are whole Naira units, NOT kobo — don't reintroduce *100 here.
+    const expectedAmountNaira = Math.round((recomputedSubtotal + (distinctSellerCount * perOrderDelivery)) * 100) / 100
+    if (Math.round(pending.amount * 100) !== Math.round(expectedAmountNaira * 100)) {
+      console.error('❌ Amount mismatch vs pending charge record', { expectedAmountNaira, pendingAmount: pending.amount })
       return appRedirect('/checkout?error=amount_mismatch')
     }
 
@@ -327,6 +243,8 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('? Orders created:', orders.map(o => o.orderNumber).join(', '))
+
+    await prisma.pendingCharge.update({ where: { id: pending.id }, data: { status: 'PROCESSED' } }).catch(() => {})
 
     // STEP 7: Fire notifications (non-blocking ? NEVER delays the redirect)
     console.log('\n🔔 STEP 7: Queueing Notifications')

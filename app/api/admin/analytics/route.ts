@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { credoFeePerOrder as calculateCredoFeePerOrder } from '@/lib/finance/fees'
+import { flutterwaveFeePerOrder as calculateFlutterwaveFeePerOrder } from '@/lib/finance/fees'
 
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       engagedNewUsers,
       // FIX #1: fetch rider-specific stats for a correct riderCompletionRate
       riderAssignedOrders, riderDeliveredOrders,
-      // FIX #6: fetch per-order amounts to compute real Credo fees
+      // FIX #6: fetch per-order amounts to compute real Flutterwave fees
       completedOrderAmounts,
     ] = await Promise.all([
 
@@ -207,7 +207,7 @@ export async function GET(req: NextRequest) {
         },
       }),
 
-      // FIX #6: fetch per-order totalAmount for accurate Paystack fee calculation
+      // FIX #6: fetch per-order totalAmount for accurate Flutterwave fee calculation
       prisma.order.findMany({
         where: { ...orderBase, createdAt: { gte: startDate }, status: 'COMPLETED' },
         select: { totalAmount: true },
@@ -224,14 +224,14 @@ export async function GET(req: NextRequest) {
     const platformCommission = revenueAgg._sum.platformCommission || 0
     const referralsPaidOut   = (referralData as any)._sum?.amount || 0
 
-    // FIX #6: compute actual Credo fees per order, then subtract from commission
-    // Previously: netRevenue = platformCommission - referralsPaidOut (missing Credo fees)
-    // Now:        netRevenue = platformCommission - paystackFees - referralsPaidOut
-    const paystackFees = completedOrderAmounts.reduce(
-      (sum, o) => sum + calculateCredoFeePerOrder(o.totalAmount || 0),
+    // FIX #6: compute actual Flutterwave fees per order, then subtract from commission
+    // Previously: netRevenue = platformCommission - referralsPaidOut (missing gateway fees)
+    // Now:        netRevenue = platformCommission - flutterwaveFees - referralsPaidOut
+    const flutterwaveFees = completedOrderAmounts.reduce(
+      (sum, o) => sum + calculateFlutterwaveFeePerOrder(o.totalAmount || 0),
       0
     )
-    const netRevenue = platformCommission - paystackFees - referralsPaidOut
+    const netRevenue = platformCommission - flutterwaveFees - referralsPaidOut
 
     // FIX #9: suppress trend for all-time range (prevGmv would always be 0)
     const prevGmv      = prevRevenueAgg._sum.totalAmount || 0
@@ -291,9 +291,8 @@ export async function GET(req: NextRequest) {
       completionRate,
       revenue:          gmv,
       platformCommission,
-      paystackFees,       // legacy alias for compatibility
-      credoFees: paystackFees,
-      netRevenue,         // FIX #6: now correctly deducts Credo fees
+      flutterwaveFees,
+      netRevenue,         // FIX #6: now correctly deducts Flutterwave fees
       revenueTrend,       // FIX #9: null when range='all'
 
       dau: dauUsers,
