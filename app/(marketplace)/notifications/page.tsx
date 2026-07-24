@@ -149,12 +149,43 @@ export default function NotificationsPage() {
     fetchNotifications()
   }, [])
 
-  // Get link for notification
+  // Get link for notification — deep-links to the exact screen it's about
+  // (same logic as components/layout/NotificationBell.tsx; kept in sync
+  // manually since this page renders its own list independently of the bell).
   const getNotificationLink = (notification: Notification) => {
+    const sellerOrderUrl = notification.metadata?.orderUrl as string | undefined
+    const sellerId = notification.metadata?.sellerId as string | undefined
+    const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null
+    if (notification.type === 'ORDER_PLACED' && sellerOrderUrl && sellerId && currentUserId && sellerId === currentUserId) {
+      return sellerOrderUrl
+    }
+
+    switch (notification.type) {
+      case 'PAYMENT_RECEIVED':
+      case 'WITHDRAWAL_PROCESSED':
+        return '/wallet'
+      case 'ACCOUNT_SUSPENDED':
+      case 'ACCOUNT_UNSUSPENDED':
+      case 'PENALTY_ISSUED':
+      case 'SELLER_STRIKE_ISSUED':
+        return '/myprofile'
+      case 'REFERRAL_REWARD':
+        return '/referrals'
+      case 'DISPUTE_OPENED':
+      case 'DISPUTE_MESSAGE':
+      case 'DISPUTE_RESOLVED':
+        if (notification.disputeId) return `/disputes/${notification.disputeId}`
+        break
+      case 'PRODUCT_UNDER_REVIEW':
+      case 'STOCK_ALERT':
+        if (notification.productId) return `/product/${notification.productId}`
+        return '/my-shop'
+    }
+
     if (notification.orderId) return `/orders/${notification.orderId}`
-    if (notification.productId) return `/product/${notification.productId}`
     if (notification.disputeId) return `/disputes/${notification.disputeId}`
-    return '#'
+    if (notification.productId) return `/product/${notification.productId}`
+    return '/notifications'
   }
 
   // Format time ago

@@ -38,6 +38,10 @@ export function useSuspensionGuard() {
           const data = await response.json()
 
           if (data.suspended) {
+            // Riders have their own login page — send them back there, not
+            // the buyer/seller /login.
+            const wasRider = localStorage.getItem('userRole') === 'RIDER'
+
             // Clear auth — but keep token briefly so suspension-info
             // endpoint can still identify the user (it clears on next load)
             localStorage.removeItem('userName')
@@ -49,7 +53,7 @@ export function useSuspensionGuard() {
             window.dispatchEvent(new Event('auth-change'))
 
             // Only pass the signal — reason/until fetched server-side
-            router.replace('/login?suspended=1')
+            router.replace(wasRider ? '/rider/login?suspended=1' : '/login?suspended=1')
           }
         }
       } catch {

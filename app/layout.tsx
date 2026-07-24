@@ -139,7 +139,13 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="BataMart" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="manifest" href="/manifest.json" />
+        {/* No hardcoded <link rel="manifest"> here — the metadata.manifest
+            export above handles /manifest.json for most routes, and child
+            routes (app/rider/layout.tsx, app/(marketplace)/rider-dashboard/
+            layout.tsx) correctly override it to /rider-manifest.json via
+            Next's own per-route metadata resolution. A static tag here would
+            win over that per-route resolution and always force /manifest.json
+            everywhere, including on rider pages. */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           dangerouslySetInnerHTML={{

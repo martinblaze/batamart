@@ -17,6 +17,7 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
 
 const ORDER_STATUS_VALUES: OrderStatus[] = [
   'PENDING',
+  'PROCESSING',
   'RIDER_ASSIGNED',
   'PICKED_UP',
   'ON_THE_WAY',
@@ -161,7 +162,8 @@ export async function PATCH(
     }
 
     const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
-      PENDING:        ['RIDER_ASSIGNED'],
+      PENDING:        ['PROCESSING', 'RIDER_ASSIGNED'],
+      PROCESSING:     ['RIDER_ASSIGNED'],
       RIDER_ASSIGNED: ['PICKED_UP'],
       PICKED_UP:      ['ON_THE_WAY'],
       ON_THE_WAY:     ['DELIVERED'],
@@ -184,6 +186,9 @@ export async function PATCH(
     // Actor-specific controls to prevent privilege abuse.
     if (!isAdmin) {
       const actorAllowed = (
+        (isSeller && (
+          currentStatus === 'PENDING' && nextStatus === 'PROCESSING'
+        )) ||
         (isRider && (
           (currentStatus === 'RIDER_ASSIGNED' && nextStatus === 'PICKED_UP') ||
           (currentStatus === 'PICKED_UP' && nextStatus === 'ON_THE_WAY') ||
@@ -228,6 +233,30 @@ export async function PATCH(
         dispute: { select: { id: true, status: true, createdAt: true, resolution: true, refundAmount: true } },
       },
     });
+
+    // Seller just accepted this order (PENDING -> PROCESSING). Riders can only
+    // pick up a whole batch at once, so don't notify them until EVERY order
+    // in the batch has been accepted by its seller — otherwise a rider could
+    // be sent to collect from a seller who hasn't even started preparing yet.
+    if (status === 'PROCESSING' && updatedOrder.batchId) {
+      const siblingOrders = await prisma.order.findMany({
+        where: { batchId: updatedOrder.batchId },
+        select: { status: true },
+      });
+      const batchFullyAccepted = siblingOrders.every(o => o.status !== 'PENDING');
+
+      if (batchFullyAccepted) {
+        const batch = await prisma.deliveryBatch.findUnique({
+          where: { id: updatedOrder.batchId },
+          select: { universityId: true },
+        });
+        if (batch?.universityId) {
+          import('@/lib/push/sendPushNotification')
+            .then(({ notifyAvailableRiders }) => notifyAvailableRiders(updatedOrder.orderNumber, batch.universityId))
+            .catch(err => console.error('⚠️  Rider push failed after seller acceptance:', err));
+        }
+      }
+    }
 
     return jsonResponse(updatedOrder);
   } catch (error) {

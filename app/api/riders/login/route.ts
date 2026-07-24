@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
     // ── FIXED: pass rider.phone as 2nd arg, rider.role as 3rd arg ──
     // Previously `rider.role` was passed as the `phone` slot, so the token
     // never contained a `role` claim, silently breaking all role-based auth.
-    const token = generateToken(rider.id, rider.phone, rider.role)
+    // 90-day expiry (vs the default 30d) — riders use this as an installed
+    // PWA for daily work and shouldn't be bounced back to login regularly.
+    const token = generateToken(rider.id, rider.phone, rider.role, '90d')
 
     return NextResponse.json({
       success: true,

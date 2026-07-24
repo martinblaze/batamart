@@ -60,17 +60,45 @@ const toneClasses: Record<'primary' | 'success' | 'warning' | 'danger', string> 
   danger: 'bg-danger/10 text-danger',
 }
 
+// Deep-links each notification to the exact screen it's about — the same
+// idea as Jumia/most e-commerce apps: an order update opens that order, a
+// dispute message opens that dispute, a payout opens the wallet, etc.,
+// rather than dropping everything on the generic notifications list.
 function getNotificationLink(notification: Notification, currentUserId: string | null): string {
   const sellerOrderUrl = notification.metadata?.orderUrl as string | undefined
   const sellerId = notification.metadata?.sellerId as string | undefined
   if (notification.type === 'ORDER_PLACED' && sellerOrderUrl && sellerId && currentUserId && sellerId === currentUserId) {
     return sellerOrderUrl
   }
+
+  // Type-specific destinations that aren't just "the order/dispute/product
+  // this notification points at" — checked first since some types (e.g.
+  // WITHDRAWAL_PROCESSED) can carry an orderId-less context.
+  switch (notification.type) {
+    case 'PAYMENT_RECEIVED':
+    case 'WITHDRAWAL_PROCESSED':
+      return '/wallet'
+    case 'ACCOUNT_SUSPENDED':
+    case 'ACCOUNT_UNSUSPENDED':
+    case 'PENALTY_ISSUED':
+    case 'SELLER_STRIKE_ISSUED':
+      return '/myprofile'
+    case 'REFERRAL_REWARD':
+      return '/referrals'
+    case 'DISPUTE_OPENED':
+    case 'DISPUTE_MESSAGE':
+    case 'DISPUTE_RESOLVED':
+      if (notification.disputeId) return `/disputes/${notification.disputeId}`
+      break
+    case 'PRODUCT_UNDER_REVIEW':
+    case 'STOCK_ALERT':
+      if (notification.productId) return `/product/${notification.productId}`
+      return '/my-shop'
+  }
+
   if (notification.orderId) return `/orders/${notification.orderId}`
   if (notification.disputeId) return `/disputes/${notification.disputeId}`
   if (notification.productId) return `/product/${notification.productId}`
-  if (notification.type === 'PAYMENT_RECEIVED' || notification.type === 'WITHDRAWAL_PROCESSED') return '/wallet'
-  if (notification.type === 'ACCOUNT_SUSPENDED' || notification.type === 'ACCOUNT_UNSUSPENDED') return '/myprofile'
   return '/notifications'
 }
 

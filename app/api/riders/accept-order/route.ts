@@ -115,9 +115,12 @@ export async function POST(request: NextRequest) {
         throw new Error('BATCH_ALREADY_CLAIMED')
       }
 
-      // Assign rider to every order in the batch + flip to RIDER_ASSIGNED
+      // Assign rider to every order in the batch + flip to RIDER_ASSIGNED.
+      // Orders reach here via PROCESSING (seller-accepted) — see
+      // app/api/riders/available-orders/route.ts, which only surfaces
+      // batches where every order has already left PENDING.
       await tx.order.updateMany({
-        where: { batchId, riderId: null, status: 'PENDING' },
+        where: { batchId, riderId: null, status: 'PROCESSING' },
         data:  {
           riderId:         user.id,
           status:          'RIDER_ASSIGNED',

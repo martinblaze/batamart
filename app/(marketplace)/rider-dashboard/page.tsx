@@ -77,6 +77,7 @@ export default function RiderDashboardPage() {
   const [trackingActive, setTrackingActive] = useState(false)
   const [trackingError, setTrackingError] = useState<string | null>(null)
   const [lastTrackingPing, setLastTrackingPing] = useState<Date | null>(null)
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unsupported' | null>(null)
   const [oversizedProofByOrder, setOversizedProofByOrder] = useState<Record<string, string>>({})
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null)
   const [isInstalled, setIsInstalled] = useState(false)
@@ -102,7 +103,7 @@ export default function RiderDashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push('/rider/login'); return }
     fetchRiderData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -147,7 +148,7 @@ export default function RiderDashboardPage() {
   }, [])
 
   const openRiderInstallPage = () => {
-    router.push('/rider?app=true&rider=true')
+    router.push('/rider-dashboard?app=true&rider=true')
   }
 
   const installRiderApp = async () => {
@@ -522,6 +523,43 @@ export default function RiderDashboardPage() {
     }
   }, [liveOrderIds, myBatches])
 
+  // Proactively check location permission on load — not just once a delivery
+  // is active — so a rider without location enabled sees a persistent prompt
+  // before it becomes urgent, instead of only finding out after accepting a
+  // batch (when the buyer live-map would otherwise silently stay empty).
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationPermission('unsupported')
+      return
+    }
+    if (!navigator.permissions?.query) {
+      // Permissions API unsupported (e.g. Safari) — fall back to a silent
+      // probe; getCurrentPosition itself triggers the OS prompt if unasked.
+      navigator.geolocation.getCurrentPosition(
+        () => setLocationPermission('granted'),
+        (err) => setLocationPermission(err.code === err.PERMISSION_DENIED ? 'denied' : 'prompt'),
+        { maximumAge: 60000, timeout: 8000 }
+      )
+      return
+    }
+    let status: PermissionStatus | null = null
+    navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((result) => {
+      status = result
+      setLocationPermission(result.state as 'granted' | 'denied' | 'prompt')
+      result.onchange = () => setLocationPermission(result.state as 'granted' | 'denied' | 'prompt')
+    }).catch(() => setLocationPermission(null))
+    return () => { if (status) status.onchange = null }
+  }, [])
+
+  const requestLocationPermission = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      () => setLocationPermission('granted'),
+      (err) => setLocationPermission(err.code === err.PERMISSION_DENIED ? 'denied' : 'prompt'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface">
@@ -603,6 +641,29 @@ export default function RiderDashboardPage() {
               <p className="text-xs font-semibold text-primary mt-0.5">Earned</p>
             </div>
           </div>
+
+          {(locationPermission === 'denied' || locationPermission === 'prompt' || locationPermission === 'unsupported') && (
+            <div className="mt-4 rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-3">
+              <p className="text-sm font-semibold text-warning">
+                {locationPermission === 'unsupported' ? 'Location not supported on this device' : 'Turn on location'}
+              </p>
+              <p className="mt-0.5 text-xs text-warning">
+                {locationPermission === 'unsupported'
+                  ? "Buyers won't be able to see your live route on deliveries from this device."
+                  : locationPermission === 'denied'
+                    ? "Location access is blocked. Buyers can't see your live route until you enable it in your browser/phone settings for BataMart, then reopen the app."
+                    : 'BataMart needs your location so buyers can see your live route while you deliver. Enable it now, before you accept an order.'}
+              </p>
+              {locationPermission === 'prompt' && (
+                <button
+                  onClick={requestLocationPermission}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-warning px-3 py-1.5 text-xs font-semibold text-white hover:brightness-95 transition-all"
+                >
+                  Enable Location
+                </button>
+              )}
+            </div>
+          )}
 
           {liveOrderIds.length > 0 && (
             <div className={`mt-4 rounded-xl border px-3 py-2.5 text-xs ${

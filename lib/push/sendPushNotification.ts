@@ -285,7 +285,11 @@ export async function notifyNewReview(sellerId: string, productName: string) {
 }
 
 // ─── Notify all available riders of a new order ──────────────────────────────
-export async function notifyAvailableRiders(orderNumber: string): Promise<void> {
+// universityId scopes this to riders on the same campus as the order — riders
+// can only see/accept batches for their own campus (see
+// app/api/riders/available-orders/route.ts), so notifying riders elsewhere
+// would just send them to a dashboard where the order never appears.
+export async function notifyAvailableRiders(orderNumber: string, universityId: string): Promise<void> {
   try {
     const availableRiders = await prisma.user.findMany({
       where: {
@@ -293,6 +297,7 @@ export async function notifyAvailableRiders(orderNumber: string): Promise<void> 
         isAvailable: true,
         isDeleted: false,
         isSuspended: false,
+        universityId,
         riderDeliveries: {
           none: {
             status: { in: ['RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY'] },

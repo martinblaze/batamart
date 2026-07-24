@@ -229,20 +229,9 @@ export default function OrderDetailPage() {
     const actions = [];
     const userRole = getCurrentUserRole();
 
-    if (userRole === 'SELLER') {
-      if (order.status === 'PENDING') {
-        actions.push({ label: 'Process Order', status: 'PROCESSING', variant: 'primary' });
-      }
-      if (order.status === 'PROCESSING') {
-        actions.push({ label: 'Mark as Shipped', status: 'SHIPPED', variant: 'primary' });
-      }
-    }
-
-    if (userRole === 'RIDER') {
-      if (order.status === 'SHIPPED') {
-        actions.push({ label: 'Mark as Delivered', status: 'DELIVERED', variant: 'success' });
-      }
-    }
+    // Sellers accept orders from the sales list (app/(marketplace)/orders/sales),
+    // not from this detail page. Riders progress a delivery from the rider
+    // dashboard's own status buttons (POST /api/riders/update-status), not here.
 
     if (userRole === 'BUYER') {
       // Buyers can no longer cancel after payment.
@@ -331,9 +320,9 @@ export default function OrderDetailPage() {
               <RefreshCw className="w-4 h-4" />
               Try Again
             </Button>
-            <Button variant="outline" onClick={() => router.push('/orders')}>
+            <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Orders
+              Back
             </Button>
           </div>
         </div>
@@ -348,9 +337,9 @@ export default function OrderDetailPage() {
         <Package className="w-16 h-16 mx-auto text-ink-muted mb-4" />
         <h1 className="text-2xl font-semibold mb-2">Order Not Found</h1>
         <p className="text-ink-secondary mb-6">The order you're looking for doesn't exist or you don't have access to it.</p>
-        <Button onClick={() => router.push('/orders')}>
+        <Button onClick={() => router.back()}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Orders
+          Back
         </Button>
       </div>
     );
@@ -401,9 +390,9 @@ export default function OrderDetailPage() {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
 
       {/* Back button */}
-      <Button variant="ghost" onClick={() => router.push('/orders')} className="mb-6">
+      <Button variant="ghost" onClick={() => router.back()} className="mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Orders
+        Back
       </Button>
 
       {/* Inline update error banner — replaces alert() */}

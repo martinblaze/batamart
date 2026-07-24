@@ -55,11 +55,19 @@ export async function authFetch(
       // Small delay so any in-flight state updates can settle
       setTimeout(() => { window.location.href = '/admin-login' }, 100)
     } else {
+      // Riders have their own login page — bounce them back there, not the
+      // buyer/seller /login, so an expired rider session doesn't strand them
+      // on a login form that can't authenticate a rider account.
+      const wasRider = localStorage.getItem('userRole') === 'RIDER'
       localStorage.removeItem('token')
       localStorage.removeItem('userName')
       localStorage.removeItem('userRole')
       window.dispatchEvent(new Event('auth-change'))
       setTimeout(() => {
+        if (wasRider) {
+          window.location.href = '/rider/login'
+          return
+        }
         // Preserve the current path so we can redirect back after login
         const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
         window.location.href = `/login?returnTo=${returnTo}`

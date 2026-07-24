@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ChevronRight, MapPin, Package, ShoppingBag, Tag, User } from 'lucide-react'
+import { ArrowRight, CheckCircle2, ChevronRight, Loader2, MapPin, Package, ShoppingBag, Tag, User } from 'lucide-react'
 import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
 
 interface SalesItem {
@@ -99,6 +99,33 @@ export default function SalesOrdersPage() {
   const [orders, setOrders] = useState<SalesOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [highlightId, setHighlightId] = useState<string | null>(null)
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const [acceptError, setAcceptError] = useState<{ orderId: string; message: string } | null>(null)
+
+  const acceptOrder = async (orderId: string) => {
+    if (acceptingId) return
+    setAcceptingId(orderId)
+    setAcceptError(null)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: 'PROCESSING' }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setAcceptError({ orderId, message: data.error || 'Failed to accept order. Please try again.' })
+        return
+      }
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'PROCESSING' } : o)))
+    } catch (error) {
+      console.error('[SalesOrdersPage] accept error:', error)
+      setAcceptError({ orderId, message: 'Network error. Please try again.' })
+    } finally {
+      setAcceptingId(null)
+    }
+  }
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search)
@@ -221,8 +248,8 @@ export default function SalesOrdersPage() {
                     <div className="flex gap-4">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-surface flex-shrink-0 border border-border">
                         <img
-                          src={order.buyer?.profilePhoto || '/placeholder.png'}
-                          alt={order.buyer?.name || 'Buyer'}
+                          src={order.product?.images?.[0] || '/placeholder.png'}
+                          alt={order.product?.name || 'Product'}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -248,7 +275,23 @@ export default function SalesOrdersPage() {
                             {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? "s" : ""}
                           </p>
                         </div>
+                        {acceptError?.orderId === order.id && (
+                          <p className="mt-3 text-xs font-semibold text-danger">{acceptError.message}</p>
+                        )}
                         <div className="mt-4 flex items-center gap-3">
+                          {order.status === 'PENDING' && (
+                            <button
+                              onClick={() => acceptOrder(order.id)}
+                              disabled={acceptingId === order.id}
+                              className="inline-flex items-center gap-2 bg-success hover:brightness-95 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-soft transition-all"
+                            >
+                              {acceptingId === order.id ? (
+                                <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
+                              ) : (
+                                <><CheckCircle2 className="w-4 h-4" /> Accept Order</>
+                              )}
+                            </button>
+                          )}
                           <Link
                             href={`/orders/${order.id}`}
                             className="inline-flex items-center gap-2 bg-primary hover:brightness-95 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-soft transition-all"

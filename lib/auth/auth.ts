@@ -13,8 +13,8 @@ function getJwtSecret(): string {
 }
 
 // -- FIXED: added optional `role` param so rider tokens carry the role claim --
-export function generateToken(userId: string, phone: string | null, role?: string): string {
-  return jwt.sign({ userId, phone, ...(role ? { role } : {}) }, getJwtSecret(), { expiresIn: '30d' })
+export function generateToken(userId: string, phone: string | null, role?: string, expiresIn: string = '30d'): string {
+  return jwt.sign({ userId, phone, ...(role ? { role } : {}) }, getJwtSecret(), { expiresIn })
 }
 
 export function verifyToken(token: string): { userId: string; phone: string; role?: string } | null {

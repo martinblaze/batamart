@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Bike } from 'lucide-react'
@@ -13,6 +13,11 @@ function RiderLoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [wasForceLoggedOut, setWasForceLoggedOut] = useState(false)
+  // Belt-and-braces guard against rapid multi-click double submits: React's
+  // state update (setLoading) isn't guaranteed to re-render/disable the
+  // button before a second click lands in the same tick, so check a ref
+  // synchronously as the very first thing in the handler too.
+  const submittingRef = useRef(false)
 
   useEffect(() => {
     const reason = new URLSearchParams(window.location.search).get('reason')
@@ -32,6 +37,8 @@ function RiderLoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submittingRef.current) return
+    submittingRef.current = true
     setLoading(true)
     setError('')
 
@@ -50,7 +57,8 @@ function RiderLoginForm() {
         localStorage.setItem('userId', data.user.id)
         localStorage.setItem('userName', data.user.name)
 
-        document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
+        // 90 days, matching the rider token's expiry (see app/api/riders/login/route.ts)
+        document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 90}`
         router.replace('/rider-dashboard')
       } else {
         setError(data.error || 'Login failed')
@@ -58,6 +66,7 @@ function RiderLoginForm() {
     } catch {
       setError('Network error. Please try again.')
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
