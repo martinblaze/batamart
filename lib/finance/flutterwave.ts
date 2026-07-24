@@ -1,13 +1,13 @@
-// lib/finance/flutterwave.ts — server-only. Flutterwave v4 API client.
+// lib/finance/flutterwave.ts â€” server-only. Flutterwave v4 API client.
 //
 // v4 auth is OAuth2 client_credentials against a Keycloak-style IdP, not a
 // static secret key like v3/Credo/Paystack. Access tokens last 10 minutes
-// (confirmed via Flutterwave's docs) — cached in module scope so warm
+// (confirmed via Flutterwave's docs) â€” cached in module scope so warm
 // serverless invocations reuse a token instead of round-tripping the IdP on
 // every request; a cold start just pays for one extra fetch.
 //
 // IMPORTANT: card numbers/CVV must NEVER pass through this file or any
-// server code — they're encrypted in the browser (see
+// server code â€” they're encrypted in the browser (see
 // lib/finance/flutterwave-encrypt.ts) before they ever reach our API routes,
 // so this app never touches raw PAN data.
 
@@ -15,7 +15,7 @@ const TOKEN_URL = 'https://idp.flutterwave.com/realms/flutterwave/protocol/openi
 
 function getApiBaseUrl(): string {
   // Flutterwave's v4 sandbox host is developersandbox-api.flutterwave.com;
-  // the production host isn't publicly documented yet as of this writing —
+  // the production host isn't publicly documented yet as of this writing â€”
   // override via env once Flutterwave confirms it for your live account.
   return (process.env.FLUTTERWAVE_API_BASE_URL ?? 'https://developersandbox-api.flutterwave.com').replace(/\/$/, '')
 }
@@ -116,7 +116,7 @@ export async function createFlutterwaveCustomer(params: { email: string; name?: 
 
 // -- Payment methods (card) ----------------------------------------------
 // card fields must already be individually AES-256-GCM-encrypted client-side
-// (see lib/finance/flutterwave-encrypt.ts) — this function never sees a raw PAN.
+// (see lib/finance/flutterwave-encrypt.ts) â€” this function never sees a raw PAN.
 export async function createFlutterwaveCardPaymentMethod(params: {
   encryptedCardNumber: string
   encryptedExpiryMonth: string
