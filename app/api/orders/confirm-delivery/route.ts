@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { processReferralReward } from '@/lib/referral/processReferralReward'
+import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
 import {
   normaliseProductName,
   extractVariantValues,
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       : extractCondition(variantValues, product.description || '')
 
     const confirmedPrice = order.productPrice
-    const riderShare = 560
+    const riderShare = Math.round(order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
     const hasRider = !!order.riderId
 
     const result = await prisma.$transaction(

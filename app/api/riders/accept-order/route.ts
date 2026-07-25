@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
             status:      true,
             buyerId:     true,
             sellerId:    true,
+            deliveryFee: true,
             product:     { select: { name: true } },
           },
         },
@@ -107,8 +109,12 @@ export async function POST(request: NextRequest) {
       }, { status: 409 })
     }
 
-    const riderSharePerOrder = 560
-    const totalRiderEscrow   = riderSharePerOrder * batch.orders.length
+    // Each order in the batch may have its own zone-priced delivery fee —
+    // rider gets 70% of each, summed for the whole batch.
+    const totalRiderEscrow = batch.orders.reduce(
+      (sum, order) => sum + Math.round(order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100,
+      0,
+    )
 
     // ── Atomic assignment ─────────────────────────────────────────────────
     await prisma.$transaction(async (tx) => {

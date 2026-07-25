@@ -10,21 +10,61 @@ datasource db {
 }
 
 model University {
-  id            String    @id @default(cuid())
-  name          String    @unique
-  shortName     String    @unique
-  slug          String    @unique
+  id            String         @id @default(cuid())
+  name          String         @unique
+  shortName     String         @unique
+  slug          String         @unique
   location      String
-  isActive      Boolean   @default(true)
-  deliveryAreas Json      @default("[]")
-  hostels       Json      @default("[]")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isActive      Boolean        @default(true)
+  deliveryAreas Json           @default("[]")
+  hostels       Json           @default("[]")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deliveryZones DeliveryZone[]
   products      Product[]
   users         User[]
 
   @@index([slug])
   @@index([isActive])
+  @@schema("public")
+}
+
+// A named delivery pickup/drop-off area within a campus (e.g. "Aroma",
+// "Tempsite"). Names are matched (case-insensitively) against
+// User.landmark / Product.landmark, which are populated from the same
+// University.deliveryAreas picklist shown at signup/listing time.
+model DeliveryZone {
+  id           String          @id @default(cuid())
+  universityId String
+  name         String
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  university   University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  routesFrom   DeliveryRoute[] @relation("RouteZoneA")
+  routesTo     DeliveryRoute[] @relation("RouteZoneB")
+
+  @@unique([universityId, name])
+  @@index([universityId])
+  @@schema("public")
+}
+
+// A bidirectional priced route between two zones. zoneAId/zoneBId order is
+// arbitrary (not directional) — lookups check both orderings.
+model DeliveryRoute {
+  id        String       @id @default(cuid())
+  zoneAId   String
+  zoneBId   String
+  price     Float
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  zoneA     DeliveryZone @relation("RouteZoneA", fields: [zoneAId], references: [id], onDelete: Cascade)
+  zoneB     DeliveryZone @relation("RouteZoneB", fields: [zoneBId], references: [id], onDelete: Cascade)
+
+  @@unique([zoneAId, zoneBId])
+  @@index([zoneAId])
+  @@index([zoneBId])
   @@schema("public")
 }
 

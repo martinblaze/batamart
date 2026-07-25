@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate:referrals": "tsx scripts/migrate-referral-codes.ts",
+    "seed:delivery-zones": "tsx prisma/seed-delivery-zones.ts",
     "test:oversized": "tsx scripts/oversized-protection.test.ts",
     "fix:encoding": "node fix-encoding.mjs"
   },

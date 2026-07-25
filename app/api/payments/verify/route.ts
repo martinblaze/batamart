@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { createOrders } from '../initialize/route'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
+import { getDeliveryFee } from '@/lib/delivery/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -217,7 +218,6 @@ export async function GET(request: NextRequest) {
 
     const rawMetadata = verifyData.data.meta
     const meta = parseMetadata(rawMetadata)
-    const perOrderDelivery = 800
 
     if (!meta || !meta.userId || !Array.isArray(meta.cartItems) || meta.cartItems.length === 0) {
       console.error('Invalid/missing metadata:', JSON.stringify(meta))
@@ -240,15 +240,8 @@ export async function GET(request: NextRequest) {
 
     console.log('Metadata OK - User:', meta.userId, '| Items:', meta.cartItems.length)
 
-    const distinctSellerCount = new Set(meta.cartItems.map(i => i.sellerId)).size
-    const recomputedSubtotal = meta.cartItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
-    // Flutterwave amounts are whole Naira units, NOT kobo — don't reintroduce *100 here.
-    const expectedAmountNaira = Math.round((recomputedSubtotal + (distinctSellerCount * perOrderDelivery)) * 100) / 100
-    const paidAmountNaira = Number(verifyData?.data?.amount ?? 0)
-    if (!Number.isFinite(paidAmountNaira) || Math.round(paidAmountNaira * 100) !== Math.round(expectedAmountNaira * 100)) {
-      console.error('❌ Paid amount mismatch', { expectedAmountNaira, paidAmountNaira })
-      return appRedirect('/checkout?error=amount_mismatch')
-    }
+    // Amount is now re-validated after STEP 5, once each item's pickup zone
+    // (product.landmark) is known — delivery fees are zone-priced, not flat.
 
     // STEP 4: Fetch buyer (include universityId for batch campus-scoping)
     console.log('\n👤 STEP 4: Fetching Buyer')
@@ -281,6 +274,7 @@ export async function GET(request: NextRequest) {
       name: string
       category: string
       sellerName: string
+      landmark: string
     }> = []
 
     for (const item of meta.cartItems) {
@@ -314,13 +308,40 @@ export async function GET(request: NextRequest) {
         name: product.name,
         category: product.category,
         sellerName: product.seller.name,
+        landmark: product.landmark,
       })
       console.log(`? ${product.name}: OK (stock: ${availableStock})`)
     }
 
+    // STEP 5b: Re-validate the paid amount now that pickup zones are known.
+    // Same grouping (by sellerId, pickup zone = first item's landmark) that
+    // createOrders uses, so the total here always matches what gets charged
+    // per order.
+    console.log('\n💰 STEP 5b: Amount Verification')
+
+    const sellerGroupsForAmountCheck = enrichedCartItems.reduce<Record<string, typeof enrichedCartItems>>((acc, item) => {
+      if (!acc[item.sellerId]) acc[item.sellerId] = []
+      acc[item.sellerId].push(item)
+      return acc
+    }, {})
+
+    let expectedDelivery = 0
+    for (const sellerItems of Object.values(sellerGroupsForAmountCheck)) {
+      expectedDelivery += await getDeliveryFee(buyer.universityId, sellerItems[0].landmark, buyer.landmark)
+    }
+
+    const recomputedSubtotal = meta.cartItems.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0)
+    // Flutterwave amounts are whole Naira units, NOT kobo — don't reintroduce *100 here.
+    const expectedAmountNaira = Math.round((recomputedSubtotal + expectedDelivery) * 100) / 100
+    const paidAmountNaira = Number(verifyData?.data?.amount ?? 0)
+    if (!Number.isFinite(paidAmountNaira) || Math.round(paidAmountNaira * 100) !== Math.round(expectedAmountNaira * 100)) {
+      console.error('❌ Paid amount mismatch', { expectedAmountNaira, paidAmountNaira })
+      return appRedirect('/checkout?error=amount_mismatch')
+    }
+
     // STEP 6: Create orders + DeliveryBatch
     // createOrders creates ONE DeliveryBatch then one Order per seller group.
-    // Each order carries a full ?800 delivery fee.
+    // Each order carries its own zone-priced delivery fee.
     // updateMany with quantity >= guard atomically claims stock.
     // If two buyers race for the last unit, the second gets STOCK_GONE thrown.
     console.log('\n?? STEP 6: Creating Orders + DeliveryBatch')

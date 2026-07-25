@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { notifyOrderPlaced } from '@/lib/notification'
+import { getDeliveryFee } from '@/lib/delivery/pricing'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,7 +95,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'productId and a positive quantity are required' }, { status: 400 })
     }
 
-    const deliveryFee = 800
+    const pickupProduct = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { landmark: true },
+    })
+    const deliveryFee = await getDeliveryFee(user.universityId, pickupProduct?.landmark, user.landmark)
 
     // ── Atomic transaction: check stock AND create order in one DB round-trip ─
     // Without this, two simultaneous requests for the last item in stock both

@@ -38,6 +38,7 @@ const CART_CSS = `
 export default function CartPage() {
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)
+  const [serverDeliveryFee, setServerDeliveryFee] = useState<number | null>(null)
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, updateVariants } = useCartStore()
 
   useEffect(() => {
@@ -47,6 +48,24 @@ export default function CartPage() {
   }, [])
 
   useEffect(() => { setIsClient(true) }, [])
+
+  // Zone-based delivery fee estimate (real per-seller pricing, not a flat
+  // guess). Plain fetch (not authFetch) — the cart is browsable while
+  // logged out, and a 401 here shouldn't force-redirect a guest to /login.
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (items.length === 0 || !token) { setServerDeliveryFee(null); return }
+    fetch('/api/delivery/quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ cartItems: items.map(i => ({ productId: i.productId })) }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && typeof data.deliveryFee === 'number') setServerDeliveryFee(data.deliveryFee)
+      })
+      .catch(err => console.error('Delivery quote error:', err))
+  }, [items])
 
   const fmt = (price: number) =>
     new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(price)
@@ -86,7 +105,10 @@ export default function CartPage() {
   )
 
   const uniqueSellers = new Set(items.map(i => i.sellerId)).size
-  const deliveryFee   = 800 * Math.max(1, uniqueSellers)
+  // Real per-seller zone pricing once /api/delivery/quote resolves; a rough
+  // flat guess until then (checkout re-quotes and payment always charges
+  // the authoritative zone-based fee regardless of what's shown here).
+  const deliveryFee   = serverDeliveryFee ?? (2000 * Math.max(1, uniqueSellers))
   const subtotal      = getTotalPrice()
   const total         = subtotal + deliveryFee
 

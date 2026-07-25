@@ -1,17 +1,15 @@
 // lib/finance/calculatePayout.ts
+import { RIDER_SHARE_PERCENT, PLATFORM_SHARE_PERCENT, REFERRAL_FLAT_BONUS } from '@/lib/delivery/commission'
 
-export function calculatePayout(subtotal: number, deliveryFee: number = 800) {
-  const PLATFORM_RATE          = 0.05
-  const RIDER_SHARE            = 560
-  // ── ₦120 delivery cut goes to referrer (50% of the original ₦240) ──────────
-  const REFERRAL_DELIVERY_CUT  = 120   // referrer earns this per delivery order
-  const PLATFORM_DELIVERY_CUT  = 120   // platform retains the other ₦120
+export function calculatePayout(subtotal: number, deliveryFee: number) {
+  const PLATFORM_RATE = 0.05
 
   const platformFeeFromProducts = subtotal * PLATFORM_RATE
   const sellerShare             = subtotal - platformFeeFromProducts
-  const riderShare              = RIDER_SHARE
-  const referralDeliveryCut     = REFERRAL_DELIVERY_CUT   // goes to referrer if applicable
-  const platformTotal           = platformFeeFromProducts + PLATFORM_DELIVERY_CUT
+  const riderShare              = Math.round(deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
+  const referralDeliveryCut     = REFERRAL_FLAT_BONUS   // goes to referrer if applicable
+  const platformDeliveryCut     = Math.round(deliveryFee * PLATFORM_SHARE_PERCENT * 100) / 100
+  const platformTotal           = platformFeeFromProducts + platformDeliveryCut
   const totalAmount             = subtotal + deliveryFee
 
   return {

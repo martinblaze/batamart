@@ -7,8 +7,9 @@ function getSellerShareFromOrder(order: {
   totalAmount: number
   platformCommission: number
   riderId: string | null
+  deliveryFee: number
 }) {
-  const subtotal = order.totalAmount - (order.riderId ? 800 : 0)
+  const subtotal = order.totalAmount - (order.riderId ? order.deliveryFee : 0)
   return Math.max(0, subtotal - order.platformCommission)
 }
 
@@ -34,6 +35,7 @@ export async function releaseMaturedSellerEscrowForUser(sellerId: string) {
       totalAmount: true,
       platformCommission: true,
       riderId: true,
+      deliveryFee: true,
       status: true,
     },
   })
@@ -110,6 +112,7 @@ export async function releaseSellerEscrowForOrder(orderId: string, sellerId: str
       totalAmount: true,
       platformCommission: true,
       riderId: true,
+      deliveryFee: true,
       status: true,
     },
   })

@@ -97,6 +97,22 @@ export default function CheckoutPage() {
     fetchPaymentSettings()
   }, [])
 
+  // Fetch a zone-based delivery fee estimate as soon as we have cart items,
+  // so the summary shows a real number before the user even clicks Pay
+  // (initialize's response remains the authoritative fee once payment starts).
+  useEffect(() => {
+    if (cartItems.length === 0) return
+    authFetch('/api/delivery/quote', {
+      method: 'POST',
+      body: JSON.stringify({ cartItems: cartItems.map(i => ({ productId: i.productId })) }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.deliveryFee === 'number') setServerDeliveryFee(data.deliveryFee)
+      })
+      .catch(err => console.error('Delivery quote error:', err))
+  }, [cartItems])
+
   const fetchUserProfile = async () => {
     try {
       const response = await authFetch('/api/auth/me')
@@ -216,9 +232,11 @@ export default function CheckoutPage() {
     </div>
   )
 
-  // ── FIX: Delivery fee is ₦800 per unique seller (server remains source of truth). ──
+  // ── Delivery fee is zone-priced per seller (server remains source of truth). ──
+  // This flat guess only shows for the brief moment before /api/delivery/quote
+  // resolves — it's immediately replaced by serverDeliveryFee.
   const uniqueSellers = Math.max(1, new Set(cartItems.map(item => item.sellerId)).size)
-  const fallbackDeliveryFee = uniqueSellers * 800
+  const fallbackDeliveryFee = uniqueSellers * 2000
   const deliveryFee   = serverDeliveryFee ?? fallbackDeliveryFee
   const subtotal      = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalAmount   = subtotal + deliveryFee

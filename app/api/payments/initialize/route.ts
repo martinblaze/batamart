@@ -6,6 +6,8 @@ import { notifyOrderPlaced } from '@/lib/notification'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 import { flutterwaveRequest, getFlutterwaveSecretKey } from '@/lib/finance/flutterwave'
+import { getDeliveryFee } from '@/lib/delivery/pricing'
+import { RIDER_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/lib/delivery/commission'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -35,24 +37,22 @@ async function arePaymentsEnabled() {
 // must always compute fees identically from the same function.
 //
 // DELIVERY MODEL (batch):
-//   Each order in the cart gets its own full ₦800 delivery fee.
-//   Buyer pays ₦800 × number_of_orders (one per seller).
-//   Rider gets ₦560 per order = ₦560 × N total.
-//   Platform keeps ₦240 per order from delivery.
-//   Referral reward (₦120) fires ONCE per batch (not per order).
-//   The remaining ₦120 per order stays with the platform.
+//   Each order in the cart gets its own delivery fee, priced per the
+//   pickup-zone <-> dropoff-zone route (see lib/delivery/pricing.ts) —
+//   no longer a flat ₦800 per order.
+//   Rider gets 70% of that order's delivery fee.
+//   Platform keeps 30% of that order's delivery fee (gross).
+//   Referral reward (₦120) fires ONCE per batch (not per order), paid out
+//   of the platform's share at the reporting layer — see
+//   lib/delivery/commission.ts for the full accounting note.
 // ============================================================
-export function calculateFees(subtotal: number, deliveryFee: number = 800) {
+export function calculateFees(subtotal: number, deliveryFee: number) {
   const PLATFORM_RATE         = 0.05
-  const RIDER_SHARE           = 560
-  // Platform keeps full ₦240 delivery cut per order.
-  // Referral (₦120) is deducted at batch level in processReferralReward,
-  // not here — so platformTotal here reflects the gross delivery cut.
-  const PLATFORM_DELIVERY_CUT = 240
+  const riderShare            = Math.round(deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
+  const PLATFORM_DELIVERY_CUT = Math.round(deliveryFee * PLATFORM_SHARE_PERCENT * 100) / 100
 
   const platformFeeFromProducts = subtotal * PLATFORM_RATE
   const sellerShare             = subtotal - platformFeeFromProducts
-  const riderShare              = RIDER_SHARE
   const platformTotal           = platformFeeFromProducts + PLATFORM_DELIVERY_CUT
   const totalAmount             = subtotal + deliveryFee
 
@@ -125,6 +125,7 @@ export async function POST(request: NextRequest) {
       price:      number
       quantity:   number
       sellerId:   string
+      landmark:   string
       orderNote?: string
       buyerDeliveryAcknowledged?: boolean
     }
@@ -176,6 +177,7 @@ export async function POST(request: NextRequest) {
           price:      resolvedPrice, // ? always from DB, never from client
           quantity:   safeQuantity,
           sellerId:   product.sellerId,
+          landmark:   product.landmark,
           orderNote:  item.orderNote,
           buyerDeliveryAcknowledged: item.buyerDeliveryAcknowledged === true,
         })
@@ -210,6 +212,7 @@ export async function POST(request: NextRequest) {
         price:      resolvedPrice,
         quantity:   1,
         sellerId:   product.sellerId,
+        landmark:   product.landmark,
         orderNote:  body.orderNote,
         buyerDeliveryAcknowledged: false,
       }]
@@ -224,11 +227,22 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Calculate totals ──────────────────────────────────────────────────────
-    // Count distinct sellers = number of orders = number of ₦800 delivery fees
-    const distinctSellers  = new Set(items.map(i => i.sellerId)).size
-    const perOrderDelivery = 800
-    const totalDelivery    = perOrderDelivery * distinctSellers
-    const subtotal         = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    // One order per seller, each with its own zone-priced delivery fee
+    // (pickup zone = that seller's first item's landmark, dropoff zone =
+    // buyer's landmark). Must match the per-order fees createOrders will
+    // persist, and what verify/route.ts recomputes to validate the payment.
+    const sellerGroupsForQuote = items.reduce<Record<string, CartItem[]>>((acc, item) => {
+      if (!acc[item.sellerId]) acc[item.sellerId] = []
+      acc[item.sellerId].push(item)
+      return acc
+    }, {})
+
+    let totalDelivery = 0
+    for (const sellerItems of Object.values(sellerGroupsForQuote)) {
+      totalDelivery += await getDeliveryFee(user.universityId, sellerItems[0].landmark, user.landmark)
+    }
+
+    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
     // fees here represent the TOTAL for Flutterwave (all orders combined)
     const totalSubtotal = subtotal
@@ -256,7 +270,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Initializing Flutterwave payment - reference:', reference, '| callback:', callbackUrl)
-    console.log(`Cart: ${items.length} item(s), ${distinctSellers} seller(s), total delivery ₦${totalDelivery}`)
+    console.log(`Cart: ${items.length} item(s), ${Object.keys(sellerGroupsForQuote).length} seller(s), total delivery ₦${totalDelivery}`)
 
     // NOTE: Flutterwave amounts are in whole Naira units, NOT kobo (unlike
     // Paystack/Credo, which multiply by 100). Don't reintroduce a *100 here.
@@ -323,7 +337,7 @@ export async function POST(request: NextRequest) {
 // ══════════════════════════════════════════════════════════════════════════════
 // createOrders — called ONLY from the verify route after Flutterwave confirms.
 // Creates ONE DeliveryBatch then one Order per seller group.
-// Each order carries a full ₦800 delivery fee — NOT split.
+// Each order carries its own zone-priced delivery fee — NOT split.
 // ══════════════════════════════════════════════════════════════════════════════
 export async function createOrders(
   items: {
@@ -336,6 +350,7 @@ export async function createOrders(
     category:   string
     sellerId:   string
     sellerName: string
+    landmark:   string
     orderNote?: string
     buyerDeliveryAcknowledged?: boolean
   }[],
@@ -390,12 +405,13 @@ export async function createOrders(
     productName: string
   }> = []
 
-  // Each order gets a FULL ₦800 delivery fee (not split, not proportional)
-  const perOrderDelivery = 800
-
   for (const [sellerId, sellerItems] of Object.entries(sellerGroups)) {
     const orderSubtotal = sellerItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
-    const orderFees     = calculateFees(orderSubtotal, perOrderDelivery)
+    // Each order gets its own zone-priced delivery fee (not split, not
+    // proportional) — pickup zone from this seller's first item's landmark,
+    // dropoff zone from the buyer's landmark.
+    const perOrderDelivery = await getDeliveryFee(user.universityId, sellerItems[0].landmark, user.landmark)
+    const orderFees        = calculateFees(orderSubtotal, perOrderDelivery)
 
     const orderNumber = `BATAMART-${crypto.randomUUID().replace(/-/g, '').substring(0, 16).toUpperCase()}`
     const itemsList   = sellerItems.map(i => `${i.name} (x${i.quantity})`).join(', ')
