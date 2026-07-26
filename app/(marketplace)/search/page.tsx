@@ -14,6 +14,7 @@ import FilterGroup from '@/components/FilterGroup'
 import PriceRangeSlider from '@/components/PriceRangeSlider'
 import ProductCard from '@/components/ProductCard'
 import { primeImageBatch } from '@/lib/image-cache'
+import GirlfriendsDayBanner from '@/components/marketplace/GirlfriendsDayBanner'
 
 type Product = {
   id: string
@@ -24,6 +25,8 @@ type Product = {
   isHot?: boolean
   isNew?: boolean
   isDeal?: boolean
+  campaignTag?: string | null
+  campaignExpiresAt?: string | null
   deliveryEstimate?: string | null
   landmark?: string | null
   avgRating?: number
@@ -185,6 +188,11 @@ function SearchPage() {
   const parsed = useMemo(() => stateFromParams(params), [searchParamsString])
 
   const [query, setQuery] = useState(parsed.query)
+  // Text shown in the on-page mobile search box as you type — separate from
+  // `query` (which actually drives the results fetch) so typing doesn't fire
+  // a search on every keystroke. Only committed to `query` on submit, on
+  // clicking a dropdown suggestion, or on the explicit Search button.
+  const [queryDraft, setQueryDraft] = useState(parsed.query)
   const [categoryKey, setCategoryKey] = useState(parsed.categoryKey)
   const [subcategoryKey, setSubcategoryKey] = useState(parsed.subcategoryKey)
   const [sellerId, setSellerId] = useState(parsed.sellerId)
@@ -229,6 +237,7 @@ function SearchPage() {
   useEffect(() => {
     if (searchParamsString === lastUrlRef.current) return
     setQuery(parsed.query)
+    setQueryDraft(parsed.query)
     setCategoryKey(parsed.categoryKey)
     setSubcategoryKey(parsed.subcategoryKey)
     setSellerId(parsed.sellerId)
@@ -451,7 +460,23 @@ function SearchPage() {
           <div className="flex items-center gap-2">
             <button onClick={() => router.push('/marketplace')} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white text-ink-secondary shadow-soft"><ChevronLeft className="h-4 w-4" /></button>
             {/* Desktop already has a search bar in the navbar — only show this one on mobile, where the navbar collapses to an icon. */}
-            <div className="min-w-0 flex-1 md:hidden"><SearchAutocomplete value={query} onChange={(next) => { setQuery(next); setPage(1) }} onSubmit={() => setPage(1)} onSelect={(text) => { setQuery(text); setPage(1) }} autoFocus={params.get('focus') === '1'} /></div>
+            <div className="min-w-0 flex-1 md:hidden">
+              <SearchAutocomplete
+                value={queryDraft}
+                onChange={setQueryDraft}
+                onSubmit={() => { setQuery(queryDraft); setPage(1) }}
+                onSelect={(text) => { setQueryDraft(text); setQuery(text); setPage(1) }}
+                autoFocus={params.get('focus') === '1'}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => { setQuery(queryDraft); setPage(1) }}
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-soft md:hidden"
+              aria-label="Search"
+            >
+              <Search className="h-4 w-4" strokeWidth={1.75} />
+            </button>
             {query && <p className="hidden md:block min-w-0 flex-1 truncate text-sm font-medium text-ink-secondary">Results for &quot;{query}&quot;</p>}
           </div>
           <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -469,6 +494,7 @@ function SearchPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4">
+        <div className="mb-4"><GirlfriendsDayBanner /></div>
         <div className="grid gap-4 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
           <aside className="sticky top-[132px] hidden max-h-[calc(100vh-150px)] overflow-auto rounded-3xl md:block">{filterPanel}</aside>
           <main className="min-w-0">
@@ -482,13 +508,13 @@ function SearchPage() {
               </div>
             </div>
 
-            {suggestion && query && suggestion !== query.toLowerCase() && (<div className="mt-3 rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning shadow-soft">Did you mean <button className="font-semibold underline" onClick={() => { setQuery(suggestion); setPage(1) }}>{suggestion}</button>?</div>)}
+            {suggestion && query && suggestion !== query.toLowerCase() && (<div className="mt-3 rounded-2xl border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning shadow-soft">Did you mean <button className="font-semibold underline" onClick={() => { setQuery(suggestion); setQueryDraft(suggestion); setPage(1) }}>{suggestion}</button>?</div>)}
 
             {loading && page === 1 ? (
               <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}</div>
             ) : products.length === 0 ? (
               <div className="mt-4 space-y-4">
-                <div className="rounded-3xl border border-dashed border-border bg-white p-8 text-center shadow-soft"><div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface"><Search className="h-8 w-8 text-ink-muted" /></div><h2 className="text-xl font-semibold text-ink">No results for &quot;{query || 'your search'}&quot;</h2><p className="mx-auto mt-2 max-w-lg text-sm text-ink-secondary">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-4"><button onClick={() => { setQuery(suggestion); setPage(1) }} className="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-soft shadow-soft">Did you mean {suggestion}?</button></div>}<div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="rounded-2xl bg-surface px-4 py-2.5 text-sm font-semibold text-ink-secondary">Broaden search</button><Link href="/marketplace" className="rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary">Browse marketplace</Link></div></div>
+                <div className="rounded-3xl border border-dashed border-border bg-white p-8 text-center shadow-soft"><div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface"><Search className="h-8 w-8 text-ink-muted" /></div><h2 className="text-xl font-semibold text-ink">No results for &quot;{query || 'your search'}&quot;</h2><p className="mx-auto mt-2 max-w-lg text-sm text-ink-secondary">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-4"><button onClick={() => { setQuery(suggestion); setQueryDraft(suggestion); setPage(1) }} className="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-soft shadow-soft">Did you mean {suggestion}?</button></div>}<div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="rounded-2xl bg-surface px-4 py-2.5 text-sm font-semibold text-ink-secondary">Broaden search</button><Link href="/marketplace" className="rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary">Browse marketplace</Link></div></div>
                 {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink"><Sparkles className="h-4 w-4 text-primary" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={index < 2} />))}</div></div>}
               </div>
             ) : (
