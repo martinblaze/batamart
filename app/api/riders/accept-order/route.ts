@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
+import { CAMPAIGNS, isCampaignDeliverable, isValidCampaignKey } from '@/lib/campaigns'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
             buyerId:     true,
             sellerId:    true,
             deliveryFee: true,
-            product:     { select: { name: true } },
+            product:     { select: { name: true, campaignTag: true } },
           },
         },
         buyer: { select: { universityId: true } },
@@ -106,6 +107,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: `Waiting on ${notYetAccepted.length} seller${notYetAccepted.length > 1 ? 's' : ''} to accept this order. Try again shortly.`,
         blockReason: 'AWAITING_SELLER_ACCEPTANCE',
+      }, { status: 409 })
+    }
+
+    // ── Seasonal campaign delivery gate ────────────────────────────────────
+    // A tagged item can be bought and seller-confirmed at any time during the
+    // campaign, but riders can't collect it until the campaign's delivery
+    // date — otherwise a Girlfriend's Day gift bought early could arrive
+    // before the day itself. See lib/campaigns.ts.
+    const notYetDeliverable = batch.orders.filter(
+      (o) => isValidCampaignKey(o.product?.campaignTag) && !isCampaignDeliverable(o.product?.campaignTag)
+    )
+    if (notYetDeliverable.length > 0) {
+      const tag = notYetDeliverable[0].product!.campaignTag as keyof typeof CAMPAIGNS
+      const campaign = CAMPAIGNS[tag]
+      const releaseDate = new Date(campaign.deliverableFrom).toLocaleDateString('en-NG', { day: 'numeric', month: 'long' })
+      return NextResponse.json({
+        error: `${notYetDeliverable.length} order${notYetDeliverable.length > 1 ? 's' : ''} in this batch ${notYetDeliverable.length > 1 ? 'are' : 'is'} tagged for ${campaign.label} and can't be picked up until ${releaseDate}.`,
+        blockReason: 'CAMPAIGN_DELIVERY_NOT_STARTED',
       }, { status: 409 })
     }
 

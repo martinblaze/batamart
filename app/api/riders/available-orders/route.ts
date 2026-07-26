@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         orders: {
           include: {
             product: {
-              select: { name: true, images: true, hostelName: true, landmark: true, estimatedWeightKg: true, dimensionsCm: true },
+              select: { name: true, images: true, hostelName: true, landmark: true, estimatedWeightKg: true, dimensionsCm: true, campaignTag: true },
             },
             seller: {
               select: { name: true, phone: true },

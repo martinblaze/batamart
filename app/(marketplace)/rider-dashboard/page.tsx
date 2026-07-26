@@ -16,9 +16,22 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, AlertTriangle, MapPin, Phone, Package,
-  CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload,
+  CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload, Heart,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
+import { CAMPAIGNS, isCampaignDeliverable, isValidCampaignKey } from '@/lib/campaigns'
+
+function CampaignItemBadge({ campaignTag }: { campaignTag?: string | null }) {
+  if (!isValidCampaignKey(campaignTag)) return null
+  const campaign = CAMPAIGNS[campaignTag]
+  const deliverable = isCampaignDeliverable(campaignTag)
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 whitespace-nowrap bg-rose-500/10 text-rose-600">
+      <Heart className="w-2.5 h-2.5" strokeWidth={2} fill="currentColor" />
+      {deliverable ? campaign.label : `Releases ${new Date(campaign.deliverableFrom).toLocaleDateString('en-NG', { day: 'numeric', month: 'short' })}`}
+    </span>
+  )
+}
 
 // Delivery fees are zone-priced now (not a flat ₦800) — rider always gets 70%
 // of whatever that order's route costs. See lib/delivery/commission.ts.
@@ -244,6 +257,9 @@ export default function RiderDashboardPage() {
         await fetchRiderData()
       } else if (res.status === 409 && data.blockReason === 'AWAITING_SELLER_ACCEPTANCE') {
         showToast(data.error || 'Waiting on the seller(s) to accept this order.', 'info')
+        await fetchRiderData()
+      } else if (res.status === 409 && data.blockReason === 'CAMPAIGN_DELIVERY_NOT_STARTED') {
+        showToast(data.error || 'This batch has an item that can\'t be picked up yet.', 'info')
         await fetchRiderData()
       } else if (res.status === 409) {
         showToast('Another rider just accepted this batch. Refreshing...', 'info')
@@ -934,6 +950,7 @@ export default function RiderDashboardPage() {
                             </div>
                             <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                               <StatusBadge status={order.status} />
+                              <CampaignItemBadge campaignTag={order.product.campaignTag} />
                               <span className="text-[10px] font-semibold text-ink-muted">#{idx + 1}</span>
                             </div>
                           </div>
@@ -1115,6 +1132,7 @@ export default function RiderDashboardPage() {
                             {order.product.landmark ? ` · ${order.product.landmark}` : order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
                           </p>
                         </div>
+                        <CampaignItemBadge campaignTag={order.product.campaignTag} />
                         {order.status === 'PENDING' ? (
                           <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
                             Awaiting seller
@@ -1133,10 +1151,18 @@ export default function RiderDashboardPage() {
                     {(() => {
                       const pendingCount = batch.orders.filter((o: any) => o.status === 'PENDING').length
                       const awaitingSeller = pendingCount > 0
+                      const notDeliverable = batch.orders.filter(
+                        (o: any) => isValidCampaignKey(o.product?.campaignTag) && !isCampaignDeliverable(o.product?.campaignTag)
+                      )
+                      const awaitingCampaignDate = notDeliverable.length > 0
+                      const releaseLabel = awaitingCampaignDate
+                        ? new Date(CAMPAIGNS[notDeliverable[0].product.campaignTag as keyof typeof CAMPAIGNS].deliverableFrom)
+                            .toLocaleDateString('en-NG', { day: 'numeric', month: 'long' })
+                        : ''
                       return (
                         <button
                           onClick={() => acceptBatch(batch.id)}
-                          disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending || awaitingSeller}
+                          disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending || awaitingSeller || awaitingCampaignDate}
                           className="w-full py-3 bg-primary hover:brightness-95 text-white rounded-xl
                                      font-semibold text-sm shadow-soft shadow-primary/20
                                      flex items-center justify-center gap-2
@@ -1146,10 +1172,12 @@ export default function RiderDashboardPage() {
                             ? <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
                             : awaitingSeller
                               ? <>Waiting on {pendingCount} seller{pendingCount > 1 ? 's' : ''} to accept</>
-                              : <>
-                                  Accept Batch · ₦{batchRiderTotal(batch).toLocaleString()}
-                                  <ArrowRight className="w-4 h-4" />
-                                </>
+                              : awaitingCampaignDate
+                                ? <><Heart className="w-3.5 h-3.5" strokeWidth={2} /> Releases for pickup {releaseLabel}</>
+                                : <>
+                                    Accept Batch · ₦{batchRiderTotal(batch).toLocaleString()}
+                                    <ArrowRight className="w-4 h-4" />
+                                  </>
                           }
                         </button>
                       )

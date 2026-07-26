@@ -275,6 +275,7 @@ export async function GET(request: NextRequest) {
       category: string
       sellerName: string
       landmark: string
+      campaignTag: string | null
     }> = []
 
     for (const item of meta.cartItems) {
@@ -309,6 +310,7 @@ export async function GET(request: NextRequest) {
         category: product.category,
         sellerName: product.seller.name,
         landmark: product.landmark,
+        campaignTag: product.campaignTag,
       })
       console.log(`? ${product.name}: OK (stock: ${availableStock})`)
     }

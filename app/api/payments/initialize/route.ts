@@ -8,6 +8,7 @@ import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 import { flutterwaveRequest, getFlutterwaveSecretKey } from '@/lib/finance/flutterwave'
 import { getDeliveryFee } from '@/lib/delivery/pricing'
 import { RIDER_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/lib/delivery/commission'
+import { isValidCampaignKey } from '@/lib/campaigns'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -353,6 +354,7 @@ export async function createOrders(
     landmark:   string
     orderNote?: string
     buyerDeliveryAcknowledged?: boolean
+    campaignTag?: string | null
   }[],
   user: {
     id:           string
@@ -415,6 +417,10 @@ export async function createOrders(
 
     const orderNumber = `BATAMART-${crypto.randomUUID().replace(/-/g, '').substring(0, 16).toUpperCase()}`
     const itemsList   = sellerItems.map(i => `${i.name} (x${i.quantity})`).join(', ')
+    // Permanent snapshot — if any item in this seller's order was tagged for a
+    // campaign, the order is marked forever, regardless of what happens to the
+    // product's tag later (reused, retagged, expired). See lib/campaigns.ts.
+    const orderCampaignTag = sellerItems.find(i => isValidCampaignKey(i.campaignTag))?.campaignTag || null
 
     console.log('🔨 Creating order:', orderNumber, 'for seller:', sellerId)
 
@@ -449,6 +455,7 @@ export async function createOrders(
             deliveryLandmark:   String(user.landmark    ?? ''),
             isPaid:             true,
             status:             'PENDING' as const,
+            campaignTag:        orderCampaignTag,
             orderNote,
             buyerDeliveryAcknowledged: Boolean(sellerItems.every(i => i.buyerDeliveryAcknowledged === true)),
             items: {

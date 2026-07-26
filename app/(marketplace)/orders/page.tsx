@@ -10,10 +10,12 @@ import Link from 'next/link'
 import {
   Star, CheckCircle, Loader2, Package, MapPin, User,
   Bike, ChevronRight, ArrowRight, ShoppingBag, Clock,
-  X, BadgeCheck, AlertCircle, Tag,
+  X, BadgeCheck, AlertCircle, Tag, Heart,
 } from 'lucide-react'
 import { OrderNotificationBanner } from '@/components/layout/OrderNotificationBanner'
 import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
+import { CAMPAIGNS, isValidCampaignKey } from '@/lib/campaigns'
+import GirlfriendsDayCelebration from '@/components/marketplace/GirlfriendsDayCelebration'
 
 interface ProductReview { id: string; rating: number; comment: string; createdAt: string }
 interface Review { id: string; type: string; rating: number; comment: string | null; createdAt: string }
@@ -34,8 +36,12 @@ interface PeopleLikeYouItem {
 interface Order {
   id: string; orderNumber?: string; status: string; totalAmount: number; quantity?: number
   deliveryAddress: string; deliveryLandmark?: string; createdAt: string; completedAt?: string; isPaid?: boolean
-  orderNote?: string | null
+  orderNote?: string | null; campaignTag?: string | null
   seller: Seller; product: Product; rider?: Rider; reviews?: Review[]; productReviews?: ProductReview[]
+}
+
+function isGirlfriendsDayOrder(order: Order) {
+  return isValidCampaignKey(order.campaignTag)
 }
 
 // Design bible: status colors are reserved for true status only — success/danger/warning,
@@ -94,6 +100,8 @@ export default function OrdersPage() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [postPayment, setPostPayment] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [celebrate, setCelebrate] = useState(false)
+  const [celebrateOrder, setCelebrateOrder] = useState(false)
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<PeopleLikeYouItem[]>([])
 
@@ -111,32 +119,46 @@ export default function OrdersPage() {
       setPostPayment(true)
       sessionStorage.removeItem('checkout_product')
       sessionStorage.removeItem('checkout_cart')
-      const count = orderCount ? parseInt(orderCount) : 1
-      setSuccessMessage(
-        orderNumber
-          ? `Payment successful! Order${count > 1 ? 's' : ''} placed: ${orderNumber}${count > 1 ? ` and ${count - 1} more` : ''}`
-          : 'Payment successful! Your order has been placed.'
-      )
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 6000)
       window.history.replaceState({}, '', '/orders')
     }
 
-    fetchOrders()
+    fetchOrders().then((fetched) => {
+      if (paymentStatus !== 'success') return
+
+      const count = orderCount ? parseInt(orderCount) : 1
+      const matched = orderNumber ? fetched.find((o) => o.orderNumber === orderNumber) : null
+
+      if (matched && isGirlfriendsDayOrder(matched)) {
+        const label = CAMPAIGNS[matched.campaignTag as keyof typeof CAMPAIGNS].label
+        setSuccessMessage(`Your ${label} order has been placed${orderNumber ? ` — #${orderNumber}` : ''}. She's going to love this.`)
+        setCelebrateOrder(true)
+        setCelebrate(true)
+      } else {
+        setSuccessMessage(
+          orderNumber
+            ? `Payment successful! Order${count > 1 ? 's' : ''} placed: ${orderNumber}${count > 1 ? ` and ${count - 1} more` : ''}`
+            : 'Payment successful! Your order has been placed.'
+        )
+      }
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 6000)
+    })
     fetchPeopleLikeYouBought()
   }, [router])
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (): Promise<Order[]> => {
     try {
       const token = localStorage.getItem('token')
       const response = await fetch('/api/orders', { headers: { 'Authorization': `Bearer ${token}` } })
       const data = await response.json()
       if (response.ok) {
-        const nextOrders = data.orders || []
+        const nextOrders: Order[] = data.orders || []
         setOrders(nextOrders)
+        return nextOrders
       }
     } catch (error) { console.error('Error fetching orders:', error) }
     finally { setLoading(false) }
+    return []
   }
 
   const fetchPeopleLikeYouBought = async () => {
@@ -194,12 +216,21 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-surface pb-20">
 
+      {/* ── Girlfriend's Day celebration ──────────────────────────────── */}
+      {celebrate && <GirlfriendsDayCelebration onDone={() => setCelebrate(false)} />}
+
       {/* ── Success toast ─────────────────────────────────────────────── */}
       {showSuccess && (
         <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in-from-top-3 duration-300">
-          <div className="w-full max-w-md bg-ink text-white rounded-xl px-4 py-3 shadow-soft flex items-start gap-3">
-            <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <CheckCircle className="w-4 h-4" strokeWidth={1.75} />
+          <div className={`w-full max-w-md rounded-xl px-4 py-3 shadow-soft flex items-start gap-3 ${
+            celebrateOrder ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white' : 'bg-ink text-white'
+          }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+              celebrateOrder ? 'bg-white/20' : 'bg-success'
+            }`}>
+              {celebrateOrder
+                ? <Heart className="w-4 h-4" strokeWidth={1.75} fill="currentColor" />
+                : <CheckCircle className="w-4 h-4" strokeWidth={1.75} />}
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm leading-snug break-words">{successMessage}</p>
@@ -207,7 +238,7 @@ export default function OrdersPage() {
             </div>
             <button
               onClick={() => setShowSuccess(false)}
-              className="text-ink-muted hover:text-white flex-shrink-0 ml-1 mt-0.5"
+              className="text-white/70 hover:text-white flex-shrink-0 ml-1 mt-0.5"
             >
               <X className="w-4 h-4" />
             </button>
@@ -319,11 +350,23 @@ export default function OrdersPage() {
 
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-2xl border border-border shadow-soft hover:shadow-soft transition-all duration-200 overflow-hidden">
+            {orders.map((order) => {
+              const isGfd = isGirlfriendsDayOrder(order)
+              const gfdLabel = isGfd ? CAMPAIGNS[order.campaignTag as keyof typeof CAMPAIGNS].label : null
+              return (
+              <div
+                key={order.id}
+                className={`rounded-2xl border shadow-soft hover:shadow-soft transition-all duration-200 overflow-hidden ${
+                  isGfd
+                    ? 'bg-gradient-to-br from-rose-50 to-white border-rose-200/70 ring-1 ring-rose-100'
+                    : 'bg-white border-border'
+                }`}
+              >
 
                 {/* ── Order header ── */}
-                <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface/50">
+                <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
+                  isGfd ? 'border-rose-200/60 bg-rose-500/5' : 'border-border bg-surface/50'
+                }`}>
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Order</p>
@@ -336,6 +379,11 @@ export default function OrdersPage() {
                         {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
+                    {isGfd && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 text-[10px] font-semibold uppercase tracking-wider">
+                        <Heart className="w-2.5 h-2.5" strokeWidth={2} fill="currentColor" /> {gfdLabel}
+                      </span>
+                    )}
                   </div>
                   <StatusBadge status={order.status} />
                 </div>
@@ -492,7 +540,7 @@ export default function OrdersPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

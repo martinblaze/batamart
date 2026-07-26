@@ -442,6 +442,7 @@ model Order {
   orderNote                   String?
   buyerDeliveryAcknowledged   Boolean         @default(false)
   oversizedCancellationReason String?
+  campaignTag                 String? // snapshot of a tagged item's campaign at purchase time — permanent, never re-derived from the live Product
   batchId                     String?
   dispute                     Dispute?
   batch                       DeliveryBatch?  @relation(fields: [batchId], references: [id])
@@ -466,6 +467,7 @@ model Order {
   @@index([buyerId, status])
   @@index([sellerId, status])
   @@index([riderId, status])
+  @@index([campaignTag])
   @@schema("public")
 }
 
