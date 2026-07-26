@@ -49,6 +49,9 @@ module.exports = {
         'bounce-subtle': 'bounceSubtle 0.5s ease-in-out',
         'shimmer': 'shimmer 2s infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float-slow': 'floatSlow 6s ease-in-out infinite',
+        'float-slower': 'floatSlow 9s ease-in-out infinite',
+        'heartbeat': 'heartbeat 2.4s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -82,6 +85,17 @@ module.exports = {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        floatSlow: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-14px) rotate(4deg)' },
+        },
+        heartbeat: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '15%': { transform: 'scale(1.12)' },
+          '30%': { transform: 'scale(1)' },
+          '45%': { transform: 'scale(1.08)' },
+          '60%': { transform: 'scale(1)' },
         },
       },
       spacing: {

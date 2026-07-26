@@ -7,6 +7,7 @@ import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
 import { CATEGORY_TREE, getCategoryDisplayInfo, getCategoryQueryValues } from '@/lib/variants'
 import { normalizeText } from '@/lib/search-utils'
+import { getCampaignExpiry, isValidCampaignKey } from '@/lib/campaigns'
 
 const DEFAULT_PAGE_SIZE = 40
 const MAX_PAGE_SIZE     = 100
@@ -451,6 +452,7 @@ export async function GET(request: NextRequest) {
     const sellerId = searchParams.get('sellerId') || ''
     const hostel = searchParams.get('hostel') || ''
     const zone = searchParams.get('zone') || ''
+    const campaignTag = searchParams.get('campaignTag') || ''
     const q = (searchParams.get('q') || searchParams.get('search') || '').trim()
     const sortBy = (searchParams.get('sortBy') || searchParams.get('sort') || 'relevance').toLowerCase()
     const minPrice = searchParams.get('minPrice')
@@ -502,6 +504,10 @@ export async function GET(request: NextRequest) {
     }
     if (hostel && hostel !== 'All') where.hostelName = { contains: hostel, mode: 'insensitive' }
     if (zone && zone !== 'All') where.landmark = { equals: zone, mode: 'insensitive' }
+    if (campaignTag && isValidCampaignKey(campaignTag)) {
+      where.campaignTag = campaignTag
+      where.campaignExpiresAt = { gt: new Date() }
+    }
 
     if (minPrice || maxPrice) {
       where.price = {}
@@ -652,7 +658,10 @@ export async function POST(request: NextRequest) {
       estimatedWeightKg,
       dimensionsCm,
       deliveryEstimate,
+      campaignTag,
     } = body
+
+    const validCampaignTag = isValidCampaignKey(campaignTag) ? campaignTag : null
 
     if (!name || !price || !category || !quantity) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -761,6 +770,7 @@ export async function POST(request: NextRequest) {
         ...(typeof estimatedWeightKg === 'number' && estimatedWeightKg > 0 ? { estimatedWeightKg } : {}),
         ...(dimensionsCm && typeof dimensionsCm === 'object' ? { dimensionsCm } : {}),
         ...(deliveryEstimate ? { deliveryEstimate: String(deliveryEstimate).trim().substring(0, 80) } : {}),
+        ...(validCampaignTag ? { campaignTag: validCampaignTag, campaignExpiresAt: getCampaignExpiry(validCampaignTag) } : {}),
         variantsEnabled: hasStructuredVariants,
         quantity:    totalVariantStock,
         images:      Array.isArray(images) ? images : [],

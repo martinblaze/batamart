@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { getCategoryDisplayInfo } from '@/lib/variants'
+import { getCampaignExpiry, isValidCampaignKey } from '@/lib/campaigns'
 
 // GET single product
 export async function GET(
@@ -158,6 +159,15 @@ export async function PUT(
     if (body.isActive !== undefined) updateData.isActive = body.isActive
     if (body.quantity !== undefined) updateData.quantity = parseInt(body.quantity)
     if (body.deliveryEstimate !== undefined) updateData.deliveryEstimate = body.deliveryEstimate ? String(body.deliveryEstimate).trim().substring(0, 80) : null
+    if (body.campaignTag !== undefined) {
+      if (!body.campaignTag) {
+        updateData.campaignTag = null
+        updateData.campaignExpiresAt = null
+      } else if (isValidCampaignKey(body.campaignTag)) {
+        updateData.campaignTag = body.campaignTag
+        updateData.campaignExpiresAt = getCampaignExpiry(body.campaignTag)
+      }
+    }
 
     const updatedProduct = await prisma.product.update({
       where: { id: params.id },

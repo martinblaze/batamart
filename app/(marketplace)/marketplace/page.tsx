@@ -24,6 +24,7 @@ import {
   CrownIcon, MapPin,
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
+import GirlfriendsDayBanner from '@/components/marketplace/GirlfriendsDayBanner'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
@@ -2373,6 +2374,9 @@ export default function MarketplacePage() {
 
             {/* ── Campus Stats Banner ── */}
             <StatsBanner />
+
+            {/* ── Seasonal Campaign Banner ── */}
+            <GirlfriendsDayBanner />
 
             {/* ── Shop by Category (showcase panels) ── */}
             {allProducts.length > 0 && (

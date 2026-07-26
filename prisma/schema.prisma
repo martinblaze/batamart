@@ -217,6 +217,8 @@ model Product {
   hotScore                 Int                     @default(0)
   isFlagged                Boolean                 @default(false)
   flagReason               String?
+  campaignTag              String? // seasonal promo tag, e.g. "GIRLFRIENDS_DAY" — reused across future campaigns
+  campaignExpiresAt        DateTime? // campaign badge auto-hides after this date
   cartItems                CartItem[]
   variants                 ProductVariant[]
   attributeValues          ProductAttributeValue[]
@@ -248,6 +250,7 @@ model Product {
   @@index([universityId, isActive, isDeleted, quantity])
   @@index([isHot, universityId])
   @@index([moderationStatus, createdAt])
+  @@index([campaignTag])
   @@schema("public")
 }
 

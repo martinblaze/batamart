@@ -7,12 +7,15 @@ import {
   X, Plus, AlertCircle, Camera, Upload, CheckCircle2,
   Sparkles, Tag, MapPin, Package, ChevronRight, Zap,
   Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2, RefreshCw,
-  Lightbulb, Ban, ShoppingBag,
+  Lightbulb, Ban, ShoppingBag, Heart, Gift,
 } from 'lucide-react'
 import {
   CATEGORY_TREE, getCategoryDisplayInfo, getCategoryList, getSubcategoryList,
 } from '@/lib/variants'
 import { getCategoryIcon } from '@/lib/category-icons'
+import { CAMPAIGNS, isCampaignWindowOpen } from '@/lib/campaigns'
+
+const GIRLFRIENDS_DAY = CAMPAIGNS.GIRLFRIENDS_DAY
 
 const SELL_CSS = `
   @keyframes fadeUp {
@@ -432,6 +435,7 @@ export default function SellPage() {
   const [description, setDescription] = useState('')
   const [descriptionEdited, setDescriptionEdited] = useState(false)
   const [deliveryAgreementChecked, setDeliveryAgreementChecked] = useState(false)
+  const [campaignTagEnabled, setCampaignTagEnabled] = useState(false)
   const [estimatedWeightKg, setEstimatedWeightKg] = useState('')
   const [deliveryEstimate, setDeliveryEstimate] = useState('')
   const [dimensionL, setDimensionL] = useState('')
@@ -511,6 +515,7 @@ export default function SellPage() {
         }
         if (draft?.manuallyTouchedAttributes) setManuallyTouchedAttributes(draft.manuallyTouchedAttributes)
         if (Array.isArray(draft?.tags)) setTags(draft.tags)
+        if (typeof draft?.campaignTagEnabled === 'boolean') setCampaignTagEnabled(draft.campaignTagEnabled)
         if (Array.isArray(draft?.images)) setImages(draft.images)
       }
     } catch {}
@@ -536,11 +541,12 @@ export default function SellPage() {
           attributeValues,
           manuallyTouchedAttributes,
           tags,
+          campaignTagEnabled,
           images: safeImages,
         })
       )
     } catch {}
-  }, [draftHydrated, formData, description, descriptionEdited, categoryKey, subcategoryKey, variantPricing, attributeValues, manuallyTouchedAttributes, tags, images])
+  }, [draftHydrated, formData, description, descriptionEdited, categoryKey, subcategoryKey, variantPricing, attributeValues, manuallyTouchedAttributes, tags, campaignTagEnabled, images])
 
   useEffect(() => {
     if (document.getElementById('sell-anim')) return
@@ -1018,6 +1024,7 @@ export default function SellPage() {
             ? { length: Number(dimensionL), width: Number(dimensionW), height: Number(dimensionH) }
             : undefined,
           deliveryEstimate: deliveryEstimate.trim() ? `${deliveryEstimate.trim()} day${Number(deliveryEstimate) === 1 ? '' : 's'}` : undefined,
+          campaignTag: campaignTagEnabled ? GIRLFRIENDS_DAY.key : undefined,
         }),
       })
       const data = await response.json()
@@ -1587,6 +1594,38 @@ export default function SellPage() {
           </div>
           {tags.length > 0 && <p className="text-xs text-ink-muted mt-2">{tags.length} tag{tags.length !== 1 ? 's' : ''} auto-generated</p>}
         </div>
+
+        {/* ── Seasonal campaign opt-in ── */}
+        {isCampaignWindowOpen(GIRLFRIENDS_DAY.key) && (
+          <label
+            htmlFor="campaign-tag-toggle"
+            className={`step-card relative flex items-start gap-4 rounded-2xl border-2 p-5 sm:p-6 cursor-pointer transition-colors ${
+              campaignTagEnabled
+                ? 'border-rose-300 bg-gradient-to-br from-rose-50 to-pink-50'
+                : 'border-border bg-white hover:border-rose-200'
+            }`}
+          >
+            <div className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${campaignTagEnabled ? 'bg-rose-500' : 'bg-rose-50'}`}>
+              <Heart className={`w-5 h-5 ${campaignTagEnabled ? 'text-white' : 'text-rose-500'}`} strokeWidth={1.75} fill={campaignTagEnabled ? 'currentColor' : 'none'} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="text-sm font-semibold text-ink">Feature in {GIRLFRIENDS_DAY.label}</h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 text-[10px] font-semibold uppercase tracking-wider">
+                  <Gift className="w-3 h-3" strokeWidth={2} /> Limited time
+                </span>
+              </div>
+              <p className="text-xs text-ink-muted">{GIRLFRIENDS_DAY.tagline} Tagged listings get a badge and appear on the campaign page — no discount required.</p>
+            </div>
+            <input
+              id="campaign-tag-toggle"
+              type="checkbox"
+              checked={campaignTagEnabled}
+              onChange={(e) => setCampaignTagEnabled(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded border-border text-rose-500 focus:ring-rose-400/40 flex-shrink-0"
+            />
+          </label>
+        )}
 
         {/* ── STEP 7: Location ── */}
         <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">

@@ -1,8 +1,9 @@
 'use client'
 
 import LoadedImage from '@/components/LoadedImage'
-import { BadgeCheck, Flame, MapPin, Star, Truck } from 'lucide-react'
+import { BadgeCheck, Flame, Heart, MapPin, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import { CAMPAIGNS, isCampaignActive } from '@/lib/campaigns'
 
 type ProductCardProduct = {
   id: string
@@ -13,6 +14,8 @@ type ProductCardProduct = {
   isHot?: boolean
   isNew?: boolean
   isDeal?: boolean
+  campaignTag?: string | null
+  campaignExpiresAt?: string | Date | null
   deliveryEstimate?: string | null
   landmark?: string | null
   seller?: { id?: string; name?: string; trustLevel?: string; avgRating?: number }
@@ -65,6 +68,8 @@ export default function ProductCard({
   const rating = product.avgRating ?? product.seller?.avgRating ?? 0
   const price = product.priceDisplay || fmt(product.price)
   const stock = product.quantity ?? 0
+  const campaignActive = isCampaignActive(product.campaignTag, product.campaignExpiresAt)
+  const campaignLabel = campaignActive ? CAMPAIGNS[product.campaignTag as keyof typeof CAMPAIGNS]?.label : null
 
   if (layout === 'list') {
     return (
@@ -75,6 +80,7 @@ export default function ProductCard({
         <div className="relative aspect-square w-full flex-shrink-0 bg-surface sm:w-52">
           <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
           <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+            {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
             {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
             {product.isNew && <Badge status="new">New</Badge>}
             {product.isDeal && <Badge status="success">Deal</Badge>}
@@ -128,6 +134,7 @@ export default function ProductCard({
       <div className="relative aspect-square w-full bg-surface">
         <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
           {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
           {product.isNew && <Badge status="new">New</Badge>}
           {product.isDeal && <Badge status="success">Deal</Badge>}

@@ -11,7 +11,8 @@ export type BadgeStatus =
   | 'success'
   | 'danger'
   | 'warning'
-  | 'neutral';
+  | 'neutral'
+  | 'campaign';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   status?: BadgeStatus;
@@ -32,6 +33,9 @@ const statusStyles: Record<BadgeStatus, string> = {
   danger: 'bg-danger/10 text-danger',
   warning: 'bg-warning/10 text-warning',
   neutral: 'bg-surface text-ink-secondary',
+  // Seasonal campaign badges (e.g. Girlfriend's Day) are the one deliberate exception
+  // to the status-color system — they carry a fixed brand color, not a semantic status.
+  campaign: 'bg-rose-500/10 text-rose-600',
 };
 
 export function Badge({ status = 'neutral', icon: Icon, pill = false, className, children, ...props }: BadgeProps) {
