@@ -18,6 +18,7 @@ import { AppNavigationCache } from '@/components/layout/AppNavigationCache'
 import { GlobalPullToRefresh } from '@/components/layout/GlobalPullToRefresh'
 import { ToastContainer } from '@/components/ui/Toast'
 import { KeyboardVisibilityProvider } from '@/components/layout/KeyboardVisibilityProvider'
+import GirlfriendsDayIntro from '@/components/marketplace/GirlfriendsDayIntro'
 
 const inter = Inter({ subsets: ['latin'] })
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
@@ -242,6 +243,7 @@ export default function RootLayout({
             <GlobalPullToRefresh />
             <PWARegister />
             <SplashScreen />
+            <GirlfriendsDayIntro />
             <InstallPrompt />
             <IosInstallPrompt />
             <SuspensionGuard />

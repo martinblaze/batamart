@@ -12,6 +12,14 @@ import { CAMPAIGNS, isCampaignWindowOpen } from '@/lib/campaigns'
 const CAMPAIGN = CAMPAIGNS.GIRLFRIENDS_DAY
 const PAGE_SIZE = 20
 
+const GFD_CSS = `
+  @keyframes gfdFadeUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .gfd-enter { opacity: 0; animation: gfdFadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+`
+
 function useCountdown(target: string) {
   const [msLeft, setMsLeft] = useState(() => new Date(target).getTime() - Date.now())
   useEffect(() => {
@@ -57,6 +65,14 @@ export default function GirlfriendsDayPage() {
   const [searchInput, setSearchInput] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (document.getElementById('batamart-gfd-css')) return
+    const s = document.createElement('style')
+    s.id = 'batamart-gfd-css'
+    s.textContent = GFD_CSS
+    document.head.appendChild(s)
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -128,10 +144,10 @@ export default function GirlfriendsDayPage() {
         <div className="relative mx-auto max-w-7xl space-y-5 px-4 pb-7 pt-5 sm:px-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/20 ring-2 ring-white/30">
+              <div className="flex h-12 w-12 flex-shrink-0 animate-scale-in items-center justify-center rounded-2xl bg-white/20 ring-2 ring-white/30">
                 <Heart className="h-6 w-6 animate-heartbeat text-white" strokeWidth={1.75} fill="currentColor" />
               </div>
-              <div>
+              <div className="animate-slide-in-left">
                 <h1 className="text-2xl font-semibold tracking-tight text-white">{CAMPAIGN.label}</h1>
                 <p className="text-sm font-medium text-white/80">{CAMPAIGN.tagline}</p>
               </div>
@@ -206,8 +222,10 @@ export default function GirlfriendsDayPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {visible.map((p) => (
-                <ProductCard key={p.id} product={p} onOpen={() => handleProductClick(p.id)} />
+              {visible.map((p, i) => (
+                <div key={p.id} className="gfd-enter" style={{ animationDelay: `${(i % PAGE_SIZE) * 30}ms` }}>
+                  <ProductCard product={p} onOpen={() => handleProductClick(p.id)} />
+                </div>
               ))}
             </div>
 
