@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Heart, Gift, ChevronLeft, Search, X, Loader2, CheckCircle,
-  Sparkles, Clock, ShoppingBag, HandHeart,
+  Crown, Clock, ShoppingBag, HandHeart,
 } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
 import { CAMPAIGNS, isCampaignWindowOpen } from '@/lib/campaigns'
@@ -130,7 +130,7 @@ export default function GirlfriendsDayPage() {
         <Heart className="pointer-events-none absolute top-10 right-[14%] h-14 w-14 text-white/10 animate-float-slower" fill="currentColor" strokeWidth={0} />
         <Heart className="pointer-events-none absolute bottom-4 left-[28%] h-8 w-8 text-white/10 animate-float-slow" fill="currentColor" strokeWidth={0} />
         <Heart className="pointer-events-none absolute bottom-10 right-[32%] h-6 w-6 text-white/10 animate-float-slower" fill="currentColor" strokeWidth={0} />
-        <Sparkles className="pointer-events-none absolute top-1/3 right-[6%] h-5 w-5 text-white/20 animate-pulse-slow" />
+        <Crown className="pointer-events-none absolute top-1/3 right-[6%] h-5 w-5 text-white/20 animate-pulse-slow" />
 
         <div className="relative mx-auto max-w-7xl px-4 pt-4 sm:px-6">
           <button

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Sparkles, Star, Truck } from 'lucide-react'
+import { Crown, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 
 export type RelatedProductCardProduct = {
@@ -61,7 +61,7 @@ export default function RelatedProductCard({
           />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <Sparkles className="h-8 w-8 text-ink-muted" strokeWidth={1.75} />
+            <Crown className="h-8 w-8 text-ink-muted" strokeWidth={1.75} />
           </div>
         )}
         {product.isHot && (

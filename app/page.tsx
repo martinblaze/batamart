@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   ShoppingBag, ShieldCheck, Truck, Search, Users, Package, Star,
-  Shirt, UtensilsCrossed, Home, Backpack, Headphones, Sparkles, Cookie, BookOpen,
+  Shirt, UtensilsCrossed, Home, Backpack, Headphones, ChessQueen, Cookie, BookOpen,
   ArrowRight,
 } from 'lucide-react'
 import { Logo } from '@/components/layout/Logo'
@@ -15,7 +15,7 @@ const categories = [
   { name: 'Room essentials', icon: Home, count: '950 items' },
   { name: 'School supplies', icon: Backpack, count: '740 items' },
   { name: 'Tech gadgets', icon: Headphones, count: '680 items' },
-  { name: 'Cosmetics', icon: Sparkles, count: '520 items' },
+  { name: 'Cosmetics', icon: ChessQueen, count: '520 items' },
   { name: 'Snacks', icon: Cookie, count: '890 items' },
   { name: 'Books', icon: BookOpen, count: '650 items' },
 ]

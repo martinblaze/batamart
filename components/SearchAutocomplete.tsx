@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Clock3, Search, Sparkles } from 'lucide-react'
+import { ChevronDown, Clock3, Search, Crown } from 'lucide-react'
 
 type Suggestion = {
   text: string
@@ -222,7 +222,7 @@ export default function SearchAutocomplete({
 
           <div className="border-t border-border px-4 py-3">
             <div className="flex items-center gap-2 text-xs text-ink-muted">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Crown className="h-3.5 w-3.5" />
               Tip: press Enter to search, Esc to close.
             </div>
           </div>

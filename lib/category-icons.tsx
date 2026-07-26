@@ -1,5 +1,5 @@
 import {
-  Smartphone, Laptop, Shirt, Home, UtensilsCrossed, Sparkles, Dumbbell,
+  Smartphone, Laptop, Shirt, Home, UtensilsCrossed, ChessQueen, Dumbbell,
   Car, BookOpen, Ticket, Baby, Palette, LayoutGrid, type LucideIcon,
 } from 'lucide-react'
 
@@ -13,7 +13,7 @@ export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   fashion: Shirt,
   home_kitchen: Home,
   groceries: UtensilsCrossed,
-  beauty: Sparkles,
+  beauty: ChessQueen,
   sports: Dumbbell,
   vehicles: Car,
   books: BookOpen,

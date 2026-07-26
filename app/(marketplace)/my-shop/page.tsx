@@ -8,7 +8,7 @@ import {
   ShoppingBag, Package, TrendingUp, Award, Eye,
   CheckCircle, XCircle, Plus, Trash2, BarChart3,
   Grid, List, Search, ArrowRight, X, AlertTriangle,
-  Sparkles, Zap, RefreshCw, Star, Loader2, ChevronRight,
+  Crown, Zap, RefreshCw, Star, Loader2, ChevronRight,
   BadgeCheck, Timer,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
@@ -408,7 +408,7 @@ export default function MyShopPage() {
                 <Link href="/sell"
                   className="inline-flex items-center gap-2 text-white px-6 py-3 rounded-2xl font-semibold text-sm shadow-soft transition-all hover:scale-105"
                   style={{ background: 'var(--color-primary)' }}>
-                  <Sparkles className="w-4 h-4" /> List First Product
+                  <Crown className="w-4 h-4" /> List First Product
                 </Link>
               </div>
             ) : viewMode === 'grid' ? (

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   Flame, ChevronLeft, Percent, Star, BadgeCheck, Tag,
   Truck, Timer, SlidersHorizontal, X, Search, Loader2,
-  CheckCircle, ShoppingBag, Sparkles, Heart, Eye, ArrowUpDown,
+  CheckCircle, ShoppingBag, ChessQueen, Heart, Eye, ArrowUpDown,
   ChevronDown, Filter, LayoutGrid, Smartphone, Laptop, Shirt, Home,
   UtensilsCrossed, Dumbbell, Car, BookOpen, Ticket, Baby, Palette,
   Zap, TrendingDown, Trophy, Wallet, type LucideIcon,
@@ -129,7 +129,7 @@ const CATEGORIES = [
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'All': LayoutGrid, 'Electronics': Smartphone, 'Computing': Laptop, 'Fashion': Shirt, 'Home & Kitchen': Home,
-  'Food & Groceries': UtensilsCrossed, 'Beauty & Health': Sparkles, 'Sports & Fitness': Dumbbell,
+  'Food & Groceries': UtensilsCrossed, 'Beauty & Health': ChessQueen, 'Sports & Fitness': Dumbbell,
   'Vehicles & Transport': Car, 'Books & Stationery': BookOpen, 'Tickets & Events': Ticket,
   'Kids & Baby': Baby, 'Arts & Crafts': Palette,
 }

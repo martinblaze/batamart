@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, CheckCircle2, Sparkles, Lock, ClipboardList, Banknote,
+  ArrowLeft, CheckCircle2, Crown, Lock, ClipboardList, Banknote,
   ShoppingBag, PartyPopper,
 } from 'lucide-react'
 
@@ -117,7 +117,7 @@ export default function BecomeSellerPage() {
           <div className="space-y-6">
             <div className="bg-surface border border-border rounded-xl p-6">
               <h3 className="font-semibold text-ink text-[16px] mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" strokeWidth={1.75} /> Seller benefits
+                <Crown className="w-5 h-5 text-primary" strokeWidth={1.75} /> Seller benefits
               </h3>
               <ul className="space-y-3">
                 {[

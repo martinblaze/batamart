@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   X, Plus, AlertCircle, Camera, Upload, CheckCircle2,
-  Sparkles, Tag, MapPin, Package, ChevronRight, Zap,
+  Crown, Tag, MapPin, Package, ChevronRight, Zap,
   Shield, Info, ArrowLeft, Loader2, Image as ImageIcon, Trash2, RefreshCw,
   Lightbulb, Ban, ShoppingBag, Heart, Gift,
 } from 'lucide-react'
@@ -1080,7 +1080,7 @@ export default function SellPage() {
               <p className="text-white/50 text-xs">Sell to your campus community</p>
             </div>
             <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
-              {CatIcon ? <CatIcon className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} /> : <Sparkles className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} />}
+              {CatIcon ? <CatIcon className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} /> : <Crown className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} />}
               <span className="text-[11px] font-semibold text-white/80">5% platform fee</span>
             </div>
           </div>

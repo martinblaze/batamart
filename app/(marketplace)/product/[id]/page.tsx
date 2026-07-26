@@ -11,7 +11,7 @@ import {
   MapPin, Clock, CheckCircle, AlertCircle, Store, Award,
   MessageCircle, ThumbsUp, Camera, Tag, ArrowRight, Flame,
   BadgeCheck, Info, RefreshCw, ChevronDown, ChevronUp,
-  StarHalf, Users, TrendingUp, Sparkles, Loader2,
+  StarHalf, Users, TrendingUp, Crown, Loader2,
   CheckCircle2, Flag, X,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/cart-store'
@@ -1187,7 +1187,7 @@ export default function ProductDetailPage() {
             {(variantKeys.length > 0 || specAttributes.length > 0) && (
               <div id="variant-selector" className="bg-white rounded-2xl p-4 ring-1 ring-border space-y-4">
                 <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Crown className="w-4 h-4 text-primary" />
                   Options & Specs
                 </h3>
                 {variantKeys.length > 0 && (
@@ -1319,7 +1319,7 @@ export default function ProductDetailPage() {
                   onClick={() => setNoteToSeller(noteSuggestionText)}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/15 rounded-full px-3 py-1.5 transition-colors"
                 >
-                  <Sparkles className="w-3 h-3" /> {noteSuggestionText}
+                  <Crown className="w-3 h-3" /> {noteSuggestionText}
                 </button>
               )}
               <textarea
@@ -1483,7 +1483,7 @@ export default function ProductDetailPage() {
                 {variantKeys.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-ink-secondary mb-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Available Options
+                      <Crown className="w-3 h-3" /> Available Options
                     </p>
                     <div className="space-y-2">
                       {variantKeys.map(key => {

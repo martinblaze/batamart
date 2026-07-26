@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowUpDown, ChevronLeft, Filter, Grid2x2, List, Loader2, MapPin, Search, SlidersHorizontal, Sparkles, Star, X } from 'lucide-react'
+import { ArrowUpDown, ChevronLeft, Filter, Grid2x2, List, Loader2, MapPin, Search, SlidersHorizontal, Crown, Star, X } from 'lucide-react'
 import { CATEGORY_TREE } from '@/lib/variants'
 import { getCategoryIcon } from '@/lib/category-icons'
 import { authFetch } from '@/lib/auth-client'
@@ -515,7 +515,7 @@ function SearchPage() {
             ) : products.length === 0 ? (
               <div className="mt-4 space-y-4">
                 <div className="rounded-3xl border border-dashed border-border bg-white p-8 text-center shadow-soft"><div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface"><Search className="h-8 w-8 text-ink-muted" /></div><h2 className="text-xl font-semibold text-ink">No results for &quot;{query || 'your search'}&quot;</h2><p className="mx-auto mt-2 max-w-lg text-sm text-ink-secondary">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-4"><button onClick={() => { setQuery(suggestion); setQueryDraft(suggestion); setPage(1) }} className="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-soft shadow-soft">Did you mean {suggestion}?</button></div>}<div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="rounded-2xl bg-surface px-4 py-2.5 text-sm font-semibold text-ink-secondary">Broaden search</button><Link href="/marketplace" className="rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary">Browse marketplace</Link></div></div>
-                {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink"><Sparkles className="h-4 w-4 text-primary" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={index < 2} />))}</div></div>}
+                {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink"><Crown className="h-4 w-4 text-primary" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={index < 2} />))}</div></div>}
               </div>
             ) : (
               <>

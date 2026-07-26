@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Heart, Sparkles, X, ArrowRight, Gift } from 'lucide-react'
+import { Heart, Crown, X, ArrowRight, Gift } from 'lucide-react'
 import { CAMPAIGNS, isCampaignWindowOpen } from '@/lib/campaigns'
 import { isSplashPending } from '@/components/SplashScreen'
 
@@ -91,8 +91,8 @@ export default function GirlfriendsDayIntro() {
         <div className="relative h-36 overflow-hidden bg-gradient-to-br from-rose-500 via-rose-500 to-pink-600">
           <Heart className="pointer-events-none absolute -top-2 left-[10%] h-8 w-8 text-white/15 animate-float-slow" fill="currentColor" strokeWidth={0} />
           <Heart className="pointer-events-none absolute top-4 right-[14%] h-10 w-10 text-white/15 animate-float-slower" fill="currentColor" strokeWidth={0} />
-          <Sparkles className="pointer-events-none absolute bottom-3 left-[22%] h-4 w-4 text-white/25 animate-pulse-slow" />
-          <Sparkles className="pointer-events-none absolute top-6 right-[30%] h-3.5 w-3.5 text-white/25 animate-pulse-slow" />
+          <Crown className="pointer-events-none absolute bottom-3 left-[22%] h-4 w-4 text-white/25 animate-pulse-slow" />
+          <Crown className="pointer-events-none absolute top-6 right-[30%] h-3.5 w-3.5 text-white/25 animate-pulse-slow" />
 
           <button
             onClick={close}
