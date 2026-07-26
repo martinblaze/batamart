@@ -13,7 +13,6 @@ import {
   Search,
   Shield,
   ShoppingBag,
-  Sparkles,
   Star,
   TrendingUp,
   Flame,
@@ -60,6 +59,7 @@ function ProductCard({
     categoryKey: string | null
     subcategory: string | null
     subcategoryKey: string | null
+    landmark: string
     deliveryEstimate: string | null
     avgRating: number
     totalReviews: number
@@ -151,6 +151,12 @@ function ProductCard({
             <Package className="h-3 w-3" />
             {product.viewCount} views
           </span>
+          {product.landmark && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-1 text-[10px] font-semibold text-ink-secondary">
+              <MapPin className="h-3 w-3" />
+              {product.landmark}
+            </span>
+          )}
           {product.deliveryEstimate && (
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
               <Clock3 className="h-3 w-3" />
@@ -210,6 +216,7 @@ export default async function SellerProductsPage({
           categoryKey: true,
           subcategory: true,
           subcategoryKey: true,
+          landmark: true,
           deliveryEstimate: true,
           avgRating: true,
           totalReviews: true,
@@ -261,111 +268,72 @@ export default async function SellerProductsPage({
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="relative overflow-hidden bg-primary">
-        <div className="absolute -top-12 -right-12 h-56 w-56 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-14">
-          <div className="flex items-center gap-2 text-sm text-white/45">
-            <Link href="/seller" className="font-semibold hover:text-white/80 transition">
+      <div className="border-b border-border bg-white">
+        <div className="mx-auto max-w-6xl px-4 pb-6 pt-4 sm:px-6">
+          <div className="flex items-center gap-2 text-xs text-ink-muted">
+            <Link href="/seller" className="font-semibold hover:text-primary transition">
               Sellers
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <Link href={`/seller/${seller.id}`} className="font-semibold hover:text-white/80 transition">
+            <Link href={`/seller/${seller.id}`} className="font-semibold hover:text-primary transition">
               {seller.name}
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <span className="font-semibold text-white/75">Products</span>
+            <span className="font-semibold text-ink-secondary">Products</span>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <div className="flex gap-4">
-              <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-3xl border border-white/15 bg-white/10 shadow-soft">
-                {seller.profilePhoto ? (
-                  <img src={seller.profilePhoto} alt={seller.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-white/80">
-                    {seller.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
+          <div className="mt-4 flex gap-4">
+            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-primary">
+              {seller.profilePhoto ? (
+                <img src={seller.profilePhoto} alt={seller.name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl font-semibold text-white">
+                  {seller.name?.[0]?.toUpperCase() || '?'}
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{seller.name}</h1>
+                <TrustPill level={seller.trustLevel} />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-3xl font-semibold text-white sm:text-4xl">{seller.name}</h1>
-                  <TrustPill level={seller.trustLevel} />
-                </div>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
-                  Full product catalog for this seller. Browse active listings, compare prices, and open any product for the normal BataMart purchase flow.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/60">
-                  {seller.university?.shortName && (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {seller.university.shortName}
-                    </span>
-                  )}
+              <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-secondary">
+                {seller.landmark && (
                   <span className="inline-flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-warning text-warning" />
-                    {Number(seller.avgRating || 0).toFixed(1)} rating
+                    <MapPin className="h-3.5 w-3.5 text-ink-muted" />
+                    {seller.landmark}
                   </span>
-                  <span className="inline-flex items-center gap-1">
-                    <ShoppingBag className="h-3 w-3" />
-                    {sellThrough} completed orders
-                  </span>
-                </div>
+                )}
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                  {Number(seller.avgRating || 0).toFixed(1)} rating ({seller.totalReviews || 0})
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <ShoppingBag className="h-3.5 w-3.5 text-ink-muted" />
+                  {sellThrough} completed orders
+                </span>
               </div>
             </div>
+          </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-semibold tabular-nums">{activeProducts}</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Active products</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-semibold tabular-nums">{lowStock}</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Low stock</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4 text-white backdrop-blur-sm">
-                <p className="text-2xl font-semibold tabular-nums">{seller.totalReviews || 0}</p>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Reviews</p>
-              </div>
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Package className="h-4 w-4" /></div>
+              <div className="leading-tight"><p className="text-sm font-semibold text-ink tabular-nums">{activeProducts}</p><p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Listings</p></div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning"><TrendingUp className="h-4 w-4" /></div>
+              <div className="leading-tight"><p className="text-sm font-semibold text-ink tabular-nums">{lowStock}</p><p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Low stock</p></div>
+            </div>
+            <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface px-3.5 py-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-success/10 text-success"><BadgeCheck className="h-4 w-4" /></div>
+              <div className="leading-tight"><p className="text-sm font-semibold text-ink tabular-nums">{seller.totalReviews || 0}</p><p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Reviews</p></div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-              <Package className="w-5 h-5" />
-            </div>
-            <p className="text-2xl font-semibold text-ink">{activeProducts}</p>
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Listings</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success mb-3">
-              <BadgeCheck className="w-5 h-5" />
-            </div>
-            <p className="text-2xl font-semibold text-ink">{seller.avgRating.toFixed(1)}</p>
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Seller rating</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning mb-3">
-              <TrendingUp className="w-5 h-5" />
-            </div>
-            <p className="text-2xl font-semibold text-ink">{sellThrough}</p>
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Completed orders</p>
-          </div>
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-3">
-              
-            </div>
-            <p className="text-2xl font-semibold text-ink">{seller.totalReviews || 0}</p>
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-secondary mt-0.5">Buyer reviews</p>
-          </div>
-        </div>
-
         <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
           <aside className="space-y-4">
             <div className="rounded-3xl border border-border bg-white p-5 shadow-soft">

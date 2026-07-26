@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const limit = Math.max(50, Math.min(100, Number(searchParams.get('limit') || 100)))
+    const zone = (searchParams.get('zone') || '').trim()
 
     const categoriesFallback = parseList(searchParams, 'categories', 'viewed')
     const keywordsFallback = parseList(searchParams, 'keywords', 'searched')
@@ -125,6 +126,7 @@ export async function GET(request: NextRequest) {
         quantity: { gt: 0 },
         isDeleted: false,
         universityId: user.universityId,
+        ...(zone ? { landmark: { equals: zone, mode: 'insensitive' } } : {}),
       },
       select: {
         id: true,
@@ -137,6 +139,7 @@ export async function GET(request: NextRequest) {
         sellerId: true,
         quantity: true,
         images: true,
+        landmark: true,
         viewCount: true,
         createdAt: true,
         isHot: true,

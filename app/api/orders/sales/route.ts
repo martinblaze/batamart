@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
             name: true,
             images: true,
             price: true,
+            landmark: true,
           },
         },
         items: {

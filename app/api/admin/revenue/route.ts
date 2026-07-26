@@ -54,7 +54,13 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       prisma.order.findMany({
         where: { status: 'COMPLETED', ...uniFilter },
-        select: { totalAmount: true, platformCommission: true, deliveryFee: true },
+        select: {
+          totalAmount: true,
+          platformCommission: true,
+          deliveryFee: true,
+          deliveryLandmark: true,
+          product: { select: { landmark: true } },
+        },
       }),
       prisma.order.findMany({
         where: { status: 'COMPLETED', createdAt: { gte: thisMonthStart }, ...uniFilter },
@@ -100,6 +106,27 @@ export async function GET(req: NextRequest) {
       count: orders.length,
       flutterwaveFees: orders.reduce((s, o) => s + feeForOrder(o.totalAmount || 0), 0),
     })
+
+    // ── Top delivery routes by volume/revenue ───────────────────────────────
+    // Pickup zone = seller's product.landmark, dropoff zone = buyer's
+    // order.deliveryLandmark. Unordered pair (A↔B) since routes are
+    // bidirectional — see lib/delivery/pricing.ts.
+    const routeStats = new Map<string, { zoneA: string; zoneB: string; count: number; totalDeliveryFee: number; riderTotal: number }>()
+    for (const order of allCompletedOrders as any[]) {
+      const pickup = order.product?.landmark?.trim()
+      const dropoff = order.deliveryLandmark?.trim()
+      if (!pickup || !dropoff) continue
+      const [zoneA, zoneB] = [pickup, dropoff].sort()
+      const key = `${zoneA}|${zoneB}`
+      const existing = routeStats.get(key) || { zoneA, zoneB, count: 0, totalDeliveryFee: 0, riderTotal: 0 }
+      existing.count += 1
+      existing.totalDeliveryFee += order.deliveryFee || 0
+      existing.riderTotal += Math.round((order.deliveryFee || 0) * 0.7)
+      routeStats.set(key, existing)
+    }
+    const topRoutes = Array.from(routeStats.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
 
     const allTime = sumOrders(allCompletedOrders)
     const thisMonth = sumOrders(thisMonthCompletedOrders)
@@ -206,6 +233,7 @@ export async function GET(req: NextRequest) {
           totalPaidOut: referralPaidOut,
           totalRewards: referralStats._count,
         },
+        topRoutes,
         withdrawal: {
           safeToWithdraw,
           flutterwaveHeldApprox,

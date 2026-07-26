@@ -1,7 +1,7 @@
 'use client'
 
 import LoadedImage from '@/components/LoadedImage'
-import { BadgeCheck, Flame, Star, Truck } from 'lucide-react'
+import { BadgeCheck, Flame, MapPin, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 
 type ProductCardProduct = {
@@ -14,6 +14,7 @@ type ProductCardProduct = {
   isNew?: boolean
   isDeal?: boolean
   deliveryEstimate?: string | null
+  landmark?: string | null
   seller?: { id?: string; name?: string; trustLevel?: string; avgRating?: number }
   avgRating?: number
   totalReviews?: number
@@ -87,6 +88,11 @@ export default function ProductCard({
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
                   <span className="font-medium text-ink-secondary">{product.seller?.name || 'Seller'}</span>
                   <TrustBadge trustLevel={product.seller?.trustLevel} />
+                  {product.landmark && (
+                    <span className="inline-flex items-center gap-1 text-ink-muted">
+                      <MapPin className="h-3 w-3" strokeWidth={1.75} /> {product.landmark}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -137,6 +143,11 @@ export default function ProductCard({
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
             <span className="font-medium text-ink-secondary">{product.seller?.name || 'Seller'}</span>
             <TrustBadge trustLevel={product.seller?.trustLevel} />
+            {product.landmark && (
+              <span className="inline-flex items-center gap-1 text-ink-muted">
+                <MapPin className="h-3 w-3" strokeWidth={1.75} /> {product.landmark}
+              </span>
+            )}
           </div>
         )}
         <div className="mt-2 flex items-center justify-between gap-2">

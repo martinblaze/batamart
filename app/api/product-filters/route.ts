@@ -65,6 +65,7 @@ function getQueryFilters(searchParams: URLSearchParams): Record<string, string[]
       'sellerId',
       'attributes',
       'hostel',
+      'zone',
       'delivery',
     ].includes(key)) continue
 

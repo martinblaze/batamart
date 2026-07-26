@@ -270,6 +270,11 @@ export default function SalesOrdersPage() {
                         <VariantBadges orderNote={order.orderNote} />
                         <div className="mt-3 grid gap-2 text-sm text-ink-secondary">
                           <p className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-0.5 text-ink-muted flex-shrink-0" />{order.deliveryAddress}</p>
+                          {order.product?.landmark && order.deliveryLandmark && (
+                            <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
+                              {order.product.landmark} <ArrowRight className="w-3 h-3" /> {order.deliveryLandmark}
+                            </p>
+                          )}
                           {extraNote && <p className="text-xs text-ink-secondary"><span className="font-semibold text-ink-secondary">Buyer's note:</span> {extraNote}</p>}
                           <p className="text-xs text-ink-muted">
                             {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? "s" : ""}

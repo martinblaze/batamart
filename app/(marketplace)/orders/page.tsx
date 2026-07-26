@@ -18,7 +18,7 @@ import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
 interface ProductReview { id: string; rating: number; comment: string; createdAt: string }
 interface Review { id: string; type: string; rating: number; comment: string | null; createdAt: string }
 interface Seller { id: string; name: string; profilePhoto: string | null; email: string; phone: string; avgRating: number; trustLevel: string }
-interface Product { id: string; name: string; images: string[]; price: number }
+interface Product { id: string; name: string; images: string[]; price: number; landmark?: string }
 interface Rider { id: string; name: string; phone: string | null }
 interface PeopleLikeYouItem {
   key: string
@@ -33,7 +33,7 @@ interface PeopleLikeYouItem {
 }
 interface Order {
   id: string; orderNumber?: string; status: string; totalAmount: number; quantity?: number
-  deliveryAddress: string; createdAt: string; completedAt?: string; isPaid?: boolean
+  deliveryAddress: string; deliveryLandmark?: string; createdAt: string; completedAt?: string; isPaid?: boolean
   orderNote?: string | null
   seller: Seller; product: Product; rider?: Rider; reviews?: Review[]; productReviews?: ProductReview[]
 }
@@ -385,6 +385,13 @@ export default function OrdersPage() {
                       <MapPin className="w-4 h-4 text-ink-muted flex-shrink-0 mt-0.5" />
                       <span className="font-medium">{order.deliveryAddress || 'Not specified'}</span>
                     </div>
+                    {order.product?.landmark && order.deliveryLandmark && (
+                      <div className="flex items-center gap-2 text-xs text-ink-muted">
+                        <span className="inline-flex items-center gap-1 font-semibold">
+                          {order.product.landmark} <ArrowRight className="w-3 h-3" /> {order.deliveryLandmark}
+                        </span>
+                      </div>
+                    )}
                     {order.rider && (
                       <div className="flex items-center gap-2 text-sm text-ink-secondary">
                         <Bike className="w-4 h-4 text-ink-muted flex-shrink-0" />

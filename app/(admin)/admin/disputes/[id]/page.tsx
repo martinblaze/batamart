@@ -140,6 +140,8 @@ export default function AdminDisputeDetailPage() {
   const orderTotal = dispute.order?.totalAmount || 0
   const processingFee = Math.round(orderTotal * PROCESSING_FEE * 100) / 100
   const netRefund = Math.round((orderTotal - processingFee) * 100) / 100
+  // Rider always gets 70% of that order's zone-priced delivery fee — see lib/delivery/commission.ts.
+  const riderPickupPay = Math.round((dispute.order?.deliveryFee || 0) * 0.7)
   const isFullyDone = stage === 'FULLY_DONE' || ['RESOLVED_SELLER_FAVOR', 'DISMISSED'].includes(dispute.status)
 
   const stages = ['INITIAL', 'RIDER_SENT', 'ITEM_RECEIVED', 'REFUND_RELEASED', 'FULLY_DONE']
@@ -219,7 +221,7 @@ export default function AdminDisputeDetailPage() {
             <span>Buyer receives</span><span>₦{netRefund.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-primary">
-            <span>Rider pickup pay</span><span>₦560</span>
+            <span>Rider pickup pay</span><span>₦{riderPickupPay.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -277,7 +279,7 @@ export default function AdminDisputeDetailPage() {
                       <p className="text-ink font-semibold">Send original rider to collect item</p>
                       <p className="text-ink-secondary text-sm mt-1">
                         <span className="text-primary font-medium">{rider.name}</span> ({rider.phone}) will
-                        receive a notification to go back to the buyer and collect the item. They'll earn ₦560 once confirmed.
+                        receive a notification to go back to the buyer and collect the item. They'll earn ₦{riderPickupPay.toLocaleString()} once confirmed.
                       </p>
                     </div>
                   </div>
@@ -395,7 +397,7 @@ export default function AdminDisputeDetailPage() {
                       Release Rider Pickup Pay
                     </p>
                     <p className="text-ink-secondary text-sm mt-1">
-                      ₦560 → {rider?.name}'s wallet
+                      ₦{riderPickupPay.toLocaleString()} → {rider?.name}'s wallet
                     </p>
                   </div>
                   <button
@@ -405,7 +407,7 @@ export default function AdminDisputeDetailPage() {
                   >
                     {actionLoading === 'release_rider_pay'
                       ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : 'Release ₦560'
+                      : `Release ₦${riderPickupPay.toLocaleString()}`
                     }
                   </button>
                 </div>

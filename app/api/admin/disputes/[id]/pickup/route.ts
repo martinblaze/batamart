@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
+import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
 
 async function getAdminFromToken(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -43,6 +44,8 @@ export async function POST(
         }, { status: 400 })
       }
 
+      const returnPay = Math.round(dispute.order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
+
       await prisma.$transaction(async (tx) => {
         await tx.notification.create({
           data: {
@@ -52,7 +55,7 @@ export async function POST(
             message: `Please collect disputed item for Order #${dispute.order.orderNumber} and return to seller.`,
             orderId: dispute.orderId,
             disputeId,
-            metadata: { action: 'DISPUTE_PICKUP', riderPay: 560 },
+            metadata: { action: 'DISPUTE_PICKUP', riderPay: returnPay },
           },
         })
 
@@ -98,7 +101,7 @@ export async function POST(
       const rider = dispute.order.rider
       if (!rider) return NextResponse.json({ error: 'No rider on this order' }, { status: 400 })
 
-      const riderPay = 560
+      const riderPay = Math.round(dispute.order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
 
       await prisma.$transaction(async (tx) => {
         const riderRecord = await tx.user.findUnique({

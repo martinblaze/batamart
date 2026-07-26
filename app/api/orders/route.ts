@@ -20,10 +20,11 @@ export async function GET(request: NextRequest) {
       include: {
         product: {
           select: {
-            id:     true,
-            name:   true,
-            images: true,
-            price:  true,
+            id:       true,
+            name:     true,
+            images:   true,
+            price:    true,
+            landmark: true,
           },
         },
         seller: {

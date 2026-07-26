@@ -32,6 +32,7 @@ import {
   Loader2,
   Navigation,
   Route,
+  ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -567,6 +568,15 @@ export default function OrderDetailPage() {
                   <div>
                     <p className="text-sm text-ink-secondary">Landmark</p>
                     <p className="font-medium">{order.deliveryLandmark}</p>
+                  </div>
+                )}
+                {order.product?.landmark && order.deliveryLandmark && (
+                  <div>
+                    <p className="text-sm text-ink-secondary">Delivery Route</p>
+                    <p className="font-medium inline-flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-ink-muted" />
+                      {order.product.landmark} <ArrowRight className="w-3.5 h-3.5 text-ink-muted" /> {order.deliveryLandmark}
+                    </p>
                   </div>
                 )}
                 <div>

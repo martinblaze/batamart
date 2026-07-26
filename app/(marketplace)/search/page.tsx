@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowUpDown, ChevronLeft, Filter, Grid2x2, List, Loader2, Search, SlidersHorizontal, Sparkles, Star, X } from 'lucide-react'
+import { ArrowUpDown, ChevronLeft, Filter, Grid2x2, List, Loader2, MapPin, Search, SlidersHorizontal, Sparkles, Star, X } from 'lucide-react'
 import { CATEGORY_TREE } from '@/lib/variants'
 import { getCategoryIcon } from '@/lib/category-icons'
 import { authFetch } from '@/lib/auth-client'
@@ -25,6 +25,7 @@ type Product = {
   isNew?: boolean
   isDeal?: boolean
   deliveryEstimate?: string | null
+  landmark?: string | null
   avgRating?: number
   totalReviews?: number
   quantity?: number
@@ -53,6 +54,7 @@ type SearchState = {
   minRating: number
   inStockOnly: boolean
   deliveryFast: boolean
+  zone: string
   sortBy: string
   page: number
   viewMode: 'grid' | 'list'
@@ -98,7 +100,7 @@ function didYouMean(query: string) {
 
 function parseArrayParams(params: URLSearchParams): Record<string, string[]> {
   const out: Record<string, string[]> = {}
-  const skip = new Set(['q', 'search', 'categoryKey', 'category', 'subcategoryKey', 'sub', 'sellerId', 'page', 'limit', 'sort', 'sortBy', 'minPrice', 'maxPrice', 'minRating', 'rating', 'inStock', 'delivery', 'view', 'attributes', 'hostel', 'fastDelivery'])
+  const skip = new Set(['q', 'search', 'categoryKey', 'category', 'subcategoryKey', 'sub', 'sellerId', 'page', 'limit', 'sort', 'sortBy', 'minPrice', 'maxPrice', 'minRating', 'rating', 'inStock', 'delivery', 'view', 'attributes', 'hostel', 'zone', 'fastDelivery'])
   const raw = params.get('attributes')
   if (raw) {
     try {
@@ -127,6 +129,7 @@ function stateFromParams(params: URLSearchParams): SearchState {
     minRating: Number(params.get('minRating') || params.get('rating') || '0') || 0,
     inStockOnly: (params.get('inStock') || '').toLowerCase() === 'true',
     deliveryFast: (params.get('delivery') || '').toLowerCase() === 'fast',
+    zone: params.get('zone') || '',
     sortBy: params.get('sortBy') || params.get('sort') || 'relevance',
     page: Math.max(1, Number(params.get('page') || '1') || 1),
     viewMode: params.get('view') === 'list' ? 'list' : 'grid',
@@ -144,6 +147,7 @@ function buildParams(state: SearchState) {
   if (state.minRating > 0) params.set('minRating', String(state.minRating))
   if (state.inStockOnly) params.set('inStock', 'true')
   if (state.deliveryFast) params.set('delivery', 'fast')
+  if (state.zone) params.set('zone', state.zone)
   if (state.sortBy !== 'relevance') params.set('sortBy', state.sortBy)
   if (state.page > 1) params.set('page', String(state.page))
   if (state.viewMode === 'list') params.set('view', 'list')
@@ -151,8 +155,8 @@ function buildParams(state: SearchState) {
   return params
 }
 
-function countActive(filters: Record<string, string[]>, priceRange: [number, number], bounds: { min: number; max: number }, minRating: number, inStockOnly: boolean, deliveryFast: boolean) {
-  return Object.values(filters).filter((arr) => arr.length > 0).length + (priceRange[0] > bounds.min || priceRange[1] < bounds.max ? 1 : 0) + (minRating > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (deliveryFast ? 1 : 0)
+function countActive(filters: Record<string, string[]>, priceRange: [number, number], bounds: { min: number; max: number }, minRating: number, inStockOnly: boolean, deliveryFast: boolean, zone: string) {
+  return Object.values(filters).filter((arr) => arr.length > 0).length + (priceRange[0] > bounds.min || priceRange[1] < bounds.max ? 1 : 0) + (minRating > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (deliveryFast ? 1 : 0) + (zone ? 1 : 0)
 }
 
 function SkeletonCard() { return <div className="h-[360px] animate-pulse rounded-3xl bg-surface" /> }
@@ -191,6 +195,8 @@ function SearchPage() {
   const [minRating, setMinRating] = useState(parsed.minRating)
   const [inStockOnly, setInStockOnly] = useState(parsed.inStockOnly)
   const [deliveryFast, setDeliveryFast] = useState(parsed.deliveryFast)
+  const [zone, setZone] = useState(parsed.zone)
+  const [availableZones, setAvailableZones] = useState<string[]>([])
   const [sortBy, setSortBy] = useState(parsed.sortBy)
   const [page, setPage] = useState(parsed.page)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(parsed.viewMode)
@@ -216,9 +222,9 @@ function SearchPage() {
     const countMap = new Map((live?.options || []).map((o) => [o.value, o.count]))
     return CONDITION_OPTIONS.map((opt) => ({ value: opt.value, count: countMap.get(opt.value) ?? 0 }))
   }, [availableFilters])
-  const activeCount = countActive(filters, [minPrice, maxPrice], priceBounds, minRating, inStockOnly, deliveryFast)
+  const activeCount = countActive(filters, [minPrice, maxPrice], priceBounds, minRating, inStockOnly, deliveryFast, zone)
   const suggestion = didYouMean(query)
-  const filterPayload = useMemo(() => buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode }), [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode])
+  const filterPayload = useMemo(() => buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode }), [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode])
 
   useEffect(() => {
     if (searchParamsString === lastUrlRef.current) return
@@ -232,18 +238,19 @@ function SearchPage() {
     setMinRating(parsed.minRating)
     setInStockOnly(parsed.inStockOnly)
     setDeliveryFast(parsed.deliveryFast)
+    setZone(parsed.zone)
     setSortBy(parsed.sortBy)
     setPage(parsed.page)
     setViewMode(parsed.viewMode)
   }, [searchParamsString, parsed])
 
   useEffect(() => {
-    const next = buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode })
+    const next = buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode })
     const nextString = next.toString()
     if (nextString === searchParamsString) return
     lastUrlRef.current = nextString
     router.replace(`${pathname}${nextString ? `?${nextString}` : ''}`, { scroll: false })
-  }, [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, sortBy, page, viewMode])
+  }, [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode])
 
   useEffect(() => {
     const loadBounds = async () => {
@@ -274,6 +281,24 @@ function SearchPage() {
       }
     }
     loadTop()
+  }, [])
+
+  useEffect(() => {
+    const loadZones = async () => {
+      try {
+        const meRes = await authFetch('/api/auth/me')
+        const meData = await meRes.json()
+        const universityId = meData?.user?.universityId
+        if (!universityId) return
+        const uniRes = await fetch('/api/universities')
+        const uniData = await uniRes.json()
+        const uni = (uniData.universities || []).find((u: any) => u.id === universityId)
+        setAvailableZones(Array.isArray(uni?.deliveryAreas) ? uni.deliveryAreas : [])
+      } catch {
+        setAvailableZones([])
+      }
+    }
+    loadZones()
   }, [])
 
   useEffect(() => {
@@ -325,6 +350,7 @@ function SearchPage() {
     setMinRating(0)
     setInStockOnly(false)
     setDeliveryFast(false)
+    setZone('')
     setSortBy('relevance')
     setPage(1)
   }
@@ -396,6 +422,22 @@ function SearchPage() {
             <span><span className="block text-sm font-semibold text-ink">Fast delivery</span><span className="block text-xs text-ink-muted">Prioritize quicker delivery estimates</span></span>
             <input type="checkbox" checked={deliveryFast} onChange={(e) => { setDeliveryFast(e.target.checked); setPage(1) }} className="h-5 w-5 rounded border-border text-primary" />
           </label>
+
+          {availableZones.length > 0 && (
+            <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink"><MapPin className="h-4 w-4 text-ink-muted" /> Delivery zone</h3>
+                {zone && <button onClick={() => { setZone(''); setPage(1) }} className="text-xs font-semibold text-primary hover:underline">Clear</button>}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {availableZones.map((z) => (
+                  <button key={z} type="button" onClick={() => { setZone((current) => (current === z ? '' : z)); setPage(1) }} className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${zone === z ? 'bg-primary text-white' : 'bg-surface text-ink-secondary hover:bg-border'}`}>
+                    {z}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {dynamicFilters.length > 0 && <div className="space-y-3"><p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">More filters</p>{dynamicFilters.map((filter) => (<FilterGroup key={filter.key} title={filter.label} options={filter.options} selectedValues={filters[filter.key] || filter.selectedValues || []} onChange={(value) => toggleFilterValue(filter.key, value)} />))}</div>}
         </div>

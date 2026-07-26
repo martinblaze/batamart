@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,9 +71,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const returnPay = Math.round(order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
+
     return NextResponse.json({
       success: true,
-      message: 'Marked as collected. Return the item to complete and earn your ₦560.',
+      message: `Marked as collected. Return the item to complete and earn your ₦${returnPay.toLocaleString()}.`,
       order: updatedOrder,
     })
   } catch (error) {

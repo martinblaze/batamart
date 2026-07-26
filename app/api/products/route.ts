@@ -313,7 +313,7 @@ function parseMultiValueParams(searchParams: URLSearchParams): Record<string, st
   for (const [key, value] of searchParams.entries()) {
     const cleanKey = key.endsWith('[]') ? key.slice(0, -2) : key
     if ([
-      'category', 'categoryKey', 'subcategory', 'subcategoryKey', 'hostel', 'search', 'q',
+      'category', 'categoryKey', 'subcategory', 'subcategoryKey', 'hostel', 'zone', 'search', 'q',
       'minPrice', 'maxPrice', 'minRating', 'sort', 'sortBy', 'page', 'limit', 'attributes',
       'sellerId', 'inStock', 'delivery', 'fastDelivery', 'priceDisplay'
     ].includes(cleanKey)) continue
@@ -450,6 +450,7 @@ export async function GET(request: NextRequest) {
     const subcategoryKey = resolveSubcategoryKey(categoryKey, requestedSubcategoryKey)
     const sellerId = searchParams.get('sellerId') || ''
     const hostel = searchParams.get('hostel') || ''
+    const zone = searchParams.get('zone') || ''
     const q = (searchParams.get('q') || searchParams.get('search') || '').trim()
     const sortBy = (searchParams.get('sortBy') || searchParams.get('sort') || 'relevance').toLowerCase()
     const minPrice = searchParams.get('minPrice')
@@ -500,6 +501,7 @@ export async function GET(request: NextRequest) {
       ]
     }
     if (hostel && hostel !== 'All') where.hostelName = { contains: hostel, mode: 'insensitive' }
+    if (zone && zone !== 'All') where.landmark = { equals: zone, mode: 'insensitive' }
 
     if (minPrice || maxPrice) {
       where.price = {}

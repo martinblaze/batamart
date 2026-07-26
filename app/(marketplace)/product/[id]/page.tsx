@@ -1443,6 +1443,11 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-2 mt-0.5">
                   <StarRow rating={product.seller.avgRating || 0} />
                   <span className="text-[11px] text-ink-secondary">{product.seller.completedOrders || 0} orders</span>
+                  {(product as any).landmark && (
+                    <span className="inline-flex items-center gap-0.5 text-[11px] text-ink-secondary">
+                      <MapPin className="w-3 h-3" /> {(product as any).landmark}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1 text-primary group-hover:translate-x-0.5 transition-transform">

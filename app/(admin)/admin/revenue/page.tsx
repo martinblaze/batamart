@@ -62,6 +62,7 @@ export default function RevenuePage() {
   const withdrawal  = revenue?.withdrawal    || {}
   const referrals   = revenue?.referrals     || {}
   const topSellers  = revenue?.topSellers    || []
+  const topRoutes   = revenue?.topRoutes     || []
   const breakdown   = withdrawal.breakdown   || {}
 
   return (
@@ -245,6 +246,33 @@ export default function RevenuePage() {
           </div>
         </div>
       )}
+
+      {/* ── Top Delivery Routes ── */}
+      {topRoutes.length > 0 && (
+        <div className="bg-white border border-border rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-ink mb-1 flex items-center gap-2">
+            <Truck className="w-5 h-5 text-primary" /> Top Delivery Routes
+          </h3>
+          <p className="text-ink-secondary text-xs mb-4">By completed order volume, all-time</p>
+          <div className="space-y-3">
+            {topRoutes.map((route: any, i: number) => (
+              <div key={i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-ink-muted text-sm w-5">{i + 1}</span>
+                  <div>
+                    <p className="text-ink text-sm font-medium">{route.zoneA} ↔ {route.zoneB}</p>
+                    <p className="text-ink-secondary text-xs">{route.count} deliver{route.count === 1 ? 'y' : 'ies'}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-ink text-sm font-semibold">₦{(route.totalDeliveryFee || 0).toLocaleString()}</p>
+                  <p className="text-ink-secondary text-xs">₦{(route.riderTotal || 0).toLocaleString()} to riders</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
-} 
+}

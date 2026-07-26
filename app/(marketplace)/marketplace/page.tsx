@@ -21,7 +21,7 @@ import {
   Building2, Rocket, Tablet, Footprints, BatteryCharging, GraduationCap,
   RotateCcw, ClipboardList, Calculator, Ruler, FlaskConical, Usb, Plug,
   PenTool, Lock, Tv, type LucideIcon,
-  CrownIcon,
+  CrownIcon, MapPin,
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 
@@ -593,6 +593,11 @@ function ProductCard({ product, onClick, delay = 0 }: {
               {product.seller?.name}
             </Link>
             <VerifiedBadge />
+            {product.landmark && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-ink-muted">
+                <MapPin className="w-2.5 h-2.5" strokeWidth={1.75} /> {product.landmark}
+              </span>
+            )}
           </div>
           <TrustPill level={product.seller?.trustLevel || 'BRONZE'} />
         </div>
@@ -1610,6 +1615,8 @@ export default function MarketplacePage() {
   const [renderSeed,          setRenderSeed]          = useState(() => Date.now())
   const [maxPriceFilter,      setMaxPriceFilter]      = useState<number | null>(null)
   const [sortMode,            setSortMode]            = useState<'relevance' | 'price_asc' | 'price_desc' | 'newest'>('relevance')
+  const [selectedZone,        setSelectedZone]        = useState<string>('')
+  const [availableZones,      setAvailableZones]      = useState<string[]>([])
 
   // ── Referral popup — shows once per app session, only on first marketplace visit ──
   const [showReferralPopup, setShowReferralPopup] = useState(false)
@@ -1696,6 +1703,19 @@ export default function MarketplacePage() {
     if (selectedCategory === 'All' && !universityId) return
     if (selectedCategory === 'All') { setMaxPriceFilter(null); fetchFeed() } else { fetchByCategory(selectedCategory) }
   }, [selectedCategory, mounted, universityId])
+
+  // ── Delivery zones for the location filter — same picklist used at signup/sell ──
+  useEffect(() => {
+    if (!universityId) return
+    fetch('/api/universities')
+      .then(r => r.json())
+      .then(d => {
+        const uni = (d.universities || []).find((u: any) => u.id === universityId)
+        const areas = Array.isArray(uni?.deliveryAreas) ? uni.deliveryAreas : []
+        setAvailableZones(areas)
+      })
+      .catch(() => {})
+  }, [universityId])
 
   // ── Filter recently viewed to remove suspended/deleted products ──
   useEffect(() => {
@@ -2026,30 +2046,38 @@ export default function MarketplacePage() {
   }
 
   // ── Derived data ──
-  const forYouProducts = useMemo(() => allProducts.filter(p => p.isPersonalised).slice(0, 12), [allProducts])
+  // Zone filter applies before everything else derived from allProducts, so
+  // every section (hot deals, new listings, for you, discover, category rows)
+  // respects the buyer's chosen delivery zone.
+  const zoneFilteredProducts = useMemo(() => {
+    if (!selectedZone) return allProducts
+    return allProducts.filter(p => (p.landmark || '').toLowerCase() === selectedZone.toLowerCase())
+  }, [allProducts, selectedZone])
+
+  const forYouProducts = useMemo(() => zoneFilteredProducts.filter(p => p.isPersonalised).slice(0, 12), [zoneFilteredProducts])
   // Hot Deals — powered by confirmed campus sales + view signals
   const hotDeals = useMemo(() => {
-    return allProducts
+    return zoneFilteredProducts
       .filter(p => p.isHot)
       .sort((a, b) => {
         return (b.discountPercent || 0) - (a.discountPercent || 0) || (b.viewCount || 0) - (a.viewCount || 0)
       })
-  }, [allProducts])
+  }, [zoneFilteredProducts])
   const trendingProducts = hotDeals.slice(0, 12)
-  const newListings = useMemo(() => allProducts.filter(p => p.isNew), [allProducts])
+  const newListings = useMemo(() => zoneFilteredProducts.filter(p => p.isNew), [zoneFilteredProducts])
   const discoverProducts = useMemo(() => {
     const shown = new Set([...forYouProducts, ...trendingProducts, ...newListings].map(p => p.id))
-    const remaining = allProducts.filter(p => !shown.has(p.id))
+    const remaining = zoneFilteredProducts.filter(p => !shown.has(p.id))
     // Always keep an "All Listings" fallback visible even when sections above consume most products.
-    return (remaining.length > 0 ? remaining : allProducts).slice(0, 16)
-  }, [allProducts, forYouProducts, trendingProducts, newListings])
+    return (remaining.length > 0 ? remaining : zoneFilteredProducts).slice(0, 16)
+  }, [zoneFilteredProducts, forYouProducts, trendingProducts, newListings])
 
   const filteredByCategory = useMemo(() => {
     const categoryFilter = selectedCategoryKey || selectedCategory
-    let prods = selectedCategory === 'All' ? allProducts : allProducts.filter((p: any) => matchesCategoryFilter(p, categoryFilter))
+    let prods = selectedCategory === 'All' ? zoneFilteredProducts : zoneFilteredProducts.filter((p: any) => matchesCategoryFilter(p, categoryFilter))
     if (maxPriceFilter !== null) prods = prods.filter(p => p.price <= maxPriceFilter)
     return prods
-  }, [allProducts, selectedCategory, selectedCategoryKey, maxPriceFilter])
+  }, [zoneFilteredProducts, selectedCategory, selectedCategoryKey, maxPriceFilter])
 
   const sortProducts = useCallback((products: any[]) => {
     const next = [...products]
@@ -2060,15 +2088,15 @@ export default function MarketplacePage() {
   }, [sortMode])
 
   const sortedFilteredByCategory = useMemo(() => sortProducts(filteredByCategory), [filteredByCategory, sortProducts])
-  const sortedAllProducts = useMemo(() => sortProducts(allProducts), [allProducts, sortProducts])
+  const sortedAllProducts = useMemo(() => sortProducts(zoneFilteredProducts), [zoneFilteredProducts, sortProducts])
 
   const productsByCategory = useMemo(() => {
     const map: Record<string, any[]> = {}
     for (const cat of CATEGORIES.slice(1)) {
-      map[cat.name] = allProducts.filter((p: any) => matchesCategoryFilter(p, cat.name)).slice(0, 10)
+      map[cat.name] = zoneFilteredProducts.filter((p: any) => matchesCategoryFilter(p, cat.name)).slice(0, 10)
     }
     return map
-  }, [allProducts])
+  }, [zoneFilteredProducts])
 
   if (!splashDone) return <div className="min-h-screen bg-white" />
 
@@ -2199,6 +2227,23 @@ export default function MarketplacePage() {
                 </button>
               ))}
             </div>
+            {availableZones.length > 0 && (
+              <div className="relative flex-shrink-0">
+                <MapPin className="w-3.5 h-3.5 text-ink-muted absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.75} />
+                <select
+                  value={selectedZone}
+                  onChange={e => setSelectedZone(e.target.value)}
+                  className={`text-[11px] font-medium rounded-lg pl-6 pr-2 py-1.5 outline-none border transition-all ${
+                    selectedZone ? 'bg-primary/10 text-primary border-primary/30' : 'bg-surface text-ink-secondary border-transparent'
+                  }`}
+                >
+                  <option value="">All zones</option>
+                  {availableZones.map(zone => (
+                    <option key={zone} value={zone}>{zone}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex items-center gap-0.5 bg-surface rounded-lg p-0.5 flex-shrink-0">
               {(['feed', 'grid'] as const).map(mode => (
                 <button
@@ -2238,6 +2283,12 @@ export default function MarketplacePage() {
                 <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-semibold">
                   <Tag className="w-3 h-3" /> Under {fmt(maxPriceFilter)}
                   <button onClick={() => setMaxPriceFilter(null)} className="ml-1 hover:text-danger"><X className="w-3 h-3" /></button>
+                </span>
+              )}
+              {selectedZone && (
+                <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-semibold">
+                  <MapPin className="w-3 h-3" /> {selectedZone}
+                  <button onClick={() => setSelectedZone('')} className="ml-1 hover:text-danger"><X className="w-3 h-3" /></button>
                 </span>
               )}
               <div className="ml-auto flex items-center gap-2">

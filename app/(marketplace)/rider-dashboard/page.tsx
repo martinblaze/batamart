@@ -5,7 +5,7 @@
 //    • Rider accepts the whole batch at once (one tap).
 //    • Inside My Active Batches, each order has its own status buttons.
 //    • Buyer gets notified PER ORDER as each one is picked up / delivered.
-//    • Rider earns ₦560 per order in the batch.
+//    • Rider earns 70% of each order's zone-priced delivery fee.
 //
 // ── Race condition: accept uses batchId, server returns 409 if already taken.
 // ── Availability revert: optimistic UI rolls back if API fails.
@@ -19,6 +19,12 @@ import {
   CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
+
+// Delivery fees are zone-priced now (not a flat ₦800) — rider always gets 70%
+// of whatever that order's route costs. See lib/delivery/commission.ts.
+const RIDER_SHARE_PERCENT = 0.7
+const riderShareFor = (order: any) => Math.round((order?.deliveryFee || 0) * RIDER_SHARE_PERCENT)
+const batchRiderTotal = (batch: any) => (batch?.orders || []).reduce((sum: number, o: any) => sum + riderShareFor(o), 0)
 
 // ── Inline Toast ──────────────────────────────────────────────────────────────
 function Toast({
@@ -639,9 +645,9 @@ export default function RiderDashboardPage() {
             </div>
             <div className="bg-primary/10 p-3 rounded-xl text-center">
               <p className="text-2xl font-semibold text-primary">
-                ₦{((rider?.completedOrders || 0) * 560).toLocaleString()}
+                ₦{Number(rider?.availableBalance || 0).toLocaleString()}
               </p>
-              <p className="text-xs font-semibold text-primary mt-0.5">Earned</p>
+              <p className="text-xs font-semibold text-primary mt-0.5">Wallet Balance</p>
             </div>
           </div>
 
@@ -704,7 +710,7 @@ export default function RiderDashboardPage() {
               <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
                 Complete this return pickup before accepting new orders.
-                You will earn <strong>₦560</strong> once confirmed.
+                You will earn your delivery share once confirmed.
               </span>
             </div>
 
@@ -722,7 +728,7 @@ export default function RiderDashboardPage() {
                         <p className="font-semibold text-ink mt-0.5">{order.product.name}</p>
                       </div>
                       <span className="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-semibold">
-                        ₦560 on done
+                        ₦{riderShareFor(order).toLocaleString()} on done
                       </span>
                     </div>
 
@@ -862,7 +868,7 @@ export default function RiderDashboardPage() {
                           {deliveredCount}/{totalCount} delivered
                         </span>
                         <p className="text-xs font-semibold text-primary mt-1">
-                          ₦{(totalCount * 560).toLocaleString()} total
+                          ₦{batchRiderTotal(batch).toLocaleString()} total
                         </p>
                       </div>
                     </div>
@@ -1061,7 +1067,7 @@ export default function RiderDashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-success">
-                        ₦{(batch.orders.length * 560).toLocaleString()}
+                        ₦{batchRiderTotal(batch).toLocaleString()}
                       </p>
                       <p className="text-[10px] text-ink-muted">you earn</p>
                     </div>
@@ -1106,7 +1112,7 @@ export default function RiderDashboardPage() {
                           <p className="text-xs font-semibold text-ink truncate">{order.product.name}</p>
                           <p className="text-xs text-ink-muted">
                             From: {order.seller.name}
-                            {order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
+                            {order.product.landmark ? ` · ${order.product.landmark}` : order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
                           </p>
                         </div>
                         {order.status === 'PENDING' ? (
@@ -1141,7 +1147,7 @@ export default function RiderDashboardPage() {
                             : awaitingSeller
                               ? <>Waiting on {pendingCount} seller{pendingCount > 1 ? 's' : ''} to accept</>
                               : <>
-                                  Accept Batch · ₦{(batch.orders.length * 560).toLocaleString()}
+                                  Accept Batch · ₦{batchRiderTotal(batch).toLocaleString()}
                                   <ArrowRight className="w-4 h-4" />
                                 </>
                           }

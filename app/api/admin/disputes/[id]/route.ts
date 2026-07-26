@@ -38,6 +38,7 @@ export async function GET(
             id: true,
             orderNumber: true,
             totalAmount: true,
+            deliveryFee: true,
             product: { select: { name: true, images: true } },
             rider: {
               select: {
