@@ -1,4 +1,5 @@
 ﻿// app/api/products/route.ts
+export const dynamic = 'force-dynamic'
 export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'

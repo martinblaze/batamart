@@ -81,6 +81,7 @@ export default function GirlfriendsDayPage() {
     setLoading(true)
     fetch(`/api/products?campaignTag=${CAMPAIGN.key}&limit=100&sort=newest`, {
       headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
     })
       .then((r) => r.json())
       .then((data) => setProducts(data.products || []))
