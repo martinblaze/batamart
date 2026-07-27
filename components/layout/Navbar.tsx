@@ -415,6 +415,7 @@ function AppBottomNav({
             <Link
               href={sellHref}
               onClick={handleTabPress(sellHref, isActive('/sell') || isActive('/become-seller'))}
+              data-tour="tour-sell-plus"
               className="relative z-10 flex flex-col items-center justify-center -mt-5"
             >
               <div className="w-14 h-14 rounded-full flex items-center justify-center bg-primary shadow-soft transition-transform active:scale-95">
@@ -846,6 +847,7 @@ export function Navbar() {
               <div className="relative ml-2" ref={dropdownRef}>
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  data-tour="tour-user-dropdown"
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-surface transition-all"
                 >
                   <div className="flex flex-col items-end">
@@ -908,7 +910,7 @@ export function Navbar() {
                           <Store className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                         </Link>
                         {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/sell') ? 'bg-primary/10 text-primary' : ''}`}>
+                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} data-tour="tour-desktop-sell" className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/sell') ? 'bg-primary/10 text-primary' : ''}`}>
                             <PlusCircle className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Sell</span>
                           </Link>
                         )}
@@ -961,7 +963,7 @@ export function Navbar() {
             <Link href="/search?focus=1" className="p-2 rounded-lg hover:bg-surface transition-colors" aria-label="Search">
               <Search className="w-5 h-5 text-ink" strokeWidth={1.75} />
             </Link>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 rounded-lg hover:bg-surface transition-colors" aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} data-tour="tour-hamburger" className="p-2 rounded-lg hover:bg-surface transition-colors" aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}>
               {isMenuOpen ? <X className="w-6 h-6 text-ink" strokeWidth={1.75} /> : <Menu className="w-6 h-6 text-ink" strokeWidth={1.75} />}
             </button>
           </div>
@@ -1014,7 +1016,7 @@ export function Navbar() {
                       <Store className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                     </Link>
                     {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/sell') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
+                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} data-tour="tour-hamburger-sell" className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/sell') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
                         <PlusCircle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Sell</span>
                       </Link>
                     )}

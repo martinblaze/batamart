@@ -153,6 +153,9 @@ export default function NotificationsPage() {
   // (same logic as components/layout/NotificationBell.tsx; kept in sync
   // manually since this page renders its own list independently of the bell).
   const getNotificationLink = (notification: Notification) => {
+    const tourUrl = notification.metadata?.tourUrl as string | undefined
+    if (tourUrl) return tourUrl
+
     const sellerOrderUrl = notification.metadata?.orderUrl as string | undefined
     const sellerId = notification.metadata?.sellerId as string | undefined
     const currentUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null

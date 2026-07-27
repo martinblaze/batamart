@@ -1599,6 +1599,7 @@ export default function SellPage() {
         {isCampaignWindowOpen(GIRLFRIENDS_DAY.key) && (
           <label
             htmlFor="campaign-tag-toggle"
+            data-tour="tour-gfd-checkbox"
             className={`step-card relative flex items-start gap-4 rounded-2xl border-2 p-5 sm:p-6 cursor-pointer transition-colors ${
               campaignTagEnabled
                 ? 'border-rose-300 bg-gradient-to-br from-rose-50 to-pink-50'

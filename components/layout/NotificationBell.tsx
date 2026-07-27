@@ -65,6 +65,9 @@ const toneClasses: Record<'primary' | 'success' | 'warning' | 'danger', string> 
 // dispute message opens that dispute, a payout opens the wallet, etc.,
 // rather than dropping everything on the generic notifications list.
 function getNotificationLink(notification: Notification, currentUserId: string | null): string {
+  const tourUrl = notification.metadata?.tourUrl as string | undefined
+  if (tourUrl) return tourUrl
+
   const sellerOrderUrl = notification.metadata?.orderUrl as string | undefined
   const sellerId = notification.metadata?.sellerId as string | undefined
   if (notification.type === 'ORDER_PLACED' && sellerOrderUrl && sellerId && currentUserId && sellerId === currentUserId) {
