@@ -4,7 +4,7 @@
 // Handles: Push Notifications, Notification Clicks, Offline Cache
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'batamart-v2'
+const CACHE_NAME = 'batamart-v3'
 
 // Pages to cache for offline use
 const OFFLINE_URLS = [
@@ -43,7 +43,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// ─── Fetch: serve cached pages when offline ───────────────────────────────────
+// ─── Fetch: network-first for pages, cache-first for hashed static assets ─────
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (
@@ -52,41 +52,52 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/api/')
   ) return
 
-  event.respondWith(
-    caches.open(CACHE_NAME)
-      .then(async (cache) => {
-        const accept = event.request.headers.get('accept') || ''
-        const cacheablePage =
-          event.request.mode === 'navigate' ||
-          url.pathname.startsWith('/_next/static/') ||
-          accept.includes('text/html') ||
-          accept.includes('text/x-component')
+  const accept = event.request.headers.get('accept') || ''
+  const isStaticAsset = url.pathname.startsWith('/_next/static/')
+  const isNavigation =
+    event.request.mode === 'navigate' ||
+    accept.includes('text/html') ||
+    accept.includes('text/x-component')
 
-        if (!cacheablePage) return fetch(event.request)
-        if (event.request.cache === 'reload') {
-          const response = await fetch(event.request)
-          if (response && response.status === 200 && response.type === 'basic') {
-            await cache.put(event.request, response.clone())
-          }
-          return response
-        }
-
+  if (isStaticAsset) {
+    // Next.js content-hashes these filenames, so the same URL always means
+    // the same bytes — safe (and fast) to cache-first forever.
+    event.respondWith(
+      caches.open(CACHE_NAME).then(async (cache) => {
         const cached = await cache.match(event.request)
         if (cached) return cached
-
         const response = await fetch(event.request)
         if (response && response.status === 200 && response.type === 'basic') {
-          await cache.put(event.request, response.clone())
+          cache.put(event.request, response.clone())
         }
         return response
       })
-      .catch(() => {
-        // Offline fallback — serve cached version if available
-        return caches.match(event.request).then((cached) => {
-          return cached || caches.match('/')
+    )
+    return
+  }
+
+  if (isNavigation) {
+    // Pages/RSC payloads live at stable URLs whose CONTENT changes on every
+    // deploy — cache-first here meant a page loaded once was frozen forever
+    // (e.g. the Girlfriend's Day page showing "no gifts" from before any
+    // were approved, never re-checking even after real data existed).
+    // Network-first fixes that; the cache is now purely an offline fallback.
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const cache = await caches.open(CACHE_NAME)
+            cache.put(event.request, response.clone())
+          }
+          return response
         })
-      })
-  )
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME)
+          const cached = await cache.match(event.request)
+          return cached || cache.match('/')
+        })
+    )
+  }
 })
 
 // ─── Push: receive and show notification ─────────────────────────────────────

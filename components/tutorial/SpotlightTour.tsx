@@ -108,12 +108,14 @@ export default function SpotlightTour({
   const bubbleLeft = Math.min(Math.max(centerX - BUBBLE_WIDTH / 2, 12), window.innerWidth - BUBBLE_WIDTH - 12)
 
   return (
-    <div className="fixed inset-0 z-[9700]">
-      {/* Dim + soft-blur panels around the cutout */}
-      <div className="absolute backdrop-blur-sm bg-ink/40" style={{ top: 0, left: 0, right: 0, height: Math.max(top, 0) }} />
-      <div className="absolute backdrop-blur-sm bg-ink/40" style={{ top: bottomEdge, left: 0, right: 0, bottom: 0 }} />
-      <div className="absolute backdrop-blur-sm bg-ink/40" style={{ top, left: 0, width: Math.max(left, 0), height }} />
-      <div className="absolute backdrop-blur-sm bg-ink/40" style={{ top, left: left + width, right: 0, height }} />
+    <div className="fixed inset-0 z-[9700] pointer-events-none">
+      {/* Dim + soft-blur panels around the cutout — pointer-events-auto so they
+          block interaction with the rest of the page, while the wrapper itself
+          (and the untouched cutout over the target) stays click-through. */}
+      <div className="absolute pointer-events-auto backdrop-blur-sm bg-ink/40" style={{ top: 0, left: 0, right: 0, height: Math.max(top, 0) }} />
+      <div className="absolute pointer-events-auto backdrop-blur-sm bg-ink/40" style={{ top: bottomEdge, left: 0, right: 0, bottom: 0 }} />
+      <div className="absolute pointer-events-auto backdrop-blur-sm bg-ink/40" style={{ top, left: 0, width: Math.max(left, 0), height }} />
+      <div className="absolute pointer-events-auto backdrop-blur-sm bg-ink/40" style={{ top, left: left + width, right: 0, height }} />
 
       {/* Highlight ring — no pointer-events, so the real element underneath stays clickable */}
       <div
@@ -133,7 +135,7 @@ export default function SpotlightTour({
 
       {/* Message bubble */}
       <div
-        className="absolute rounded-2xl bg-white shadow-2xl ring-1 ring-rose-100 p-4"
+        className="absolute pointer-events-auto rounded-2xl bg-white shadow-2xl ring-1 ring-rose-100 p-4"
         style={{
           width: BUBBLE_WIDTH,
           left: bubbleLeft,
