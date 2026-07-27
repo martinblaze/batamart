@@ -1,10 +1,101 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, Users, Mail, ArrowRight, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
+import { Send, Users, Mail, ArrowRight, CheckCircle2, AlertTriangle, XCircle, Heart } from 'lucide-react'
 import { adminFetch } from '@/lib/auth-client'
 
 const sampleMessage = `This is a test push notification from BATAMART Admin. Please confirm receipt in your browser.`
+
+const GFD_TITLE = "Girlfriend's Day is live 💕"
+const GFD_MESSAGE = 'Got something she’d love? List it and tag it "Girlfriend’s Day" so gift shoppers can find it. Selling a package? Describe everything inside the box. Tap for a quick walkthrough.'
+
+type GfdAnnounceResult = { success: boolean; notified: number; pushDelivered: number; message: string }
+
+function GirlfriendsDayAnnounceCard() {
+  const [title, setTitle] = useState(GFD_TITLE)
+  const [message, setMessage] = useState(GFD_MESSAGE)
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<GfdAnnounceResult | null>(null)
+  const [error, setError] = useState('')
+
+  const handleSend = async () => {
+    if (!confirm('This sends a real push + in-app notification to every active seller right now. Continue?')) return
+    setLoading(true)
+    setError('')
+    setResult(null)
+    try {
+      const res = await adminFetch('/api/admin/campaigns/girlfriends-day-announce', {
+        method: 'POST',
+        body: JSON.stringify({ title, message }),
+      })
+      const data = await res.json()
+      if (res.ok) setResult(data)
+      else setError(data.error || 'Failed to send announcement.')
+    } catch {
+      setError('Unexpected error sending announcement.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-rose-200/60 bg-gradient-to-br from-rose-50 to-white p-8 shadow-soft">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="rounded-2xl bg-rose-500/10 p-3 text-rose-600">
+          <Heart className="h-5 w-5" fill="currentColor" strokeWidth={0} />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-ink">Girlfriend's Day Seller Announcement</h2>
+          <p className="text-sm text-ink-secondary">
+            One-time broadcast to every active seller. Tapping it opens a guided walkthrough to the Sell page.
+          </p>
+        </div>
+      </div>
+
+      <label className="block mb-4">
+        <p className="text-sm text-ink-secondary mb-2">Title</p>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-ink outline-none focus:border-rose-400"
+        />
+      </label>
+      <label className="block">
+        <p className="text-sm text-ink-secondary mb-2">Message</p>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          rows={4}
+          className="w-full rounded-3xl border border-border bg-white px-4 py-3 text-ink outline-none focus:border-rose-400"
+        />
+      </label>
+
+      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-ink-secondary">Targets every seller currently in seller mode, active (not suspended).</p>
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {loading ? 'Sending…' : 'Send Announcement'}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+
+      {error && (
+        <div className="mt-6 flex items-center gap-2.5 rounded-3xl border border-danger/30 bg-danger/10 p-4 text-sm font-medium text-danger">
+          <XCircle className="w-4 h-4 flex-shrink-0" /> {error}
+        </div>
+      )}
+      {result && (
+        <div className="mt-6 flex items-center gap-2.5 rounded-3xl border border-success/30 bg-success/10 p-4 text-sm font-medium text-success">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> {result.message}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type AdminPushResult = {
   success: boolean
@@ -56,6 +147,8 @@ export default function AdminPushPage() {
 
   return (
     <div className="space-y-8">
+      <GirlfriendsDayAnnounceCard />
+
       <div className="rounded-3xl border border-border bg-surface p-8 shadow-soft shadow-black/20">
         <div className="flex items-center gap-3 mb-6">
           <div className="rounded-2xl bg-danger/10 text-danger p-3">

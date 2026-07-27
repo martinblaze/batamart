@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Trash2, Flag, PackageCheck, ShieldAlert, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 
 interface Product {
@@ -27,6 +28,7 @@ interface Product {
 }
 
 export default function ProductsPage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -222,7 +224,11 @@ export default function ProductsPage() {
           </div>
         ) : (
           filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-all">
+            <div
+              key={product.id}
+              onClick={() => router.push(`/admin/products/${product.id}`)}
+              className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-all cursor-pointer"
+            >
               <div className="relative aspect-square bg-surface">
                 <img
                   src={product.images[0] || '/placeholder.png'}
@@ -273,7 +279,7 @@ export default function ProductsPage() {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleApproveProduct(product.id)}
+                        onClick={(e) => { e.stopPropagation(); handleApproveProduct(product.id) }}
                         disabled={processingId === product.id}
                         className="flex-1 px-3 py-2 bg-success/10 text-success hover:bg-success/10 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
                       >
@@ -290,7 +296,7 @@ export default function ProductsPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => setShowReasonInput({ ...showReasonInput, [product.id]: !showReasonInput[product.id] })}
+                        onClick={(e) => { e.stopPropagation(); setShowReasonInput({ ...showReasonInput, [product.id]: !showReasonInput[product.id] }) }}
                         className="flex-1 px-3 py-2 bg-danger/10 text-danger hover:bg-danger/10 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1"
                       >
                         <XCircle className="w-4 h-4" />
@@ -299,7 +305,7 @@ export default function ProductsPage() {
                     </div>
 
                     {showReasonInput[product.id] && (
-                      <div className="space-y-2">
+                      <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
                         <textarea
                           value={rejectionReason[product.id] || ''}
                           onChange={(e) => setRejectionReason({ ...rejectionReason, [product.id]: e.target.value })}
@@ -330,7 +336,7 @@ export default function ProductsPage() {
                 {product.moderationStatus !== 'PENDING' && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleDeleteProduct(product.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id) }}
                       className="flex-1 px-3 py-2 bg-danger/10 text-danger rounded-lg hover:bg-danger/10 transition-colors text-sm font-semibold"
                     >
                       <Trash2 className="w-4 h-4 inline mr-1" />
