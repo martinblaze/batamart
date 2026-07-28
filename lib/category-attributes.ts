@@ -18,6 +18,7 @@ const RESERVED_QUERY_KEYS = new Set([
   'attributes',
   'sort',
   'sortBy',
+  'campaignTag',
 ])
 
 export async function getCategoryAttributes(categoryKey?: string | null, subcategoryKey?: string | null) {

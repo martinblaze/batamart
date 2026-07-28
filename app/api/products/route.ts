@@ -317,7 +317,7 @@ function parseMultiValueParams(searchParams: URLSearchParams): Record<string, st
     if ([
       'category', 'categoryKey', 'subcategory', 'subcategoryKey', 'hostel', 'zone', 'search', 'q',
       'minPrice', 'maxPrice', 'minRating', 'sort', 'sortBy', 'page', 'limit', 'attributes',
-      'sellerId', 'inStock', 'delivery', 'fastDelivery', 'priceDisplay'
+      'sellerId', 'inStock', 'delivery', 'fastDelivery', 'priceDisplay', 'campaignTag'
     ].includes(cleanKey)) continue
     if (!value?.trim()) continue
     filters[cleanKey] = [...new Set([...(filters[cleanKey] || []), ...value.split(',').map((item) => item.trim()).filter(Boolean)])]
