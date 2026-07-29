@@ -108,7 +108,7 @@ export default function OrdersPage() {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search)
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`); return }
     setCheckingAuth(false)
 
     const paymentStatus = query.get('payment')

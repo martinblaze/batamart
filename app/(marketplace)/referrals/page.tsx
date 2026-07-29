@@ -37,7 +37,7 @@ export default function ReferralsPage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return }
 
       const res = await fetch('/api/referrals', {
         headers: { Authorization: `Bearer ${token}` },

@@ -18,7 +18,7 @@ export default function BecomeSellerPage() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
-      router.push('/login')
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
     } else {
       setCheckingAuth(false)
     }

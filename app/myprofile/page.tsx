@@ -187,7 +187,7 @@ export default function MyProfilePage() {
   const fetchProfileData = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`); return }
       const [userRes, walletRes] = await Promise.all([
         fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/wallet', { headers: { Authorization: `Bearer ${token}` } }),

@@ -250,7 +250,7 @@ export default function WalletPage() {
   const fetchWalletData = async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`); return }
       const [uR, wR, tR] = await Promise.all([
         fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } }),
         fetch('/api/wallet', { headers: { Authorization: `Bearer ${token}` } }),

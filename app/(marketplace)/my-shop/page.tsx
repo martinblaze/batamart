@@ -178,7 +178,7 @@ export default function MyShopPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return }
     const loadUserData = async () => {
       try {
         const response = await authFetch('/api/auth/me')

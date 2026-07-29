@@ -598,7 +598,8 @@ function SignupForm() {
                   localStorage.setItem('userId', data.user.id)
                   document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
                   window.dispatchEvent(new Event('auth-change'))
-                  window.location.href = '/marketplace'
+                  const redirectTo = searchParams.get('redirect')
+                  window.location.href = redirectTo && redirectTo.startsWith('/') ? redirectTo : '/marketplace'
                 }
               }}
             />

@@ -35,7 +35,7 @@ export default function SelectOrderForDisputePage() {
     setIsApp(new URLSearchParams(window.location.search).get('app') === 'true')
     const token = localStorage.getItem('token')
     if (!token) {
-      router.push('/login?returnTo=/dispute/select-order')
+      router.push('/login?redirect=/dispute/select-order')
       return
     }
     fetchOrders()

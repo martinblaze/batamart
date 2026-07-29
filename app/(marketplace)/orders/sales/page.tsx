@@ -131,7 +131,7 @@ export default function SalesOrdersPage() {
     const query = new URLSearchParams(window.location.search)
     const token = localStorage.getItem('token')
     if (!token) {
-      router.push('/login')
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)
       return
     }
     setHighlightId(query.get('highlight'))

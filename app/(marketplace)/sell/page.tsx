@@ -559,7 +559,7 @@ export default function SellPage() {
     const userRole = localStorage.getItem('userRole')
     const params   = new URLSearchParams(window.location.search)
     setAppMode(params.get('app') === 'true')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`); return }
     if (userRole === 'BUYER') { setIsBuyer(true); setCheckingAuth(false); return }
     const loadProfile = async () => {
       try {

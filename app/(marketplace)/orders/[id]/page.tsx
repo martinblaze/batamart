@@ -111,7 +111,7 @@ export default function OrderDetailPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        router.push('/login');
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
         return;
       }
 
@@ -123,7 +123,7 @@ export default function OrderDetailPage() {
         const data = await response.json();
         setOrder(data);
       } else if (response.status === 401 || response.status === 403) {
-        router.push('/login');
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       } else if (response.status === 404) {
         setOrder(null);
       } else {

@@ -38,7 +38,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`); return }
 
     // ── Show error messages from payment callback ──
     const searchParams = new URLSearchParams(window.location.search)

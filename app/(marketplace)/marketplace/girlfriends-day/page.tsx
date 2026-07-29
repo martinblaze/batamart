@@ -76,7 +76,7 @@ export default function GirlfriendsDayPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return }
 
     setLoading(true)
     fetch(`/api/products?campaignTag=${CAMPAIGN.key}&limit=100&sort=newest`, {
@@ -91,7 +91,7 @@ export default function GirlfriendsDayPage() {
 
   const handleProductClick = useCallback((id: string) => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) { router.push(`/login?redirect=${encodeURIComponent(`/product/${id}`)}`); return }
     fetch(`/api/products/${id}/view`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
     router.push(`/product/${id}`)
   }, [router])

@@ -41,7 +41,7 @@ export default function ReviewSellerPage() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      router.push('/login');
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     fetchOrder();
@@ -52,7 +52,7 @@ export default function ReviewSellerPage() {
       const token = localStorage.getItem('token');
 
       if (!token) {
-        router.push('/login');
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
         return;
       }
 
