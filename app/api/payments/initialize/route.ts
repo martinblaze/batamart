@@ -165,6 +165,12 @@ export async function POST(request: NextRequest) {
         if (seller?.isSuspended || product.moderationStatus === 'UNDER_REVIEW' || product.moderationStatus === 'REMOVED') {
           return jsonResponse({ error: `Product unavailable: ${product.name}` }, { status: 400 })
         }
+        // Delivery is hyperlocal (motorcycle riders within one campus) — a
+        // product link can be viewed from any university, but only buyers on
+        // the same campus as the seller can actually check out.
+        if (product.universityId && product.universityId !== user.universityId) {
+          return jsonResponse({ error: `${product.name} isn't available for delivery to your campus` }, { status: 400 })
+        }
 
         if (!product.isActive || resolvedStock < safeQuantity) {
           return jsonResponse({ error: `Product unavailable: ${product.name}` }, { status: 400 })
@@ -202,6 +208,10 @@ export async function POST(request: NextRequest) {
         }
         resolvedPrice = variant.price
         resolvedStock = variant.stock
+      }
+
+      if (product.universityId && product.universityId !== user.universityId) {
+        return jsonResponse({ error: `${product.name} isn't available for delivery to your campus` }, { status: 400 })
       }
 
       if (!product.isActive || resolvedStock < 1) {

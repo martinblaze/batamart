@@ -16,15 +16,12 @@ export async function GET(
     // Check for internal API secret (for WhatsApp crawler / OG meta fetches)
     const authHeader = request.headers.get('Authorization')
     const isInternal = authHeader === `Bearer ${process.env.INTERNAL_API_SECRET}`
-    
-    // Only enforce user authentication for non-internal requests
-    let user = null
-    if (!isInternal) {
-      user = await getUserFromRequest(request)
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-    }
+
+    // Product pages are publicly viewable — a shared link works whether the
+    // visitor is logged out or logged in from a different university.
+    // Purchasing itself is what's gated (same-university only), enforced at
+    // checkout time in app/api/payments/initialize/route.ts, not here.
+    const user = isInternal ? null : await getUserFromRequest(request)
 
     const product = await prisma.product.findFirst({
       where: { id: params.id, isDeleted: false, isActive: true },
@@ -62,9 +59,9 @@ export async function GET(
       subcategory: subcategory || product.subcategory || null,
     }
 
-    // Increment view count (only for authenticated users or internal requests)
-    // This prevents spam from crawlers
-    if (!isInternal) {
+    // Increment view count only for identifiable logged-in visitors — skips
+    // both crawler/OG-meta hits and anonymous viewers to avoid spam counts.
+    if (!isInternal && user) {
       await prisma.product.update({
         where: { id: params.id },
         data: { viewCount: { increment: 1 } },

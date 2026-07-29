@@ -444,7 +444,8 @@ function SignupForm() {
         localStorage.setItem('userName', data.user.name)
         localStorage.setItem('userRole', data.user.role)
         localStorage.setItem('userId',   data.user.id)
-        router.push('/marketplace')
+        const redirectTo = searchParams.get('redirect')
+        router.push(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/marketplace')
       } else {
         setError(data.error || 'Signup failed')
       }

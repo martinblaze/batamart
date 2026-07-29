@@ -18,6 +18,12 @@ function LoginForm() {
   const [error, setError]       = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
   const [suspensionMessage, setSuspensionMessage] = useState<string | null>(null)
+  const [redirectParam, setRedirectParam] = useState('')
+
+  useEffect(() => {
+    const redirect = new URLSearchParams(window.location.search).get('redirect')
+    if (redirect && redirect.startsWith('/')) setRedirectParam(redirect)
+  }, [])
 
   useEffect(() => {
     const wasSuspended = new URLSearchParams(window.location.search).get('suspended') === '1'
@@ -66,7 +72,8 @@ function LoginForm() {
         document.cookie = `token=${data.token}; path=/; SameSite=Lax; max-age=${60 * 60 * 24 * 7}`
 
         window.dispatchEvent(new Event('auth-change'))
-        router.push('/marketplace')
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect')
+        router.push(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/marketplace')
 
       } else if (response.status === 403 && data.isRider) {
         setError('__RIDER__')
@@ -222,7 +229,7 @@ function LoginForm() {
           <div className="mt-6 text-center">
             <p className="text-ink-secondary text-sm">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
+              <Link href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'} className="text-primary font-medium hover:underline">Sign up</Link>
             </p>
           </div>
         </div>

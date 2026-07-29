@@ -31,6 +31,7 @@ interface Product {
   subcategory?: string
   categoryKey?: string
   subcategoryKey?: string
+  universityId?: string | null
   variantsEnabled?: boolean
   basePrice?: number | null
   variants?: Array<{
@@ -408,6 +409,8 @@ export default function ProductDetailPage() {
 
   const { addItem, items } = useCartStore()
   const toast = useToast()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [viewerUniversityId, setViewerUniversityId] = useState<string | null>(null)
   const mainRef = useRef<HTMLDivElement>(null)
   const relatedScrollRef = useRef<HTMLDivElement>(null)
 
@@ -448,6 +451,20 @@ export default function ProductDetailPage() {
     setSessionId(ensureSessionId())
   }, [])
 
+  // Who's viewing — used only to decide whether buying is allowed
+  // (same-university logged-in users), never to gate viewing itself.
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    setIsLoggedIn(!!token)
+    if (!token) return
+    fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setViewerUniversityId(data?.user?.universityId || null))
+      .catch(() => {})
+  }, [])
+
+  const canTransact = isLoggedIn && !!viewerUniversityId && !!product?.universityId && viewerUniversityId === product.universityId
+
   // ── Fetch product ───────────────────────────────────────
   useEffect(() => {
     if (!productId) return
@@ -457,13 +474,13 @@ export default function ProductDetailPage() {
   const fetchProduct = async () => {
     setLoading(true)
     try {
+      // Product pages are publicly viewable — logged out or cross-university
+      // visitors can see everything. Buying is what's gated, separately.
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
       const res = await fetch(`/api/products/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       if (!res.ok) {
-        if (res.status === 401) { router.push('/login'); return }
         setError('Product not found')
         return
       }
@@ -738,6 +755,14 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!product) return
+    if (!isLoggedIn) {
+      router.push(`/login?redirect=/product/${productId}`)
+      return
+    }
+    if (!canTransact) {
+      toast.error("This item isn't available for delivery to your campus.")
+      return
+    }
     if (!allVariantsSelected) {
       setVariantError('Please select all options before adding to cart')
       // Scroll up to variant selector
@@ -778,6 +803,14 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = () => {
     if (!product) return
+    if (!isLoggedIn) {
+      router.push(`/login?redirect=/product/${productId}`)
+      return
+    }
+    if (!canTransact) {
+      toast.error("This item isn't available for delivery to your campus.")
+      return
+    }
     if (!allVariantsSelected) {
       setVariantError('Please select all options first')
       document.getElementById('variant-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -1354,6 +1387,13 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
                 {stockKnown && <span className="text-xs text-ink-muted">({effectiveStock} available)</span>}
+              </div>
+            )}
+
+            {isLoggedIn && viewerUniversityId && !canTransact && (
+              <div className="flex items-start gap-2 bg-warning/10 border border-warning/30 text-warning text-sm font-medium px-3 py-2.5 rounded-xl">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>This item isn't available for delivery to your campus — you can still view it, but ordering is limited to buyers at the seller's university.</span>
               </div>
             )}
 

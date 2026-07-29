@@ -21,12 +21,14 @@ const fmt = (n: number) =>
 
 // Resolve absolute URL for OG images — required by WhatsApp / FB crawlers.
 const absoluteUrl = (path: string): string => {
-  // Prefer an explicit env var so it works on every deploy target
+  // Prefer an explicit env var so it works on every deploy target.
+  // (Previously `A || B ? X : Y` — `||` binds tighter than `?:` in JS, so
+  // whenever NEXT_PUBLIC_APP_URL was set this still evaluated the VERCEL_URL
+  // branch, silently producing "https://undefined" on any deploy where
+  // VERCEL_URL itself wasn't set. Parenthesized now to actually prefer it.)
   const base =
-    process.env.NEXT_PUBLIC_APP_URL ||      // e.g. https://batamart.ng
-    process.env.VERCEL_URL                  // e.g. your-app.vercel.app (no https)
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000'
+    process.env.NEXT_PUBLIC_APP_URL ||      // e.g. https://batamart.com
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   // If it's already an absolute URL (Cloudinary, S3, etc.) return as-is
   if (path.startsWith('http')) return path
