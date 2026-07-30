@@ -217,6 +217,16 @@ function SearchPage() {
   const [topProducts, setTopProducts] = useState<Product[]>([])
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [sortSheetOpen, setSortSheetOpen] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      router.replace(`/login?redirect=${encodeURIComponent(`${pathname}${searchParamsString ? `?${searchParamsString}` : ''}`)}`)
+      return
+    }
+    setCheckingAuth(false)
+  }, [])
 
   const subcategories = useMemo(() => {
     if (categoryKey === 'all') return []
@@ -262,6 +272,7 @@ function SearchPage() {
   }, [query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode])
 
   useEffect(() => {
+    if (checkingAuth) return
     const loadBounds = async () => {
       try {
         const res = await authFetch(`/api/product-filters?${filterPayload.toString()}`)
@@ -275,9 +286,10 @@ function SearchPage() {
       }
     }
     loadBounds()
-  }, [filterPayload.toString(), categoryKey, subcategoryKey, sellerId])
+  }, [checkingAuth, filterPayload.toString(), categoryKey, subcategoryKey, sellerId])
 
   useEffect(() => {
+    if (checkingAuth) return
     const loadTop = async () => {
       try {
         const res = await authFetch('/api/products/feed?mode=top&pageSize=4')
@@ -290,9 +302,10 @@ function SearchPage() {
       }
     }
     loadTop()
-  }, [])
+  }, [checkingAuth])
 
   useEffect(() => {
+    if (checkingAuth) return
     const loadZones = async () => {
       try {
         const meRes = await authFetch('/api/auth/me')
@@ -308,9 +321,10 @@ function SearchPage() {
       }
     }
     loadZones()
-  }, [])
+  }, [checkingAuth])
 
   useEffect(() => {
+    if (checkingAuth) return
     const loadProducts = async () => {
       try {
         const res = await authFetch(`/api/products?${filterPayload.toString()}`)
@@ -332,7 +346,11 @@ function SearchPage() {
     if (page === 1) setLoading(true)
     else setLoadingMore(true)
     loadProducts()
-  }, [filterPayload.toString(), page])
+  }, [checkingAuth, filterPayload.toString(), page])
+
+  if (checkingAuth) {
+    return <div className="flex min-h-screen items-center justify-center bg-surface"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+  }
 
   const knownSubcategories = categoryKey !== 'all' ? Object.entries(CATEGORY_TREE[categoryKey]?.subcategories || {}) : []
   const searchWithinSeller = sellerId ? 'within this seller' : ''

@@ -70,7 +70,7 @@ export async function authFetch(
         }
         // Preserve the current path so we can redirect back after login
         const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
-        window.location.href = `/login?returnTo=${returnTo}`
+        window.location.href = `/login?redirect=${returnTo}`
       }, 100)
     }
   }
