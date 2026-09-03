@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "996103819519",
+    "project_id": "batamart-fddeb",
+    "storage_bucket": "batamart-fddeb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:996103819519:android:5c6a24fa07ddfb878d7cca",
+        "android_client_info": {
+          "package_name": "com.batamart.batamart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8kHIaRsSSMyJj3Ww0iOGDlNgvRNUq9kA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

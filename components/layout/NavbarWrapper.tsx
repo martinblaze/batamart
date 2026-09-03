@@ -22,11 +22,16 @@ function NavbarContent() {
 
   const isApp = isAppParam || isStandalone
 
-  // Hide navbar completely on admin pages
+  // Routes that bring their own chrome. Admin has its own frame; the
+  // marketing surface (app/(marketing)) ships its own nav and footer, so the
+  // product navbar would be a second, conflicting header on those pages.
+  const MARKETING_ROUTES = ['/about', '/contact', '/privacy', '/terms']
+
   const hideNav =
     pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/admin-login')||
-    pathname === '/'
+    pathname?.startsWith('/admin-login') ||
+    pathname === '/' ||
+    MARKETING_ROUTES.some((route) => pathname?.startsWith(route))
 
   if (hideNav) return null
 

@@ -1,0 +1,606 @@
+/* ==========================================================================
+   BATAMART — Marketing surface design system
+   --------------------------------------------------------------------------
+   Everything here is scoped under `.mk` so it cannot collide with the app
+   shell, and — importantly — so the aggressive `.dark .bg-white { ... }`
+   overrides in globals.css never reach these pages. The marketing surface
+   owns a fixed editorial palette in both themes on purpose: it is brand
+   canvas, not a themed product screen.
+   ========================================================================== */
+
+.mk {
+  /* ── Palette ─────────────────────────────────────────────────────────── */
+  --ink:        #0B0B0D;   /* near-black, the dark ground */
+  --ink-soft:   #141519;
+  --ink-line:   rgba(240, 236, 228, 0.14);
+
+  --paper:      #F1EDE6;   /* warm bone, the light ground */
+  --paper-2:    #E5DFD4;
+  --paper-line: rgba(11, 11, 13, 0.13);
+
+  --blue:       #1E90FF;   /* BataMart brand accent */
+  --blue-deep:  #0A4FA6;
+
+  --muted-on-paper: #6E6B64;
+  --muted-on-ink:   #8E8B85;
+
+  /* ── Motion ──────────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io:  cubic-bezier(0.76, 0, 0.24, 1);
+
+  /* ── Rhythm ──────────────────────────────────────────────────────────── */
+  --gutter: clamp(1.25rem, 5vw, 5.5rem);
+  --shell:  1560px;
+
+  background: var(--paper);
+  color: var(--ink);
+  /* Body copy inherits Inter from the root layout; only the display, serif
+     and mono faces are loaded specifically for this surface. */
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+.mk ::selection { background: var(--blue); color: #fff; }
+
+/* Sharp edges are a rule on this surface, not an accident.
+   `.mk-round` is the deliberate opt-out (avatars, cursor, status dots). */
+.mk :where(a, button, input, textarea, select, img, figure, div, section, span) {
+  border-radius: 0;
+}
+.mk .mk-round { border-radius: 999px; }
+
+/* IOSAppShell pads every route for the mobile bottom nav and, on iOS PWA,
+   hoists scrolling into its own fixed container. Marketing pages are
+   full-bleed documents scrolled by the window, so we unwind both. */
+html.mk-active #page-scroll-container { padding-bottom: 0 !important; }
+html.mk-active #ios-app-shell {
+  position: static !important;
+  overflow: visible !important;
+  padding-top: 0 !important;
+}
+html.mk-active #ios-scroll-area {
+  overflow: visible !important;
+  flex: none !important;
+  padding-bottom: 0 !important;
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ==========================================================================
+   1. Grounds & structure
+   ========================================================================== */
+.mk-ink     { background: var(--ink);      color: var(--paper); }
+.mk-ink-2   { background: var(--ink-soft); color: var(--paper); }
+.mk-paper   { background: var(--paper);    color: var(--ink); }
+.mk-paper-2 { background: var(--paper-2);  color: var(--ink); }
+
+.mk-shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.mk-shell-narrow { max-width: 1080px; }
+
+.mk-section { position: relative; padding-block: clamp(5rem, 11vw, 11rem); }
+.mk-section-tight { padding-block: clamp(3.5rem, 7vw, 7rem); }
+
+/* Fine vertical rules — the quiet structural grid award sites lean on. */
+.mk-rules {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  z-index: 0;
+}
+.mk-rules > span { border-left: 1px solid var(--paper-line); }
+.mk-rules > span:last-child { border-right: 1px solid var(--paper-line); }
+.mk-ink .mk-rules > span,
+.mk-ink-2 .mk-rules > span { border-color: var(--ink-line); }
+@media (max-width: 860px) { .mk-rules { grid-template-columns: repeat(2, 1fr); } }
+
+/* Film grain — very low opacity, reads as paper rather than as texture. */
+.mk-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   2. Typography
+   ========================================================================== */
+.mk-display,
+.mk-h1, .mk-h2, .mk-h3 {
+  font-family: var(--font-display), Archivo, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.042em;
+  line-height: 0.9;
+  text-wrap: balance;
+  margin: 0;
+}
+.mk-display { font-size: clamp(3.2rem, 12vw, 12.5rem); line-height: 0.84; letter-spacing: -0.05em; }
+.mk-h1      { font-size: clamp(2.6rem, 7.2vw, 6.8rem); }
+.mk-h2      { font-size: clamp(2rem, 5vw, 4.5rem); }
+.mk-h3      { font-size: clamp(1.3rem, 2.3vw, 2.1rem); line-height: 1.04; letter-spacing: -0.03em; }
+
+/* Editorial serif — one word or one aside per section, never a paragraph. */
+.mk-serif {
+  font-family: var(--font-serif), 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.015em;
+}
+
+.mk-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.mk-mono-sm { font-size: 0.625rem; letter-spacing: 0.22em; }
+
+.mk-lead {
+  font-size: clamp(1.05rem, 1.55vw, 1.4rem);
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
+}
+.mk-body {
+  font-size: 1rem;
+  line-height: 1.68;
+  letter-spacing: -0.008em;
+  color: var(--muted-on-paper);
+}
+.mk-ink .mk-body, .mk-ink-2 .mk-body { color: var(--muted-on-ink); }
+
+.mk-accent { color: var(--blue); }
+
+/* Marker highlight that wipes in as the line settles into view.
+   `box-decoration-break: clone` makes each wrapped line get its own stripe;
+   without it a phrase spanning two lines draws one stripe stretched across
+   both, which reads as a rendering fault rather than a highlight. */
+.mk-mark {
+  display: inline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  /* Translucent so the ink stays readable through it — a solid accent bar
+     behind dark text is a highlight you cannot read. */
+  background-image: linear-gradient(
+    rgba(30, 144, 255, 0.34),
+    rgba(30, 144, 255, 0.34)
+  );
+  background-repeat: no-repeat;
+  background-position: 0 0.42em;
+  background-size: 0% 0.72em;
+  transition: background-size 0.85s var(--ease-out);
+  padding-inline: 0.12em;
+}
+.mk-mark[data-lit='true'] { background-size: 100% 0.72em; }
+.mk-ink .mk-mark, .mk-ink-2 .mk-mark {
+  background-image: linear-gradient(
+    rgba(30, 144, 255, 0.5),
+    rgba(30, 144, 255, 0.5)
+  );
+}
+
+/* Eyebrow — mono index label trailed by a hairline. */
+.mk-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: var(--muted-on-paper);
+}
+.mk-ink .mk-eyebrow, .mk-ink-2 .mk-eyebrow { color: var(--muted-on-ink); }
+.mk-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.3;
+  max-width: 7rem;
+}
+
+/* ==========================================================================
+   3. The rubber button
+   --------------------------------------------------------------------------
+   Geometry only. The elastic follow is driven by springs in MagneticButton;
+   the fill is a circle parked under the button that scales up from the exact
+   point the cursor crossed the edge, so the wipe always matches the approach.
+   ========================================================================== */
+.mk-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 1.15rem 2.4rem;
+  min-height: 3.6rem;
+  border: 1px solid currentColor;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+  transition: color 0.45s var(--ease-out), border-color 0.45s var(--ease-out);
+}
+.mk-btn__fill {
+  position: absolute;
+  z-index: -1;
+  width: 160%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+}
+.mk-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  will-change: transform;
+}
+
+.mk-btn--solid { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.mk-btn--solid .mk-btn__fill { background: var(--blue); }
+.mk-btn--solid[data-hot='true'] { color: #fff; }
+
+.mk-btn--ghost { color: var(--ink); border-color: var(--paper-line); }
+.mk-btn--ghost .mk-btn__fill { background: var(--ink); }
+.mk-btn--ghost[data-hot='true'] { color: var(--paper); border-color: var(--ink); }
+
+.mk-btn--light { color: var(--paper); border-color: var(--ink-line); }
+.mk-btn--light .mk-btn__fill { background: var(--paper); }
+.mk-btn--light[data-hot='true'] { color: var(--ink); border-color: var(--paper); }
+
+.mk-btn--blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+.mk-btn--blue .mk-btn__fill { background: var(--ink); }
+
+.mk-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* ==========================================================================
+   4. Navigation
+   ========================================================================== */
+.mk-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 90;
+  transition: transform 0.55s var(--ease-io);
+}
+.mk-nav[data-tucked='true'] { transform: translateY(-102%); }
+
+/* The plate carries a fixed blur and fades in as one composited layer, so the
+   blur ramps with the opacity instead of being animated as a filter. */
+.mk-nav__plate {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(241, 237, 230, 0.85);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+.mk-nav__hairline {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 1px;
+  pointer-events: none;
+  background: rgba(11, 11, 13, 0.14);
+}
+
+.mk-nav__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  height: 84px;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@media (max-width: 860px) { .mk-nav__inner { height: 68px; } }
+
+.mk-nav__links { display: flex; align-items: center; gap: 2.4rem; }
+@media (max-width: 1024px) { .mk-nav__links { display: none; } }
+
+.mk-navlink {
+  position: relative;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-block: 0.4rem;
+  white-space: nowrap;
+}
+.mk-navlink::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 100%; height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s var(--ease-out);
+}
+.mk-navlink:hover::after,
+.mk-navlink[data-active='true']::after { transform: scaleX(1); transform-origin: left; }
+
+.mk-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 89;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex;
+  flex-direction: column;
+  padding: 6rem var(--gutter) 3rem;
+  overflow-y: auto;
+}
+/* Centred with auto margins rather than `justify-content: center`: when the
+   links outgrow a short viewport, flex centring overflows past the start
+   padding and the first link slides up under the logo. Auto margins collapse
+   to zero instead, so the top padding always holds. */
+.mk-menu > * { margin-block: auto; width: 100%; }
+.mk-menu__link {
+  display: block;
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 10vw, 4.4rem);
+  letter-spacing: -0.045em;
+  line-height: 1.06;
+  padding-block: 0.2em;
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.mk-burger { display: none; }
+@media (max-width: 1024px) { .mk-burger { display: inline-flex; } }
+
+.mk-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  z-index: 95;
+  background: var(--blue);
+  transform-origin: 0 50%;
+}
+
+/* ==========================================================================
+   5. Curved section transitions
+   ========================================================================== */
+.mk-curve { position: relative; display: block; width: 100%; line-height: 0; }
+.mk-curve svg { display: block; width: 100%; height: clamp(56px, 8.5vw, 140px); }
+
+/* ==========================================================================
+   6. Marquee
+   ========================================================================== */
+.mk-marquee { display: flex; overflow: hidden; width: 100%; user-select: none; }
+.mk-marquee__row { display: flex; flex: none; align-items: center; }
+.mk-marquee__item {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  padding-right: clamp(1.5rem, 3vw, 3rem);
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4.2vw, 3.4rem);
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+.mk-marquee__dot { width: 0.34em; height: 0.34em; border-radius: 50%; background: var(--blue); flex: none; }
+
+/* ==========================================================================
+   7. Media
+   ========================================================================== */
+.mk-figure { position: relative; overflow: hidden; background: var(--ink-soft); }
+.mk-figure > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mk-figure--zoom > img { transition: transform 1.1s var(--ease-out); }
+.mk-figure--zoom:hover > img { transform: scale(1.06); }
+
+/* Weighted at both ends: dense at the bottom where the headline sits, and
+   again at the top so the navigation never has to compete with the photo. */
+.mk-scrim-b {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top,
+    rgba(11,11,13,0.92) 0%,
+    rgba(11,11,13,0.74) 28%,
+    rgba(11,11,13,0.42) 52%,
+    rgba(11,11,13,0.28) 72%,
+    rgba(11,11,13,0.6) 100%);
+}
+.mk-scrim-flat { position: absolute; inset: 0; background: rgba(11,11,13,0.5); }
+
+/* ==========================================================================
+   8. Editorial tiles
+   ========================================================================== */
+.mk-tile { position: relative; display: block; overflow: hidden; background: var(--ink); }
+.mk-tile__media { position: absolute; inset: 0; }
+.mk-tile__media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  transition: transform 1.2s var(--ease-out), opacity 0.6s ease;
+}
+.mk-tile:hover .mk-tile__media img { transform: scale(1.07); opacity: 1; }
+.mk-tile__body {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  height: 100%;
+  padding: clamp(1.1rem, 2vw, 1.9rem);
+  color: var(--paper);
+}
+.mk-tile__arrow { transition: transform 0.5s var(--ease-out); }
+.mk-tile:hover .mk-tile__arrow { transform: translate(0.4rem, -0.4rem); }
+
+/* ==========================================================================
+   9. Interactive rows (coverage, values, index lists)
+   ========================================================================== */
+.mk-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  padding-block: clamp(1.4rem, 2.5vw, 2.3rem);
+  border-top: 1px solid var(--paper-line);
+  isolation: isolate;
+  transition: color 0.45s var(--ease-out), padding-inline 0.55s var(--ease-out);
+}
+.mk-ink .mk-row, .mk-ink-2 .mk-row { border-color: var(--ink-line); }
+.mk-row:last-child { border-bottom: 1px solid var(--paper-line); }
+.mk-ink .mk-row:last-child, .mk-ink-2 .mk-row:last-child { border-color: var(--ink-line); }
+.mk-row__wash {
+  position: absolute;
+  z-index: -1;
+  inset: 0 -1.25rem;
+  background: var(--blue);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.55s var(--ease-io);
+}
+.mk-row:hover { color: #fff; padding-inline: 1.25rem; }
+.mk-row:hover .mk-row__wash { transform: scaleY(1); transform-origin: top; }
+@media (max-width: 720px) {
+  .mk-row { grid-template-columns: 2.75rem 1fr; }
+  .mk-row:hover { padding-inline: 0.6rem; }
+}
+
+/* ==========================================================================
+   10. Accordion
+   ========================================================================== */
+.mk-acc { border-top: 1px solid var(--paper-line); }
+.mk-ink .mk-acc, .mk-ink-2 .mk-acc { border-color: var(--ink-line); }
+.mk-acc:last-of-type { border-bottom: 1px solid var(--paper-line); }
+.mk-ink .mk-acc:last-of-type, .mk-ink-2 .mk-acc:last-of-type { border-color: var(--ink-line); }
+.mk-acc__btn {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  text-align: left;
+  padding-block: clamp(1.3rem, 2.2vw, 2rem);
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.mk-acc__sign { flex: none; position: relative; width: 1rem; height: 1rem; margin-top: 0.4rem; }
+.mk-acc__sign::before,
+.mk-acc__sign::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: currentColor;
+  transition: transform 0.5s var(--ease-io);
+}
+.mk-acc__sign::after { transform: rotate(90deg); }
+.mk-acc[data-open='true'] .mk-acc__sign::after { transform: rotate(0deg); }
+
+/* ==========================================================================
+   11. Forms
+   ========================================================================== */
+.mk-field__label {
+  display: block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-on-ink);
+  margin-bottom: 0.8rem;
+}
+.mk-input,
+.mk-textarea,
+.mk-select {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ink-line);
+  color: var(--paper);
+  font-family: inherit;
+  font-size: clamp(1rem, 1.4vw, 1.2rem);
+  letter-spacing: -0.015em;
+  padding: 0.5rem 0 0.9rem;
+  outline: none;
+  transition: border-color 0.4s var(--ease-out);
+}
+.mk-textarea { resize: none; line-height: 1.6; }
+.mk-input::placeholder, .mk-textarea::placeholder { color: rgba(241, 237, 230, 0.26); }
+.mk-input:focus, .mk-textarea:focus, .mk-select:focus { border-color: var(--blue); }
+.mk-select { -webkit-appearance: none; appearance: none; cursor: pointer; }
+.mk-select option { background: var(--ink); color: var(--paper); }
+
+/* ==========================================================================
+   12. Custom cursor (fine pointers only)
+   ========================================================================== */
+.mk-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 100;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--blue);
+  pointer-events: none;
+  mix-blend-mode: difference;
+  will-change: transform;
+}
+@media (hover: none), (pointer: coarse) { .mk-cursor { display: none; } }
+
+/* ==========================================================================
+   13. Legal documents
+   ========================================================================== */
+.mk-legal { font-size: 1.02rem; line-height: 1.75; color: var(--muted-on-paper); letter-spacing: -0.008em; }
+.mk-legal p + p { margin-top: 1.1rem; }
+.mk-legal strong { color: var(--ink); font-weight: 600; }
+.mk-toc__link {
+  display: flex;
+  gap: 0.85rem;
+  padding-block: 0.5rem;
+  padding-left: 1rem;
+  margin-left: -1px;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--muted-on-paper);
+  border-left: 1px solid var(--paper-line);
+  transition: color 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
+}
+.mk-toc__link[data-active='true'] { color: var(--ink); border-color: var(--blue); }
+
+/* ==========================================================================
+   14. Reduced motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .mk *,
+  .mk *::before,
+  .mk *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .mk-cursor { display: none; }
+}
