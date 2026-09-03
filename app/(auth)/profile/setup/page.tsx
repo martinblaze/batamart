@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Phone } from 'lucide-react'
-import { Logo } from '@/components/layout/Logo'
+import {
+  AuthShell,
+  AuthField,
+  AuthNotice,
+  AuthSubmit,
+} from '@/components/auth/AuthShell'
 
 const HOSTELS = [
   'Aroma',
@@ -50,7 +55,7 @@ export default function ProfileSetupPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       })
@@ -68,111 +73,84 @@ export default function ProfileSetupPage() {
     }
   }
 
+  const labelClass =
+    'mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary'
+  const controlClass =
+    'w-full border border-border bg-card text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15'
+
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center mb-4">
-            <Logo size={40} />
-          </div>
-          <h1 className="text-[28px] font-semibold text-ink mb-2">Complete your profile</h1>
-          <p className="text-ink-secondary">Help us deliver to you accurately</p>
+    <AuthShell
+      eyebrow="One last step"
+      title="Complete your profile"
+      subtitle="Where should riders bring your orders?"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          label="Phone number *"
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => handleChange('phone', e.target.value)}
+          required
+          autoComplete="tel"
+          placeholder="08012345678"
+          hint={
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="h-3 w-3" strokeWidth={1.75} />
+              Riders call this number when they arrive.
+            </span>
+          }
+        />
+
+        <div>
+          <label className={labelClass}>Hostel / location *</label>
+          <select
+            value={formData.hostelName}
+            onChange={(e) => handleChange('hostelName', e.target.value)}
+            required
+            className={`${controlClass} h-12 px-4`}
+          >
+            <option value="">Select your hostel or location</option>
+            {HOSTELS.map((hostel) => (
+              <option key={hostel} value={hostel}>
+                {hostel}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          label="Room number *"
+          type="text"
+          value={formData.roomNumber}
+          onChange={(e) => handleChange('roomNumber', e.target.value)}
+          required
+          placeholder="e.g. Room 12, Block A"
+        />
 
-            {/* Phone Number */}
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
-                Phone number <span className="text-danger">*</span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                required
-                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-                placeholder="08012345678"
-              />
-              <p className="text-xs text-ink-muted mt-1 flex items-center gap-1">
-                <Phone className="w-3 h-3" strokeWidth={1.75} />
-                Riders will call this number when they arrive
-              </p>
-            </div>
-
-            {/* Hostel Selection */}
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
-                Hostel / location <span className="text-danger">*</span>
-              </label>
-              <select
-                value={formData.hostelName}
-                onChange={(e) => handleChange('hostelName', e.target.value)}
-                required
-                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-              >
-                <option value="">Select your hostel/location</option>
-                {HOSTELS.map((hostel) => (
-                  <option key={hostel} value={hostel}>
-                    {hostel}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Room Number */}
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
-                Room number <span className="text-danger">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.roomNumber}
-                onChange={(e) => handleChange('roomNumber', e.target.value)}
-                required
-                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-                placeholder="e.g., Room 12, Block A"
-              />
-            </div>
-
-            {/* Landmark */}
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">
-                Landmark / description <span className="text-danger">*</span>
-              </label>
-              <textarea
-                value={formData.landmark}
-                onChange={(e) => handleChange('landmark', e.target.value)}
-                required
-                rows={3}
-                className="w-full px-4 py-3 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-                placeholder="e.g., Near the water dispenser, blue door"
-              />
-              <p className="text-xs text-ink-muted mt-1">Help riders find you easily</p>
-            </div>
-
-            {error && (
-              <p className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">{error}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
-            >
-              {loading ? 'Saving…' : 'Complete setup'}
-            </button>
-          </form>
-
-          <div className="mt-6 bg-primary/5 border border-primary/20 rounded-lg p-4">
-            <p className="text-sm text-primary">
-              <strong>Why we need this:</strong> your location and phone help riders deliver directly to you.
-            </p>
-          </div>
+        <div>
+          <label className={labelClass}>Landmark / description *</label>
+          <textarea
+            value={formData.landmark}
+            onChange={(e) => handleChange('landmark', e.target.value)}
+            required
+            rows={3}
+            className={`${controlClass} resize-none px-4 py-3`}
+            placeholder="e.g. Near the water dispenser, blue door"
+          />
+          <p className="mt-1.5 text-xs text-ink-muted">The detail that helps a rider find you fast.</p>
         </div>
-      </div>
-    </div>
+
+        {error && <AuthNotice>{error}</AuthNotice>}
+
+        <AuthSubmit type="submit" loading={loading} loadingText="Saving…">
+          Complete setup
+        </AuthSubmit>
+      </form>
+
+      <AuthNotice tone="info" className="mt-6">
+        <span className="font-medium text-ink">Why we ask.</span> Your location and phone number are
+        shared only with the rider carrying your order, and only while it is in transit.
+      </AuthNotice>
+    </AuthShell>
   )
 }

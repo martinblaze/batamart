@@ -250,7 +250,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-surface pb-20">
 
       {/* ── Sticky header ── */}
-      <div className="bg-white border-b border-border sticky top-0 z-30">
+      <div className="bg-card border-b border-border sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/cart')}
@@ -268,7 +268,10 @@ export default function CheckoutPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
-        <h1 className="text-2xl sm:text-3xl font-semibold text-ink mb-7">Checkout</h1>
+        <div className="mb-8 border-b border-border pb-6">
+          <p className="ui-eyebrow mb-2.5 max-w-[14rem]">Final step</p>
+          <h1 className="text-[clamp(1.7rem,3.6vw,2.5rem)] text-ink">Checkout</h1>
+        </div>
 
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
 
@@ -276,13 +279,11 @@ export default function CheckoutPage() {
           <div className="lg:col-span-3 space-y-5">
 
             {/* ── Delivery address ── */}
-            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-primary" />
-                  </div>
-                  <h2 className="font-semibold text-ink">Delivery Address</h2>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
+                  <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Delivery address</h2>
                 </div>
                 <Link href="/profile/setup" className="text-xs font-semibold text-primary hover:underline transition-colors flex items-center gap-1">
                   Edit <ArrowRight className="w-3 h-3" />
@@ -308,7 +309,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Order items + notes ── */}
-            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
               <div className="px-5 py-4 border-b border-border flex items-center gap-2.5">
                 <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                   <Package className="w-4 h-4 text-primary" />
@@ -378,7 +379,7 @@ export default function CheckoutPage() {
 
                         {/* Auto-filled variant preview */}
                         {variantSummary && (
-                          <div className="bg-white/70 rounded-lg px-3 py-2 mb-2 border border-warning/20">
+                          <div className="bg-card/70 rounded-lg px-3 py-2 mb-2 border border-warning/20">
                             Auto-filled: <span className="text-primary">[Order: {variantSummary}]</span>
                           </div>
                         )}
@@ -389,7 +390,7 @@ export default function CheckoutPage() {
                           placeholder={variantSummary ? 'Add extra instructions (optional)...' : `e.g. "Size M, black colour" or "Size 42 shoe, wider fit preferred."`}
                           rows={3}
                           maxLength={300}
-                          className="w-full text-sm bg-white border border-warning/30 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-warning/30 focus:border-warning resize-none placeholder:text-ink-muted text-ink font-medium"
+                          className="w-full text-sm bg-card border border-warning/30 rounded-xl px-3.5 py-3 focus:outline-none focus:ring-2 focus:ring-warning/30 focus:border-warning resize-none placeholder:text-ink-muted text-ink font-medium"
                         />
                         <div className="flex items-center justify-between mt-2">
                           <p className="text-[11px] text-warning font-semibold flex items-center gap-1">
@@ -408,7 +409,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Escrow info ── */}
-            <div className="bg-white rounded-2xl border border-border shadow-soft p-5">
+            <div className="bg-card rounded-2xl border border-border shadow-soft p-5">
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
                   <Shield className="w-4 h-4 text-success" />
@@ -478,7 +479,7 @@ export default function CheckoutPage() {
 
           {/* ── RIGHT: Summary + CTA ── */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-border shadow-soft p-5 sticky top-20">
+            <div className="bg-card rounded-2xl border border-border shadow-soft p-5 sticky top-20">
               <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-4">Order Summary</p>
 
               <div className="space-y-3 pb-4 border-b border-border">

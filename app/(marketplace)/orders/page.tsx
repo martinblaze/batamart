@@ -223,7 +223,7 @@ export default function OrdersPage() {
       {showSuccess && (
         <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 animate-in slide-in-from-top-3 duration-300">
           <div className={`w-full max-w-md rounded-xl px-4 py-3 shadow-soft flex items-start gap-3 ${
-            celebrateOrder ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white' : 'bg-ink text-white'
+            celebrateOrder ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white' : 'bg-ink text-background'
           }`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
               celebrateOrder ? 'bg-white/20' : 'bg-success'
@@ -252,26 +252,26 @@ export default function OrdersPage() {
       </div>
 
       {/* ── Page header ───────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-border">
+      <div className="bg-card border-b border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-ink">My Orders</h1>
-              <p className="text-sm text-ink-secondary mt-0.5">
+              <p className="ui-eyebrow mb-2 max-w-[12rem]">
                 {orders.length} order{orders.length !== 1 ? 's' : ''} total
               </p>
+              <h1 className="text-[clamp(1.6rem,3.4vw,2.4rem)] text-ink">My orders</h1>
             </div>
             <Link
               href="/marketplace"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline transition-colors"
+              className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:text-ink sm:flex"
             >
-              <ShoppingBag className="w-4 h-4" /> Shop More
+              <ShoppingBag className="h-3.5 w-3.5" /> Shop more
             </Link>
             <Link
               href="/orders/sales"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-success hover:text-success transition-colors"
+              className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:text-ink sm:flex"
             >
-              <Package className="w-4 h-4" /> Selling
+              <Package className="h-3.5 w-3.5" /> Selling
             </Link>
           </div>
         </div>
@@ -280,7 +280,7 @@ export default function OrdersPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {peopleLikeYouBought.length > 0 && (
-          <div className="mb-6 bg-white rounded-2xl border border-border shadow-soft p-4">
+          <div className="mb-6 bg-card rounded-2xl border border-border shadow-soft p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-ink">People Like You Bought</h2>
               <button
@@ -295,7 +295,7 @@ export default function OrdersPage() {
                 <div
                   key={item.key}
                   onClick={() => router.push(`/product/${item.product.id}`)}
-                  className="flex-shrink-0 w-36 sm:w-44 rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-soft transition-shadow bg-white"
+                  className="flex-shrink-0 w-36 sm:w-44 rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-soft transition-shadow bg-card"
                 >
                   <div className="aspect-square bg-surface overflow-hidden">
                     <img
@@ -319,7 +319,7 @@ export default function OrdersPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-5 animate-pulse">
+              <div key={i} className="bg-card rounded-2xl p-5 animate-pulse">
                 <div className="flex gap-4">
                   <div className="w-20 h-20 bg-border rounded-xl flex-shrink-0" />
                   <div className="flex-1 space-y-2">
@@ -334,7 +334,7 @@ export default function OrdersPage() {
 
         ) : orders.length === 0 ? (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-border">
+          <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-dashed border-border">
             <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center mb-5 ring-1 ring-border">
               <ShoppingBag className="w-9 h-9 text-ink-muted" />
             </div>
@@ -342,7 +342,7 @@ export default function OrdersPage() {
             <p className="text-ink-muted text-sm mb-6">Start shopping on BATAMART marketplace!</p>
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-2 bg-primary hover:brightness-95 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-soft transition-all"
+              className="inline-flex items-center gap-2 bg-ink hover:bg-primary text-background px-6 py-3 rounded-xl font-semibold text-sm shadow-soft transition-all"
             >
               Browse Products <ArrowRight className="w-4 h-4" />
             </Link>
@@ -359,7 +359,7 @@ export default function OrdersPage() {
                 className={`rounded-2xl border shadow-soft hover:shadow-soft transition-all duration-200 overflow-hidden ${
                   isGfd
                     ? 'bg-gradient-to-br from-rose-50 to-white border-rose-200/70 ring-1 ring-rose-100'
-                    : 'bg-white border-border'
+                    : 'bg-card border-border'
                 }`}
               >
 
@@ -488,7 +488,7 @@ export default function OrdersPage() {
                       <button
                         onClick={() => nav(`review-product-${order.id}`, `/orders/${order.id}/review-product`)}
                         disabled={!!actionLoading[`review-product-${order.id}`]}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:brightness-95 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 shadow-soft shadow-primary/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-ink hover:bg-primary text-background rounded-xl font-semibold text-sm transition-all disabled:opacity-50 shadow-soft shadow-primary/20"
                       >
                         {actionLoading[`review-product-${order.id}`]
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -502,7 +502,7 @@ export default function OrdersPage() {
                       <button
                         onClick={() => nav(`review-seller-${order.id}`, `/orders/${order.id}/review-seller`)}
                         disabled={!!actionLoading[`review-seller-${order.id}`]}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-sm transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-ink hover:bg-primary text-background rounded-lg font-medium text-sm transition-all disabled:opacity-50"
                       >
                         {actionLoading[`review-seller-${order.id}`]
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />

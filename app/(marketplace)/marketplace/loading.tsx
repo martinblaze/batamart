@@ -5,7 +5,7 @@ export default function MarketplaceLoading() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl overflow-hidden border border-border animate-pulse">
+            <div key={i} className="bg-card rounded-xl overflow-hidden border border-border animate-pulse">
               <div className="aspect-square bg-surface" />
               <div className="p-3 space-y-2">
                 <div className="h-3 bg-surface rounded w-1/2" />

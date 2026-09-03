@@ -75,13 +75,13 @@ export function ToastContainer() {
   const getStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return 'bg-white border-success/30';
+        return 'bg-card border-success/30';
       case 'error':
-        return 'bg-white border-danger/30';
+        return 'bg-card border-danger/30';
       case 'warning':
-        return 'bg-white border-warning/30';
+        return 'bg-card border-warning/30';
       case 'info':
-        return 'bg-white border-primary/30';
+        return 'bg-card border-primary/30';
     }
   };
 

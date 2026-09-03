@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/components/layout/Logo'
+import {
+  AuthShell,
+  AuthNotice,
+  AuthSubmit,
+  OtpInput,
+} from '@/components/auth/AuthShell'
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -28,27 +33,6 @@ export default function VerifyPage() {
       router.push('/signup')
     }
   }, [router])
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return
-
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`)
-      nextInput?.focus()
-    }
-  }
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`)
-      prevInput?.focus()
-    }
-  }
 
   const handleResend = async () => {
     if (resending) return
@@ -84,7 +68,7 @@ export default function VerifyPage() {
     const otpCode = otp.join('')
 
     if (otpCode.length !== 6) {
-      setError('Please enter complete OTP')
+      setError('Please enter the complete 6-digit code')
       return
     }
 
@@ -115,16 +99,15 @@ export default function VerifyPage() {
         sessionStorage.removeItem('signup_data')
         sessionStorage.removeItem('login_data')
 
-        // Redirect based on whether profile is complete
         if (result.user.hostelName) {
           router.push('/marketplace')
         } else {
           router.push('/profile/setup')
         }
       } else {
-        setError(result.error || 'Invalid OTP')
+        setError(result.error || 'Invalid code')
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -132,92 +115,60 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center mb-4">
-            <Logo size={40} />
-          </div>
-          <h1 className="text-[28px] font-semibold text-ink mb-2">Verify your account</h1>
-          <p className="text-ink-secondary">
-            We sent a code to <span className="font-medium text-ink">{contact}</span>
-          </p>
+    <AuthShell
+      eyebrow="Verification"
+      title="Verify your account"
+      subtitle={
+        contact ? (
+          <>
+            We sent a six-digit code to{' '}
+            <span className="font-medium text-ink">{contact}</span>
+          </>
+        ) : (
+          'We sent a six-digit code to your inbox.'
+        )
+      }
+      back={{ href: '/signup', label: 'Back to signup' }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="mb-4 block text-center font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">
+            Enter 6-digit code
+          </label>
+          <OtpInput value={otp} onChange={setOtp} disabled={loading} />
         </div>
 
-        {/* Verification Form */}
-        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* OTP Input */}
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-4 text-center">
-                Enter 6-digit code
-              </label>
-              <div className="flex justify-center gap-2">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    id={`otp-${index}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-2xl font-semibold border border-border rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors bg-surface text-ink"
-                  />
-                ))}
-              </div>
-            </div>
+        {error && <AuthNotice className="text-center">{error}</AuthNotice>}
 
-            {/* Error Message */}
-            {error && (
-              <div className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm text-center">
-                {error}
-              </div>
-            )}
+        <AuthSubmit type="submit" loading={loading} loadingText="Verifying…">
+          Verify &amp; continue
+        </AuthSubmit>
+      </form>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] transition-all disabled:opacity-50"
-            >
-              {loading ? 'Verifying…' : 'Verify & continue'}
-            </button>
-          </form>
+      <p className="mt-6 text-center text-sm text-ink-secondary">
+        Didn&apos;t receive a code?{' '}
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resending}
+          className="font-medium text-primary transition-opacity hover:underline disabled:opacity-50"
+        >
+          {resending ? 'Resending…' : resent ? 'Code resent' : 'Resend'}
+        </button>
+      </p>
 
-          {/* Resend */}
-          <div className="mt-6 text-center">
-            <p className="text-ink-secondary text-sm">
-              Didn&apos;t receive a code?{' '}
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resending}
-                className="text-primary font-medium hover:underline disabled:opacity-50"
-              >
-                {resending ? 'Resending…' : resent ? 'Code resent' : 'Resend'}
-              </button>
-            </p>
-          </div>
+      {!process.env.NEXT_PUBLIC_PRODUCTION && (
+        <AuthNotice tone="warning" className="mt-6">
+          Development mode — the code is printed to your terminal.
+        </AuthNotice>
+      )}
 
-          {/* Back Link */}
-          <div className="mt-4 text-center">
-            <Link href="/signup" className="text-ink-secondary text-sm hover:underline">
-              Back to signup
-            </Link>
-          </div>
-        </div>
-
-        {/* Dev Note */}
-        <div className="mt-6 bg-warning/5 border border-warning/20 rounded-lg p-4">
-          <p className="text-sm text-warning text-center">
-            <strong>Development mode:</strong> check your terminal/console for the OTP code
-          </p>
-        </div>
-      </div>
-    </div>
+      <p className="mt-6 text-center text-sm text-ink-secondary">
+        Wrong address?{' '}
+        <Link href="/signup" className="font-medium text-primary hover:underline">
+          Start over
+        </Link>
+      </p>
+    </AuthShell>
   )
 }
-

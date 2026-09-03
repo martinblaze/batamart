@@ -136,7 +136,7 @@ export default function SearchAutocomplete({
         />,
         document.body
       )}
-      <div className="relative z-50 flex items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2.5 shadow-sm transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+      <div className="relative z-50 flex items-center gap-2.5 rounded-lg border border-border bg-card px-4 py-3 transition-[border-color,box-shadow] duration-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/12">
         <Search className="h-4 w-4 text-ink-muted" />
         <input
           ref={inputRef}
@@ -181,13 +181,13 @@ export default function SearchAutocomplete({
       </div>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-3xl border border-border bg-white shadow-soft">
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-3xl border border-border bg-card shadow-soft">
           {!trimmed && (
             <div className="border-b border-border px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Recent searches</p>
+              <p className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-muted">Recent searches</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {recent.length > 0 ? recent.map((item) => (
-                  <button key={item} type="button" onClick={() => choose(item)} className="inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-semibold text-ink-secondary hover:bg-primary/10 hover:text-primary">
+                  <button key={item} type="button" onClick={() => choose(item)} className="ui-chip !py-1.5 !text-xs">
                     <Clock3 className="h-3 w-3" /> {item}
                   </button>
                 )) : <span className="text-xs text-ink-muted">No recent searches yet.</span>}
@@ -196,7 +196,7 @@ export default function SearchAutocomplete({
           )}
 
           <div className="px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">{trimmed ? 'Suggestions' : 'Popular searches'}</p>
+            <p className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-muted">{trimmed ? 'Suggestions' : 'Popular searches'}</p>
             {loading && <p className="mt-2 text-xs text-ink-muted">Searching...</p>}
             <div className="mt-2 space-y-1">
               {(trimmed ? live : popular).length > 0 ? (trimmed ? live : popular).map((item, index) => (

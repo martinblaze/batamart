@@ -2,6 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { Plus, Trash2, Pencil, Check, X, MapPin, Truck } from 'lucide-react'
+import {
+  AdminHeader, AdminPanel, AdminEmpty, AdminButton,
+} from '@/components/admin/AdminUI'
+import { Badge } from '@/components/ui/Badge'
 
 type University = { id: string; name: string; shortName: string }
 type Zone = { id: string; universityId: string; name: string; isActive: boolean }
@@ -164,53 +168,61 @@ export default function AdminDeliveryZonesPage() {
     fetchRoutes(universityId)
   }
 
-  if (loading) return <div className="text-ink-secondary">Loading delivery zones...</div>
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
+      </div>
+    )
+  }
 
   const activeZones = zones.filter(z => z.isActive)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink flex items-center gap-2">
-            <Truck className="w-6 h-6 text-primary" /> Delivery Zones & Routes
-          </h1>
-          <p className="text-sm text-ink-muted mt-1">
-            Rider gets 70% of the delivery fee, referrer gets ₦{REFERRAL_FLAT_BONUS} flat (if the buyer was referred),
-            Batamart keeps the remaining 30%. Same-zone deliveries are a flat ₦{SAME_ZONE_FEE}.
-          </p>
-        </div>
-
-        {universities.length > 1 && (
-          <select
-            value={universityId}
-            onChange={e => handleUniversityChange(e.target.value)}
-            className="border border-border rounded-lg px-3 py-2 text-sm bg-white"
-          >
-            {universities.map(u => <option key={u.id} value={u.id}>{u.shortName}</option>)}
-          </select>
-        )}
-      </div>
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Logistics"
+        title="Zones & routes"
+        description={
+          <>
+            Riders take 70% of the delivery fee. A referrer takes a flat ₦{REFERRAL_FLAT_BONUS} when
+            the buyer was referred, and BataMart keeps the rest. Same-zone deliveries are a flat
+            ₦{SAME_ZONE_FEE}.
+          </>
+        }
+        actions={
+          universities.length > 1 ? (
+            <select
+              value={universityId}
+              onChange={e => handleUniversityChange(e.target.value)}
+              aria-label="University"
+              className="h-9 cursor-pointer border border-border bg-card px-3 text-[13px] text-ink transition-colors hover:border-ink/25 focus:border-ink/40 focus:outline-none"
+            >
+              {universities.map(u => <option key={u.id} value={u.id}>{u.shortName}</option>)}
+            </select>
+          ) : undefined
+        }
+      />
 
       {error && (
-        <div className="bg-danger/10 border border-danger/30 text-danger text-sm rounded-xl px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 border border-danger/25 bg-danger/5 px-4 py-3.5 text-sm text-danger">
           {error}
-          <button onClick={() => setError('')}><X className="w-4 h-4" /></button>
+          <button onClick={() => setError('')} aria-label="Dismiss">
+            <X className="h-4 w-4" strokeWidth={1.75} />
+          </button>
         </div>
       )}
 
       {/* Zones list */}
-      <div className="bg-white border border-border rounded-2xl p-5">
-        <h2 className="text-ink font-semibold mb-3 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-primary" /> Zones ({zones.length})
-        </h2>
-
-        <div className="flex flex-wrap gap-2 mb-4">
+      <AdminPanel
+        title={`Zones · ${zones.length}`}
+      >
+        <div className="mb-5 flex flex-wrap gap-2">
           {zones.map(zone => (
             <div
               key={zone.id}
-              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm border ${
-                zone.isActive ? 'bg-surface border-border' : 'bg-danger/5 border-danger/20 opacity-60'
+              className={`flex items-center gap-2.5 border px-3 py-2 text-sm ${
+                zone.isActive ? 'border-border bg-surface' : 'border-danger/20 bg-danger/5 opacity-70'
               }`}
             >
               {editingZoneId === zone.id ? (
@@ -218,7 +230,7 @@ export default function AdminDeliveryZonesPage() {
                   <input
                     value={editingZoneName}
                     onChange={e => setEditingZoneName(e.target.value)}
-                    className="border border-border rounded px-2 py-1 text-xs w-28"
+                    className="w-28 border border-border bg-card px-2 py-1 text-xs text-ink focus:border-ink/40 focus:outline-none"
                     autoFocus
                   />
                   <button onClick={() => saveZoneName(zone.id)}><Check className="w-3.5 h-3.5 text-success" /></button>
@@ -231,9 +243,9 @@ export default function AdminDeliveryZonesPage() {
                     <Pencil className="w-3.5 h-3.5 text-ink-muted hover:text-primary" />
                   </button>
                   <button onClick={() => toggleZoneActive(zone)} title={zone.isActive ? 'Deactivate' : 'Activate'}>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${zone.isActive ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                    <Badge status={zone.isActive ? 'success' : 'danger'}>
                       {zone.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                    </Badge>
                   </button>
                   <button onClick={() => deleteZone(zone)}>
                     <Trash2 className="w-3.5 h-3.5 text-ink-muted hover:text-danger" />
@@ -244,43 +256,40 @@ export default function AdminDeliveryZonesPage() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 border-t border-border pt-5">
           <input
             value={newZoneName}
             onChange={e => setNewZoneName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addZone()}
             placeholder="New zone name (e.g. Aroma)"
-            className="border border-border rounded-lg px-3 py-2 text-sm flex-1 max-w-xs"
+            className="h-9 max-w-xs flex-1 border border-border bg-card px-3 text-sm text-ink placeholder:text-ink-muted focus:border-ink/40 focus:outline-none"
           />
-          <button
-            onClick={addZone}
-            disabled={!newZoneName.trim()}
-            className="flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-3 py-2 rounded-lg disabled:opacity-50"
-          >
-            <Plus className="w-4 h-4" /> Add Zone
-          </button>
+          <AdminButton tone="ink" onClick={addZone} disabled={!newZoneName.trim()} icon={Plus}>
+            Add zone
+          </AdminButton>
         </div>
-      </div>
+      </AdminPanel>
 
       {/* Route price matrix */}
-      <div className="bg-white border border-border rounded-2xl p-5 overflow-x-auto">
-        <h2 className="text-ink font-semibold mb-3">Route Prices</h2>
+      <AdminPanel title="Route prices" className="overflow-x-auto">
         {activeZones.length < 2 ? (
-          <p className="text-sm text-ink-muted">Add at least 2 active zones to start pricing routes.</p>
+          <p className="text-sm text-ink-secondary">
+            Add at least two active zones before you can price routes between them.
+          </p>
         ) : (
           <table className="min-w-full text-sm border-separate border-spacing-0">
             <thead>
               <tr>
-                <th className="text-left p-2 text-ink-muted font-semibold sticky left-0 bg-white">Zone</th>
+                <th className="ui-mono ui-mono-sm sticky left-0 bg-card p-2 text-left font-medium text-ink-muted">Zone</th>
                 {activeZones.map(z => (
-                  <th key={z.id} className="p-2 text-ink-muted font-semibold text-center min-w-[110px]">{z.name}</th>
+                  <th key={z.id} className="ui-mono ui-mono-sm min-w-[110px] p-2 text-center font-medium text-ink-muted">{z.name}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {activeZones.map((rowZone, rowIdx) => (
                 <tr key={rowZone.id}>
-                  <td className="p-2 font-semibold text-ink sticky left-0 bg-white border-t border-border">{rowZone.name}</td>
+                  <td className="sticky left-0 border-t border-border bg-card p-2 text-sm font-medium text-ink">{rowZone.name}</td>
                   {activeZones.map((colZone, colIdx) => {
                     if (rowZone.id === colZone.id) {
                       return (
@@ -307,7 +316,7 @@ export default function AdminDeliveryZonesPage() {
                               value={editingPrice}
                               onChange={e => setEditingPrice(e.target.value)}
                               onKeyDown={e => e.key === 'Enter' && saveCell(rowZone.id, colZone.id)}
-                              className="border border-border rounded px-1.5 py-1 text-xs w-20"
+                              className="w-20 border border-border bg-card px-1.5 py-1 text-xs text-ink focus:border-ink/40 focus:outline-none"
                               autoFocus
                             />
                             <button onClick={() => saveCell(rowZone.id, colZone.id)}><Check className="w-3.5 h-3.5 text-success" /></button>
@@ -319,7 +328,7 @@ export default function AdminDeliveryZonesPage() {
                             className="group w-full"
                             title="Click to edit"
                           >
-                            <div className="font-semibold text-ink group-hover:text-primary">₦{route.price.toLocaleString()}</div>
+                            <div className="ui-figure text-sm text-ink transition-colors group-hover:text-primary">₦{route.price.toLocaleString()}</div>
                             <div className="text-[10px] text-ink-muted">
                               R:₦{splitFee(route.price).rider} · P:₦{splitFee(route.price).platform}
                             </div>
@@ -328,9 +337,9 @@ export default function AdminDeliveryZonesPage() {
                         ) : (
                           <button
                             onClick={() => startEditCell(rowZone.id, colZone.id)}
-                            className="text-xs text-primary hover:underline"
+                            className="ui-mono ui-mono-sm text-ink-muted transition-colors hover:text-ink"
                           >
-                            + Set price
+                            + Set
                           </button>
                         )}
                       </td>
@@ -341,33 +350,50 @@ export default function AdminDeliveryZonesPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </AdminPanel>
 
       {/* Flat route list, useful for deleting / spotting inactive routes */}
-      <div className="bg-white border border-border rounded-2xl p-5">
-        <h2 className="text-ink font-semibold mb-3">All Routes ({routes.length})</h2>
-        <div className="space-y-2">
-          {routes.map(r => {
-            const split = splitFee(r.price)
-            return (
-              <div key={r.id} className="flex items-center justify-between bg-surface rounded-xl px-3.5 py-2.5 text-sm">
-                <div>
-                  <span className="font-semibold text-ink">{r.zoneA.name} ↔ {r.zoneB.name}</span>
-                  <span className="text-ink-muted ml-2">₦{r.price.toLocaleString()}</span>
-                  <span className="text-ink-muted ml-2 text-xs">
-                    (Rider ₦{split.rider} · Batamart ₦{split.platform} gross, ₦{split.platform - split.referrer} net if buyer was referred)
-                  </span>
-                  {!r.isActive && <span className="ml-2 text-[10px] font-semibold text-danger bg-danger/10 px-1.5 py-0.5 rounded">INACTIVE</span>}
+      <AdminPanel title={`All routes · ${routes.length}`} padded={false}>
+        {routes.length === 0 ? (
+          <AdminEmpty
+            className="border-0"
+            icon={MapPin}
+            title="No routes yet"
+            description="Price a pair of zones in the matrix above and it appears here."
+          />
+        ) : (
+          <div className="ui-divide">
+            {routes.map(r => {
+              const split = splitFee(r.price)
+              return (
+                <div key={r.id} className="ui-row">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-sm font-medium text-ink">
+                        {r.zoneA.name} ↔ {r.zoneB.name}
+                      </span>
+                      <span className="ui-figure text-sm text-ink">
+                        ₦{r.price.toLocaleString()}
+                      </span>
+                      {!r.isActive && <Badge status="danger">Inactive</Badge>}
+                    </div>
+                    <p className="mt-1.5 text-xs text-ink-muted">
+                      Rider ₦{split.rider} · BataMart ₦{split.platform} gross, ₦{split.platform - split.referrer} net when the buyer was referred
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => deleteRoute(r.id)}
+                    aria-label="Delete route"
+                    className="flex-shrink-0 text-ink-muted transition-colors hover:text-danger"
+                  >
+                    <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                  </button>
                 </div>
-                <button onClick={() => deleteRoute(r.id)}>
-                  <Trash2 className="w-4 h-4 text-ink-muted hover:text-danger" />
-                </button>
-              </div>
-            )
-          })}
-          {routes.length === 0 && <p className="text-sm text-ink-muted">No routes yet.</p>}
-        </div>
-      </div>
+              )
+            })}
+          </div>
+        )}
+      </AdminPanel>
     </div>
   )
 }

@@ -5,8 +5,10 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, AlertTriangle, Package, ChevronRight, ShoppingBag } from 'lucide-react'
+import { AlertTriangle, Package, ChevronRight, ShoppingBag } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
+import { Shell, PageHeader, EmptyState } from '@/components/ui/Shell'
+import { Badge } from '@/components/ui/Badge'
 
 interface Order {
   id: string
@@ -22,6 +24,23 @@ interface Order {
 }
 
 const DISPUTE_ELIGIBLE = ['DELIVERED', 'COMPLETED']
+
+/** Product thumbnail with a graceful fallback when the listing has no image. */
+function OrderThumb({ order }: { order: Order }) {
+  return (
+    <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden bg-surface">
+      {order.product.images?.[0] ? (
+        <img
+          src={order.product.images[0]}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <Package className="h-5 w-5 text-ink-muted" strokeWidth={1.5} />
+      )}
+    </div>
+  )
+}
 
 export default function SelectOrderForDisputePage() {
   const router = useRouter()
@@ -61,136 +80,127 @@ export default function SelectOrderForDisputePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-[#000000] pb-24">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-5 h-5 text-warning" />
-            <h1 className="text-2xl font-semibold text-ink">Open a Dispute</h1>
-          </div>
-          <p className="text-ink-secondary text-sm">
-            Select the delivered order you want to dispute. Disputes must be opened within 48 hours of delivery.
-          </p>
-        </div>
+    <div className="min-h-screen bg-surface pb-24">
+      <Shell width="reading" className="pt-8 sm:pt-12">
+        <PageHeader
+          eyebrow="Support"
+          back={{ href: '/orders', label: 'All orders' }}
+          title={
+            <>
+              Open a <span className="ui-serif">dispute</span>
+            </>
+          }
+          description="Pick the delivered order you want to raise. Disputes must be opened within 48 hours of delivery."
+        />
 
         {error && (
-          <div className="bg-danger/10 border border-danger/30 text-danger rounded-xl px-4 py-3 mb-4 text-sm">
-            {error}
+          <div className="mt-8 flex items-start gap-3 border border-danger/25 bg-danger/5 px-4 py-3.5">
+            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
+            <p className="text-sm text-danger">{error}</p>
           </div>
         )}
 
         {/* Eligible orders */}
-        {eligibleOrders.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-border p-8 text-center">
-            <ShoppingBag className="w-10 h-10 text-ink-muted mx-auto mb-3" />
-            <p className="text-ink-secondary font-medium">No eligible orders</p>
-            <p className="text-ink-muted text-sm mt-1">
-              Only delivered or completed orders within 48 hours can be disputed.
-            </p>
-            <Link
-              href="/orders"
-              className="inline-block mt-4 text-primary text-sm font-semibold hover:underline"
-            >
-              View all orders →
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {eligibleOrders.map((order) => (
-              <button
-                key={order.id}
-                onClick={() =>
-                  router.push(
-                    `/orders/${order.id}/dispute${isApp ? '?app=true' : ''}`
-                  )
-                }
-                className="w-full bg-white border border-border rounded-2xl p-4 flex items-center gap-4 hover:border-primary/50 hover:shadow-soft transition-all text-left"
-              >
-                {/* Product image */}
-                <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
-                  {order.product.images?.[0] ? (
-                    <img
-                      src={order.product.images[0]}
-                      alt={order.product.name}
-                      className="w-full h-full object-cover"
+        <div className="mt-10">
+          {eligibleOrders.length === 0 ? (
+            <EmptyState
+              icon={ShoppingBag}
+              title="No eligible orders"
+              description="Only delivered or completed orders within the last 48 hours can be disputed."
+              action={
+                <Link
+                  href="/orders"
+                  className="inline-flex items-center gap-2 bg-ink px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-ink/90"
+                >
+                  View all orders
+                </Link>
+              }
+            />
+          ) : (
+            <>
+              <p className="ui-eyebrow mb-5">Eligible orders</p>
+              <div className="ui-divide border border-border">
+                {eligibleOrders.map((order) => (
+                  <button
+                    key={order.id}
+                    onClick={() =>
+                      router.push(`/orders/${order.id}/dispute${isApp ? '?app=true' : ''}`)
+                    }
+                    className="ui-row group w-full text-left"
+                  >
+                    <OrderThumb order={order} />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {order.product.name}
+                      </p>
+                      <p className="ui-mono ui-mono-sm mt-1.5 text-ink-muted">
+                        #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
+                      </p>
+                      <p className="mt-1 text-xs text-ink-secondary">
+                        <span className="ui-figure text-[13px] text-ink">
+                          ₦{order.totalAmount.toLocaleString()}
+                        </span>
+                        {' · '}
+                        {new Date(
+                          order.deliveredAt ?? order.completedAt ?? order.createdAt
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <ChevronRight
+                      className="h-4 w-4 flex-shrink-0 text-ink-muted transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:text-ink"
+                      strokeWidth={2}
                     />
-                  ) : (
-                    <Package className="w-6 h-6 text-ink-muted m-auto mt-4" />
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-ink truncate">
-                    {order.product.name}
-                  </p>
-                  <p className="text-sm text-ink-secondary">
-                    Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
-                  </p>
-                  <p className="text-sm text-ink-muted">
-                    ₦{order.totalAmount.toLocaleString()} ·{' '}
-                    {new Date(
-                      order.deliveredAt ?? order.completedAt ?? order.createdAt
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <ChevronRight className="w-5 h-5 text-ink-muted flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Already disputed orders */}
         {disputedOrders.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wider mb-3">
-              Existing Disputes
-            </h2>
-            <div className="space-y-3">
+          <div className="mt-14">
+            <p className="ui-eyebrow mb-5">Existing disputes</p>
+            <div className="ui-divide border border-border">
               {disputedOrders.map((order) => (
                 <Link
                   key={order.id}
                   href={`/orders/${order.id}`}
-                  className="flex items-center gap-4 bg-white border border-border rounded-2xl p-4 hover:border-border transition-all"
+                  className="ui-row group"
                 >
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
-                    {order.product.images?.[0] ? (
-                      <img
-                        src={order.product.images[0]}
-                        alt={order.product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Package className="w-6 h-6 text-ink-muted m-auto mt-4" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-ink truncate">
+                  <OrderThumb order={order} />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">
                       {order.product.name}
                     </p>
-                    <p className="text-sm text-ink-secondary">
-                      Order #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
+                    <p className="ui-mono ui-mono-sm mt-1.5 text-ink-muted">
+                      #{order.orderNumber ?? order.id.slice(-6).toUpperCase()}
                     </p>
-                    <span className="inline-block text-xs font-semibold text-danger bg-danger/10 px-2 py-0.5 rounded-full mt-1">
-                      Disputed
-                    </span>
+                    <div className="mt-2">
+                      <Badge status="danger">Disputed</Badge>
+                    </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-ink-muted flex-shrink-0" />
+
+                  <ChevronRight
+                    className="h-4 w-4 flex-shrink-0 text-ink-muted transition-transform duration-300 ease-out group-hover:translate-x-0.5 group-hover:text-ink"
+                    strokeWidth={2}
+                  />
                 </Link>
               ))}
             </div>
           </div>
         )}
-      </div>
+      </Shell>
     </div>
   )
 }

@@ -102,7 +102,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
                 <button
                   onClick={handleEnable}
                   disabled={isBusy}
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 h-11 rounded-lg text-sm font-medium bg-white text-primary transition-all disabled:opacity-60 active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 h-11 rounded-lg text-sm font-medium bg-card text-primary transition-all disabled:opacity-60 active:scale-[0.98]"
                 >
                   {isBusy
                     ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />Enabling…</>
@@ -122,7 +122,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
 
         ) : (
           /* ── PASSIVE ──────────────────────────────────────────────────── */
-          <div className="relative w-full rounded-2xl overflow-hidden bg-primary/5 border border-primary/20">
+          <div className="relative w-full overflow-hidden border border-border bg-card">
             {/* Dismiss sits absolutely */}
             <button
               onClick={handleDismiss}
@@ -135,8 +135,8 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
             <div className="p-4 pr-12">
               {/* Icon + text */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10">
-                  <BellOff className="w-4 h-4 text-primary" strokeWidth={1.75} />
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                  <BellOff className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-ink leading-tight">
@@ -152,7 +152,7 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
               <button
                 onClick={handleEnable}
                 disabled={isBusy}
-                className="w-full flex items-center justify-center gap-2 h-11 rounded-lg text-sm font-medium text-white bg-primary transition-all disabled:opacity-60 active:scale-[0.98]"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-ink font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-primary disabled:opacity-60 active:scale-[0.99]"
               >
                 {isBusy
                   ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />Enabling…</>

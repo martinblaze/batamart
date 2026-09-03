@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, children, variant = 'sheet', class
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative bg-white w-full sm:max-w-md max-h-[90vh] overflow-y-auto',
+          'relative bg-card w-full sm:max-w-md max-h-[90vh] overflow-y-auto',
           'animate-in duration-200',
           isSheet
             ? 'rounded-t-2xl sm:rounded-2xl slide-in-from-bottom sm:zoom-in-95'
@@ -58,7 +58,7 @@ export function Modal({ open, onClose, title, children, variant = 'sheet', class
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-4 py-4 border-b border-border sticky top-0 bg-white">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-border sticky top-0 bg-card">
             <h2 className="text-[16px] font-medium text-ink">{title}</h2>
             <button
               onClick={onClose}

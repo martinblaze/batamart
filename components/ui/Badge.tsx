@@ -12,6 +12,7 @@ export type BadgeStatus =
   | 'danger'
   | 'warning'
   | 'neutral'
+  | 'ink'
   | 'campaign';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -20,36 +21,40 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   pill?: boolean;
 }
 
-// Design bible section 8 — Badges. Status-based only: background = status
-// color at 10% opacity, text = status color at full value. One implementation
-// consolidates every ad-hoc badge chip in the app.
+/* Badges are mono, uppercase and tightly tracked — the "instrument panel"
+   voice. Solid tinted fills at 10% read washy at this size, so each status
+   gets a legible tint plus a hairline of its own colour, which holds up over
+   both card white and a product photograph. */
 const statusStyles: Record<BadgeStatus, string> = {
-  'in-stock': 'bg-success/10 text-success',
-  'low-stock': 'bg-warning/10 text-warning',
-  'out-of-stock': 'bg-danger/10 text-danger',
-  verified: 'bg-primary/10 text-primary',
-  new: 'bg-primary/10 text-primary',
-  success: 'bg-success/10 text-success',
-  danger: 'bg-danger/10 text-danger',
-  warning: 'bg-warning/10 text-warning',
-  neutral: 'bg-surface text-ink-secondary',
-  // Seasonal campaign badges (e.g. Girlfriend's Day) are the one deliberate exception
-  // to the status-color system — they carry a fixed brand color, not a semantic status.
-  campaign: 'bg-rose-500/10 text-rose-600',
+  'in-stock': 'bg-success/12 text-success ring-success/25',
+  'low-stock': 'bg-warning/14 text-warning ring-warning/30',
+  'out-of-stock': 'bg-danger/12 text-danger ring-danger/25',
+  verified: 'bg-primary/12 text-primary ring-primary/25',
+  new: 'bg-primary/12 text-primary ring-primary/25',
+  success: 'bg-success/12 text-success ring-success/25',
+  danger: 'bg-danger/12 text-danger ring-danger/25',
+  warning: 'bg-warning/14 text-warning ring-warning/30',
+  neutral: 'bg-surface text-ink-secondary ring-border',
+  // On photography: solid ink reads at any brightness where a tint would not.
+  ink: 'bg-ink text-background ring-transparent',
+  // Seasonal campaign badges carry a fixed brand colour, not a semantic status.
+  campaign: 'bg-rose-500/14 text-rose-600 ring-rose-500/30',
 };
 
 export function Badge({ status = 'neutral', icon: Icon, pill = false, className, children, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 py-1 px-2.5 text-xs font-medium',
-        pill ? 'rounded-full' : 'rounded-md',
+        'inline-flex items-center gap-1 py-1 px-2',
+        'font-mono text-[10px] uppercase tracking-[0.1em] font-medium leading-none',
+        'ring-1 ring-inset',
+        pill ? 'rounded-full' : 'rounded-sm',
         statusStyles[status],
         className
       )}
       {...props}
     >
-      {Icon && <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />}
+      {Icon && <Icon className="w-3 h-3" strokeWidth={2} />}
       {children}
     </span>
   );

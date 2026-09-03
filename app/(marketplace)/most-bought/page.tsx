@@ -109,17 +109,18 @@ export default function MostBoughtPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-7">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-secondary hover:text-primary mb-4"
+          className="group mb-5 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-secondary transition-colors duration-300 hover:text-ink"
         >
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="bg-white rounded-2xl border border-border shadow-soft p-4 sm:p-5 mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <h1 className="text-xl sm:text-2xl font-semibold text-ink">Most bought daily</h1>
-          </div>
-          <p className="text-sm text-ink-secondary">
+        <div className="mb-6 border-b border-border pb-6">
+          <p className="ui-eyebrow mb-2.5 max-w-[16rem]">
+            <TrendingUp className="h-3.5 w-3.5" strokeWidth={2} />
+            Updated daily
+          </p>
+          <h1 className="text-[clamp(1.6rem,3.4vw,2.4rem)] text-ink">Most bought daily</h1>
+          <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-ink-secondary">
             Updated every day and stacked over time. Keep scrolling.
           </p>
         </div>
@@ -127,7 +128,7 @@ export default function MostBoughtPage() {
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-border overflow-hidden animate-pulse">
+              <div key={i} className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
                 <div className="aspect-square bg-surface" />
                 <div className="p-3 space-y-2">
                   <div className="h-3 bg-surface rounded" />
@@ -138,11 +139,11 @@ export default function MostBoughtPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="bg-white rounded-2xl border border-danger/30 p-10 text-center">
+          <div className="bg-card rounded-2xl border border-danger/30 p-10 text-center">
             <p className="text-danger font-semibold">{error}</p>
           </div>
         ) : list.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-border p-10 text-center">
+          <div className="bg-card rounded-2xl border border-border p-10 text-center">
             <p className="text-ink-secondary font-semibold">No trending purchases yet.</p>
           </div>
         ) : (
@@ -155,7 +156,7 @@ export default function MostBoughtPage() {
                     setNavigatingProductId(item.product.id)
                     router.push(`/product/${item.product.id}`)
                   }}
-                  className="bg-white rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-soft transition-shadow"
+                  className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-soft transition-shadow"
                 >
                   <div className="relative aspect-square bg-surface overflow-hidden">
                     <img

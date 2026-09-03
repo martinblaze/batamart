@@ -7,6 +7,9 @@ import {
   AlertTriangle, User, DollarSign, MessageSquare,
   Truck, Send, Loader2, CheckCircle, Package, Phone
 } from 'lucide-react'
+import { AdminHeader, AdminPanel, AdminEmpty } from '@/components/admin/AdminUI'
+import { DataRow } from '@/components/ui/Shell'
+import { Badge } from '@/components/ui/Badge'
 
 const PROCESSING_FEE = 0.10
 
@@ -127,13 +130,21 @@ export default function AdminDisputeDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+      <div className="flex justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
 
-  if (!dispute) return <div className="text-center py-12 text-ink-secondary">Dispute not found</div>
+  if (!dispute) {
+    return (
+      <AdminEmpty
+        icon={AlertTriangle}
+        title="Dispute not found"
+        description="This case may already have been resolved and archived."
+      />
+    )
+  }
 
   const stage = getPickupStage(dispute)
   const rider = dispute.order?.rider
@@ -151,91 +162,78 @@ export default function AdminDisputeDetailPage() {
     <div className="max-w-5xl mx-auto space-y-6">
 
       {/* ── Overview ──────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="p-3 bg-warning/10 rounded-xl">
-            <AlertTriangle className="w-6 h-6 text-warning" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-ink">Dispute #{dispute.id.slice(0, 8).toUpperCase()}</h1>
-            <p className="text-ink-secondary text-sm">Order #{dispute.order?.orderNumber}</p>
-          </div>
-          <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-semibold ${
-            isFullyDone ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-          }`}>
+      <AdminHeader
+        eyebrow={`Order #${dispute.order?.orderNumber}`}
+        title={<span className="ui-figure">#{dispute.id.slice(0, 8).toUpperCase()}</span>}
+        description="Work the case top to bottom: send a rider, confirm the return, then release the money."
+        actions={
+          <Badge status={isFullyDone ? 'success' : 'warning'}>
             {isFullyDone ? 'Resolved' : dispute.status.replace(/_/g, ' ')}
-          </span>
+          </Badge>
+        }
+      />
+
+      <div className="grid gap-px border border-border bg-border md:grid-cols-3">
+        <div className="bg-card p-4">
+          <p className="ui-mono ui-mono-sm text-ink-muted">Buyer</p>
+          <p className="mt-2 truncate text-sm font-medium text-ink">{dispute.buyer?.name}</p>
+          <p className="mt-0.5 truncate text-xs text-ink-secondary">{dispute.buyer?.email}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-          <div className="p-4 bg-surface rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <User className="w-4 h-4 text-primary" />
-              <p className="text-ink-secondary text-xs uppercase tracking-wide">Buyer</p>
-            </div>
-            <p className="text-ink font-semibold">{dispute.buyer?.name}</p>
-            <p className="text-ink-secondary text-sm">{dispute.buyer?.email}</p>
-          </div>
-
-          <div className="p-4 bg-surface rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-warning" />
-              <p className="text-ink-secondary text-xs uppercase tracking-wide">Order Amount</p>
-            </div>
-            <p className="text-ink font-semibold text-xl">₦{orderTotal.toLocaleString()}</p>
-            <p className="text-ink-muted text-xs mt-1">After 10% fee → buyer gets ₦{netRefund.toLocaleString()}</p>
-          </div>
-
-          <div className="p-4 bg-surface rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <Truck className="w-4 h-4 text-primary" />
-              <p className="text-ink-secondary text-xs uppercase tracking-wide">Original Rider</p>
-            </div>
-            {rider ? (
-              <>
-                <p className="text-ink font-semibold">{rider.name}</p>
-                <p className="text-ink-secondary text-sm flex items-center gap-1">
-                  <Phone className="w-3 h-3" />{rider.phone}
-                </p>
-              </>
-            ) : (
-              <p className="text-ink-muted text-sm">No rider on record</p>
-            )}
-          </div>
+        <div className="bg-card p-4">
+          <p className="ui-mono ui-mono-sm text-ink-muted">Order amount</p>
+          <p className="ui-figure mt-2 text-xl text-ink">₦{orderTotal.toLocaleString()}</p>
+          <p className="mt-1 text-xs text-ink-muted">
+            After the 10% fee the buyer receives ₦{netRefund.toLocaleString()}
+          </p>
         </div>
 
-        <div className="p-4 bg-surface rounded-xl mb-4">
-          <p className="text-ink-secondary text-xs uppercase tracking-wide mb-2">Buyer's Complaint</p>
-          <p className="text-ink">{dispute.reason}</p>
-        </div>
-
-        {/* Fee breakdown */}
-        <div className="p-4 bg-surface rounded-xl border border-border text-sm space-y-1.5">
-          <div className="flex justify-between text-ink-secondary">
-            <span>Order total</span><span>₦{orderTotal.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-warning">
-            <span>Processing fee (10%)</span><span>− ₦{processingFee.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-success font-semibold border-t border-border pt-1.5">
-            <span>Buyer receives</span><span>₦{netRefund.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between text-primary">
-            <span>Rider pickup pay</span><span>₦{riderPickupPay.toLocaleString()}</span>
-          </div>
+        <div className="bg-card p-4">
+          <p className="ui-mono ui-mono-sm text-ink-muted">Original rider</p>
+          {rider ? (
+            <>
+              <p className="mt-2 truncate text-sm font-medium text-ink">{rider.name}</p>
+              <p className="mt-0.5 flex items-center gap-1 text-xs text-ink-secondary">
+                <Phone className="h-3 w-3" strokeWidth={1.75} />{rider.phone}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-ink-muted">No rider on record</p>
+          )}
         </div>
       </div>
 
+      <AdminPanel title="Buyer's complaint">
+        <p className="max-w-[70ch] whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
+          {dispute.reason}
+        </p>
+      </AdminPanel>
+
+      {/* Fee breakdown */}
+      <AdminPanel title="Money">
+        <div className="ui-divide">
+          <DataRow label="Order total" value={`₦${orderTotal.toLocaleString()}`} />
+          <DataRow
+            label="Processing fee (10%)"
+            value={<span className="text-warning">− ₦{processingFee.toLocaleString()}</span>}
+          />
+          <DataRow
+            label="Buyer receives"
+            emphasis
+            value={<span className="text-success">₦{netRefund.toLocaleString()}</span>}
+          />
+          <DataRow label="Rider pickup pay" value={`₦${riderPickupPay.toLocaleString()}`} />
+        </div>
+      </AdminPanel>
+
       {/* ── Action panel ──────────────────────────────────────────────────── */}
       {!isFullyDone && (
-        <div className="bg-white border border-border rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-ink mb-5">Actions</h2>
-
+        <AdminPanel title="Actions">
           {actionFeedback && (
-            <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
+            <div className={`mb-5 border px-4 py-3 text-sm font-medium ${
               actionFeedback.startsWith('Error')
-                ? 'bg-danger/10 text-danger border border-danger/20'
-                : 'bg-success/10 text-success border border-success/20'
+                ? 'border-danger/25 bg-danger/5 text-danger'
+                : 'border-success/25 bg-success/5 text-success'
             }`}>
               {actionFeedback}
             </div>
@@ -253,16 +251,16 @@ export default function AdminDisputeDetailPage() {
               const done   = currentStageIndex > stepIndex
               const active = currentStageIndex === stepIndex
               return (
-                <div key={step.key} className="flex items-center gap-2 flex-shrink-0">
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                    done   ? 'bg-success/10 text-success' :
-                    active ? 'bg-warning/10 text-warning' :
-                             'bg-surface text-ink-muted'
+                <div key={step.key} className="flex flex-shrink-0 items-center gap-2">
+                  <div className={`ui-mono ui-mono-sm flex items-center gap-1.5 border px-3 py-1.5 ${
+                    done   ? 'border-success/25 bg-success/5 text-success' :
+                    active ? 'border-ink bg-ink text-background' :
+                             'border-border bg-card text-ink-muted'
                   }`}>
-                    {done && <CheckCircle className="w-3 h-3" />}
+                    {done && <CheckCircle className="h-3 w-3" strokeWidth={2} />}
                     {step.label}
                   </div>
-                  {i < arr.length - 1 && <span className="text-ink-muted text-xs">→</span>}
+                  {i < arr.length - 1 && <span className="text-xs text-ink-muted">→</span>}
                 </div>
               )
             })}
@@ -286,7 +284,7 @@ export default function AdminDisputeDetailPage() {
                   <button
                     onClick={() => doPickupAction('send_rider')}
                     disabled={actionLoading === 'send_rider'}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-primary hover:brightness-95 text-white rounded-xl font-semibold transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-ink hover:bg-primary text-white rounded-xl font-semibold transition-colors disabled:opacity-50"
                   >
                     {actionLoading === 'send_rider'
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Notifying Rider...</>
@@ -403,7 +401,7 @@ export default function AdminDisputeDetailPage() {
                   <button
                     onClick={() => doPickupAction('release_rider_pay')}
                     disabled={actionLoading === 'release_rider_pay'}
-                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-primary hover:brightness-95 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                    className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-ink hover:bg-primary text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
                   >
                     {actionLoading === 'release_rider_pay'
                       ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -414,48 +412,48 @@ export default function AdminDisputeDetailPage() {
               </div>
             </div>
           )}
-        </div>
+        </AdminPanel>
       )}
 
       {/* ── Resolved summary ──────────────────────────────────────────────── */}
       {isFullyDone && (
-        <div className="bg-white border border-success/30 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <CheckCircle className="w-5 h-5 text-success" />
-            <h2 className="text-lg font-semibold text-ink">Dispute Resolved</h2>
-          </div>
-          <p className="text-ink-secondary">
-            Status: <span className="text-ink font-semibold">{dispute.status.replace(/_/g, ' ')}</span>
+        <section className="ui-panel border-success/30">
+          <p className="ui-eyebrow mb-5 text-success">
+            <CheckCircle className="h-3.5 w-3.5" strokeWidth={1.75} />
+            Resolved
           </p>
-          {dispute.refundAmount > 0 && (
-            <p className="text-ink-secondary mt-1">
-              Refund paid: <span className="text-success font-semibold">₦{dispute.refundAmount.toLocaleString()}</span>
-            </p>
-          )}
-        </div>
+          <div className="ui-divide">
+            <DataRow label="Status" value={dispute.status.replace(/_/g, ' ')} />
+            {dispute.refundAmount > 0 && (
+              <DataRow
+                label="Refund paid"
+                emphasis
+                value={<span className="text-success">₦{dispute.refundAmount.toLocaleString()}</span>}
+              />
+            )}
+          </div>
+        </section>
       )}
 
       {/* ── Chat ──────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <MessageSquare className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold text-ink">Chat with Buyer</h2>
-        </div>
+      <AdminPanel title="Chat with buyer">
 
-        <div className="space-y-3 max-h-72 overflow-y-auto mb-4 pr-1">
+        <div className="mb-5 max-h-72 space-y-3 overflow-y-auto pr-1">
           {messages.length === 0 ? (
-            <p className="text-ink-muted text-sm text-center py-6">No messages yet</p>
+            <p className="py-8 text-center text-sm text-ink-secondary">No messages yet</p>
           ) : (
             messages.map((msg: any) => {
               const isAdmin = msg.senderType === 'ADMIN'
               return (
                 <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-sm px-4 py-3 rounded-2xl text-sm ${
-                    isAdmin ? 'bg-primary text-white rounded-br-sm' : 'bg-surface text-ink rounded-bl-sm'
+                  <div className={`max-w-sm px-4 py-3 text-sm leading-relaxed ${
+                    isAdmin ? 'bg-ink text-background' : 'border border-border bg-surface text-ink'
                   }`}>
-                    <p className="text-xs opacity-60 mb-1 font-semibold">{isAdmin ? 'You (Admin)' : 'Buyer'}</p>
+                    <p className="ui-mono ui-mono-sm mb-1.5 opacity-60">
+                      {isAdmin ? 'You (admin)' : 'Buyer'}
+                    </p>
                     <p>{msg.message}</p>
-                    <p className="text-xs opacity-40 mt-1">
+                    <p className="ui-mono ui-mono-sm mt-1.5 opacity-45">
                       {new Date(msg.createdAt).toLocaleTimeString('en-NG', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -466,26 +464,30 @@ export default function AdminDisputeDetailPage() {
         </div>
 
         {!isFullyDone && (
-          <form onSubmit={handleSendMessage} className="flex gap-2">
+          <form onSubmit={handleSendMessage} className="flex gap-2 border-t border-border pt-5">
             <input
               type="text"
               value={adminMessage}
               onChange={(e) => setAdminMessage(e.target.value)}
-              placeholder="Message the buyer..."
-              className="flex-1 px-4 py-2.5 bg-surface border border-border rounded-xl text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              placeholder="Message the buyer…"
+              className="h-10 flex-1 border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
               disabled={sendingMsg}
             />
             <button
               type="submit"
               disabled={sendingMsg || !adminMessage.trim()}
-              className="px-4 py-2.5 bg-danger/100/80 hover:bg-danger/100 text-ink rounded-xl text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+              className="ui-mono ui-mono-sm inline-flex h-10 flex-shrink-0 items-center gap-2 bg-ink px-4 text-white transition-colors hover:bg-primary disabled:pointer-events-none disabled:opacity-40"
             >
-              {sendingMsg ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sendingMsg ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+              ) : (
+                <Send className="h-3.5 w-3.5" strokeWidth={2} />
+              )}
               Send
             </button>
           </form>
         )}
-      </div>
+      </AdminPanel>
 
     </div>
   )

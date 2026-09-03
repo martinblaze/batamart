@@ -509,7 +509,7 @@ function ProductCard({ product, onClick, delay = 0 }: {
   return (
     <div
       onClick={onClick}
-      className="product-card card-enter bg-white rounded-xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
+      className="product-card card-enter bg-card rounded-xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative aspect-square bg-surface overflow-hidden">
@@ -542,10 +542,10 @@ function ProductCard({ product, onClick, delay = 0 }: {
           </div>
         )}
         <div className="quick-actions absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-card/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
             <Eye className="w-3.5 h-3.5 text-ink-secondary" />
           </button>
-          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-white/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
+          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-card/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
             <Flag className="w-3.5 h-3.5 text-ink-secondary hover:text-danger" />
           </button>
         </div>
@@ -624,7 +624,7 @@ function MiniProductCard({ product, onClick }: { product: any; onClick: () => vo
 
 function SkeletonCard({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="card-enter bg-white rounded-xl overflow-hidden border border-border shadow-soft" style={{ animationDelay: `${delay}ms` }}>
+    <div className="card-enter bg-card rounded-xl overflow-hidden border border-border shadow-soft" style={{ animationDelay: `${delay}ms` }}>
       <div className="aspect-square shimmer" />
       <div className="p-3 space-y-2">
         <div className="h-2.5 shimmer rounded-full w-1/2" />
@@ -642,10 +642,15 @@ function SkeletonCard({ delay = 0 }: { delay?: number }) {
 function PromoTicker() {
   const items = ['Secure payments', 'Verified campus sellers', 'Fast delivery', 'Buyer protection']
   return (
-    <div className="bg-surface border-b border-border overflow-hidden py-2">
-      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 px-4">
-        {items.map((item) => (
-          <span key={item} className="text-ink-secondary text-xs font-medium">{item}</span>
+    <div className="overflow-hidden border-b border-border bg-card py-2.5">
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4">
+        {items.map((item, i) => (
+          <span key={item} className="flex items-center gap-3">
+            {i > 0 && <span aria-hidden className="h-2.5 w-px bg-border" />}
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">
+              {item}
+            </span>
+          </span>
         ))}
       </div>
     </div>
@@ -796,7 +801,7 @@ function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
         const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
         const Icon = panel.icon
         return (
-          <div key={panel.title} className="bg-white rounded-xl border border-border overflow-hidden">
+          <div key={panel.title} className="bg-card rounded-xl border border-border overflow-hidden">
             <div className="p-3 pb-2">
               <p className="text-sm font-medium text-ink leading-tight">{panel.title}</p>
             </div>
@@ -904,7 +909,7 @@ function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
         return (
           <div
             key={panel.title}
-            className="bg-white rounded-xl border border-border overflow-hidden cursor-pointer group"
+            className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer group"
             onClick={() => onCategorySelect(panel.catFilter)}
           >
             <div className="p-3 pb-1">
@@ -951,7 +956,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
   const scrollBy = (dir: number) => rowRef.current?.scrollBy({ left: dir * 240, behavior: 'smooth' })
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
       <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
           <h2 className="text-lg font-semibold text-ink section-header-line">{title}</h2>
@@ -965,7 +970,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
       </div>
       <div className="relative group/row px-5 py-4">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-4 overflow-x-auto no-scrollbar scroll-section">
@@ -986,7 +991,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1024,9 +1029,9 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
           )}
         </div>
       </div>
-      <div className="bg-white px-5 py-4 relative group/row">
+      <div className="bg-card px-5 py-4 relative group/row">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-section">
@@ -1037,7 +1042,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1063,7 +1068,7 @@ function PullIndicator({ pullDistance, isRefreshing }: { pullDistance: number; i
       }}
     >
       <div
-        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white shadow-soft border border-border"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-card shadow-soft border border-border"
         style={{ transform: `scale(${0.85 + progress * 0.15})` }}
       >
         <RefreshCw
@@ -1186,7 +1191,7 @@ function JustDroppedSection({ allProducts, onProductClick }: {
         </div>
       </div>
 
-      <div className="bg-white p-4">
+      <div className="bg-card p-4">
         {filtered.length === 0 ? (
           <div className="text-center py-12">
             <CrownIcon className="w-10 h-10 text-border mx-auto mb-3" />
@@ -1197,7 +1202,7 @@ function JustDroppedSection({ allProducts, onProductClick }: {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-5 lg:grid-cols-4">
               {visible.map((p, i) => (
                 <ProductCard key={p.id} product={p} onClick={() => onProductClick(p.id)} delay={i * 25} />
               ))}
@@ -1230,23 +1235,22 @@ function JustDroppedSection({ allProducts, onProductClick }: {
 // ══ MAIN PAGE ══
 // ─────────────────────────────────────────────
 // ── Stats Banner ──────────────────────────────────────────────────────────────
+// Figures lead, labels follow. The icons are gone: four blue glyphs repeated
+// across a row add no information and pull the eye off the numbers, which are
+// the only reason this strip exists.
 function StatsBanner() {
   return (
-    <div className="bg-white rounded-xl border border-border overflow-hidden">
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border">
-        {CAMPUS_STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="flex flex-col items-center justify-center p-4 text-center gap-1"
-          >
-            <stat.icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            <p className="text-xl font-semibold text-ink">
-              {stat.value}
-            </p>
-            <p className="text-[11px] text-ink-muted font-medium leading-tight">{stat.label}</p>
-          </div>
-        ))}
-      </div>
+    <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
+      {CAMPUS_STATS.map((stat) => (
+        <div key={stat.label} className="bg-card px-5 py-6">
+          <p className="ui-figure text-[clamp(1.5rem,3vw,2.1rem)] leading-none text-ink">
+            {stat.value}
+          </p>
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">
+            {stat.label}
+          </p>
+        </div>
+      ))}
     </div>
   )
 }
@@ -1257,54 +1261,57 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
   onCategorySelect: (cat: string) => void
 }) {
   return (
-    <div className="bg-white rounded-xl border border-border p-5 overflow-hidden">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="w-4 h-4 text-primary" strokeWidth={1.75} />
-        <h2 className="text-[16px] font-semibold text-ink">Trending on campus</h2>
-      </div>
-      <div className="flex gap-2 flex-wrap">
+    <section>
+      <p className="ui-eyebrow mb-4">
+        <TrendingUp className="w-3.5 h-3.5" strokeWidth={2} />
+        Trending on campus
+      </p>
+      {/* A rail rather than a wrapping block: on a phone these scroll, and on
+          a desktop they still read as a single line of options. */}
+      <div className="ui-rail">
         {BRAND_CHIPS.map((chip) => (
-          <button
-            key={chip.label}
-            onClick={() => onCategorySelect(chip.cat)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-surface hover:bg-primary/10 border border-border rounded-lg text-sm font-medium text-ink-secondary hover:text-primary transition-colors"
-          >
+          <button key={chip.label} onClick={() => onCategorySelect(chip.cat)} className="ui-chip">
             <chip.icon className="w-4 h-4" strokeWidth={1.75} /> {chip.label}
           </button>
         ))}
       </div>
-    </div>
+    </section>
   )
 }
 
 // ── Study Essentials Quick Links ─────────────────────────────────────────────
 function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
   return (
-    <div className="rounded-xl overflow-hidden border border-border">
-      <div className="bg-primary px-5 py-4">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-white" strokeWidth={1.75} />
-          <div>
-            <h2 className="text-[16px] font-semibold text-white">Study essentials</h2>
-            <p className="text-white/80 text-[11px] mt-0.5">Everything you need for lectures & exams</p>
-          </div>
-        </div>
+    <section>
+      <div className="mb-5">
+        <p className="ui-eyebrow mb-2.5">
+          <BookOpen className="w-3.5 h-3.5" strokeWidth={2} />
+          Study essentials
+        </p>
+        <h2 className="text-[clamp(1.15rem,2.2vw,1.6rem)] text-ink">
+          Everything for lectures &amp; exams
+        </h2>
       </div>
-      <div className="bg-white px-5 py-4">
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
-          {STUDY_LINKS.map((link) => (
-            <button
-              key={link.label}
-              onClick={() => onSearch(link.query)}
-              className="flex flex-col items-center gap-2 p-3 rounded-lg bg-surface hover:bg-primary/10 border border-border transition-colors group"
-            >
-              <link.icon className="w-5 h-5 text-ink-secondary group-hover:text-primary transition-colors" strokeWidth={1.75} />
-              <p className="text-[10px] font-medium text-ink-secondary group-hover:text-primary text-center leading-tight">{link.label}</p>
-            </button>
-          ))}
-        </div>
+      {/* `gap-px` over a border-coloured ground draws hairline dividers
+          between cells, instead of eight separately outlined boxes. */}
+      <div className="grid grid-cols-4 gap-px border border-border bg-border sm:grid-cols-8">
+        {STUDY_LINKS.map((link) => (
+          <button
+            key={link.label}
+            onClick={() => onSearch(link.query)}
+            className="group flex flex-col items-center gap-2.5 bg-card px-2 py-5 transition-colors duration-300 hover:bg-surface"
+          >
+            <link.icon
+              className="h-5 w-5 text-ink-muted transition-colors duration-300 group-hover:text-primary"
+              strokeWidth={1.5}
+            />
+            <p className="text-center text-[11px] font-medium leading-tight text-ink-secondary transition-colors duration-300 group-hover:text-ink">
+              {link.label}
+            </p>
+          </button>
+        ))}
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -1312,22 +1319,30 @@ function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
 function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string) => void }) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[16px] font-semibold text-ink">All categories</h2>
-        <span className="text-[11px] text-ink-muted font-medium">Browse everything</span>
+      <div className="mb-5">
+        <p className="ui-eyebrow mb-2.5">Browse everything</p>
+        <h2 className="text-[clamp(1.15rem,2.2vw,1.6rem)] text-ink">All categories</h2>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-5">
         {MEGA_CATEGORIES.map((cat) => (
           <button
             key={cat.name}
             onClick={() => onCategorySelect(cat.name)}
-            className="relative overflow-hidden rounded-xl bg-white border border-border p-4 text-left group cursor-pointer transition-transform duration-150 ease-out hover:-translate-y-0.5"
+            className="group relative cursor-pointer bg-card p-5 text-left transition-colors duration-300 hover:bg-surface"
           >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-              <cat.icon className="w-5 h-5 text-primary" strokeWidth={1.75} />
-            </div>
-            <p className="text-ink font-medium text-sm leading-tight">{cat.name.split(' /')[0]}</p>
-            <p className="text-ink-muted text-[10px] font-medium mt-0.5">{cat.count} items</p>
+            <cat.icon
+              className="mb-8 h-5 w-5 text-ink-muted transition-colors duration-300 group-hover:text-primary"
+              strokeWidth={1.5}
+            />
+            <p className="text-sm font-medium leading-tight text-ink">{cat.name.split(' /')[0]}</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+              {cat.count} items
+            </p>
+            {/* Hairline that draws itself along the bottom edge on hover. */}
+            <span
+              aria-hidden
+              className="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-primary transition-transform duration-500 ease-out group-hover:scale-x-100"
+            />
           </button>
         ))}
       </div>
@@ -1338,30 +1353,26 @@ function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string
 // ── Why BataMart Trust Banner ─────────────────────────────────────────────────
 function TrustBanner() {
   return (
-    <div className="rounded-xl overflow-hidden border border-border">
-      <div className="bg-primary px-5 py-3">
-        <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-white" strokeWidth={1.75} />
-          <h2 className="text-[16px] font-semibold text-white">Why students trust BataMart</h2>
-        </div>
-      </div>
-      <div className="bg-white p-5">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {TRUST_POINTS.map((point) => (
-            <div
-              key={point.title}
-              className="flex items-start gap-3 p-3 rounded-lg bg-surface border border-border"
-            >
-              <point.icon className="w-5 h-5 flex-shrink-0 mt-0.5 text-primary" strokeWidth={1.75} />
-              <div>
-                <p className="text-xs font-medium text-ink">{point.title}</p>
-                <p className="text-[10px] text-ink-secondary mt-0.5 leading-tight">{point.desc}</p>
-              </div>
+    // A full-bleed dark band, so it uses `slab` rather than `ink`: `bg-ink`
+    // inverts to cream in dark mode and would take this white-on-dark text
+    // with it.
+    <section className="border-y border-border bg-slab px-5 py-8 text-slab-fg sm:py-10">
+      <p className="ui-eyebrow mb-6 !text-slab-fg/45">
+        <Shield className="h-3.5 w-3.5" strokeWidth={2} />
+        Why students trust BataMart
+      </p>
+      <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+        {TRUST_POINTS.map((point) => (
+          <div key={point.title} className="flex items-start gap-3.5">
+            <point.icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" strokeWidth={1.75} />
+            <div className="min-w-0">
+              <p className="text-[13px] font-medium text-slab-fg">{point.title}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slab-fg/55">{point.desc}</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -1379,10 +1390,10 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
       <div className={`${sectionClass} px-5 py-4`}>
-        <h2 className="text-base font-semibold text-white">{title}</h2>
+        <h2 className="text-base font-semibold text-background">{title}</h2>
         <p className="text-white/70 text-[11px] mt-0.5">{subtitle}</p>
       </div>
-      <div className="bg-white p-3">
+      <div className="bg-card p-3">
         <div className="grid grid-cols-4 grid-rows-2 gap-2" style={{ height: 280 }}>
           {/* Big left tile */}
           <div
@@ -1397,7 +1408,7 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
             {picks[0] && (
               <div className="absolute inset-0 bg-ink/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
                 <div>
-                  <p className="text-white text-xs font-medium line-clamp-1">{picks[0].name}</p>
+                  <p className="text-background text-xs font-medium line-clamp-1">{picks[0].name}</p>
                   <p className="text-white/80 text-[10px] font-medium">₦{picks[0].price?.toLocaleString()}</p>
                 </div>
               </div>
@@ -1460,7 +1471,7 @@ function TopSellersRow({ products, onProductClick }: {
   if (topSellers.length === 0) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+    <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
       <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
           <h2 className="text-base font-semibold text-ink section-header-line">Top campus sellers</h2>
@@ -1526,19 +1537,19 @@ function FlashSaleCountdown({ products, onProductClick }: {
   if (picks.length === 0) return null
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border">
-      {/* Header — design bible bans countdown-timer urgency tactics, so this is a calm section header, not a ticking clock */}
-      <div className="bg-primary px-5 py-4">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-white" strokeWidth={1.75} />
-          <div>
-            <h2 className="text-[16px] font-semibold text-white">Flash picks today</h2>
-            <p className="text-white/80 text-[11px] mt-0.5">A rotating selection of deals</p>
-          </div>
+    <div>
+      {/* Design bible bans countdown-timer urgency tactics, so this stays a
+          calm section header rather than a ticking clock. */}
+      <div className="mb-5 flex items-end justify-between gap-6">
+        <div>
+          <p className="ui-eyebrow mb-2.5">
+            <Zap className="h-3.5 w-3.5" strokeWidth={2} />
+            Flash picks today
+          </p>
+          <h2 className="text-[clamp(1.15rem,2.2vw,1.6rem)] text-ink">A rotating selection of deals</h2>
         </div>
       </div>
-      {/* Products */}
-      <div className="bg-white px-5 py-4">
+      <div>
         <div className="flex gap-3 overflow-x-auto no-scrollbar">
           {picks.map((p) => (
             <div
@@ -1546,10 +1557,10 @@ function FlashSaleCountdown({ products, onProductClick }: {
               className="flash-card flex-shrink-0 w-36 cursor-pointer"
               onClick={() => onProductClick(p.id)}
             >
-              <div className="aspect-square rounded-lg overflow-hidden bg-surface mb-2 relative">
-                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover" />
+              <div className="ui-tile__media relative mb-3 aspect-[4/5] overflow-hidden">
+                <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="h-full w-full object-cover" />
                 {p.discountPercent && (
-                  <span className="absolute top-1.5 left-1.5 bg-danger text-white text-[9px] font-medium px-1.5 py-0.5 rounded-md">
+                  <span className="absolute left-2 top-2 bg-ink px-1.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-background">
                     -{p.discountPercent}%
                   </span>
                 )}
@@ -2099,7 +2110,7 @@ export default function MarketplacePage() {
     return map
   }, [zoneFilteredProducts])
 
-  if (!splashDone) return <div className="min-h-screen bg-white" />
+  if (!splashDone) return <div className="min-h-screen bg-card" />
 
   return (
     <div className="min-h-screen bg-surface marketplace-shell">
@@ -2110,7 +2121,7 @@ export default function MarketplacePage() {
           onClick={() => setShowReferralPopup(false)}
         >
           <div
-            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-white shadow-soft"
+            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-card shadow-soft"
             onClick={e => e.stopPropagation()}
           >
             {/* Close btn */}
@@ -2160,7 +2171,7 @@ export default function MarketplacePage() {
                   </div>
                   <button
                     onClick={copyReferralCode}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-primary text-white font-medium text-xs px-3 py-2 rounded-lg hover:brightness-95 transition-colors"
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-primary text-background font-medium text-xs px-3 py-2 rounded-lg hover:brightness-95 transition-colors"
                   >
                     {referralCopied
                       ? <><CheckCircle className="w-3.5 h-3.5" strokeWidth={1.75} /> Copied</>
@@ -2174,13 +2185,13 @@ export default function MarketplacePage() {
               <div className="flex gap-3">
                 <button
                   onClick={shareReferralWhatsApp}
-                  className="flex-1 flex items-center justify-center gap-2 h-11 rounded-lg font-medium text-sm bg-primary text-white hover:brightness-95 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 h-11 rounded-lg font-medium text-sm bg-primary text-background hover:brightness-95 transition-colors"
                 >
                   Share on WhatsApp
                 </button>
                 <button
                   onClick={() => { setShowReferralPopup(false); router.push('/referrals') }}
-                  className="px-4 h-11 rounded-lg font-medium text-sm bg-white border border-border text-ink hover:bg-surface transition-colors flex items-center gap-1.5"
+                  className="px-4 h-11 rounded-lg font-medium text-sm bg-card border border-border text-ink hover:bg-surface transition-colors flex items-center gap-1.5"
                 >
                   <Users className="w-4 h-4" strokeWidth={1.75} /> View
                 </button>
@@ -2216,10 +2227,10 @@ export default function MarketplacePage() {
                 <button
                   key={cat.name}
                   onClick={() => handleCategorySelect(cat.name)}
-                  className={`cat-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap text-[11px] sm:text-xs flex-shrink-0 transition-all ${
+                  className={`cat-btn relative flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[11px] font-medium transition-colors duration-300 sm:text-xs ${
                     selectedCategory === cat.name
-                      ? 'cat-active bg-primary text-white'
-                      : 'text-ink-secondary hover:text-ink hover:bg-surface'
+                      ? 'cat-active text-ink after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-primary'
+                      : 'text-ink-secondary hover:text-ink'
                   }`}
                 >
                   <cat.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
@@ -2234,8 +2245,10 @@ export default function MarketplacePage() {
                 <select
                   value={selectedZone}
                   onChange={e => setSelectedZone(e.target.value)}
-                  className={`text-[11px] font-medium rounded-lg pl-6 pr-2 py-1.5 outline-none border transition-all ${
-                    selectedZone ? 'bg-primary/10 text-primary border-primary/30' : 'bg-surface text-ink-secondary border-transparent'
+                  className={`appearance-none rounded-lg border py-2 pl-7 pr-3 text-[11px] font-medium outline-none transition-colors duration-300 ${
+                    selectedZone
+                      ? 'border-primary/40 bg-primary/8 text-primary'
+                      : 'border-border bg-card text-ink-secondary hover:border-ink/25'
                   }`}
                 >
                   <option value="">All zones</option>
@@ -2245,12 +2258,15 @@ export default function MarketplacePage() {
                 </select>
               </div>
             )}
-            <div className="flex items-center gap-0.5 bg-surface rounded-lg p-0.5 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center rounded-lg border border-border bg-card">
               {(['feed', 'grid'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`px-2.5 py-1.5 rounded-md text-[11px] font-medium capitalize transition-all ${viewMode === mode ? 'bg-white text-primary shadow-soft' : 'text-ink-muted'}`}
+                  aria-label={mode === 'feed' ? 'List view' : 'Grid view'}
+                  className={`px-2.5 py-2 text-[11px] font-medium capitalize transition-colors duration-300 ${
+                    viewMode === mode ? 'bg-ink text-background' : 'text-ink-muted hover:text-ink'
+                  }`}
                 >
                   {mode === 'feed' ? <List className="w-3.5 h-3.5" strokeWidth={1.75} /> : <Grid3X3 className="w-3.5 h-3.5" strokeWidth={1.75} />}
                 </button>
@@ -2271,7 +2287,7 @@ export default function MarketplacePage() {
         ) : selectedCategory !== 'All' ? (
           /* ── CATEGORY FILTER VIEW ── */
           <div>
-            <div className="flex items-center gap-2 mb-4 bg-white rounded-xl border border-border shadow-soft px-4 py-3">
+            <div className="flex items-center gap-2 mb-4 bg-card rounded-xl border border-border shadow-soft px-4 py-3">
               <button
                 onClick={() => handleCategorySelect('All')}
                 className="text-xs font-semibold text-ink-muted hover:text-primary transition-colors flex items-center gap-1"
@@ -2296,7 +2312,7 @@ export default function MarketplacePage() {
                 <select
                   value={sortMode}
                   onChange={(e) => setSortMode(e.target.value as 'relevance' | 'price_asc' | 'price_desc' | 'newest')}
-                  className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-white text-ink-secondary outline-none"
+                  className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-card text-ink-secondary outline-none"
                 >
                   <option value="relevance">Relevance</option>
                   <option value="newest">Newest</option>
@@ -2307,7 +2323,7 @@ export default function MarketplacePage() {
               </div>
             </div>
             {sortedFilteredByCategory.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-border">
+              <div className="text-center py-16 bg-card rounded-2xl border border-border">
                 <ShoppingBag className="w-12 h-12 text-border mx-auto mb-3" />
                 <p className="text-ink-muted font-semibold mb-4">Nothing here yet</p>
                 <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft">
@@ -2326,12 +2342,12 @@ export default function MarketplacePage() {
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
           <div>
-            <div className="flex items-center justify-between mb-3 bg-white rounded-xl px-4 py-3 border border-border shadow-soft gap-2">
+            <div className="flex items-center justify-between mb-3 bg-card rounded-xl px-4 py-3 border border-border shadow-soft gap-2">
               <LiveStatsBar count={allProducts.length} />
               <select
                 value={sortMode}
                 onChange={(e) => setSortMode(e.target.value as 'relevance' | 'price_asc' | 'price_desc' | 'newest')}
-                className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-white text-ink-secondary outline-none"
+                className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-card text-ink-secondary outline-none"
               >
                 <option value="relevance">Relevance</option>
                 <option value="newest">Newest</option>
@@ -2362,7 +2378,7 @@ export default function MarketplacePage() {
           <div className="space-y-4">
 
             {allProducts.length > 0 && (
-              <div className="bg-white rounded-xl border border-border shadow-soft px-4 py-3">
+              <div className="bg-card rounded-xl border border-border shadow-soft px-4 py-3">
                 <LiveStatsBar count={allProducts.length} />
               </div>
             )}
@@ -2461,7 +2477,7 @@ export default function MarketplacePage() {
 
             {/* ── Recently Viewed ── */}
             {recentlyViewed.length > 0 && (
-              <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
                 <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
                   <div>
                     <h2 className="text-base font-semibold text-ink section-header-line">Recently Viewed</h2>
@@ -2522,7 +2538,7 @@ export default function MarketplacePage() {
 
             {/* ── Your Interests ── */}
             {interestCategories.length > 0 && (
-              <div className="bg-white rounded-xl border border-border p-5">
+              <div className="bg-card rounded-xl border border-border p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <Eye className="w-4 h-4 text-primary" strokeWidth={1.75} />
                   <h2 className="text-[16px] font-semibold text-ink">Your interests</h2>
@@ -2536,7 +2552,7 @@ export default function MarketplacePage() {
                       <button
                         key={cat}
                         onClick={() => handleCategorySelect(cat)}
-                        className="interest-pill flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-lg text-sm font-medium text-ink-secondary"
+                        className="interest-pill flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-lg text-sm font-medium text-ink-secondary"
                       >
                         {Icon && <Icon className="w-4 h-4" strokeWidth={1.75} />} {cat}
                       </button>
@@ -2600,7 +2616,7 @@ export default function MarketplacePage() {
             <JustDroppedSection allProducts={allProducts} onProductClick={handleProductClick} />
 
             {allProducts.length === 0 && (
-              <div className="text-center py-20 bg-white rounded-2xl border border-border">
+              <div className="text-center py-20 bg-card rounded-2xl border border-border">
                 <ShoppingBag className="w-14 h-14 text-border mx-auto mb-4" />
                 <p className="text-ink-secondary font-semibold text-lg mb-1">No products yet</p>
                 <p className="text-ink-muted text-sm mb-6">Be the first seller on your campus!</p>
@@ -2612,7 +2628,7 @@ export default function MarketplacePage() {
 
             {/* ── All Listings ── */}
             {discoverProducts.length > 0 && (
-              <div className="bg-white rounded-2xl border border-border shadow-soft p-5">
+              <div className="bg-card rounded-2xl border border-border shadow-soft p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-base font-semibold text-ink section-header-line">All Listings</h2>
@@ -2630,11 +2646,16 @@ export default function MarketplacePage() {
         )}
       </div>
 
-      {/* Floating Sell Button (mobile) */}
+      {/* Floating sell action. Ink rather than accent-with-a-pulse: a glowing
+          blue pill parked over the content competed with every product photo
+          on the page, which is the opposite of what a shortcut should do. */}
       {!isApp && (
-        <div className="fixed bottom-20 right-4 sm:right-6 z-40">
-          <Link href="/sell" className="btn-press glow-pulse flex items-center gap-2 px-5 py-3 bg-primary text-white rounded-2xl font-semibold text-sm shadow-soft shadow-soft">
-            Sell
+        <div className="fixed bottom-20 right-4 z-40 sm:right-6">
+          <Link
+            href="/sell"
+            className="btn-press flex items-center gap-2 rounded-lg bg-ink px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.16em] text-background shadow-[0_8px_30px_-10px_rgba(19,19,17,0.55)] transition-colors duration-300 hover:bg-primary"
+          >
+            Sell an item
           </Link>
         </div>
       )}

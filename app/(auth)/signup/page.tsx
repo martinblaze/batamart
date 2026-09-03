@@ -92,9 +92,9 @@ const PageShell = ({
 }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-surface">
     <div className="w-full max-w-md">
-      <div className="text-center mb-8">
-        <h1 className="text-[28px] font-semibold text-ink tracking-tight">BataMart</h1>
-        <p className="text-ink-secondary text-sm mt-1">Campus marketplace</p>
+      <div className="mb-8 text-center">
+        <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Campus marketplace</p>
+        <h1 className="text-[clamp(1.9rem,5vw,2.6rem)] leading-[1.02] text-ink">BataMart</h1>
         {selectedUniversity && (
           <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
             <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
@@ -465,14 +465,14 @@ function SignupForm() {
         {countdown && (
           <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
-            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+            <div className="bg-card rounded-xl px-4 py-3 inline-block">
               <p className="text-xs text-primary font-medium mb-1">Countdown</p>
               <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
               <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-xl p-8 shadow-soft">
           <div className="text-center mb-6">
             <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 bg-primary">
               <MapPin className="w-7 h-7 text-white" strokeWidth={1.75} />
@@ -517,7 +517,7 @@ function SignupForm() {
                         : 'border-border'
                     }`}>
                       {effectiveSelectedUniversity?.id === uni.id && (
-                        <div className="w-2 h-2 rounded-full bg-white" />
+                        <div className="w-2 h-2 rounded-full bg-card" />
                       )}
                     </div>
                   </div>
@@ -556,14 +556,14 @@ function SignupForm() {
         {countdown && (
           <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
-            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+            <div className="bg-card rounded-xl px-4 py-3 inline-block">
               <p className="text-xs text-primary font-medium mb-1">Countdown</p>
               <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
               <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={1} />
           <h2 className="text-[20px] font-semibold text-ink mb-1">Create account</h2>
           <p className="text-sm text-ink-secondary mb-6">Join the {effectiveSelectedUniversity?.shortName} marketplace</p>
@@ -628,36 +628,36 @@ function SignupForm() {
           ) : (
             <form onSubmit={handleSendOTP} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Full Name</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Full Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
                   placeholder="Your full name"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email Address</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Email Address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
                   placeholder="your@email.com"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Phone Number</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Phone Number</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   required
                   placeholder="08012345678"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
               </div>
 
@@ -666,13 +666,13 @@ function SignupForm() {
                   which redirects them to /become-seller to upgrade their account. */}
 
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Referral Code (Optional)</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Referral Code (Optional)</label>
                 <input
                   type="text"
                   value={referralCode}
                   onChange={e => setReferralCode(e.target.value.toUpperCase().trim())}
                   placeholder="e.g. BATAMART-ABC123"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink uppercase outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] uppercase text-ink outline-none transition-[border-color,box-shadow] duration-200 tracking-[0.12em] focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
                 <p className="text-xs text-ink-muted mt-1">Paste a code from a friend or use their referral link.</p>
               </div>
@@ -724,14 +724,14 @@ function SignupForm() {
         {countdown && (
           <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
-            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+            <div className="bg-card rounded-xl px-4 py-3 inline-block">
               <p className="text-xs text-primary font-medium mb-1">Countdown</p>
               <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
               <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={2} />
           <h2 className="text-[20px] font-semibold text-ink mb-1">Verify your email</h2>
           <p className="text-sm text-ink-secondary mb-6">
@@ -787,14 +787,14 @@ function SignupForm() {
         {countdown && (
           <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
-            <div className="bg-white rounded-xl px-4 py-3 inline-block">
+            <div className="bg-card rounded-xl px-4 py-3 inline-block">
               <p className="text-xs text-primary font-medium mb-1">Countdown</p>
               <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
               <p className="text-xs text-primary mt-1">June 22, 2026</p>
             </div>
           </div>
         )}
-        <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-xl p-8 shadow-soft">
           <StepDots current={3} />
 
           <div className="text-center mb-6">
@@ -816,7 +816,7 @@ function SignupForm() {
 
           <form onSubmit={handleLocationContinue} className="space-y-5">
             <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-2">Select your area</label>
+              <label className="mb-2.5 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Select your area</label>
               <div className="flex flex-wrap gap-2">
                 {areas.map(area => (
                   <button
@@ -837,7 +837,7 @@ function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Lodge Name / Landmark</label>
+              <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Lodge Name / Landmark</label>
               <div className="relative">
                 <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
@@ -852,7 +852,7 @@ function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Room Number</label>
+              <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Room Number</label>
               <div className="relative">
                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
@@ -867,7 +867,7 @@ function SignupForm() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Phone for Delivery</label>
+              <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Phone for Delivery</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                 <input
@@ -907,14 +907,14 @@ function SignupForm() {
       {countdown && (
         <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
             <p className="text-2xl mb-2">Timer</p>
-          <div className="bg-white rounded-xl px-4 py-3 inline-block">
+          <div className="bg-card rounded-xl px-4 py-3 inline-block">
             <p className="text-xs text-primary font-medium mb-1">Countdown</p>
             <p className="text-2xl font-semibold text-primary font-mono">{countdown}</p>
             <p className="text-xs text-primary mt-1">June 22, 2026</p>
           </div>
         </div>
       )}
-      <div className="bg-white border border-border rounded-xl p-8 shadow-soft">
+      <div className="bg-card border border-border rounded-xl p-8 shadow-soft">
         <StepDots current={4} />
         <h2 className="text-[20px] font-semibold text-ink mb-1">Set your password</h2>
         <p className="text-sm text-ink-secondary mb-6">Almost done, {name}!</p>
@@ -923,25 +923,25 @@ function SignupForm() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
+            <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               placeholder="Min 8 characters, include a number"
-              className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Confirm Password</label>
+            <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Confirm Password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               required
               placeholder="Repeat password"
-              className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </div>
 

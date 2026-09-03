@@ -35,7 +35,7 @@ export default function FilterGroup({
   const hiddenCount = Math.max(0, options.length - visibleOptions.length)
 
   return (
-    <div className="rounded-xl border border-border bg-white">
+    <div className="rounded-xl border border-border bg-card">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

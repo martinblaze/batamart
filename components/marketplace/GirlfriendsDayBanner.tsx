@@ -33,7 +33,7 @@ export default function GirlfriendsDayBanner() {
           </div>
           <p className="mt-0.5 truncate text-sm font-medium text-white/85">{CAMPAIGN.tagline}</p>
         </div>
-        <div className="hidden flex-shrink-0 items-center gap-1.5 rounded-lg bg-white px-3.5 py-2 text-sm font-semibold text-rose-600 transition-transform group-hover:translate-x-0.5 sm:flex">
+        <div className="hidden flex-shrink-0 items-center gap-1.5 rounded-lg bg-card px-3.5 py-2 text-sm font-semibold text-rose-600 transition-transform group-hover:translate-x-0.5 sm:flex">
           Shop the edit <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
         </div>
       </div>

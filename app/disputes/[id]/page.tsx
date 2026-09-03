@@ -7,6 +7,9 @@ import {
   Package, ArrowLeft, Clock, CheckCircle2, XCircle,
   ChevronRight, MessageSquare, Info, RefreshCw
 } from 'lucide-react'
+import { Shell, EmptyState } from '@/components/ui/Shell'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/button'
 
 interface DisputeMessage {
   id: string
@@ -37,66 +40,54 @@ interface Dispute {
 }
 
 // ── Status config ────────────────────────────────────────────────────────────
+// One semantic tone per state drives both the badge and the dot, so the
+// status reads the same everywhere on the page.
 const STATUS_CONFIG: Record<string, {
   label: string
   sublabel: string
-  color: string
-  bg: string
-  border: string
+  tone: BadgeStatus
   dot: string
   step: number
 }> = {
   OPEN: {
-    label: 'Case Opened',
+    label: 'Case opened',
     sublabel: 'Awaiting admin review',
-    color: 'text-primary',
-    bg: 'bg-primary/10',
-    border: 'border-primary/30',
+    tone: 'verified',
     dot: 'bg-primary',
     step: 1,
   },
   UNDER_REVIEW: {
-    label: 'Under Review',
-    sublabel: 'Admin is reviewing your case',
-    color: 'text-warning',
-    bg: 'bg-warning/10',
-    border: 'border-warning/30',
+    label: 'Under review',
+    sublabel: 'An admin is reviewing your case',
+    tone: 'warning',
     dot: 'bg-warning',
     step: 2,
   },
   RESOLVED_BUYER_FAVOR: {
-    label: 'Resolved — Refund Issued',
+    label: 'Refund issued',
     sublabel: 'Case closed in your favour',
-    color: 'text-success',
-    bg: 'bg-success/10',
-    border: 'border-success/30',
+    tone: 'success',
     dot: 'bg-success',
     step: 3,
   },
   RESOLVED_SELLER_FAVOR: {
-    label: 'Resolved — No Refund',
-    sublabel: 'Case closed in seller\'s favour',
-    color: 'text-ink-secondary',
-    bg: 'bg-surface',
-    border: 'border-border',
+    label: 'No refund',
+    sublabel: "Case closed in the seller's favour",
+    tone: 'neutral',
     dot: 'bg-ink-muted',
     step: 3,
   },
   RESOLVED_COMPROMISE: {
-    label: 'Resolved — Partial Refund',
-    sublabel: 'Compromise reached',
-    color: 'text-primary',
-    bg: 'bg-primary/10',
-    border: 'border-primary/30',
+    label: 'Partial refund',
+    sublabel: 'A compromise was reached',
+    tone: 'verified',
     dot: 'bg-primary',
     step: 3,
   },
   DISMISSED: {
-    label: 'Case Dismissed',
-    sublabel: 'Insufficient grounds for dispute',
-    color: 'text-danger',
-    bg: 'bg-danger/10',
-    border: 'border-danger/30',
+    label: 'Case dismissed',
+    sublabel: 'Insufficient grounds for a dispute',
+    tone: 'danger',
     dot: 'bg-danger',
     step: 3,
   },
@@ -248,10 +239,10 @@ export default function DisputeDetailsPage() {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface dark:bg-[#000000] flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-ink-secondary font-medium">Loading case details…</p>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
+          <p className="ui-mono ui-mono-sm mt-5 text-ink-muted">Loading case…</p>
         </div>
       </div>
     )
@@ -259,28 +250,27 @@ export default function DisputeDetailsPage() {
 
   if (!dispute) {
     return (
-      <div className="min-h-screen bg-surface dark:bg-[#000000] flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-danger" />
-          </div>
-          <h2 className="text-xl font-semibold text-ink mb-2">Case Not Found</h2>
-          <p className="text-ink-secondary mb-6 text-sm">{error || 'This dispute does not exist or you don\'t have access to it.'}</p>
-          <button
-            onClick={() => router.push('/orders')}
-            className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:brightness-95 transition-colors"
-          >
-            Back to Orders
-          </button>
-        </div>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <EmptyState
+            icon={AlertCircle}
+            title="Case not found"
+            description={error || "This dispute doesn't exist, or it isn't one you have access to."}
+            action={
+              <Button variant="ink" onClick={() => router.push('/orders')}>
+                Back to orders
+              </Button>
+            }
+          />
+        </Shell>
       </div>
     )
   }
 
   const isResolved = dispute.status.startsWith('RESOLVED_') || dispute.status === 'DISMISSED'
   const statusInfo = STATUS_CONFIG[dispute.status] ?? {
-    label: dispute.status, sublabel: '', color: 'text-ink-secondary',
-    bg: 'bg-surface', border: 'border-border', dot: 'bg-ink-muted', step: 1,
+    label: dispute.status, sublabel: '', tone: 'neutral' as BadgeStatus,
+    dot: 'bg-ink-muted', step: 1,
   }
   const preferenceInfo = dispute.resolutionPreference
     ? RESOLUTION_LABELS[dispute.resolutionPreference]
@@ -290,86 +280,109 @@ export default function DisputeDetailsPage() {
   const ticketId = `BATAMART-${dispute.id.slice(-8).toUpperCase()}`
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-[#000000]">
+    <div className="min-h-screen bg-surface">
 
       {/* ── Top bar ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-border sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between gap-4 px-4">
           <button
             onClick={() => router.push('/orders')}
-            className="flex items-center gap-2 text-ink-secondary hover:text-ink text-sm font-medium transition-colors"
+            className="group ui-mono ui-mono-sm inline-flex items-center gap-2 text-ink-secondary transition-colors hover:text-ink"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft
+              className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+              strokeWidth={2}
+            />
             Orders
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold text-ink-muted tracking-wider">{ticketId}</span>
+            <span className="ui-mono ui-mono-sm hidden text-ink-muted sm:inline">{ticketId}</span>
             {refreshing && (
-              <RefreshCw className="w-3.5 h-3.5 text-ink-muted animate-spin" />
+              <RefreshCw className="h-3 w-3 animate-spin text-ink-muted" strokeWidth={2} />
             )}
           </div>
 
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${statusInfo.bg} ${statusInfo.border} ${statusInfo.color}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot} ${!isResolved ? 'animate-pulse' : ''}`} />
+          <Badge status={statusInfo.tone} pill>
+            <span
+              className={`mr-0.5 h-1.5 w-1.5 rounded-full ${statusInfo.dot} ${
+                !isResolved ? 'animate-pulse' : ''
+              }`}
+            />
             {statusInfo.label}
-          </div>
+          </Badge>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
 
         {/* ── Case header ─────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="border border-border bg-card">
 
           {/* Product strip */}
-          <div className="flex items-center gap-4 p-5 border-b border-border">
-            <div className="w-14 h-14 rounded-xl overflow-hidden bg-surface flex-shrink-0">
+          <div className="flex items-center gap-4 border-b border-border p-5">
+            <div className="h-14 w-14 flex-shrink-0 overflow-hidden bg-surface">
               <img
                 src={dispute.order.product.images[0] || '/placeholder.png'}
-                alt={dispute.order.product.name}
-                className="w-full h-full object-cover"
+                alt=""
+                className="h-full w-full object-cover"
               />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-ink truncate">{dispute.order.product.name}</p>
-              <p className="text-sm text-ink-secondary mt-0.5">
-                Order #{dispute.order.orderNumber} &middot; ₦{dispute.order.totalAmount.toLocaleString()}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-ink">{dispute.order.product.name}</p>
+              <p className="mt-1 text-xs text-ink-secondary">
+                #{dispute.order.orderNumber} ·{' '}
+                <span className="ui-figure text-[13px] text-ink">
+                  ₦{dispute.order.totalAmount.toLocaleString()}
+                </span>
               </p>
             </div>
             <button
               onClick={() => router.push(`/orders/${dispute.order.id}`)}
-              className="flex items-center gap-1 text-xs text-primary font-semibold hover:underline transition-colors flex-shrink-0"
+              className="group ui-mono ui-mono-sm inline-flex flex-shrink-0 items-center gap-1 text-ink-secondary transition-colors hover:text-ink"
             >
-              View Order <ChevronRight className="w-3.5 h-3.5" />
+              View order
+              <ChevronRight
+                className="h-3 w-3 transition-transform duration-300 ease-out group-hover:translate-x-0.5"
+                strokeWidth={2}
+              />
             </button>
           </div>
 
           {/* Progress stepper */}
-          <div className="px-6 py-5">
-            <div className="flex items-center">
+          <div className="px-6 py-7">
+            <div className="flex items-start">
               {STEPS.map((step, idx) => {
                 const StepIcon = step.icon
                 const done = currentStep > idx + 1
                 const active = currentStep === idx + 1
                 const last = idx === STEPS.length - 1
                 return (
-                  <div key={step.key} className="flex items-center flex-1 last:flex-none">
+                  <div key={step.key} className="flex flex-1 items-start last:flex-none">
                     <div className="flex flex-col items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${done ? 'bg-ink border-ink'
-                          : active ? 'bg-primary border-primary'
-                            : 'bg-white border-border'
-                        }`}>
-                        <StepIcon className={`w-4 h-4 ${(done || active) ? 'text-white' : 'text-ink-muted'}`} />
+                      <div
+                        className={`flex h-[26px] w-[26px] items-center justify-center border transition-colors duration-500 ${
+                          done || active
+                            ? 'border-ink bg-ink text-background'
+                            : 'border-border bg-card text-ink-muted'
+                        }`}
+                      >
+                        <StepIcon className="h-3.5 w-3.5" strokeWidth={1.75} />
                       </div>
-                      <p className={`text-xs font-semibold mt-1.5 whitespace-nowrap ${active ? 'text-primary' : done ? 'text-ink' : 'text-ink-muted'
-                        }`}>
+                      <p
+                        className={`ui-mono ui-mono-sm mt-3 whitespace-nowrap transition-colors duration-500 ${
+                          done || active ? 'text-ink' : 'text-ink-muted'
+                        }`}
+                      >
                         {step.label}
                       </p>
                     </div>
                     {!last && (
-                      <div className={`flex-1 h-0.5 mx-3 mb-4 rounded-full transition-colors ${done ? 'bg-ink' : 'bg-border'
-                        }`} />
+                      <div
+                        className={`mx-3 mt-[13px] h-px flex-1 transition-colors duration-500 ${
+                          done ? 'bg-ink' : 'bg-border'
+                        }`}
+                      />
                     )}
                   </div>
                 )
@@ -378,111 +391,123 @@ export default function DisputeDetailsPage() {
           </div>
 
           {/* Status message */}
-          <div className={`mx-5 mb-5 px-4 py-3 rounded-xl border ${statusInfo.bg} ${statusInfo.border} flex items-start gap-3`}>
-            <Info className={`w-4 h-4 mt-0.5 flex-shrink-0 ${statusInfo.color}`} />
+          <div className="mx-5 mb-5 flex items-start gap-3 border border-border bg-surface px-4 py-3.5">
+            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-secondary" strokeWidth={1.75} />
             <div>
-              <p className={`text-sm font-semibold ${statusInfo.color}`}>{statusInfo.label}</p>
-              <p className={`text-xs mt-0.5 ${statusInfo.color} opacity-80`}>{statusInfo.sublabel}</p>
+              <p className="text-sm font-medium text-ink">{statusInfo.label}</p>
+              <p className="mt-0.5 text-xs text-ink-secondary">{statusInfo.sublabel}</p>
             </div>
           </div>
         </div>
 
         {/* ── Complaint + resolution details ──────────────────────────────── */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
 
           {/* Your complaint */}
-          <div className="bg-white rounded-2xl border border-border p-5">
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Your Complaint</p>
-            <p className="text-sm text-ink leading-relaxed">{dispute.reason}</p>
-            <p className="text-xs text-ink-muted mt-3">Filed {formatDateTime(dispute.createdAt)}</p>
+          <div className="ui-panel">
+            <p className="ui-eyebrow mb-5">Your complaint</p>
+            <p className="text-sm leading-relaxed text-ink">{dispute.reason}</p>
+            <p className="ui-mono ui-mono-sm mt-5 text-ink-muted">
+              Filed {formatDateTime(dispute.createdAt)}
+            </p>
           </div>
 
           {/* Resolution request / outcome */}
-          <div className="bg-white rounded-2xl border border-border p-5">
+          <div className="ui-panel">
             {isResolved && dispute.resolution ? (
               <>
-                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Admin Decision</p>
-                <p className="text-sm text-ink leading-relaxed">{dispute.resolution}</p>
+                <p className="ui-eyebrow mb-5">Admin decision</p>
+                <p className="text-sm leading-relaxed text-ink">{dispute.resolution}</p>
                 {dispute.refundAmount != null && dispute.refundAmount > 0 && (
-                  <div className="mt-3 inline-flex items-center gap-2 bg-success/10 border border-success/30 px-3 py-1.5 rounded-lg">
-                    <CheckCircle2 className="w-4 h-4 text-success" />
-                    <span className="text-sm font-semibold text-success">
-                      ₦{dispute.refundAmount.toLocaleString()} refund
+                  <div className="mt-5 inline-flex items-center gap-2 border border-success/25 bg-success/5 px-3.5 py-2">
+                    <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.75} />
+                    <span className="ui-figure text-sm text-success">
+                      ₦{dispute.refundAmount.toLocaleString()} refunded
                     </span>
                   </div>
                 )}
-                <p className="text-xs text-ink-muted mt-3">Resolved {formatDateTime(dispute.updatedAt)}</p>
+                <p className="ui-mono ui-mono-sm mt-5 text-ink-muted">
+                  Resolved {formatDateTime(dispute.updatedAt)}
+                </p>
               </>
             ) : preferenceInfo ? (
               <>
-                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Requested Resolution</p>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <preferenceInfo.icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{preferenceInfo.label}</p>
-                    <p className="text-xs text-ink-secondary mt-0.5">{preferenceInfo.desc}</p>
+                <p className="ui-eyebrow mb-5">Requested resolution</p>
+                <div className="flex items-start gap-3.5">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <preferenceInfo.icon className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{preferenceInfo.label}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-ink-secondary">
+                      {preferenceInfo.desc}
+                    </p>
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">Resolution</p>
-                <p className="text-sm text-ink-muted italic">Pending admin decision</p>
+                <p className="ui-eyebrow mb-5">Resolution</p>
+                <p className="ui-serif text-base text-ink-muted">Pending an admin decision</p>
               </>
             )}
           </div>
         </div>
 
         {/* ── Chat ────────────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="border border-border bg-card">
 
           {/* Chat header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-              <Shield className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center bg-ink">
+              <Shield className="h-4 w-4 text-background" strokeWidth={1.75} />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">BATAMARTMart Support</p>
-              <p className="text-xs text-ink-muted">Dispute Resolution Team · Replies within 24h</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink">BataMart Support</p>
+              <p className="mt-0.5 text-xs text-ink-secondary">
+                Dispute resolution · replies within 24h
+              </p>
             </div>
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className={`w-2 h-2 rounded-full ${isResolved ? 'bg-ink-muted' : 'bg-success animate-pulse'}`} />
-              <span className="text-xs text-ink-secondary font-medium">
+            <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  isResolved ? 'bg-ink-muted' : 'animate-pulse bg-success'
+                }`}
+              />
+              <span className="ui-mono ui-mono-sm text-ink-secondary">
                 {isResolved ? 'Closed' : 'Active'}
               </span>
             </div>
           </div>
 
           {/* Messages area */}
-          <div className="px-4 py-4 space-y-4 min-h-64 max-h-96 overflow-y-auto">
+          <div className="max-h-96 min-h-64 space-y-5 overflow-y-auto px-4 py-5">
 
             {/* System: case opened */}
             <div className="flex justify-center">
-              <span className="px-3 py-1 bg-surface text-ink-secondary text-xs rounded-full font-medium">
+              <span className="ui-mono ui-mono-sm border border-border bg-surface px-3 py-1.5 text-ink-secondary">
                 Case opened · {formatDate(dispute.createdAt)}
               </span>
             </div>
 
             {dispute.messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <MessageSquare className="w-10 h-10 text-border mb-3" />
-                <p className="text-sm font-semibold text-ink-muted">No messages yet</p>
-                <p className="text-xs text-ink-muted mt-1">
+                <MessageSquare className="mb-4 h-8 w-8 text-ink-muted" strokeWidth={1.5} />
+                <p className="text-sm text-ink">No messages yet</p>
+                <p className="mt-1.5 max-w-[34ch] text-xs leading-relaxed text-ink-secondary">
                   {isResolved
-                    ? 'This case was resolved without additional messages.'
-                    : 'Send a message to the support team below.'}
+                    ? 'This case was resolved without any further messages.'
+                    : 'Send a message below and the support team will pick it up.'}
                 </p>
               </div>
             ) : (
               messageGroups.map((group) => (
-                <div key={group.date} className="space-y-3">
+                <div key={group.date} className="space-y-4">
                   {/* Date separator */}
                   <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-surface" />
-                    <span className="text-xs text-ink-muted font-medium">{group.date}</span>
-                    <div className="flex-1 h-px bg-surface" />
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="ui-mono ui-mono-sm text-ink-muted">{group.date}</span>
+                    <div className="h-px flex-1 bg-border" />
                   </div>
 
                   {group.messages.map((msg) => {
@@ -493,22 +518,29 @@ export default function DisputeDetailsPage() {
                       <div key={msg.id} className={`flex ${isBuyer ? 'justify-end' : 'justify-start'}`}>
                         {/* Admin avatar */}
                         {isAdmin && (
-                          <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-                            <Shield className="w-3.5 h-3.5 text-white" />
+                          <div className="mr-2.5 mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center bg-ink">
+                            <Shield className="h-3.5 w-3.5 text-background" strokeWidth={1.75} />
                           </div>
                         )}
 
-                        <div className={`max-w-xs lg:max-w-md space-y-1 ${isBuyer ? 'items-end' : 'items-start'} flex flex-col`}>
+                        <div
+                          className={`flex max-w-xs flex-col gap-1.5 lg:max-w-md ${
+                            isBuyer ? 'items-end' : 'items-start'
+                          }`}
+                        >
                           {isAdmin && (
-                            <p className="text-xs font-semibold text-ink-secondary ml-1">Support Team</p>
+                            <p className="ui-mono ui-mono-sm text-ink-muted">Support team</p>
                           )}
-                          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${isBuyer
-                              ? 'bg-primary text-white rounded-br-md'
-                              : 'bg-surface text-ink rounded-bl-md'
-                            }`}>
+                          <div
+                            className={`px-4 py-3 text-sm leading-relaxed ${
+                              isBuyer
+                                ? 'bg-ink text-background'
+                                : 'border border-border bg-surface text-ink'
+                            }`}
+                          >
                             {msg.message}
                           </div>
-                          <p className={`text-[11px] px-1 ${isBuyer ? 'text-ink-muted text-right' : 'text-ink-muted'}`}>
+                          <p className="ui-mono ui-mono-sm text-ink-muted">
                             {formatTime(msg.createdAt)}
                           </p>
                         </div>
@@ -525,7 +557,7 @@ export default function DisputeDetailsPage() {
           {/* Input area */}
           <div className="border-t border-border p-4">
             {error && (
-              <div className="mb-3 px-3 py-2 bg-danger/10 border border-danger/30 rounded-lg">
+              <div className="mb-3 border border-danger/25 bg-danger/5 px-3.5 py-2.5">
                 <p className="text-xs text-danger">{error}</p>
               </div>
             )}
@@ -538,25 +570,27 @@ export default function DisputeDetailsPage() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Message the support team…"
-                  className="flex-1 px-4 py-2.5 bg-surface border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent placeholder-ink-muted transition-all"
+                  className="h-11 flex-1 border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   disabled={sending}
                 />
                 <button
                   type="submit"
+                  aria-label="Send message"
                   disabled={sending || !newMessage.trim()}
-                  className="w-10 h-10 bg-primary hover:brightness-95 disabled:bg-border text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center bg-ink text-background transition-colors hover:bg-primary disabled:pointer-events-none disabled:opacity-40"
                 >
-                  {sending
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <Send className="w-4 h-4" />
-                  }
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                  ) : (
+                    <Send className="h-4 w-4" strokeWidth={1.75} />
+                  )}
                 </button>
               </form>
             ) : (
-              <div className="flex items-center justify-center gap-2 py-2">
-                <XCircle className="w-4 h-4 text-ink-muted" />
-                <p className="text-sm text-ink-muted">
-                  This case is closed. No further messages can be sent.
+              <div className="flex items-center justify-center gap-2 py-2.5">
+                <XCircle className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
+                <p className="text-sm text-ink-secondary">
+                  This case is closed — no further messages can be sent.
                 </p>
               </div>
             )}
@@ -565,22 +599,22 @@ export default function DisputeDetailsPage() {
 
         {/* ── Info footer ─────────────────────────────────────────────────── */}
         {!isResolved && (
-          <div className="bg-white rounded-2xl border border-border p-5">
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-3">What happens next</p>
-            <div className="space-y-3">
+          <div className="ui-panel">
+            <p className="ui-eyebrow mb-6">What happens next</p>
+            <div className="space-y-4">
               {[
-                { icon: Shield, text: 'Your case is being reviewed by our admin team.' },
-                { icon: MessageSquare, text: 'We\'ll send you a message here if we need more information.' },
+                { icon: Shield, text: 'Your case is with our admin team for review.' },
+                { icon: MessageSquare, text: "We'll message you here if we need more information." },
                 { icon: Clock, text: 'Expect a final decision within 3–5 business days.' },
                 ...(dispute.resolutionPreference === 'REFUND_WITH_PICKUP'
-                  ? [{ icon: Truck, text: 'If approved, a rider will collect the item before your refund is processed.' }]
+                  ? [{ icon: Truck, text: 'If approved, a rider collects the item before your refund is released.' }]
                   : []),
               ].map(({ icon: Icon, text }, idx) => (
-                <div key={idx} className="flex items-start gap-3">
-                  <div className="w-7 h-7 bg-surface border border-border rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-ink-secondary" />
-                  </div>
-                  <p className="text-sm text-ink-secondary leading-relaxed pt-0.5">{text}</p>
+                <div key={idx} className="flex items-start gap-3.5">
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <Icon className="h-3.5 w-3.5 text-ink-secondary" strokeWidth={1.75} />
+                  </span>
+                  <p className="pt-1 text-sm leading-relaxed text-ink-secondary">{text}</p>
                 </div>
               ))}
             </div>

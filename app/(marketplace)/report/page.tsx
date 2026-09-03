@@ -5,9 +5,16 @@ export const dynamic = 'force-dynamic'
 import { Suspense, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-    AlertCircle, Upload, X, Link, User, Package, Shield, Clock, MessageSquare, CheckCircle,
+    AlertCircle, Link as LinkIcon, User, Package, Shield, Clock, MessageSquare, CheckCircle,
     Ban, FileText, Star, Pin, Frown, type LucideIcon,
 } from 'lucide-react'
+import { Shell, PageHeader, Skeleton } from '@/components/ui/Shell'
+import { Button } from '@/components/ui/button'
+
+const labelClass =
+    'mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary'
+const controlClass =
+    'w-full border border-border bg-card text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15'
 
 // Separate the component that uses useSearchParams
 function ReportFormContent() {
@@ -36,6 +43,7 @@ function ReportFormContent() {
 
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [submitted, setSubmitted] = useState(false)
 
     const reportReasons: Record<string, { value: string; label: string; icon: LucideIcon }[]> = {
         PRODUCT: [
@@ -87,8 +95,10 @@ function ReportFormContent() {
             const data = await response.json()
 
             if (response.ok) {
-                alert('Report submitted successfully. Our team will review it within 24-48 hours.')
-                router.push('/orders')
+                // Confirm in place rather than through a blocking alert(), then
+                // hand off to the orders list.
+                setSubmitted(true)
+                setTimeout(() => router.push('/orders'), 2000)
             } else {
                 setError(data.error || 'Failed to submit report')
             }
@@ -100,332 +110,272 @@ function ReportFormContent() {
         }
     }
 
-    return (
-        <div className="min-h-screen bg-surface py-8 px-4">
-            <div className="max-w-3xl mx-auto">
-                {/* Header Card */}
-                <div className="bg-danger rounded-2xl shadow-soft p-8 mb-8 text-white">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="bg-white/20 p-3 rounded-xl">
-                            <Shield className="w-8 h-8" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-semibold">Report an Issue</h1>
-                            <p className="text-white/80 opacity-90">Help us maintain a safe and trustworthy marketplace</p>
-                        </div>
+    if (submitted) {
+        return (
+            <div className="min-h-screen bg-surface pb-20">
+                <Shell width="narrow" className="pt-16 sm:pt-24">
+                    <div className="flex flex-col items-center border border-border bg-card px-6 py-20 text-center">
+                        <CheckCircle className="mb-6 h-10 w-10 text-success" strokeWidth={1.5} />
+                        <p className="ui-eyebrow mb-4 justify-center before:hidden after:hidden">Received</p>
+                        <h1 className="text-[clamp(1.5rem,4vw,2rem)] leading-tight text-ink">
+                            Report submitted
+                        </h1>
+                        <p className="mt-3 max-w-[44ch] text-sm leading-relaxed text-ink-secondary">
+                            Our team reviews every report within 24–48 hours and will let you know the
+                            outcome. Taking you back to your orders…
+                        </p>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Your report is confidential and will be reviewed within 24-48 hours</span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Form */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-2xl shadow-soft p-6">
-                            {(productName || riderName) && (
-                                <div className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                                    <div className="flex items-center gap-2 text-primary">
-                                        <AlertCircle className="w-4 h-4" />
-                                        <span className="font-medium">
-                                            {productName && `Reporting product: ${productName}`}
-                                            {riderName && `Reporting rider: ${riderName}`}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-xl">
-                                    <div className="flex items-center gap-2 text-danger">
-                                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                                        <span className="text-sm">{error}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                {/* Report Type Selection */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-semibold text-ink-secondary">
-                                        What would you like to report? *
-                                    </label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData({
-                                                ...formData,
-                                                type: 'PRODUCT',
-                                                reason: '',
-                                                riderName: '',
-                                                productLink: ''
-                                            })}
-                                            className={`p-4 rounded-xl border-2 transition-all duration-200 ${formData.type === 'PRODUCT'
-                                                ? 'border-danger bg-danger/10 shadow-soft'
-                                                : 'border-border hover:border-border hover:bg-surface'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${formData.type === 'PRODUCT' ? 'bg-danger/10 text-danger' : 'bg-surface text-ink-secondary'}`}>
-                                                    <Package className="w-5 h-5" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <div className="font-medium text-ink">Product</div>
-                                                    <div className="text-xs text-ink-secondary">Report a product issue</div>
-                                                </div>
-                                            </div>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setFormData({
-                                                ...formData,
-                                                type: 'RIDER',
-                                                reason: '',
-                                                riderName: '',
-                                                productLink: ''
-                                            })}
-                                            className={`p-4 rounded-xl border-2 transition-all duration-200 ${formData.type === 'RIDER'
-                                                ? 'border-danger bg-danger/10 shadow-soft'
-                                                : 'border-border hover:border-border hover:bg-surface'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg ${formData.type === 'RIDER' ? 'bg-danger/10 text-danger' : 'bg-surface text-ink-secondary'}`}>
-                                                    <User className="w-5 h-5" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <div className="font-medium text-ink">Rider</div>
-                                                    <div className="text-xs text-ink-secondary">Report delivery issues</div>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Dynamic Input Fields */}
-                                {formData.type === 'RIDER' && (
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-ink-secondary">
-                                            Rider's Name *
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={formData.riderName}
-                                                onChange={(e) => setFormData({ ...formData, riderName: e.target.value })}
-                                                className="w-full pl-12 pr-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger transition-all"
-                                                placeholder="Enter the rider's full name or ID..."
-                                                required
-                                            />
-                                            <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-muted" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {formData.type === 'PRODUCT' && (
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-ink-secondary">
-                                            Product Link *
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="url"
-                                                value={formData.productLink}
-                                                onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
-                                                className="w-full pl-12 pr-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger transition-all"
-                                                placeholder="https://yourstore.com/products/..."
-                                                required
-                                            />
-                                            <Link className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-ink-muted" />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Reason Selection */}
-                                {formData.type && (
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-ink-secondary">
-                                            Select the main reason *
-                                        </label>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            {currentReasons.map((r) => (
-                                                <button
-                                                    key={r.value}
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, reason: r.value })}
-                                                    className={`p-3 rounded-lg border text-left transition-all duration-150 ${formData.reason === r.value
-                                                        ? 'border-danger bg-danger/10'
-                                                        : 'border-border hover:bg-surface'}`}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <r.icon className="w-4 h-4 text-ink-secondary" strokeWidth={1.75} />
-                                                        <span className="text-sm font-medium text-ink">{r.label}</span>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Description */}
-                                {formData.type && (
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-ink-secondary">
-                                            Please describe the issue in detail *
-                                        </label>
-                                        <div className="relative">
-                                            <textarea
-                                                value={formData.description}
-                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-danger/40 focus:border-danger min-h-32 resize-y transition-all"
-                                                placeholder={
-                                                    formData.type === 'PRODUCT'
-                                                        ? "• What specifically is wrong with the product?\n• How does it differ from the description?\n• When did you discover the issue?"
-                                                        : "• What exactly happened during delivery?\n• How was the rider's behavior?\n• When did this occur?"
-                                                }
-                                                required
-                                            />
-                                            <MessageSquare className="absolute right-4 top-4 w-5 h-5 text-ink-muted" />
-                                        </div>
-                                        <p className="text-xs text-ink-secondary">
-                                            Be as specific as possible. Include dates, times, and any relevant details.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Evidence Upload */}
-                                {formData.type && (
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-semibold text-ink-secondary">
-                                            Add Evidence (Optional)
-                                        </label>
-                                        <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-surface hover:bg-surface transition-colors cursor-pointer">
-                                            <Upload className="w-12 h-12 text-ink-muted mx-auto mb-3" />
-                                            <p className="text-sm font-medium text-ink-secondary mb-1">Upload screenshots or photos</p>
-                                            <p className="text-xs text-ink-muted">Drag & drop or click to browse</p>
-                                            <p className="text-xs text-ink-muted mt-2">Max file size: 5MB • Supported: JPG, PNG, PDF</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Submit Buttons */}
-                                {formData.type && (
-                                    <div className="flex gap-3 pt-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => router.back()}
-                                            className="flex-1 px-6 py-3.5 border-2 border-border rounded-xl font-medium text-ink-secondary hover:bg-surface transition-all"
-                                            disabled={loading}
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="submit"
-                                            disabled={loading || !formData.type || !formData.reason || !formData.description}
-                                            className="flex-1 px-6 py-3.5 bg-danger hover:brightness-95 text-white rounded-xl font-semibold shadow-soft hover:shadow-soft transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                        >
-                                            {loading ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                                    Submitting...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <AlertCircle className="w-5 h-5" />
-                                                    Submit Report
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
-                            </form>
-                        </div>
-                    </div>
-
-                    {/* Sidebar Info */}
-                    <div className="space-y-6">
-                        {/* Process Steps */}
-                        <div className="bg-white rounded-2xl shadow-soft p-6">
-                            <h3 className="font-semibold text-ink mb-4 flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-danger" />
-                                Review Process
-                            </h3>
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                        1
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-ink">Report Submission</p>
-                                        <p className="text-sm text-ink-secondary">Your report is securely submitted</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                        2
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-ink">Team Review</p>
-                                        <p className="text-sm text-ink-secondary">Our team reviews within 24-48 hours</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                        3
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-ink">Action Taken</p>
-                                        <p className="text-sm text-ink-secondary">Appropriate action if violations found</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="bg-danger/10 text-danger rounded-full w-8 h-8 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                        4
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-ink">Notification</p>
-                                        <p className="text-sm text-ink-secondary">You'll be notified of the outcome</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Important Note */}
-                        <div className="bg-warning/10 border border-warning/20 rounded-2xl p-6">
-                            <h3 className="font-semibold text-warning mb-2 flex items-center gap-2">
-                                <AlertCircle className="w-5 h-5" />
-                                Important
-                            </h3>
-                            <p className="text-sm text-warning">
-                                False reports may result in account penalties. Please ensure your report is accurate and truthful. All reports are confidential.
-                            </p>
-                        </div>
-
-                        {/* Quick Tips */}
-                        <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
-                            <h3 className="font-semibold text-primary mb-3">Tips for effective reports</h3>
-                            <ul className="space-y-2 text-sm text-primary">
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span>Include specific dates and times</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span>Provide clear, factual information</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span>Attach screenshots if available</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                                    <span>Stay objective and avoid emotional language</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                </Shell>
             </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-surface pb-20">
+            <Shell className="pt-8 sm:pt-12">
+                <PageHeader
+                    eyebrow="Trust & safety"
+                    back={{ href: '/orders', label: 'All orders' }}
+                    title={
+                        <>
+                            Report an <span className="ui-serif">issue</span>
+                        </>
+                    }
+                    description="Confidential, and reviewed by a real person within 24–48 hours. The more specific you are, the faster it resolves."
+                />
+
+                <div className="mt-10 grid gap-10 lg:grid-cols-3 lg:gap-8">
+                    {/* ── Main form ─────────────────────────────────────────── */}
+                    <div className="lg:col-span-2">
+                        {(productName || riderName) && (
+                            <div className="mb-6 flex items-start gap-3 border border-border bg-card p-4">
+                                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+                                <p className="text-sm text-ink">
+                                    {productName && <>Reporting product: <span className="font-medium">{productName}</span></>}
+                                    {riderName && <>Reporting rider: <span className="font-medium">{riderName}</span></>}
+                                </p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="mb-6 flex items-start gap-3 border border-danger/25 bg-danger/5 p-4">
+                                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
+                                <p className="text-sm text-danger">{error}</p>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-9">
+                            {/* Report Type Selection */}
+                            <section>
+                                <p className="ui-eyebrow mb-6">What are you reporting?</p>
+                                <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+                                    {[
+                                        { key: 'PRODUCT', icon: Package, title: 'Product', sub: 'A listing or item problem' },
+                                        { key: 'RIDER', icon: User, title: 'Rider', sub: 'A delivery problem' },
+                                    ].map(({ key, icon: Icon, title, sub }) => (
+                                        <button
+                                            key={key}
+                                            type="button"
+                                            aria-pressed={formData.type === key}
+                                            onClick={() => setFormData({
+                                                ...formData,
+                                                type: key,
+                                                reason: '',
+                                                riderName: '',
+                                                productLink: ''
+                                            })}
+                                            className={`p-5 text-left transition-colors duration-300 ${
+                                                formData.type === key
+                                                    ? 'bg-ink text-background'
+                                                    : 'bg-card text-ink hover:bg-surface'
+                                            }`}
+                                        >
+                                            <Icon
+                                                className={`h-5 w-5 ${formData.type === key ? 'text-white' : 'text-ink-muted'}`}
+                                                strokeWidth={1.5}
+                                            />
+                                            <p className="mt-4 text-sm font-medium">{title}</p>
+                                            <p className={`mt-1 text-xs ${formData.type === key ? 'text-white/65' : 'text-ink-secondary'}`}>
+                                                {sub}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Dynamic Input Fields */}
+                            {formData.type === 'RIDER' && (
+                                <section>
+                                    <label className={labelClass}>Rider&apos;s name *</label>
+                                    <div className="relative">
+                                        <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" strokeWidth={1.75} />
+                                        <input
+                                            type="text"
+                                            value={formData.riderName}
+                                            onChange={(e) => setFormData({ ...formData, riderName: e.target.value })}
+                                            className={`${controlClass} h-12 pl-11 pr-4`}
+                                            placeholder="Their full name, as shown on the order"
+                                            required
+                                        />
+                                    </div>
+                                </section>
+                            )}
+
+                            {formData.type === 'PRODUCT' && (
+                                <section>
+                                    <label className={labelClass}>Product link *</label>
+                                    <div className="relative">
+                                        <LinkIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" strokeWidth={1.75} />
+                                        <input
+                                            type="url"
+                                            value={formData.productLink}
+                                            onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
+                                            className={`${controlClass} h-12 pl-11 pr-4`}
+                                            placeholder="https://…"
+                                            required
+                                        />
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Reason Selection */}
+                            {formData.type && (
+                                <section>
+                                    <p className="ui-eyebrow mb-6">Main reason</p>
+                                    <div className="grid gap-px border border-border bg-border sm:grid-cols-2">
+                                        {currentReasons.map((r) => (
+                                            <button
+                                                key={r.value}
+                                                type="button"
+                                                aria-pressed={formData.reason === r.value}
+                                                onClick={() => setFormData({ ...formData, reason: r.value })}
+                                                className={`flex items-center gap-3 p-4 text-left transition-colors duration-300 ${
+                                                    formData.reason === r.value
+                                                        ? 'bg-ink text-background'
+                                                        : 'bg-card text-ink hover:bg-surface'
+                                                }`}
+                                            >
+                                                <r.icon
+                                                    className={`h-4 w-4 flex-shrink-0 ${formData.reason === r.value ? 'text-white' : 'text-ink-muted'}`}
+                                                    strokeWidth={1.75}
+                                                />
+                                                <span className="text-sm">{r.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Description */}
+                            {formData.type && (
+                                <section>
+                                    <label className={labelClass}>Describe what happened *</label>
+                                    <div className="relative">
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            className={`${controlClass} min-h-36 resize-y px-4 py-3.5 leading-relaxed`}
+                                            placeholder={
+                                                formData.type === 'PRODUCT'
+                                                    ? 'What exactly is wrong with the product? How does it differ from the listing? When did you notice?'
+                                                    : 'What happened during the delivery? How did the rider behave? When did it happen?'
+                                            }
+                                            required
+                                        />
+                                        <MessageSquare className="pointer-events-none absolute right-4 top-4 h-4 w-4 text-ink-muted" strokeWidth={1.75} />
+                                    </div>
+                                    <p className="mt-2 text-xs text-ink-muted">
+                                        Include dates, times and any other detail that helps us verify it.
+                                    </p>
+                                </section>
+                            )}
+
+                            {/* Submit Buttons */}
+                            {formData.type && (
+                                <div className="flex flex-col gap-3 border-t border-border pt-8 sm:flex-row">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="lg"
+                                        onClick={() => router.back()}
+                                        disabled={loading}
+                                        className="sm:flex-1"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="danger"
+                                        size="lg"
+                                        isLoading={loading}
+                                        loadingText="Submitting…"
+                                        disabled={!formData.type || !formData.reason || !formData.description}
+                                        className="sm:flex-[2]"
+                                    >
+                                        Submit report
+                                    </Button>
+                                </div>
+                            )}
+                        </form>
+                    </div>
+
+                    {/* ── Sidebar ───────────────────────────────────────────── */}
+                    <aside className="space-y-6">
+                        <section className="ui-panel">
+                            <p className="ui-eyebrow mb-6">
+                                <Clock className="h-3.5 w-3.5" strokeWidth={1.75} />
+                                What happens next
+                            </p>
+                            <ol className="space-y-5">
+                                {[
+                                    { t: 'Submitted', d: 'Your report reaches our queue immediately.' },
+                                    { t: 'Reviewed', d: 'A real person reads it within 24–48 hours.' },
+                                    { t: 'Acted on', d: 'We take action if a policy was broken.' },
+                                    { t: 'You hear back', d: 'We tell you the outcome either way.' },
+                                ].map((step, i) => (
+                                    <li key={step.t} className="flex items-start gap-3.5">
+                                        <span className="ui-mono ui-mono-sm flex h-6 w-6 flex-shrink-0 items-center justify-center border border-border text-ink-muted">
+                                            {i + 1}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-ink">{step.t}</p>
+                                            <p className="mt-0.5 text-xs leading-relaxed text-ink-secondary">{step.d}</p>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ol>
+                        </section>
+
+                        <section className="border border-warning/25 bg-warning/5 p-5">
+                            <p className="ui-eyebrow mb-4 text-warning">
+                                <Shield className="h-3.5 w-3.5" strokeWidth={1.75} />
+                                Before you send
+                            </p>
+                            <p className="text-sm leading-relaxed text-warning">
+                                Reports are confidential, but false reports can cost you your account. Only
+                                send what you know to be true.
+                            </p>
+                        </section>
+
+                        <section className="ui-panel">
+                            <p className="ui-eyebrow mb-5">Tips</p>
+                            <ul className="space-y-3">
+                                {[
+                                    'Give specific dates and times.',
+                                    'Stick to what actually happened.',
+                                    'Say what outcome you are looking for.',
+                                    'Keep it factual — emotion slows review down.',
+                                ].map((tip) => (
+                                    <li key={tip} className="flex items-start gap-3 text-sm text-ink-secondary">
+                                        <CheckCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+                                        {tip}
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    </aside>
+                </div>
+            </Shell>
         </div>
     )
 }
@@ -433,18 +383,20 @@ function ReportFormContent() {
 // Loading fallback component
 function ReportPageLoading() {
     return (
-        <div className="min-h-screen bg-surface py-8 px-4">
-            <div className="max-w-3xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-soft p-8 animate-pulse">
-                    <div className="h-8 bg-border rounded w-1/3 mb-4"></div>
-                    <div className="h-4 bg-border rounded w-2/3 mb-8"></div>
-                    <div className="space-y-4">
-                        <div className="h-12 bg-border rounded"></div>
-                        <div className="h-12 bg-border rounded"></div>
-                        <div className="h-32 bg-border rounded"></div>
+        <div className="min-h-screen bg-surface pb-20">
+            <Shell className="pt-8 sm:pt-12">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="mt-6 h-10 w-2/5" />
+                <Skeleton className="mt-4 h-4 w-3/5" />
+                <div className="mt-12 grid gap-10 lg:grid-cols-3">
+                    <div className="space-y-6 lg:col-span-2">
+                        <Skeleton className="h-32 w-full" />
+                        <Skeleton className="h-40 w-full" />
+                        <Skeleton className="h-36 w-full" />
                     </div>
+                    <Skeleton className="h-72 w-full" />
                 </div>
-            </div>
+            </Shell>
         </div>
     )
 }

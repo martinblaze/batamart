@@ -3,7 +3,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, Clock, CheckCircle, Eye } from 'lucide-react'
+import { AlertTriangle, Eye } from 'lucide-react'
+import {
+  AdminHeader, AdminEmpty, AdminLoading, FilterTabs,
+} from '@/components/admin/AdminUI'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
 
 interface Dispute {
   id: string
@@ -47,96 +51,91 @@ export default function DisputesPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusTone = (status: string): BadgeStatus => {
     switch (status) {
-      case 'PENDING': return 'bg-warning/10 text-warning'
-      case 'UNDER_REVIEW': return 'bg-primary/10 text-primary'
-      case 'RESOLVED_BUYER_FAVOR': return 'bg-success/10 text-success'
-      case 'RESOLVED_SELLER_FAVOR': return 'bg-success/10 text-success'
-      case 'DISMISSED': return 'bg-surface text-ink-secondary'
-      default: return 'bg-surface text-ink-secondary'
+      case 'PENDING': return 'warning'
+      case 'UNDER_REVIEW': return 'verified'
+      case 'RESOLVED_BUYER_FAVOR':
+      case 'RESOLVED_SELLER_FAVOR': return 'success'
+      default: return 'neutral'
     }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto">
-        {['PENDING', 'UNDER_REVIEW', 'ALL'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilterStatus(status)}
-            className={`px-6 py-3 rounded-xl font-semibold whitespace-nowrap transition-all ${
-              filterStatus === status
-                ? 'bg-danger text-white'
-                : 'bg-white text-ink-secondary hover:text-ink border border-border'
-            }`}
-          >
-            {status.replace('_', ' ')}
-          </button>
-        ))}
-      </div>
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Moderation"
+        title="Disputes"
+        description="Cases raised by buyers against a completed order. Review the evidence, then resolve or dismiss."
+      />
 
-      {/* Disputes List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          </div>
-        ) : disputes.length === 0 ? (
-          <div className="text-center py-12 bg-white border border-border rounded-2xl">
-            <AlertTriangle className="w-16 h-16 text-ink-muted mx-auto mb-4" />
-            <p className="text-ink-secondary">No disputes found</p>
-          </div>
-        ) : (
-          disputes.map((dispute) => (
-            <div key={dispute.id} className="bg-white border border-border rounded-2xl p-6 hover:shadow-soft transition-all">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-warning/10 rounded-xl">
-                    <AlertTriangle className="w-6 h-6 text-warning" />
-                  </div>
-                  <div>
-                    <h3 className="text-ink font-semibold">Order #{dispute.order.orderNumber}</h3>
-                    <p className="text-sm text-ink-secondary">
-                      Amount: ₦{dispute.order.totalAmount.toLocaleString()}
-                    </p>
-                  </div>
+      <FilterTabs
+        value={filterStatus}
+        onChange={setFilterStatus}
+        options={[
+          { value: 'PENDING', label: 'Pending' },
+          { value: 'UNDER_REVIEW', label: 'Under review' },
+          { value: 'ALL', label: 'All' },
+        ]}
+      />
+
+      {loading ? (
+        <AdminLoading rows={4} />
+      ) : disputes.length === 0 ? (
+        <AdminEmpty
+          icon={AlertTriangle}
+          title="No disputes here"
+          description="Nothing matches this filter — try 'All' to see resolved and dismissed cases."
+        />
+      ) : (
+        <div className="ui-divide border border-border bg-card">
+          {disputes.map((dispute) => (
+            <article key={dispute.id} className="p-5 transition-colors duration-300 hover:bg-surface">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="ui-mono ui-mono-sm text-ink-muted">
+                    #{dispute.order.orderNumber}
+                  </p>
+                  <p className="ui-figure mt-1.5 text-lg text-ink">
+                    ₦{dispute.order.totalAmount.toLocaleString()}
+                  </p>
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(dispute.status)}`}>
-                  {dispute.status.replace('_', ' ')}
-                </span>
+                <Badge status={getStatusTone(dispute.status)}>
+                  {dispute.status.replace(/_/g, ' ')}
+                </Badge>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 text-sm">
-                <div>
-                  <p className="text-ink-secondary">Buyer:</p>
-                  <p className="text-ink font-medium">{dispute.buyer.name}</p>
+              <p className="mt-5 max-w-[70ch] text-sm leading-relaxed text-ink-secondary">
+                {dispute.reason}
+              </p>
+
+              <div className="mt-5 grid gap-px border border-border bg-border sm:grid-cols-2">
+                <div className="bg-card px-3.5 py-2.5">
+                  <p className="ui-mono ui-mono-sm text-ink-muted">Buyer</p>
+                  <p className="mt-1 truncate text-sm text-ink">{dispute.buyer.name}</p>
                 </div>
-                <div>
-                  <p className="text-ink-secondary">Seller:</p>
-                  <p className="text-ink font-medium">{dispute.seller.name}</p>
+                <div className="bg-card px-3.5 py-2.5">
+                  <p className="ui-mono ui-mono-sm text-ink-muted">Seller</p>
+                  <p className="mt-1 truncate text-sm text-ink">{dispute.seller.name}</p>
                 </div>
               </div>
 
-              <p className="text-ink-secondary mb-4">{dispute.reason}</p>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <span className="text-sm text-ink-muted">
+              <div className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-4">
+                <span className="ui-mono ui-mono-sm text-ink-muted">
                   {new Date(dispute.createdAt).toLocaleDateString()}
                 </span>
                 <Link
                   href={`/admin/disputes/${dispute.id}`}
-                  className="px-4 py-2 bg-danger/10 text-danger rounded-lg hover:bg-danger/10 transition-colors font-semibold text-sm flex items-center gap-2"
+                  className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-3.5 w-3.5" strokeWidth={2} />
                   Review
                 </Link>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { PackageX, ShieldAlert, UserX, ExternalLink } from 'lucide-react'
+import {
+  AdminHeader, AdminPanel, AdminEmpty, AdminLoading, AdminButton,
+} from '@/components/admin/AdminUI'
+import { Badge } from '@/components/ui/Badge'
 
 export default function AdminOversizedPage() {
   const [data, setData] = useState<any>(null)
@@ -17,8 +22,14 @@ export default function AdminOversizedPage() {
 
   useEffect(() => { fetchData() }, [])
 
-  const usersById = useMemo(() => Object.fromEntries((data?.users || []).map((u: any) => [u.id, u.name])), [data])
-  const productsById = useMemo(() => Object.fromEntries((data?.products || []).map((p: any) => [p.id, p])), [data])
+  const usersById = useMemo(
+    () => Object.fromEntries((data?.users || []).map((u: any) => [u.id, u.name])),
+    [data]
+  )
+  const productsById = useMemo(
+    () => Object.fromEntries((data?.products || []).map((p: any) => [p.id, p])),
+    [data]
+  )
 
   const moderate = async (productId: string, action: 'APPROVE' | 'REMOVE') => {
     const token = localStorage.getItem('adminToken')
@@ -30,47 +41,146 @@ export default function AdminOversizedPage() {
     fetchData()
   }
 
-  if (loading) return <div className="text-ink-secondary">Loading oversized reports...</div>
+  const declines = data?.declines || []
+  const strikes = data?.strikes || []
+  const suspended = data?.suspendedSellers || []
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-ink">Oversized Product Management</h1>
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Moderation"
+        title="Oversized listings"
+        description="Items riders refused to carry. Approve the listing if the rider was wrong, or remove it if the seller misrepresented the size."
+      />
 
-      <div className="bg-white border border-border rounded-2xl p-5">
-        <h2 className="text-ink font-semibold mb-3">Decline Evidence</h2>
-        <div className="space-y-3">
-          {(data?.declines || []).map((d: any) => (
-            <div key={d.id} className="bg-surface rounded-xl p-3 text-sm text-ink-secondary">
-              <p><span className="font-semibold">Product:</span> {productsById[d.productId]?.name || d.productId}</p>
-              <p><span className="font-semibold">Seller:</span> {usersById[d.sellerId] || d.sellerId} | <span className="font-semibold">Rider:</span> {usersById[d.riderId] || d.riderId}</p>
-              <p><span className="font-semibold">Reason:</span> {d.reason}</p>
-              {d.proofImageUrl && <a className="text-primary underline" href={d.proofImageUrl} target="_blank">View Proof Photo</a>}
-              <div className="mt-2 flex gap-2">
-                <button onClick={() => moderate(d.productId, 'APPROVE')} className="px-3 py-1.5 rounded-lg bg-success text-white text-xs font-semibold">Approve Listing</button>
-                <button onClick={() => moderate(d.productId, 'REMOVE')} className="px-3 py-1.5 rounded-lg bg-danger text-white text-xs font-semibold">Remove Listing</button>
+      {loading ? (
+        <AdminLoading rows={3} />
+      ) : (
+        <>
+          {/* ── Decline evidence ────────────────────────────────────────── */}
+          <AdminPanel title="Decline evidence" padded={false}>
+            {declines.length === 0 ? (
+              <AdminEmpty
+                className="border-0"
+                icon={PackageX}
+                title="No pending declines"
+                description="When a rider refuses an item as oversized, their evidence lands here for review."
+              />
+            ) : (
+              <div className="ui-divide">
+                {declines.map((d: any) => (
+                  <div key={d.id} className="p-5">
+                    <p className="text-sm font-medium text-ink">
+                      {productsById[d.productId]?.name || d.productId}
+                    </p>
+
+                    <div className="mt-4 grid gap-px border border-border bg-border sm:grid-cols-2">
+                      <div className="bg-card px-3.5 py-2.5">
+                        <p className="ui-mono ui-mono-sm text-ink-muted">Seller</p>
+                        <p className="mt-1 truncate text-sm text-ink">
+                          {usersById[d.sellerId] || d.sellerId}
+                        </p>
+                      </div>
+                      <div className="bg-card px-3.5 py-2.5">
+                        <p className="ui-mono ui-mono-sm text-ink-muted">Rider</p>
+                        <p className="mt-1 truncate text-sm text-ink">
+                          {usersById[d.riderId] || d.riderId}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="ui-mono ui-mono-sm text-ink-muted">Reason given</p>
+                      <p className="mt-1.5 max-w-[70ch] text-sm leading-relaxed text-ink-secondary">
+                        {d.reason}
+                      </p>
+                    </div>
+
+                    {d.proofImageUrl && (
+                      <a
+                        className="ui-mono ui-mono-sm mt-4 inline-flex items-center gap-1.5 text-ink-secondary underline-offset-4 transition-colors hover:text-ink hover:underline"
+                        href={d.proofImageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
+                        View proof photo
+                      </a>
+                    )}
+
+                    <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
+                      <AdminButton tone="success" onClick={() => moderate(d.productId, 'APPROVE')}>
+                        Approve listing
+                      </AdminButton>
+                      <AdminButton tone="danger" onClick={() => moderate(d.productId, 'REMOVE')}>
+                        Remove listing
+                      </AdminButton>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            )}
+          </AdminPanel>
 
-      <div className="bg-white border border-border rounded-2xl p-5">
-        <h2 className="text-ink font-semibold mb-3">Seller Strike History</h2>
-        <div className="space-y-2 text-sm text-ink-secondary">
-          {(data?.strikes || []).map((s: any) => (
-            <p key={s.id}>{usersById[s.sellerId] || s.sellerId} - Strike #{s.strikeCount} - {s.reason}</p>
-          ))}
-        </div>
-      </div>
+          {/* ── Strike history ──────────────────────────────────────────── */}
+          <AdminPanel title="Seller strike history" padded={false}>
+            {strikes.length === 0 ? (
+              <AdminEmpty
+                className="border-0"
+                icon={ShieldAlert}
+                title="No strikes recorded"
+                description="Sellers accumulate a strike each time a listing is removed for misrepresentation."
+              />
+            ) : (
+              <div className="ui-divide">
+                {strikes.map((s: any) => (
+                  <div key={s.id} className="ui-row">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-ink">
+                        {usersById[s.sellerId] || s.sellerId}
+                      </p>
+                      <p className="mt-1 text-xs text-ink-secondary">{s.reason}</p>
+                    </div>
+                    <Badge status={s.strikeCount >= 3 ? 'danger' : 'warning'}>
+                      Strike {s.strikeCount}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AdminPanel>
 
-      <div className="bg-white border border-border rounded-2xl p-5">
-        <h2 className="text-ink font-semibold mb-3">Suspended Sellers</h2>
-        <div className="space-y-2 text-sm text-ink-secondary">
-          {(data?.suspendedSellers || []).map((u: any) => (
-            <p key={u.id}>{u.name} - {u.suspensionReason || 'Suspended'} {u.suspendedUntil ? `(until ${new Date(u.suspendedUntil).toLocaleDateString()})` : '(permanent)'}</p>
-          ))}
-        </div>
-      </div>
+          {/* ── Suspended sellers ───────────────────────────────────────── */}
+          <AdminPanel title="Suspended sellers" padded={false}>
+            {suspended.length === 0 ? (
+              <AdminEmpty
+                className="border-0"
+                icon={UserX}
+                title="Nobody suspended"
+                description="Sellers suspended for repeated oversized violations appear here."
+              />
+            ) : (
+              <div className="ui-divide">
+                {suspended.map((u: any) => (
+                  <div key={u.id} className="ui-row">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-ink">{u.name}</p>
+                      <p className="mt-1 text-xs text-ink-secondary">
+                        {u.suspensionReason || 'Suspended'}
+                      </p>
+                    </div>
+                    <Badge status={u.suspendedUntil ? 'warning' : 'danger'}>
+                      {u.suspendedUntil
+                        ? `Until ${new Date(u.suspendedUntil).toLocaleDateString()}`
+                        : 'Permanent'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </AdminPanel>
+        </>
+      )}
     </div>
   )
 }

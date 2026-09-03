@@ -7,6 +7,10 @@ import {
   ChevronLeft, ChevronRight, X, UserPlus,
   Eye, EyeOff, Copy, Check, Building2,
 } from 'lucide-react'
+import {
+  AdminHeader, AdminEmpty, AdminButton, AdminTable, Th, Td, Tr,
+} from '@/components/admin/AdminUI'
+import { Badge } from '@/components/ui/Badge'
 
 interface User {
   id: string
@@ -261,192 +265,173 @@ export default function UsersPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-ink text-sm font-medium shadow-soft ${
-          toast.type === 'success' ? 'bg-success' : 'bg-danger'
+        <div className={`fixed right-4 top-4 z-50 border px-4 py-3 text-sm font-medium ${
+          toast.type === 'success'
+            ? 'border-success/25 bg-success/10 text-success'
+            : 'border-danger/25 bg-danger/10 text-danger'
         }`}>
           {toast.message}
         </div>
       )}
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Users</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">
-            {total.toLocaleString()} users · <span className="text-ink font-medium">{selectedUniName}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* University switcher */}
-          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
-            <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
-            <select
-              value={selectedUni}
-              onChange={e => setSelectedUni(e.target.value)}
-              className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Universities</option>
-              {universities.map(u => (
-                <option key={u.id} value={u.id}>{u.shortName}</option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={() => setShowCreateRider(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-danger hover:brightness-95 text-white text-sm font-semibold rounded-xl transition-colors"
-          >
-            <UserPlus className="w-4 h-4" />
-            Add Rider
-          </button>
-        </div>
-      </div>
+      <AdminHeader
+        eyebrow="Directory"
+        title="Users"
+        description={
+          <>
+            {total.toLocaleString()} accounts ·{' '}
+            <span className="font-medium text-ink">{selectedUniName}</span>
+          </>
+        }
+        actions={
+          <>
+            <div className="flex h-9 items-center gap-2 border border-border bg-card px-3">
+              <Building2 className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+              <select
+                value={selectedUni}
+                onChange={e => setSelectedUni(e.target.value)}
+                aria-label="University"
+                className="cursor-pointer bg-transparent text-[13px] text-ink focus:outline-none"
+              >
+                <option value="all">All universities</option>
+                {universities.map(u => (
+                  <option key={u.id} value={u.id}>{u.shortName}</option>
+                ))}
+              </select>
+            </div>
+            <AdminButton tone="ink" onClick={() => setShowCreateRider(true)} icon={UserPlus}>
+              Add rider
+            </AdminButton>
+          </>
+        }
+      />
 
       {/* ── Filters ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-secondary" />
+      <div className="flex flex-col gap-2.5 sm:flex-row">
+        <div className="flex h-9 flex-1 items-center gap-2 border border-border bg-card px-3">
+          <Search className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
           <input
             type="text"
             placeholder="Search by name, email, or phone…"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onKeyDown={handleSearchKey}
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-border rounded-xl text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-primary"
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-muted focus:outline-none"
           />
         </div>
         <select
           value={filterRole}
           onChange={e => setFilterRole(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-border rounded-xl text-ink text-sm focus:outline-none cursor-pointer"
+          aria-label="Filter by role"
+          className="h-9 cursor-pointer border border-border bg-card px-3 text-[13px] text-ink transition-colors hover:border-ink/25 focus:border-ink/40 focus:outline-none"
         >
-          <option value="ALL">All Roles</option>
+          <option value="ALL">All roles</option>
           <option value="BUYER">Buyers</option>
           <option value="SELLER">Sellers</option>
           <option value="RIDER">Riders</option>
         </select>
-        <button
-          onClick={() => fetchUsers(1)}
-          className="px-4 py-2.5 bg-surface hover:bg-border text-ink text-sm rounded-xl transition-colors"
-        >
-          Search
-        </button>
+        <AdminButton tone="ink" onClick={() => fetchUsers(1)}>Search</AdminButton>
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white border border-border rounded-2xl overflow-hidden">
+      <div className="border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
           </div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16 text-ink-secondary">No users found</div>
+          <AdminEmpty
+            className="border-0"
+            icon={Search}
+            title="No users found"
+            description="Nothing matches this search, role filter and university combination."
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">User</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Role</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">University</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Trust</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Activity</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-ink-secondary uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {users.map(user => (
-                  <tr key={user.id} className="hover:bg-surface/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="text-ink font-medium text-sm">{user.name}</p>
-                        <p className="text-ink-secondary text-xs">{user.email || user.phone}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.role === 'SELLER' ? 'bg-success/10 text-success' :
-                        user.role === 'RIDER'  ? 'bg-primary/10 text-primary' :
-                        'bg-surface text-ink-secondary'
-                      }`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-ink-secondary text-xs">{user.university?.shortName ?? '—'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.trustLevel === 'GOLD'     ? 'bg-warning/10 text-warning' :
-                        user.trustLevel === 'SILVER'   ? 'bg-surface text-ink-secondary' :
-                        user.trustLevel === 'VERIFIED' ? 'bg-primary/10 text-primary' :
-                        'bg-warning/10 text-warning'
-                      }`}>
-                        {user.trustLevel}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-ink-secondary">
+          <AdminTable>
+            <thead>
+              <tr>
+                <Th>User</Th>
+                <Th>Role</Th>
+                <Th>University</Th>
+                <Th>Trust</Th>
+                <Th>Activity</Th>
+                <Th>Status</Th>
+                <Th align="right">Actions</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(user => (
+                <Tr key={user.id}>
+                  <Td>
+                    <p className="text-sm font-medium text-ink">{user.name}</p>
+                    <p className="mt-0.5 text-xs text-ink-secondary">{user.email || user.phone}</p>
+                  </Td>
+                  <Td>
+                    <Badge status="neutral">{user.role}</Badge>
+                  </Td>
+                  <Td>
+                    <span className="text-xs text-ink-secondary">
+                      {user.university?.shortName ?? '—'}
+                    </span>
+                  </Td>
+                  <Td>
+                    <Badge status={user.trustLevel === 'VERIFIED' ? 'verified' : user.trustLevel === 'GOLD' ? 'warning' : 'neutral'}>
+                      {user.trustLevel}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <span className="ui-mono ui-mono-sm whitespace-nowrap text-ink-muted">
                       {user._count.ordersAsBuyer} orders · {user._count.products} products
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.isSuspended ? (
-                        <span className="flex items-center gap-1 text-danger text-xs">
-                          <XCircle className="w-3 h-3" /> Suspended
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-success text-xs">
-                          <CheckCircle className="w-3 h-3" /> Active
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {actionLoading === user.id ? (
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      ) : user.isSuspended ? (
-                        <button
-                          onClick={() => setUnsuspendTarget({ userId: user.id, userName: user.name })}
-                          className="text-xs text-success hover:text-success font-medium"
-                        >
-                          Unsuspend
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setSuspendDialog({ userId: user.id, userName: user.name, reason: '', days: '30' })}
-                          className="text-xs text-danger hover:text-danger font-medium"
-                        >
-                          Suspend
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </span>
+                  </Td>
+                  <Td>
+                    {user.isSuspended ? (
+                      <Badge status="danger" icon={XCircle}>Suspended</Badge>
+                    ) : (
+                      <Badge status="success" icon={CheckCircle}>Active</Badge>
+                    )}
+                  </Td>
+                  <Td align="right">
+                    {actionLoading === user.id ? (
+                      <div className="ml-auto h-4 w-4 animate-spin rounded-full border-2 border-border border-t-ink" />
+                    ) : user.isSuspended ? (
+                      <button
+                        onClick={() => setUnsuspendTarget({ userId: user.id, userName: user.name })}
+                        className="ui-mono ui-mono-sm text-success transition-opacity hover:opacity-70"
+                      >
+                        Unsuspend
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setSuspendDialog({ userId: user.id, userName: user.name, reason: '', days: '30' })}
+                        className="ui-mono ui-mono-sm text-danger transition-opacity hover:opacity-70"
+                      >
+                        Suspend
+                      </button>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </tbody>
+          </AdminTable>
         )}
       </div>
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-ink-secondary">
-            Page {page} of {totalPages} · {total.toLocaleString()} total
+        <div className="flex items-center justify-between gap-4">
+          <p className="ui-mono ui-mono-sm text-ink-muted">
+            Page {page} / {totalPages} · {total.toLocaleString()} total
           </p>
           <div className="flex gap-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink disabled:opacity-40"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-              className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink disabled:opacity-40"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <AdminButton disabled={page <= 1} onClick={() => setPage(p => p - 1)} icon={ChevronLeft}>
+              Prev
+            </AdminButton>
+            <AdminButton disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+              Next
+              <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+            </AdminButton>
           </div>
         </div>
       )}
@@ -455,7 +440,7 @@ export default function UsersPage() {
       {suspendDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setSuspendDialog(null)} />
-          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-sm z-10">
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm z-10">
             <h3 className="text-lg font-semibold text-ink mb-1">Suspend User</h3>
             <p className="text-sm text-ink-secondary mb-4">{suspendDialog.userName}</p>
             <div className="space-y-3 mb-5">
@@ -498,7 +483,7 @@ export default function UsersPage() {
       {unsuspendTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setUnsuspendTarget(null)} />
-          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-sm z-10">
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-sm z-10">
             <h3 className="text-lg font-semibold text-ink mb-2">Unsuspend User</h3>
             <p className="text-sm text-ink-secondary mb-5">Remove suspension from <span className="text-ink">{unsuspendTarget.userName}</span>?</p>
             <div className="flex gap-3">
@@ -513,7 +498,7 @@ export default function UsersPage() {
       {showCreateRider && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60" onClick={closeCreateRider} />
-          <div className="relative bg-white border border-border rounded-2xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-card border border-border rounded-2xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
             {createdCredentials ? (
               <>
                 <div className="flex items-center gap-3 mb-4">

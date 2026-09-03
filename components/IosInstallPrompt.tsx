@@ -53,7 +53,7 @@ export default function IosInstallPrompt() {
 
       {/* Sheet */}
       <div
-        className="ios-prompt-sheet fixed bottom-0 left-0 right-0 z-[9999] rounded-t-3xl overflow-hidden bg-white shadow-soft"
+        className="ios-prompt-sheet fixed bottom-0 left-0 right-0 z-[9999] rounded-t-3xl overflow-hidden bg-card shadow-soft"
         style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
       >
         {/* Drag handle */}

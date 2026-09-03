@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCartStore } from '@/lib/cart-store'
+import { Magnetic } from '@/components/ui/button'
 import {
   ShoppingCart, Trash2, Plus, Minus, ChevronLeft,
   Package, Lock, Truck, Shield, ArrowRight, X,
@@ -18,7 +19,7 @@ const CART_CSS = `
   }
   .fade-up { animation: fadeUp 0.2s ease-out forwards; }
 
-  .cart-item { transition: background 0.15s ease-out; }
+  .cart-item { transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
   .cart-item:hover { background: var(--color-surface); }
 
   .qty-btn {
@@ -27,12 +28,10 @@ const CART_CSS = `
   .qty-btn:hover:not(:disabled) { background: var(--color-surface); }
 
   .checkout-btn {
-    background: var(--color-primary);
-    transition: filter 0.15s ease-out;
+    background: var(--ui-slab);
+    transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .checkout-btn:hover {
-    filter: brightness(0.95);
-  }
+  .checkout-btn:hover { background: var(--color-primary); }
 `
 
 export default function CartPage() {
@@ -78,25 +77,28 @@ export default function CartPage() {
 
   if (!isClient) return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
-      <div className="animate-pulse space-y-3 w-full max-w-lg px-4">
-        <div className="h-8 bg-border rounded-lg" />
-        <div className="h-32 bg-border rounded-xl" />
-        <div className="h-32 bg-border rounded-xl" />
+      <div className="w-full max-w-lg space-y-3 px-4">
+        <div className="ui-skeleton h-8 rounded-lg" />
+        <div className="ui-skeleton h-32 rounded-lg" />
+        <div className="ui-skeleton h-32 rounded-lg" />
       </div>
     </div>
   )
 
   if (items.length === 0) return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-4">
-      <div className="fade-up text-center bg-white rounded-2xl p-12 sm:p-16 border border-border max-w-md w-full">
-        <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6 bg-primary/10">
-          <ShoppingCart className="w-8 h-8 text-primary" strokeWidth={1.75} />
-        </div>
-        <h1 className="text-2xl font-semibold text-ink mb-2">Your cart is empty</h1>
-        <p className="text-ink-muted text-sm mb-8 leading-relaxed">Browse products and add items you love</p>
+      <div className="fade-up w-full max-w-md border border-dashed border-border bg-card px-8 py-16 text-center sm:py-20">
+        <span className="mx-auto mb-7 flex h-14 w-14 items-center justify-center border border-border bg-surface">
+          <ShoppingCart className="h-6 w-6 text-ink-muted" strokeWidth={1.5} />
+        </span>
+        <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Nothing here yet</p>
+        <h1 className="mb-3 text-2xl text-ink">Your cart is empty</h1>
+        <p className="mx-auto mb-9 max-w-[32ch] text-sm leading-relaxed text-ink-secondary">
+          Browse what students around you are selling and add anything you want to keep.
+        </p>
         <button
           onClick={() => router.push('/marketplace')}
-          className="checkout-btn inline-flex items-center gap-2.5 text-white px-8 h-11 rounded-lg font-medium text-[15px]"
+          className="checkout-btn ui-btn-sweep inline-flex h-12 items-center gap-2.5 rounded-lg px-8 font-mono text-[11px] uppercase tracking-[0.16em] text-white"
         >
           Start shopping
         </button>
@@ -115,21 +117,29 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-surface pb-24">
       {/* Header */}
-      <header className="bg-white sticky top-0 z-40 border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
-          <button onClick={() => router.push('/marketplace')}
-            className="w-9 h-9 rounded-lg text-ink-secondary hover:bg-surface flex items-center justify-center transition-colors flex-shrink-0">
-            <ChevronLeft className="w-5 h-5" strokeWidth={1.75} />
+      <header className="sticky top-0 z-40 border-b border-border bg-card/88 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
+          <button
+            onClick={() => router.push('/marketplace')}
+            aria-label="Back to marketplace"
+            className="group flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
+          >
+            <ChevronLeft
+              className="h-5 w-5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+              strokeWidth={1.75}
+            />
           </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-ink">
-              My cart <span className="text-ink-muted font-medium text-sm">({items.length} item{items.length !== 1 ? 's' : ''})</span>
-            </h1>
-            <p className="text-ink-muted text-xs">{uniqueSellers} seller{uniqueSellers !== 1 ? 's' : ''}</p>
+          <div className="min-w-0 flex-1">
+            <p className="ui-eyebrow mb-1 max-w-[14rem]">
+              {items.length} item{items.length !== 1 ? 's' : ''} · {uniqueSellers} seller{uniqueSellers !== 1 ? 's' : ''}
+            </p>
+            <h1 className="text-xl text-ink sm:text-2xl">My cart</h1>
           </div>
-          <button onClick={clearCart}
-            className="flex items-center gap-1.5 bg-danger/10 hover:bg-danger/20 text-danger text-xs font-medium px-3 py-2 rounded-lg transition-colors">
-            <Trash2 className="w-3.5 h-3.5" strokeWidth={1.75} /> Clear
+          <button
+            onClick={clearCart}
+            className="flex-shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted transition-colors duration-300 hover:text-danger"
+          >
+            Clear all
           </button>
         </div>
       </header>
@@ -139,7 +149,7 @@ export default function CartPage() {
 
           {/* Items */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="fade-up bg-white rounded-xl border border-border overflow-hidden">
+            <div className="fade-up border border-border bg-card">
               <div className="divide-y divide-border">
                 {items.map((item) => {
                   const variantEntries = Object.entries(item.selectedVariants || {}).filter(([, v]) => v)
@@ -147,8 +157,8 @@ export default function CartPage() {
                     <div key={item.id} className="cart-item p-4 sm:p-5">
                       <div className="flex gap-3 sm:gap-4">
                         <Link href={`/product/${item.productId}`} className="flex-shrink-0">
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-colors">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <div className="h-24 w-20 overflow-hidden bg-surface transition-opacity duration-300 hover:opacity-90 sm:h-28 sm:w-24">
+                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                           </div>
                         </Link>
                         <div className="flex-1 min-w-0">
@@ -170,8 +180,8 @@ export default function CartPage() {
                               {variantEntries.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                   {variantEntries.map(([key, val]) => (
-                                    <span key={key} className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary font-medium px-2.5 py-0.5 rounded-full">
-                                      <Tag className="w-2.5 h-2.5" strokeWidth={1.75} />
+                                    <span key={key} className="inline-flex items-center gap-1 border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-secondary">
+                                      <Tag className="h-2.5 w-2.5" strokeWidth={1.75} />
                                       {String(val)}
                                     </span>
                                   ))}
@@ -199,23 +209,23 @@ export default function CartPage() {
                           </div>
 
                           <div className="flex items-center justify-between mt-3">
-                            <p className="font-semibold text-ink text-base">{fmt(item.price * item.quantity)}</p>
-                            <div className="flex items-center gap-2 bg-surface rounded-lg p-1">
+                            <p className="ui-figure text-lg text-ink">{fmt(item.price * item.quantity)}</p>
+                            <div className="flex items-center border border-border">
                               <button
                                 onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                                 aria-label="Decrease quantity"
-                                className="qty-btn w-7 h-7 rounded-md bg-white flex items-center justify-center text-ink-secondary font-medium transition-all"
+                                className="qty-btn flex h-9 w-9 items-center justify-center bg-card text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
                               >
-                                <Minus className="w-3 h-3" strokeWidth={1.75} />
+                                <Minus className="h-3 w-3" strokeWidth={2} />
                               </button>
-                              <span className="font-medium text-ink w-6 text-center text-sm">{item.quantity}</span>
+                              <span className="ui-figure w-9 text-center text-sm text-ink">{item.quantity}</span>
                               <button
                                 onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                                 disabled={item.quantity >= item.maxQuantity}
                                 aria-label="Increase quantity"
-                                className="qty-btn w-7 h-7 rounded-md bg-white flex items-center justify-center text-ink-secondary font-medium transition-all disabled:opacity-40"
+                                className="qty-btn flex h-9 w-9 items-center justify-center bg-card text-ink-secondary transition-colors hover:bg-surface hover:text-ink disabled:opacity-30"
                               >
-                                <Plus className="w-3 h-3" strokeWidth={1.75} />
+                                <Plus className="h-3 w-3" strokeWidth={2} />
                               </button>
                             </div>
                           </div>
@@ -230,42 +240,48 @@ export default function CartPage() {
 
           {/* Summary */}
           <div className="space-y-4">
-            <div className="fade-up bg-white rounded-xl border border-border p-5">
-              <h2 className="font-semibold text-ink mb-4">Order summary</h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-ink-secondary">Subtotal</span>
-                  <span className="font-medium text-ink">{fmt(subtotal)}</span>
+            <div className="fade-up border border-border bg-card p-5 lg:sticky lg:top-28">
+              <p className="ui-eyebrow mb-5">Order summary</p>
+              <div className="divide-y divide-border">
+                <div className="flex items-baseline justify-between py-2.5">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary">Subtotal</span>
+                  <span className="text-sm font-medium text-ink">{fmt(subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-ink-secondary">Delivery fee</span>
-                  <span className="font-medium text-ink">{fmt(deliveryFee)}</span>
+                <div className="flex items-baseline justify-between py-2.5">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary">Delivery fee</span>
+                  <span className="text-sm font-medium text-ink">{fmt(deliveryFee)}</span>
                 </div>
-                <div className="border-t border-border pt-3 flex justify-between">
-                  <span className="font-semibold text-ink">Total</span>
-                  <span className="font-semibold text-ink text-lg">{fmt(total)}</span>
+                <div className="flex items-baseline justify-between pt-3.5">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink">Total</span>
+                  <span className="ui-figure text-2xl text-ink">{fmt(total)}</span>
                 </div>
               </div>
 
-              <button onClick={handleCheckout}
-                className="checkout-btn w-full mt-5 h-11 rounded-lg text-white font-medium flex items-center justify-center gap-2.5">
-                <Lock className="w-4 h-4" strokeWidth={1.75} /> Secure checkout
-              </button>
+              {/* The one action this whole screen exists for — so it gets the
+                  magnetic gesture rather than the plain hover wipe. */}
+              <Magnetic block className="mt-6">
+                <button
+                  onClick={handleCheckout}
+                  className="checkout-btn ui-btn-sweep flex h-12 w-full items-center justify-center gap-2.5 rounded-lg font-mono text-[11px] uppercase tracking-[0.16em] text-white"
+                >
+                  <Lock className="h-3.5 w-3.5" strokeWidth={2} /> Secure checkout
+                </button>
+              </Magnetic>
 
-              <div className="flex items-center justify-center gap-4 mt-4">
-                <div className="flex items-center gap-1.5 text-xs text-ink-muted">
-                  <Shield className="w-3.5 h-3.5 text-success" strokeWidth={1.75} />
-                  <span>Escrow protected</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-ink-muted">
-                  <Truck className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-                  <span>Fast delivery</span>
-                </div>
+              <div className="mt-5 flex items-center justify-center gap-5 border-t border-border pt-4">
+                <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                  <Shield className="h-3.5 w-3.5 text-success" strokeWidth={1.75} />
+                  Escrow protected
+                </span>
+                <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                  <Truck className="h-3.5 w-3.5 text-primary" strokeWidth={1.75} />
+                  Fast delivery
+                </span>
               </div>
             </div>
 
             <Link href="/marketplace"
-              className="fade-up flex items-center justify-center gap-2 h-11 bg-white rounded-lg border border-border text-sm font-medium text-ink-secondary hover:text-primary hover:border-primary/20 transition-all">
+              className="fade-up flex h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink">
               Continue shopping
             </Link>
           </div>

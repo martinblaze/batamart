@@ -24,7 +24,7 @@ export default function PriceRangeSlider({
   const fmt = (n: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n)
 
   return (
-    <div className="rounded-xl border border-border bg-white p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-ink">Price range</span>
         <span className="text-xs font-medium text-ink-secondary">

@@ -4,6 +4,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Flag, User, AlertTriangle } from 'lucide-react'
+import {
+  AdminHeader, AdminPanel, AdminEmpty, AdminButton,
+} from '@/components/admin/AdminUI'
+import { DataRow } from '@/components/ui/Shell'
+import { Badge } from '@/components/ui/Badge'
 
 export default function ReportDetailPage() {
   const params = useParams()
@@ -74,146 +79,151 @@ export default function ReportDetailPage() {
     }
   }
 
+  const labelClass =
+    'mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary'
+  const controlClass =
+    'w-full border border-border bg-card px-4 text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15'
+
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      <div className="flex justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
 
   if (!report) {
-    return <div className="text-center py-12 text-ink-secondary">Report not found</div>
+    return (
+      <AdminEmpty
+        icon={Flag}
+        title="Report not found"
+        description="This report may already have been resolved and archived."
+        action={
+          <AdminButton tone="ink" onClick={() => router.push('/admin/reports')}>
+            Back to reports
+          </AdminButton>
+        }
+      />
+    )
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
+      <AdminHeader
+        eyebrow={`${report.type} report`}
+        title={<span className="ui-figure">#{report.id.slice(0, 8)}</span>}
+        description="Review who raised this, what they say happened, then record a decision."
+        actions={<Badge status="warning">{report.reason}</Badge>}
+      />
+
       {/* Report Info */}
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-danger/10 rounded-xl">
-            <Flag className="w-6 h-6 text-danger" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-ink">Report #{report.id.slice(0, 8)}</h1>
-            <p className="text-ink-secondary">{report.type} Report</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="p-4 bg-surface rounded-xl">
-            <p className="text-ink-secondary text-sm mb-1">Reporter</p>
-            <p className="text-ink font-semibold">{report.reporter.name}</p>
-            <p className="text-ink-secondary text-sm">{report.reporter.email}</p>
-          </div>
-
+      <AdminPanel title="Case detail">
+        <div className="ui-divide">
+          <DataRow
+            label="Reporter"
+            value={
+              <span className="block text-right">
+                <span className="block text-sm text-ink">{report.reporter.name}</span>
+                <span className="mt-0.5 block text-xs text-ink-secondary">{report.reporter.email}</span>
+              </span>
+            }
+          />
           {report.reportedUser && (
-            <div className="p-4 bg-surface rounded-xl">
-              <p className="text-ink-secondary text-sm mb-1">Reported User</p>
-              <p className="text-ink font-semibold">{report.reportedUser.name}</p>
-              <p className="text-ink-secondary text-sm">{report.reportedUser.email}</p>
-            </div>
+            <DataRow
+              label="Reported user"
+              value={
+                <span className="block text-right">
+                  <span className="block text-sm text-ink">{report.reportedUser.name}</span>
+                  <span className="mt-0.5 block text-xs text-ink-secondary">{report.reportedUser.email}</span>
+                </span>
+              }
+            />
           )}
-
-          <div className="p-4 bg-surface rounded-xl">
-            <p className="text-ink-secondary text-sm mb-1">Reason</p>
-            <p className="text-ink font-semibold">{report.reason}</p>
-          </div>
-
-          <div className="p-4 bg-surface rounded-xl">
-            <p className="text-ink-secondary text-sm mb-1">Description</p>
-            <p className="text-ink">{report.description}</p>
-          </div>
+          <DataRow label="Reason" value={report.reason} />
         </div>
-      </div>
+
+        <div className="mt-6 border-t border-border pt-6">
+          <p className="ui-eyebrow mb-3">What they said</p>
+          <p className="max-w-[70ch] whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
+            {report.description}
+          </p>
+        </div>
+      </AdminPanel>
 
       {/* Resolution Form */}
       {report.status === 'PENDING' || report.status === 'UNDER_REVIEW' ? (
-        <div className="bg-white border border-border rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-ink mb-6">Resolve Report</h2>
-
-          <div className="space-y-6">
+        <AdminPanel title="Record a decision">
+          <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-ink-secondary mb-2">
-                Action
-              </label>
+              <label className={labelClass}>Action</label>
               <select
                 value={resolution.action}
                 onChange={(e) => setResolution({ ...resolution, action: e.target.value })}
-                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className={`${controlClass} h-12`}
               >
-                <option value="DISMISS">Dismiss Report</option>
-                <option value="WARNING">Issue Warning</option>
-                <option value="SUSPEND">Suspend User</option>
-                <option value="BAN">Ban User</option>
-                <option value="REMOVE_CONTENT">Remove Content</option>
+                <option value="DISMISS">Dismiss report</option>
+                <option value="WARNING">Issue warning</option>
+                <option value="SUSPEND">Suspend user</option>
+                <option value="BAN">Ban user</option>
+                <option value="REMOVE_CONTENT">Remove content</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-ink-secondary mb-2">
-                Resolution Notes *
-              </label>
+              <label className={labelClass}>Resolution notes *</label>
               <textarea
                 value={resolution.actionNotes}
                 onChange={(e) => setResolution({ ...resolution, actionNotes: e.target.value })}
-                className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-32"
-                placeholder="Explain your decision..."
+                className={`${controlClass} min-h-32 resize-none py-3.5 leading-relaxed`}
+                placeholder="Explain the decision — this is the record other admins will read."
                 required
               />
             </div>
 
-            <div className="p-4 bg-surface rounded-xl">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={resolution.penalizeReported}
-                  onChange={(e) => setResolution({ ...resolution, penalizeReported: e.target.checked })}
-                  className="w-5 h-5 rounded border-border text-danger focus:ring-primary/40"
-                />
-                <span className="text-ink font-medium">Apply Penalty to Reported User</span>
-              </label>
-            </div>
+            <label className="flex cursor-pointer items-center gap-3 border border-border bg-surface p-4">
+              <input
+                type="checkbox"
+                checked={resolution.penalizeReported}
+                onChange={(e) => setResolution({ ...resolution, penalizeReported: e.target.checked })}
+                className="h-4 w-4 border-border text-ink focus:ring-primary/40"
+              />
+              <span className="text-sm font-medium text-ink">Apply a penalty to the reported user</span>
+            </label>
 
             {resolution.penalizeReported && (
               <div>
-                <label className="block text-sm font-medium text-ink-secondary mb-2">
-                  Penalty Reason
-                </label>
+                <label className={labelClass}>Penalty reason</label>
                 <input
                   type="text"
                   value={resolution.penaltyReason}
                   onChange={(e) => setResolution({ ...resolution, penaltyReason: e.target.value })}
-                  className="w-full px-4 py-3 bg-surface border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className={`${controlClass} h-12`}
                 />
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => router.back()}
-                className="flex-1 px-6 py-3 bg-surface text-ink rounded-xl font-semibold hover:bg-border transition-colors"
-              >
+            <div className="flex flex-col gap-2 border-t border-border pt-5 sm:flex-row">
+              <AdminButton onClick={() => router.back()} className="h-11 sm:flex-1">
                 Cancel
-              </button>
-              <button
+              </AdminButton>
+              <AdminButton
+                tone="danger"
                 onClick={handleResolve}
                 disabled={resolving}
-                className="flex-1 px-6 py-3 bg-danger text-white rounded-xl font-semibold hover:brightness-95 transition-all disabled:opacity-50"
+                className="h-11 sm:flex-[2]"
               >
-                {resolving ? 'Resolving...' : 'Submit Resolution'}
-              </button>
+                {resolving ? 'Resolving…' : 'Submit resolution'}
+              </AdminButton>
             </div>
           </div>
-        </div>
+        </AdminPanel>
       ) : (
-        <div className="bg-white border border-border rounded-2xl p-6">
-          <h2 className="text-xl font-semibold text-ink mb-4">Resolution</h2>
-          <p className="text-ink-secondary">Status: <span className="text-ink font-semibold">{report.status}</span></p>
-          {report.actionTaken && (
-            <p className="text-ink-secondary mt-2">Action: <span className="text-ink">{report.actionTaken}</span></p>
-          )}
-        </div>
+        <AdminPanel title="Resolution">
+          <div className="ui-divide">
+            <DataRow label="Status" value={<Badge status="success">{report.status}</Badge>} />
+            {report.actionTaken && <DataRow label="Action taken" value={report.actionTaken} />}
+          </div>
+        </AdminPanel>
       )}
     </div>
   )

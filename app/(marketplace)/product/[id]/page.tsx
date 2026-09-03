@@ -139,7 +139,8 @@ const PAGE_CSS = `
     border: 1px solid var(--color-border);
     transition: background 0.15s ease-out;
   }
-  .add-btn:hover:not(:disabled) { background: var(--color-surface); }
+  .add-btn { transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease; }
+  .add-btn:hover:not(:disabled) { background: var(--color-surface); border-color: rgba(19,19,17,0.3); }
   .add-btn:active:not(:disabled) { transform: scale(0.98); }
   .add-btn:disabled {
     opacity: 0.4;
@@ -147,10 +148,10 @@ const PAGE_CSS = `
   }
 
   .buy-btn {
-    background: var(--color-primary);
-    transition: filter 0.15s ease-out;
+    background: var(--ui-slab);
+    transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .buy-btn:hover:not(:disabled) { filter: brightness(0.95); }
+  .buy-btn:hover:not(:disabled) { background: var(--color-primary); }
   .buy-btn:active:not(:disabled) { transform: scale(0.98); }
 
   .qty-btn {
@@ -283,7 +284,7 @@ function RelatedCard({ product, onClick }: { product: RelatedProduct; onClick: (
   return (
     <div
       onClick={onClick}
-      className="rv-card bg-white rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 w-36 sm:w-44 border border-border"
+      className="rv-card ui-tile group w-36 flex-shrink-0 cursor-pointer sm:w-44"
     >
       <div className="relative">
         <div className="aspect-square overflow-hidden bg-surface">
@@ -908,7 +909,7 @@ export default function ProductDetailPage() {
 
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:bg-black/40 p-0 sm:p-4">
-          <div className="w-full sm:w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto space-y-4 p-4 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="w-full sm:w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl max-h-[90vh] overflow-y-auto space-y-4 p-4 animate-in slide-in-from-bottom-5 duration-300">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-ink">Report this listing</h3>
               <button
@@ -990,7 +991,7 @@ export default function ProductDetailPage() {
           Render client-side only and keep existing behavior. */}
 
       {/* ── Top nav ───────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-border shadow-soft">
+      <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border shadow-soft">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-3">
           <button
             onClick={() => router.back()}
@@ -1061,8 +1062,8 @@ export default function ProductDetailPage() {
 
           {/* LEFT — Images (Sticky) */}
           <div className="space-y-2 sm:sticky sm:top-16 sm:max-h-[calc(100vh-80px)] sm:overflow-y-auto no-scrollbar">
-            <div className="relative bg-white rounded-2xl overflow-hidden shadow-soft border border-border">
-              <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden">
+            <div className="relative overflow-hidden border border-border bg-card">
+              <div className="relative aspect-square overflow-hidden sm:aspect-[4/5]">
                 {product.images?.[activeImg] ? (
                   <img
                     src={product.images[activeImg]}
@@ -1102,13 +1103,13 @@ export default function ProductDetailPage() {
                   <>
                     <button
                       onClick={() => switchImg((activeImg - 1 + product.images.length) % product.images.length)}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow-soft hover:bg-white transition-all"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-card/90 rounded-full flex items-center justify-center shadow-soft hover:bg-card transition-all"
                     >
                       <ChevronLeft className="w-4 h-4 text-ink-secondary" />
                     </button>
                     <button
                       onClick={() => switchImg((activeImg + 1) % product.images.length)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 rounded-full flex items-center justify-center shadow-soft hover:bg-white transition-all"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-card/90 rounded-full flex items-center justify-center shadow-soft hover:bg-card transition-all"
                     >
                       <ChevronRight className="w-4 h-4 text-ink-secondary" />
                     </button>
@@ -1164,13 +1165,15 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <h1 className="text-lg sm:text-2xl font-semibold text-ink leading-tight">{product.name}</h1>
+            <h1 className="text-[clamp(1.35rem,3vw,2.1rem)] leading-[1.08] text-ink">{product.name}</h1>
 
             <div className="flex items-center gap-2 flex-wrap">
               <StarRow rating={product.seller.avgRating || 0} size="md" />
-              <span className="text-sm font-semibold text-warning">{(product.seller.avgRating || 0).toFixed(1)}</span>
-              <span className="text-sm text-ink-muted">·</span>
-              <span className="text-sm text-ink-secondary">{product._count?.orders || 0} sold</span>
+              <span className="ui-figure text-sm text-ink">{(product.seller.avgRating || 0).toFixed(1)}</span>
+              <span className="text-ink-muted">·</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-secondary">
+                {product._count?.orders || 0} sold
+              </span>
               {product.viewCount > 0 && (
                 <>
                   <span className="text-sm text-ink-muted">·</span>
@@ -1181,20 +1184,25 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            <div className="bg-primary/5 rounded-xl p-3 sm:p-4 border border-primary/20">
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-semibold text-ink">{fmt(effectivePrice)}</span>
+            {/* The price needs no box — at this size and weight it already
+                dominates. A tinted panel around it only added a second
+                competing rectangle. */}
+            <div className="border-y border-border py-4">
+              <div className="flex items-baseline gap-3">
+                <span className="ui-figure text-[clamp(1.9rem,4.5vw,2.75rem)] leading-none text-ink">
+                  {fmt(effectivePrice)}
+                </span>
                 {product.basePrice && product.basePrice > effectivePrice && (
-                  <span className="text-xs sm:text-sm text-ink-muted line-through font-medium">{fmt(product.basePrice)}</span>
+                  <span className="text-sm font-medium text-ink-muted line-through">{fmt(product.basePrice)}</span>
                 )}
               </div>
               {structuredVariants.length > 0 && minStructuredPrice > 0 && (
-                <p className="text-[11px] sm:text-xs text-primary font-medium mt-1">
-                  Range: {fmt(minStructuredPrice)} - {fmt(maxStructuredPrice)}
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-secondary">
+                  Range {fmt(minStructuredPrice)} — {fmt(maxStructuredPrice)}
                 </p>
               )}
-              <p className="text-xs text-ink-secondary mt-0.5 flex items-center gap-1">
-                <Shield className="w-3 h-3 text-success" strokeWidth={1.75} />
+              <p className="mt-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                <Shield className="h-3 w-3 text-success" strokeWidth={2} />
                 Secure checkout · Buyer protection
               </p>
             </div>
@@ -1202,7 +1210,7 @@ export default function ProductDetailPage() {
             {stockKnown && effectiveStock > 0 && (
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${effectiveStock <= 5 ? 'bg-warning' : 'bg-success'}`} />
-                <span className={`text-sm font-medium ${effectiveStock <= 5 ? 'text-warning' : 'text-success'}`}>
+                <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${effectiveStock <= 5 ? 'text-warning' : 'text-success'}`}>
                   {effectiveStock <= 5 ? `Only ${effectiveStock} left` : `${effectiveStock} in stock`}
                 </span>
               </div>
@@ -1210,15 +1218,15 @@ export default function ProductDetailPage() {
 
             {product.deliveryEstimate && (
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-                  <Truck className="w-3.5 h-3.5" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+                <span className="inline-flex items-center gap-1.5 border border-border px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-secondary">
+                  <Truck className="h-3.5 w-3.5 text-success" strokeWidth={1.75} /> Delivery {product.deliveryEstimate}
                 </span>
               </div>
             )}
 
             {/* ── NEW: Variant Selector ──────────────────── */}
             {(variantKeys.length > 0 || specAttributes.length > 0) && (
-              <div id="variant-selector" className="bg-white rounded-2xl p-4 ring-1 ring-border space-y-4">
+              <div id="variant-selector" className="space-y-4 border border-border bg-card p-4">
                 <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
                   <Crown className="w-4 h-4 text-primary" />
                   Options & Specs
@@ -1275,12 +1283,12 @@ export default function ProductDetailPage() {
                               setSelected(prev => ({ ...prev, [key]: prev[key] === v ? prev[key] : v }))
                               setVariantError('')
                             }}
-                            className={`variant-chip text-left px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                            className={`variant-chip rounded-lg border px-3.5 py-2.5 text-left text-xs font-medium transition-colors duration-300 ${
                               chosen
-                                ? 'bg-primary text-white border-primary shadow-soft ring-2 ring-primary/30'
+                                ? 'border-ink bg-ink text-background'
                                 : available
-                                ? 'border-border bg-white text-ink hover:border-primary/50 hover:shadow-soft'
-                                : 'border-border bg-surface text-ink-muted cursor-not-allowed opacity-70'
+                                ? 'border-border bg-card text-ink hover:border-ink/40'
+                                : 'cursor-not-allowed border-border bg-surface text-ink-muted opacity-70'
                             }`}
                             disabled={!available}
                           >
@@ -1327,7 +1335,7 @@ export default function ProductDetailPage() {
                         return (
                           <span
                             key={attr.id}
-                            className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-secondary"
+                            className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-ink-secondary"
                           >
                             <span className="text-ink-secondary">{attr.label || attr.key}:</span>
                             <span className="text-ink">{displayValue}</span>
@@ -1341,7 +1349,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* ── Note to seller ── */}
-            <div className="bg-white rounded-2xl p-4 ring-1 ring-border space-y-2">
+            <div className="space-y-2 border border-border bg-card p-4">
               <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
                 <MessageCircle className="w-4 h-4 text-primary" />
                 Note to seller <span className="text-ink-muted font-normal text-xs">(optional)</span>
@@ -1361,7 +1369,7 @@ export default function ProductDetailPage() {
                 maxLength={300}
                 rows={2}
                 placeholder={noteSuggestionText ? `e.g. ${noteSuggestionText} — confirm before delivery` : 'e.g. Please deliver after 4pm, or gift-wrap this…'}
-                className="w-full text-sm bg-surface rounded-xl p-3 border border-transparent focus:border-primary focus:bg-white outline-none resize-none transition-colors"
+                className="w-full text-sm bg-surface rounded-xl p-3 border border-transparent focus:border-primary focus:bg-card outline-none resize-none transition-colors"
               />
               <p className="text-[11px] text-ink-muted text-right">{noteToSeller.length}/300</p>
             </div>
@@ -1373,7 +1381,7 @@ export default function ProductDetailPage() {
                   <button
                     onClick={() => setQty(q => Math.max(1, q - 1))}
                     disabled={qty <= 1}
-                    className="qty-btn w-8 h-8 rounded-lg bg-white ring-1 ring-border flex items-center justify-center text-ink-secondary disabled:opacity-40"
+                    className="qty-btn w-8 h-8 rounded-lg bg-card ring-1 ring-border flex items-center justify-center text-ink-secondary disabled:opacity-40"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
@@ -1381,7 +1389,7 @@ export default function ProductDetailPage() {
                   <button
                     onClick={() => setQty(q => stockKnown ? Math.min(effectiveStock, q + 1) : q + 1)}
                     disabled={stockKnown && qty >= effectiveStock}
-                    className="qty-btn w-8 h-8 rounded-lg bg-white ring-1 ring-border flex items-center justify-center text-ink-secondary disabled:opacity-40"
+                    className="qty-btn w-8 h-8 rounded-lg bg-card ring-1 ring-border flex items-center justify-center text-ink-secondary disabled:opacity-40"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -1401,7 +1409,7 @@ export default function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 disabled={(stockKnown && effectiveStock === 0) || addingToCart}
-                className="add-btn flex-1 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base"
+                className="add-btn flex flex-1 items-center justify-center gap-2 rounded-lg py-4 font-mono text-[11px] uppercase tracking-[0.14em] transition-transform duration-300 active:scale-[0.99]"
               >
                 {addingToCart
                   ? <RefreshCw className="w-4 h-4 animate-spin" />
@@ -1418,7 +1426,7 @@ export default function ProductDetailPage() {
               {!(stockKnown && effectiveStock === 0) && (
                 <button
                   onClick={handleBuyNow}
-                  className="buy-btn flex-1 text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="buy-btn ui-btn-sweep flex flex-1 items-center justify-center gap-2 rounded-lg py-4 font-mono text-[11px] uppercase tracking-[0.14em] text-white transition-transform duration-300 active:scale-[0.99]"
                 >
                   <Zap className="w-4 h-4" />
                   Buy Now
@@ -1444,7 +1452,7 @@ export default function ProductDetailPage() {
             </button>
 
             {/* Delivery info */}
-            <div className="bg-white rounded-2xl p-3 space-y-2 ring-1 ring-border">
+            <div className="space-y-2 border border-border bg-card p-4">
               <div className="flex items-center gap-2.5">
                 <Truck className="w-4 h-4 text-success flex-shrink-0" />
                 <p className="text-xs text-ink-secondary">Campus delivery available via BataMart riders</p>
@@ -1468,7 +1476,7 @@ export default function ProductDetailPage() {
             {/* Seller card */}
             <Link
               href={`/seller/${product.seller.id}`}
-              className="flex items-center gap-3 bg-white rounded-2xl p-3 ring-1 ring-border hover:ring-primary/30 hover:shadow-soft transition-all group"
+              className="group flex items-center gap-3 border border-border bg-card p-4 transition-colors duration-300 hover:border-ink/25"
             >
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm sm:text-base flex-shrink-0">
                 {product.seller.name?.charAt(0).toUpperCase()}
@@ -1499,7 +1507,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* ── Tabs: Description · Details · Reviews ─────── */}
-        <div className="bg-white rounded-2xl overflow-hidden shadow-soft fade-up border border-border" style={{ animationDelay: '0.1s' }}>
+        <div className="bg-card rounded-2xl overflow-hidden shadow-soft fade-up border border-border" style={{ animationDelay: '0.1s' }}>
           <div className="flex border-b border-border">
             {(['desc', 'reviews'] as const).map(tab => (
               <button
@@ -1651,7 +1659,7 @@ export default function ProductDetailPage() {
 
             <div className="flex gap-3 overflow-x-auto pb-3">
               {recentlyViewed.map(item => (
-                <div key={item.id} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden bg-white border border-border">
+                <div key={item.id} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden bg-card border border-border">
                   <div className="aspect-square bg-surface">
                     {item.image ? (
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -1727,7 +1735,7 @@ export default function ProductDetailPage() {
                 {[1,2,3,4].map(i => (
                   <div key={i} className="flex-shrink-0 w-36 sm:w-44 rounded-2xl overflow-hidden">
                     <div className="shimmer aspect-square w-full" />
-                    <div className="bg-white p-2 space-y-1.5">
+                    <div className="bg-card p-2 space-y-1.5">
                       <div className="shimmer h-3 w-full rounded" />
                       <div className="shimmer h-3 w-2/3 rounded" />
                       <div className="shimmer h-4 w-1/2 rounded" />
@@ -1759,7 +1767,7 @@ export default function ProductDetailPage() {
                 <div
                   key={p.id}
                   onClick={() => navigateRelatedTracked(p.id)}
-                  className="rv-card bg-white rounded-2xl overflow-hidden cursor-pointer border border-border"
+                  className="rv-card ui-tile group cursor-pointer"
                 >
                   <div className="aspect-square overflow-hidden bg-surface">
                     {p.images?.[0] ? (
@@ -1792,7 +1800,7 @@ export default function ProductDetailPage() {
           {alsoLikeLoading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
               {Array.from({ length: ALSO_LIKE_PAGE_SIZE }).map((_, i) => (
-                <div key={i} className="rounded-2xl overflow-hidden bg-white border border-border">
+                <div key={i} className="rounded-2xl overflow-hidden bg-card border border-border">
                   <div className="shimmer aspect-square w-full" />
                   <div className="p-2.5 space-y-1.5">
                     <div className="shimmer h-3 w-full rounded" />

@@ -318,30 +318,29 @@ export function NotificationPrompt() {
       />
 
       <div
-        className="np-sheet fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl overflow-hidden"
+        className="np-sheet fixed left-0 right-0 bottom-0 z-[9999] bg-card rounded-t-3xl overflow-hidden"
         style={{ boxShadow: '0 -8px 40px rgba(0,0,0,0.18)' }}
       >
         <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg,#1a3f8f,#3b9ef5)' }} />
 
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          <div className="h-1 w-10 rounded-full bg-border" />
         </div>
 
         <div className="px-5 pt-2 pb-6" style={{ paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))' }}>
           <div className="flex items-start gap-3 mb-4">
-            <div
-              className="np-bell flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)', boxShadow: '0 4px 14px rgba(26,63,143,0.35)' }}
-            >
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="np-bell flex h-11 w-11 flex-shrink-0 items-center justify-center border border-border bg-surface">
+              <svg className="h-5 w-5 text-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 text-base leading-snug">Stay in the loop 🔔</p>
-              <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                Get notified about your orders, deliveries, and messages — even when the app is closed.
+              <p className="text-[17px] leading-snug text-ink" style={{ fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', fontWeight: 600 }}>
+                Stay in the loop
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-ink-secondary">
+                Get notified about your orders, deliveries and messages — even when the app is closed.
               </p>
             </div>
 
@@ -355,18 +354,11 @@ export function NotificationPrompt() {
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-5">
-            {[
-              { icon: '📦', text: 'Order updates' },
-              { icon: '🛵', text: 'Delivery alerts' },
-              { icon: '💬', text: 'New messages' },
-            ].map(({ icon, text }) => (
-              <span
-                key={text}
-                className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(59,158,245,0.09)', color: '#1a3f8f' }}
-              >
-                {icon} {text}
+          <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2">
+            {['Order updates', 'Delivery alerts', 'New messages'].map((text, i) => (
+              <span key={text} className="flex items-center gap-3">
+                {i > 0 && <span aria-hidden className="h-2.5 w-px bg-border" />}
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">{text}</span>
               </span>
             ))}
           </div>
@@ -374,12 +366,8 @@ export function NotificationPrompt() {
           <button
             onClick={handleEnable}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white text-sm font-bold transition-all disabled:opacity-60 active:scale-[0.98]"
-            style={{
-              background: 'linear-gradient(135deg,#1a3f8f,#3b9ef5)',
-              boxShadow: '0 4px 16px rgba(26,63,143,0.35)',
-              minHeight: '52px',
-            }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-ink font-mono text-[11px] uppercase tracking-[0.16em] text-background transition-colors duration-300 hover:bg-primary disabled:opacity-60 active:scale-[0.99]"
+            style={{ minHeight: '52px' }}
           >
             {isLoading
               ? <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> Enabling…</>
@@ -389,7 +377,7 @@ export function NotificationPrompt() {
 
           <button
             onClick={() => dismiss(true)}
-            className="w-full mt-2.5 py-3 rounded-2xl text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors active:scale-[0.98]"
+            className="mt-2.5 w-full rounded-lg border border-border font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink active:scale-[0.99]"
             style={{ minHeight: '44px' }}
           >
             Maybe Later

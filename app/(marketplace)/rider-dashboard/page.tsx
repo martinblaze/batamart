@@ -56,7 +56,7 @@ function Toast({
   }
   return (
     <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <div className={`flex items-start gap-3 px-4 py-3 rounded-2xl border shadow-soft max-w-sm w-full pointer-events-auto ${colors[type]}`}>
+      <div className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 border px-4 py-3.5 ${colors[type]}`}>
         <p className="text-sm font-semibold flex-1">{message}</p>
         <button onClick={onClose} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity">
           <X className="w-4 h-4" />
@@ -600,75 +600,85 @@ export default function RiderDashboardPage() {
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* ── Header ───────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-soft border border-border p-5">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Bike className="w-5 h-5 text-primary" />
-                <h1 className="text-xl font-semibold text-ink">Rider Dashboard</h1>
-              </div>
-              <p className="text-sm text-ink-secondary">Welcome back, {rider?.name}!</p>
+        <div className="border border-border bg-card">
+          <div className="flex flex-wrap items-start justify-between gap-5 p-5">
+            <div className="min-w-0">
+              <p className="ui-mono ui-mono-sm mb-3 flex items-center gap-2 text-ink-muted">
+                <Bike className="h-3.5 w-3.5" strokeWidth={2} />
+                Rider
+              </p>
+              <h1 className="text-[clamp(1.4rem,3.2vw,1.9rem)] leading-tight text-ink">
+                {rider?.name ? `Welcome back, ${rider.name}` : 'Rider dashboard'}
+              </h1>
             </div>
+
+            {/* Availability is the one control that changes what happens next,
+                so it gets solid weight; everything else stays quiet. */}
             <button
               onClick={toggleAvailability}
               disabled={actionLoading['toggle-availability']}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`ui-mono ui-mono-sm inline-flex h-10 flex-shrink-0 items-center gap-2 px-4 transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50 ${
                 isAvailable
                   ? 'bg-success text-white'
-                  : 'bg-border hover:bg-ink-muted/30 text-ink-secondary'
+                  : 'border border-border bg-card text-ink-secondary hover:border-ink/25 hover:text-ink'
               }`}
             >
               {actionLoading['toggle-availability'] ? (
-                <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} /> Updating…</>
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> Updating…</>
               ) : (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-current" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
                   {isAvailable ? 'Available' : 'Unavailable'}
                 </>
               )}
             </button>
-            <div className="flex items-center gap-2 flex-wrap justify-end">
-              <button
-                onClick={openRiderInstallPage}
-                className="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 border border-border bg-white text-ink-secondary hover:bg-surface"
-              >
-                Open Rider Install Page
-              </button>
-              {!isInstalled && deferredInstallPrompt && (
-                <button
-                  onClick={installRiderApp}
-                  className="px-4 py-2 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 border border-primary/30 bg-primary/10 text-primary hover:bg-primary/10"
-                >
-                  Install Rider App
-                </button>
-              )}
-              {isInstalled && (
-                <div className="px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 border border-success/30 bg-success/10 text-success">
-                  Installed
-                </div>
-              )}
-            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 mt-5">
-            <div className="bg-success/10 p-3 rounded-xl text-center">
-              <p className="text-2xl font-semibold text-success">{rider?.completedOrders || 0}</p>
-              <p className="text-xs font-semibold text-success mt-0.5">Completed</p>
+          <div className="flex flex-wrap items-center justify-end gap-2 px-5 pb-5">
+            <button
+              onClick={openRiderInstallPage}
+              className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 border border-border bg-card px-4 text-ink-secondary transition-colors hover:border-ink/25 hover:text-ink"
+            >
+              Install page
+            </button>
+            {!isInstalled && deferredInstallPrompt && (
+              <button
+                onClick={installRiderApp}
+                className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
+              >
+                Install rider app
+              </button>
+            )}
+            {isInstalled && (
+              <div className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 border border-success/30 bg-success/5 px-4 text-success">
+                Installed
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-px border-t border-border bg-border">
+            <div className="bg-card px-4 py-4">
+              <p className="ui-figure text-[clamp(1.35rem,3vw,1.9rem)] leading-none text-ink">
+                {rider?.completedOrders || 0}
+              </p>
+              <p className="ui-mono ui-mono-sm mt-2.5 text-ink-muted">Completed</p>
             </div>
-            <div className="bg-primary/10 p-3 rounded-xl text-center">
-              <p className="text-2xl font-semibold text-primary">{totalActiveOrders}</p>
-              <p className="text-xs font-semibold text-primary mt-0.5">Active Orders</p>
+            <div className="bg-card px-4 py-4">
+              <p className="ui-figure text-[clamp(1.35rem,3vw,1.9rem)] leading-none text-ink">
+                {totalActiveOrders}
+              </p>
+              <p className="ui-mono ui-mono-sm mt-2.5 text-ink-muted">Active</p>
             </div>
-            <div className="bg-primary/10 p-3 rounded-xl text-center">
-              <p className="text-2xl font-semibold text-primary">
+            <div className="bg-card px-4 py-4">
+              <p className="ui-figure text-[clamp(1.35rem,3vw,1.9rem)] leading-none text-ink">
                 ₦{Number(rider?.availableBalance || 0).toLocaleString()}
               </p>
-              <p className="text-xs font-semibold text-primary mt-0.5">Wallet Balance</p>
+              <p className="ui-mono ui-mono-sm mt-2.5 text-ink-muted">Wallet</p>
             </div>
           </div>
 
           {(locationPermission === 'denied' || locationPermission === 'prompt' || locationPermission === 'unsupported') && (
-            <div className="mt-4 rounded-xl border border-warning/30 bg-warning/10 px-3.5 py-3">
+            <div className="m-5 border border-warning/25 bg-warning/5 px-3.5 py-3">
               <p className="text-sm font-semibold text-warning">
                 {locationPermission === 'unsupported' ? 'Location not supported on this device' : 'Turn on location'}
               </p>
@@ -716,7 +726,7 @@ export default function RiderDashboardPage() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="w-4 h-4 text-danger" />
-              <h2 className="text-base font-semibold text-danger">Return Pickup Required</h2>
+              <h2 className="ui-eyebrow text-danger">Return Pickup Required</h2>
               <span className="px-2 py-0.5 bg-danger/10 text-danger rounded-full text-xs font-semibold">
                 {blockingDisputeReturns.length} pending
               </span>
@@ -734,7 +744,7 @@ export default function RiderDashboardPage() {
               {disputePickups.map((order: any) => {
                 const pickup = order.dispute?.pickupAddress as any
                 return (
-                  <div key={order.id} className="bg-white border-2 border-danger/40 rounded-2xl p-5">
+                  <div key={order.id} className="border border-danger/30 bg-card p-5">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <span className="text-xs font-semibold text-danger bg-danger/10 px-2 py-1 rounded-full">
@@ -824,7 +834,7 @@ export default function RiderDashboardPage() {
                       <button
                         onClick={() => updateStatus(order.id, 'ON_THE_WAY')}
                         disabled={actionLoading[`status-${order.id}`]}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-primary hover:brightness-95 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-ink hover:bg-primary text-background rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
                       >
                         {actionLoading[`status-${order.id}`]
                           ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</>
@@ -861,7 +871,7 @@ export default function RiderDashboardPage() {
         {/* ── My Active Batches ─────────────────────────────────────────── */}
         {myBatches.length > 0 && (
           <div>
-            <h2 className="text-base font-semibold text-ink mb-3">
+            <h2 className="ui-eyebrow mb-5">
               My Active Batch{myBatches.length > 1 ? 'es' : ''}
             </h2>
             <div className="space-y-4">
@@ -870,7 +880,7 @@ export default function RiderDashboardPage() {
                 const totalCount     = batch.orders.length
 
                 return (
-                  <div key={batch.id} className="bg-white rounded-2xl border-2 border-primary/20 shadow-soft overflow-hidden">
+                  <div key={batch.id} className="border border-ink/25 bg-card">
                     {/* Batch header */}
                     <div className="bg-primary/5 px-5 py-3 flex items-center justify-between">
                       <div>
@@ -979,7 +989,7 @@ export default function RiderDashboardPage() {
                                   <button
                                     onClick={() => updateStatus(order.id, 'PICKED_UP')}
                                     disabled={actionLoading[`status-${order.id}`]}
-                                    className="w-full py-2.5 bg-primary hover:brightness-95 text-white rounded-lg text-xs font-semibold
+                                    className="w-full py-2.5 bg-ink hover:bg-primary text-background rounded-lg text-xs font-semibold
                                                flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
                                   >
                                     {actionLoading[`status-${order.id}`]
@@ -1048,7 +1058,7 @@ export default function RiderDashboardPage() {
 
         {/* ── Available Batches ─────────────────────────────────────────── */}
         <div>
-          <h2 className="text-base font-semibold text-ink mb-3">
+          <h2 className="ui-eyebrow mb-5">
             Available Batches ({availableBatches.length})
           </h2>
 
@@ -1060,7 +1070,7 @@ export default function RiderDashboardPage() {
           )}
 
           {availableBatches.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-border p-8 text-center">
+            <div className="border border-dashed border-border bg-card p-10 text-center">
               <Bike className="w-10 h-10 text-border mx-auto mb-2" />
               <p className="text-ink-muted font-semibold text-sm">No available batches right now</p>
               <p className="text-ink-muted text-xs mt-1">Check back soon</p>
@@ -1070,7 +1080,7 @@ export default function RiderDashboardPage() {
               {availableBatches.map((batch: any) => (
                 <div
                   key={batch.id}
-                  className={`bg-white rounded-2xl border border-border shadow-soft overflow-hidden ${
+                  className={`border border-border bg-card ${
                     hasDisputePickupPending ? 'opacity-50 pointer-events-none' : ''
                   }`}
                 >
@@ -1163,7 +1173,7 @@ export default function RiderDashboardPage() {
                         <button
                           onClick={() => acceptBatch(batch.id)}
                           disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending || awaitingSeller || awaitingCampaignDate}
-                          className="w-full py-3 bg-primary hover:brightness-95 text-white rounded-xl
+                          className="w-full py-3 bg-ink hover:bg-primary text-background rounded-xl
                                      font-semibold text-sm shadow-soft shadow-primary/20
                                      flex items-center justify-center gap-2
                                      disabled:opacity-50 disabled:cursor-not-allowed transition-all"

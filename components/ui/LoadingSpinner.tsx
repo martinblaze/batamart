@@ -12,11 +12,15 @@ interface LoadingSpinnerProps {
 
 const sizeClasses = {
   sm: 'w-4 h-4',
-  md: 'w-6 h-6',
-  lg: 'w-8 h-8',
-  xl: 'w-12 h-12',
+  md: 'w-5 h-5',
+  lg: 'w-7 h-7',
+  xl: 'w-10 h-10',
 };
 
+/* Waiting states are the most-seen screens in any app, so they get the same
+   restraint as everything else: an ink spinner rather than a blue one, and a
+   mono caption instead of pulsing body text. The pulse is gone deliberately —
+   two things animating to convey one "please wait" is one too many. */
 export function LoadingSpinner({
   size = 'md',
   text,
@@ -24,17 +28,17 @@ export function LoadingSpinner({
   className,
 }: LoadingSpinnerProps) {
   const spinner = (
-    <div className={cn('flex flex-col items-center justify-center gap-3', className)}>
-      <Loader2 className={cn('animate-spin text-primary', sizeClasses[size])} strokeWidth={1.75} />
+    <div className={cn('flex flex-col items-center justify-center gap-4', className)}>
+      <Loader2 className={cn('animate-spin text-ink', sizeClasses[size])} strokeWidth={2} />
       {text && (
-        <p className="text-sm text-ink-secondary animate-pulse">{text}</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted">{text}</p>
       )}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-sm">
         {spinner}
       </div>
     );
@@ -46,32 +50,29 @@ export function LoadingSpinner({
 export function LoadingDots({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-center gap-1', className)}>
-      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
-      <div className="w-2 h-2 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
-      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+      <div className="h-1.5 w-1.5 rounded-full bg-ink animate-bounce [animation-delay:-0.3s]" />
+      <div className="h-1.5 w-1.5 rounded-full bg-ink animate-bounce [animation-delay:-0.15s]" />
+      <div className="h-1.5 w-1.5 rounded-full bg-ink animate-bounce" />
     </div>
   );
 }
 
 export function LoadingBar({ className }: { className?: string }) {
   return (
-    <div className={cn('w-full bg-surface rounded-full h-2 overflow-hidden', className)}>
-      <div className="h-full bg-primary animate-[shimmer_2s_infinite] bg-[length:200%_100%]" />
-    </div>
+    <div className={cn('ui-skeleton h-0.5 w-full overflow-hidden', className)} />
   );
 }
 
+/** Sweeping placeholder block — shares the app-wide `.ui-skeleton` treatment. */
 export function LoadingSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn('animate-pulse bg-surface rounded', className)} />
-  );
+  return <div className={cn('ui-skeleton rounded-lg', className)} aria-hidden />;
 }
 
 export function LoadingCard() {
   return (
-    <div className="bg-white rounded-xl border border-border p-4 space-y-3">
-      <LoadingSkeleton className="h-4 w-3/4" />
-      <LoadingSkeleton className="h-4 w-1/2" />
+    <div className="space-y-3 border border-border bg-card p-4">
+      <LoadingSkeleton className="h-3.5 w-3/4" />
+      <LoadingSkeleton className="h-3.5 w-1/2" />
       <LoadingSkeleton className="h-20 w-full" />
       <div className="flex gap-2">
         <LoadingSkeleton className="h-8 w-20" />

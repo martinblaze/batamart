@@ -50,7 +50,7 @@ export default function RelatedProductCard({
   }, [product.discountPercent, product.price])
 
   const card = (
-    <div className={`group relative overflow-hidden rounded-xl border border-border bg-white transition-transform duration-150 ease-out hover:-translate-y-0.5 ${compact ? 'w-40 sm:w-full' : 'w-full'}`}>
+    <div className={`group relative overflow-hidden rounded-xl border border-border bg-card transition-transform duration-150 ease-out hover:-translate-y-0.5 ${compact ? 'w-40 sm:w-full' : 'w-full'}`}>
       <div className="relative aspect-square overflow-hidden bg-surface">
         {product.images?.[0] ? (
           <img

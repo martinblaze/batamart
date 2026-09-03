@@ -3,9 +3,12 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Users, Package, DollarSign, AlertTriangle,
-  ShoppingBag, Flag, CheckCircle, Clock, Building2, RefreshCw,
+  Users, AlertTriangle,
+  Flag, CheckCircle, Clock, Building2, RefreshCw,
 } from 'lucide-react'
+import {
+  AdminHeader, StatGrid, AdminPanel, AdminEmpty, AdminButton, type AdminStat,
+} from '@/components/admin/AdminUI'
 
 interface DashboardStats {
   totalUsers: number
@@ -35,16 +38,17 @@ function UniversitySwitcher({
   onChange: (v: string) => void
 }) {
   return (
-    <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
-      <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
+    <div className="flex h-9 items-center gap-2 border border-border bg-card px-3">
+      <Building2 className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
+        aria-label="University"
+        className="cursor-pointer bg-transparent text-[13px] text-ink focus:outline-none"
       >
-        <option value="all">All Universities</option>
+        <option value="all">All universities</option>
         {universities.map(u => (
-          <option key={u.id} value={u.id}>{u.shortName} - {u.name}</option>
+          <option key={u.id} value={u.id}>{u.shortName} — {u.name}</option>
         ))}
       </select>
     </div>
@@ -179,167 +183,130 @@ export default function AdminDashboardPage() {
     ? 'All Universities'
     : universities.find(u => u.id === selectedUni)?.shortName ?? ''
 
-  const statCards = [
+  // Only the two figures that represent work waiting on an admin carry a
+  // colour; the rest are neutral so attention lands where it is needed.
+  const statCards: AdminStat[] = [
     {
-      title: 'Total Users',
-      value: stats?.totalUsers || 0,
-      change: `+${stats?.newUsersToday || 0} today`,
-      icon: Users,
-      bgColor: 'bg-primary/10',
-      textColor: 'text-primary',
+      label: 'Users',
+      value: (stats?.totalUsers || 0).toLocaleString(),
+      note: `+${stats?.newUsersToday || 0} today`,
     },
     {
-      title: 'Total Products',
-      value: stats?.totalProducts || 0,
-      change: 'Active listings',
-      icon: Package,
-      bgColor: 'bg-success/10',
-      textColor: 'text-success',
+      label: 'Products',
+      value: (stats?.totalProducts || 0).toLocaleString(),
+      note: 'Active listings',
     },
     {
-      title: 'Total Orders',
-      value: stats?.totalOrders || 0,
-      change: `+${stats?.ordersToday || 0} today`,
-      icon: ShoppingBag,
-      bgColor: 'bg-primary/10',
-      textColor: 'text-primary',
+      label: 'Orders',
+      value: (stats?.totalOrders || 0).toLocaleString(),
+      note: `+${stats?.ordersToday || 0} today`,
     },
     {
-      title: 'Total Revenue',
+      label: 'Revenue',
       value: `₦${(stats?.totalRevenue || 0).toLocaleString()}`,
-      change: 'All time GMV',
-      icon: DollarSign,
-      bgColor: 'bg-warning/10',
-      textColor: 'text-warning',
+      note: 'All-time GMV',
     },
     {
-      title: 'Pending Disputes',
+      label: 'Open disputes',
       value: stats?.pendingDisputes || 0,
-      change: 'Needs attention',
-      icon: AlertTriangle,
-      bgColor: 'bg-warning/10',
-      textColor: 'text-warning',
+      note: 'Needs attention',
+      tone: (stats?.pendingDisputes || 0) > 0 ? 'warning' : 'default',
     },
     {
-      title: 'Active Reports',
+      label: 'Active reports',
       value: stats?.activeReports || 0,
-      change: 'Awaiting review',
-      icon: Flag,
-      bgColor: 'bg-danger/10',
-      textColor: 'text-danger',
+      note: 'Awaiting review',
+      tone: (stats?.activeReports || 0) > 0 ? 'danger' : 'default',
     },
   ]
 
+  const activityIcon = (type: string) => {
+    if (type === 'order') return CheckCircle
+    if (type === 'dispute') return AlertTriangle
+    if (type === 'report') return Flag
+    return Users
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Dashboard</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">
-            Showing stats for <span className="text-ink font-medium">{selectedUniName}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <UniversitySwitcher
-            universities={universities}
-            value={selectedUni}
-            onChange={setSelectedUni}
-          />
-          <button
-            onClick={refreshAll}
-            className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink transition-colors"
-            title="Refresh"
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Overview"
+        title="Dashboard"
+        description={
+          <>
+            Showing figures for <span className="font-medium text-ink">{selectedUniName}</span>.
+          </>
+        }
+        actions={
+          <>
+            <UniversitySwitcher
+              universities={universities}
+              value={selectedUni}
+              onChange={setSelectedUni}
+            />
+            <AdminButton onClick={refreshAll} icon={RefreshCw} title="Refresh">
+              Refresh
+            </AdminButton>
+          </>
+        }
+      />
+
+      {/* Checkout kill-switch — the one destructive control on this page. */}
+      <AdminPanel title="Checkout payments">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm leading-relaxed text-ink-secondary">
+              Turns the checkout payment button on or off for every buyer at once.
+            </p>
+            <p className="ui-mono ui-mono-sm mt-3 flex items-center gap-2 text-ink">
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  paymentsLoading ? 'bg-ink-muted' : paymentsEnabled ? 'bg-success' : 'bg-warning'
+                }`}
+              />
+              {paymentsLoading ? 'Checking…' : paymentsEnabled ? 'Currently on' : 'Currently off'}
+            </p>
+          </div>
+          <AdminButton
+            onClick={togglePaymentSetting}
+            disabled={paymentsLoading || paymentsSaving}
+            tone={paymentsEnabled ? 'warning' : 'success'}
+            className="h-11 flex-shrink-0 px-6"
           >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            {paymentsSaving ? 'Saving…' : paymentsEnabled ? 'Disable payments' : 'Enable payments'}
+          </AdminButton>
         </div>
-      </div>
+      </AdminPanel>
 
-      <div className="bg-white border border-border rounded-2xl p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-ink font-semibold text-lg">Checkout Payments</p>
-          <p className="text-sm text-ink-secondary mt-1">Turn the checkout payment button on or off for everyone.</p>
-          <p className={`text-xs font-semibold mt-2 ${paymentsEnabled ? 'text-success' : 'text-warning'}`}>
-            {paymentsLoading ? 'Loading status...' : paymentsEnabled ? 'Status: ON' : 'Status: OFF'}
-          </p>
-        </div>
-        <button
-          onClick={togglePaymentSetting}
-          disabled={paymentsLoading || paymentsSaving}
-          className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-60 ${
-            paymentsEnabled ? 'bg-warning hover:brightness-95 text-white' : 'bg-success hover:brightness-95 text-white'
-          }`}
-        >
-          {paymentsSaving ? 'Saving...' : paymentsEnabled ? 'Disable Payments' : 'Enable Payments'}
-        </button>
-      </div>
+      <StatGrid stats={statCards} columns={3} loading={loading} />
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white border border-border rounded-2xl p-6 animate-pulse">
-              <div className="h-12 w-12 rounded-xl bg-surface mb-4" />
-              <div className="h-4 w-24 bg-surface rounded mb-2" />
-              <div className="h-8 w-16 bg-surface rounded" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {statCards.map((stat, index) => {
-            const Icon = stat.icon
-            return (
-              <div
-                key={index}
-                className="bg-white border border-border rounded-2xl p-6 hover:border-border transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${stat.bgColor}`}>
-                    <Icon className={`w-6 h-6 ${stat.textColor}`} />
+      <AdminPanel title="Recent activity" padded={false}>
+        {recentActivity.length === 0 ? (
+          <AdminEmpty
+            className="border-0"
+            icon={Clock}
+            title="Nothing recent"
+            description="New orders, disputes and reports will appear here as they happen."
+          />
+        ) : (
+          <div className="ui-divide">
+            {recentActivity.map((activity, index) => {
+              const Icon = activityIcon(activity.type)
+              return (
+                <div key={index} className="ui-row">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <Icon className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-ink">{activity.message}</p>
+                    <p className="ui-mono ui-mono-sm mt-1 text-ink-muted">{activity.timestamp}</p>
                   </div>
-                  <span className="text-xs text-ink-muted bg-surface px-2 py-1 rounded-full">Live</span>
                 </div>
-                <h3 className="text-ink-secondary text-sm font-medium mb-1">{stat.title}</h3>
-                <p className="text-3xl font-semibold text-ink mb-2">{stat.value}</p>
-                <p className="text-sm text-ink-muted">{stat.change}</p>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <h2 className="text-xl font-semibold text-ink mb-6">Recent Activity</h2>
-        <div className="space-y-4">
-          {recentActivity.length === 0 ? (
-            <p className="text-ink-secondary text-center py-8">No recent activity</p>
-          ) : (
-            recentActivity.map((activity, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-4 bg-surface rounded-xl hover:bg-surface transition-colors"
-              >
-                <div className={`p-2 rounded-lg ${
-                  activity.type === 'order' ? 'bg-success/10' :
-                  activity.type === 'dispute' ? 'bg-warning/10' :
-                  activity.type === 'report' ? 'bg-danger/10' :
-                  'bg-primary/10'
-                }`}>
-                  {activity.type === 'order' && <CheckCircle className="w-5 h-5 text-success" />}
-                  {activity.type === 'dispute' && <AlertTriangle className="w-5 h-5 text-warning" />}
-                  {activity.type === 'report' && <Flag className="w-5 h-5 text-danger" />}
-                  {activity.type === 'user' && <Users className="w-5 h-5 text-primary" />}
-                </div>
-                <div className="flex-1">
-                  <p className="text-ink font-medium">{activity.message}</p>
-                  <p className="text-sm text-ink-secondary">{activity.timestamp}</p>
-                </div>
-                <Clock className="w-4 h-4 text-ink-muted" />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+              )
+            })}
+          </div>
+        )}
+      </AdminPanel>
     </div>
   )
 }

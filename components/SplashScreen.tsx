@@ -147,7 +147,7 @@ export default function SplashScreen() {
   return (
     <div
       id="__splash_screen"
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white"
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-card"
     >
       <img
         src="/BATAMART - logo.png"

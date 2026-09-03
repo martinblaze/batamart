@@ -4,6 +4,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Trash2, Flag, PackageCheck, ShieldAlert, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import {
+  AdminHeader, AdminEmpty, AdminButton, FilterTabs,
+} from '@/components/admin/AdminUI'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
 
 interface Product {
   id: string
@@ -154,28 +158,17 @@ export default function ProductsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-warning/10 text-warning border-warning/30'
-      case 'APPROVED':
-        return 'bg-success/10 text-success border-success/30'
-      case 'REJECTED':
-        return 'bg-danger/10 text-danger border-danger/30'
-      default:
-        return 'bg-surface text-ink-secondary border-border'
-    }
+  const getStatusTone = (status: string): BadgeStatus => {
+    if (status === 'PENDING') return 'warning'
+    if (status === 'APPROVED') return 'success'
+    if (status === 'REJECTED') return 'danger'
+    return 'neutral'
   }
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'APPROVED':
-        return <CheckCircle className="w-4 h-4" />
-      case 'REJECTED':
-        return <XCircle className="w-4 h-4" />
-      default:
-        return <PackageCheck className="w-4 h-4" />
-    }
+    if (status === 'APPROVED') return CheckCircle
+    if (status === 'REJECTED') return XCircle
+    return PackageCheck
   }
 
   const filteredProducts = products.filter(product =>
@@ -185,123 +178,133 @@ export default function ProductsPage() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex rounded-xl border border-border bg-white p-1 w-full sm:w-auto overflow-x-auto">
-          {(['PENDING', 'APPROVED', 'REJECTED', 'all'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setModerationStatus(status)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
-                moderationStatus === status ? 'bg-primary text-white' : 'text-ink-secondary hover:bg-surface'
-              }`}
-            >
-              {status === 'all' ? 'All Products' : status}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Moderation"
+        title="Products"
+        description="Every listing awaiting review, plus what has already been approved or rejected."
+        actions={
+          <div className="flex h-9 w-full min-w-[14rem] items-center gap-2 border border-border bg-card px-3 sm:w-72">
+            <Search className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search name, category, seller…"
+              className="min-w-0 flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-muted focus:outline-none"
+            />
+          </div>
+        }
+      />
 
-        <div className="relative max-w-md w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-secondary" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search products..."
-            className="w-full pl-12 pr-4 py-3 bg-white border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
-      </div>
+      <FilterTabs
+        value={moderationStatus}
+        onChange={(v) => setModerationStatus(v as typeof moderationStatus)}
+        options={[
+          { value: 'PENDING', label: 'Pending' },
+          { value: 'APPROVED', label: 'Approved' },
+          { value: 'REJECTED', label: 'Rejected' },
+          { value: 'all', label: 'All' },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-px border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          <div className="col-span-full flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+          <div className="col-span-full flex justify-center bg-card py-16">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-ink-secondary">
-            No {moderationStatus !== 'all' ? moderationStatus.toLowerCase() : ''} products found
+          <div className="col-span-full bg-card">
+            <AdminEmpty
+              className="border-0"
+              icon={PackageCheck}
+              title="No products here"
+              description="Nothing matches this filter and search."
+            />
           </div>
         ) : (
           filteredProducts.map((product) => (
             <div
               key={product.id}
               onClick={() => router.push(`/admin/products/${product.id}`)}
-              className="bg-white border border-border rounded-2xl overflow-hidden hover:shadow-soft transition-all cursor-pointer"
+              className="group cursor-pointer bg-card transition-colors duration-300 hover:bg-surface"
             >
-              <div className="relative aspect-square bg-surface">
+              <div className="relative aspect-square overflow-hidden bg-surface">
                 <img
                   src={product.images[0] || '/placeholder.png'}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
-                <div className={`absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${getStatusColor(product.moderationStatus)}`}>
-                  {getStatusIcon(product.moderationStatus)}
-                  {product.moderationStatus}
+                <div className="absolute right-2.5 top-2.5">
+                  <Badge
+                    status={getStatusTone(product.moderationStatus)}
+                    icon={getStatusIcon(product.moderationStatus)}
+                  >
+                    {product.moderationStatus}
+                  </Badge>
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="text-ink font-semibold mb-1 line-clamp-2">{product.name}</h3>
-                <p className="text-ink-secondary text-sm mb-2">{product.category}</p>
+                <p className="ui-mono ui-mono-sm text-ink-muted">{product.category}</p>
+                <h3 className="mt-1.5 line-clamp-2 text-sm font-medium leading-snug text-ink">
+                  {product.name}
+                </h3>
 
                 {product.moderationStatus === 'REJECTED' && product.rejectionReason && (
-                  <div className="mb-3 rounded-xl border border-danger/30 bg-danger/10 p-3">
-                    <p className="text-xs font-semibold text-danger mb-1">Rejection Reason:</p>
-                    <p className="text-xs text-danger/80 line-clamp-2">{product.rejectionReason}</p>
+                  <div className="mt-3.5 border border-danger/25 bg-danger/5 p-3">
+                    <p className="ui-mono ui-mono-sm text-danger">Rejected because</p>
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-danger/80">
+                      {product.rejectionReason}
+                    </p>
                   </div>
                 )}
 
                 {product.isFlagged && (
-                  <div className="mb-3 rounded-xl border border-warning/30 bg-warning/10 p-3">
-                    <p className="flex items-center gap-2 text-xs font-semibold text-warning mb-1">
-                      <ShieldAlert className="w-3.5 h-3.5" strokeWidth={1.75} />
+                  <div className="mt-3.5 border border-warning/25 bg-warning/5 p-3">
+                    <p className="ui-mono ui-mono-sm flex items-center gap-1.5 text-warning">
+                      <ShieldAlert className="h-3 w-3" strokeWidth={2} />
                       Flagged by {product._count?.productReports || 1} user{(product._count?.productReports || 1) === 1 ? '' : 's'}
                     </p>
-                    <p className="text-xs text-warning/80 line-clamp-2">
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-warning/80">
                       {product.flagReason || 'No reason provided.'}
                     </p>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg font-semibold text-danger">
+                <div className="mt-4 flex items-baseline justify-between gap-3">
+                  <span className="ui-figure text-lg text-ink">
                     ₦{product.price.toLocaleString()}
                   </span>
-                  <span className="text-xs text-ink-secondary">Stock: {product.quantity}</span>
+                  <span className="ui-mono ui-mono-sm text-ink-muted">
+                    Stock {product.quantity}
+                  </span>
                 </div>
 
-                <p className="text-xs text-ink-secondary mb-3">
-                  <strong>Seller:</strong> {product.seller.name}
-                  {product.seller.email && <> ({product.seller.email})</>}
+                <p className="mt-2.5 truncate text-xs text-ink-secondary">
+                  {product.seller.name}
+                  {product.seller.email && <span className="text-ink-muted"> · {product.seller.email}</span>}
                 </p>
 
                 {product.moderationStatus === 'PENDING' && (
-                  <div className="space-y-2">
+                  <div className="mt-4 space-y-2 border-t border-border pt-4">
                     <div className="flex gap-2">
-                      <button
+                      <AdminButton
+                        tone="success"
                         onClick={(e) => { e.stopPropagation(); handleApproveProduct(product.id) }}
                         disabled={processingId === product.id}
-                        className="flex-1 px-3 py-2 bg-success/10 text-success hover:bg-success/10 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                        icon={processingId === product.id ? Loader2 : CheckCircle}
+                        className="flex-1"
                       >
-                        {processingId === product.id ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Approving...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            Approve
-                          </>
-                        )}
-                      </button>
-                      <button
+                        {processingId === product.id ? 'Approving…' : 'Approve'}
+                      </AdminButton>
+                      <AdminButton
                         onClick={(e) => { e.stopPropagation(); setShowReasonInput({ ...showReasonInput, [product.id]: !showReasonInput[product.id] }) }}
-                        className="flex-1 px-3 py-2 bg-danger/10 text-danger hover:bg-danger/10 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-1"
+                        icon={XCircle}
+                        className="flex-1"
                       >
-                        <XCircle className="w-4 h-4" />
                         Reject
-                      </button>
+                      </AdminButton>
                     </div>
 
                     {showReasonInput[product.id] && (
@@ -309,39 +312,33 @@ export default function ProductsPage() {
                         <textarea
                           value={rejectionReason[product.id] || ''}
                           onChange={(e) => setRejectionReason({ ...rejectionReason, [product.id]: e.target.value })}
-                          placeholder="Enter rejection reason..."
+                          placeholder="Why is this being rejected? The seller sees this."
                           maxLength={500}
-                          className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-ink text-xs focus:outline-none focus:ring-2 focus:ring-danger/40 resize-none"
+                          className="w-full resize-none border border-border bg-card px-3 py-2.5 text-xs leading-relaxed text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-danger focus:outline-none focus:ring-2 focus:ring-danger/15"
                           rows={3}
                         />
-                        <button
+                        <AdminButton
+                          tone="danger"
                           onClick={() => handleRejectProduct(product.id)}
                           disabled={processingId === product.id}
-                          className="w-full px-3 py-2 bg-danger hover:brightness-95 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-1"
+                          className="w-full"
                         >
-                          {processingId === product.id ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Rejecting...
-                            </>
-                          ) : (
-                            'Confirm Rejection'
-                          )}
-                        </button>
+                          {processingId === product.id ? 'Rejecting…' : 'Confirm rejection'}
+                        </AdminButton>
                       </div>
                     )}
                   </div>
                 )}
 
                 {product.moderationStatus !== 'PENDING' && (
-                  <div className="flex gap-2">
-                    <button
+                  <div className="mt-4 border-t border-border pt-4">
+                    <AdminButton
                       onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id) }}
-                      className="flex-1 px-3 py-2 bg-danger/10 text-danger rounded-lg hover:bg-danger/10 transition-colors text-sm font-semibold"
+                      icon={Trash2}
+                      className="w-full hover:border-danger/40 hover:text-danger"
                     >
-                      <Trash2 className="w-4 h-4 inline mr-1" />
                       Delete
-                    </button>
+                    </AdminButton>
                   </div>
                 )}
               </div>

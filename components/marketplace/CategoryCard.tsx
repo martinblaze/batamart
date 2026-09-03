@@ -18,7 +18,7 @@ export default function CategoryCard({
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-white p-4 text-center transition-transform duration-150 ease-out hover:-translate-y-0.5"
+      className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-4 text-center transition-transform duration-150 ease-out hover:-translate-y-0.5"
     >
       <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-surface">
         {image ? (

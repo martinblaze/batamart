@@ -46,36 +46,35 @@ const SELL_CSS = `
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
   .step-card:focus-within {
-    border-color: var(--color-primary) !important;
-    box-shadow: 0 0 0 3px rgba(30,144,255,0.1);
+    border-color: var(--ui-hairline-strong) !important;
   }
 
   .tag-pill {
     transition: transform 0.15s cubic-bezier(0.34,1.4,0.64,1), background 0.15s ease;
   }
-  .tag-pill:hover { transform: scale(1.05); }
+  .tag-pill:hover { background: var(--color-surface); }
 
   .img-slot {
     transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s cubic-bezier(0.34,1.4,0.64,1);
   }
-  .img-slot:hover { border-color: var(--color-primary); background: var(--color-surface); transform: scale(1.02); }
+  .img-slot:hover { border-color: var(--ui-hairline-strong); background: var(--color-surface); }
 
   .suggestion-chip {
     transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
   }
   .suggestion-chip:hover {
-    background: var(--color-primary);
+    background: var(--ui-slab);
     color: white;
     border-color: transparent;
   }
   .suggestion-chip:active { transform: scale(0.97); }
 
   .submit-btn {
-    transition: filter 0.15s ease-out;
-    background: var(--color-primary);
+    transition: background-color 0.3s var(--ui-ease);
+    background: var(--ui-slab);
   }
   .submit-btn:hover:not(:disabled) {
-    filter: brightness(0.95);
+    background: var(--color-primary);
   }
   .submit-btn:active:not(:disabled) { transform: scale(0.98); }
 
@@ -84,7 +83,10 @@ const SELL_CSS = `
   }
 
   .header-gradient {
-    background: var(--color-primary);
+    /* Ink, not accent. A full-bleed blue slab at the top of four different
+       screens was the loudest thing in the product and made every one of
+       them read as a different app. */
+    background: var(--ui-slab);
   }
 
   .cat-card {
@@ -132,9 +134,9 @@ function ConfirmListingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
-      <div className="scale-in relative bg-white rounded-3xl shadow-soft w-full max-w-md p-6 z-10 max-h-[85vh] overflow-y-auto mx-4">
+      <div className="scale-in relative z-10 mx-4 max-h-[85vh] w-full max-w-md overflow-y-auto border border-border bg-card p-6">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-11 h-11 rounded-2xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center border border-warning/25 bg-warning/5">
             <AlertCircle className="w-5 h-5 text-warning" />
           </div>
           <div>
@@ -143,7 +145,7 @@ function ConfirmListingModal({
           </div>
         </div>
 
-        <div className="bg-primary/5 rounded-2xl p-4 mb-4 border border-primary/20">
+        <div className="mb-4 border border-border bg-surface p-4">
           <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-3">Fee Breakdown</p>
           {!hasStructuredVariants ? (
             <>
@@ -161,7 +163,7 @@ function ConfirmListingModal({
                   <span className="font-semibold text-success text-base">{fmt(receive)}</span>
                 </div>
               </div>
-              <p className="text-[11px] text-primary mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
+              <p className="text-[11px] text-primary mt-3 bg-card/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
                 <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
                 <span>To receive exactly <strong>{fmt(price)}</strong>, list at <strong>{fmt(Math.ceil(price / 0.95))}</strong></span>
               </p>
@@ -184,7 +186,7 @@ function ConfirmListingModal({
                   </span>
                 </div>
               </div>
-              <p className="text-[11px] text-primary mt-3 bg-white/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
+              <p className="text-[11px] text-primary mt-3 bg-card/60 rounded-xl p-2.5 leading-relaxed flex items-start gap-1.5">
                 <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" strokeWidth={1.75} />
                 <span>Variant rows use their own prices and stock. Base price is fallback only.</span>
               </p>
@@ -192,7 +194,7 @@ function ConfirmListingModal({
           )}
         </div>
 
-        <div className="bg-danger/10 border border-danger/30 rounded-2xl p-4 mb-5">
+        <div className="mb-5 border border-danger/25 bg-danger/5 p-4">
           <div className="flex items-start gap-2.5 mb-3">
             <Ban className="w-5 h-5 flex-shrink-0 text-danger" strokeWidth={1.75} />
             <div>
@@ -208,7 +210,7 @@ function ConfirmListingModal({
           <label className="flex items-start gap-2.5 cursor-pointer">
             <div
               onClick={() => setAgreed(!agreed)}
-              className={`w-5 h-5 rounded-lg flex-shrink-0 mt-0.5 cursor-pointer border-2 flex items-center justify-center transition-all ${agreed ? 'bg-danger border-danger' : 'border-danger/40 bg-white'}`}
+              className={`w-5 h-5 rounded-lg flex-shrink-0 mt-0.5 cursor-pointer border-2 flex items-center justify-center transition-all ${agreed ? 'bg-danger border-danger' : 'border-danger/40 bg-card'}`}
             >
               {agreed && <CheckCircle2 className="w-3 h-3 text-white" />}
             </div>
@@ -221,14 +223,14 @@ function ConfirmListingModal({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 rounded-2xl border-2 border-border text-ink-secondary font-semibold text-sm hover:bg-surface transition-colors"
+            className="flex-1 border border-border py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors hover:border-ink/25 hover:text-ink"
           >
             Go Back
           </button>
           <button
             onClick={onConfirm}
             disabled={!agreed}
-            className="flex-1 py-3 rounded-2xl font-semibold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-white transition-all disabled:cursor-not-allowed disabled:opacity-40"
             style={{ background: agreed ? 'var(--color-primary)' : 'var(--color-border)' }}
           >
             List Product
@@ -243,8 +245,8 @@ function ConfirmListingModal({
 function BecomeSellerGate({ appMode }: { appMode: boolean }) {
   const router = useRouter()
   return (
-    <div className="min-h-screen bg-ink flex items-center justify-center px-4">
-      <div className="fade-up bg-white/10 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full text-center border border-white/20 shadow-soft">
+    <div className="min-h-screen bg-slab flex items-center justify-center px-4">
+      <div className="fade-up w-full max-w-md border border-white/20 bg-white/10 p-8 text-center backdrop-blur-xl">
         <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-5">
           <ShoppingBag className="w-7 h-7 text-white" strokeWidth={1.75} />
         </div>
@@ -254,14 +256,14 @@ function BecomeSellerGate({ appMode }: { appMode: boolean }) {
         </p>
         <button
           onClick={() => router.push(appMode ? '/become-seller?app=true' : '/become-seller')}
-          className="w-full py-4 rounded-2xl font-semibold text-white text-base shadow-soft mb-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="mb-3 w-full py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-white transition-transform active:scale-[0.985]"
           style={{ background: 'var(--color-primary)' }}
         >
           Become a Seller →
         </button>
         <button
           onClick={() => router.push(appMode ? '/marketplace?app=true' : '/marketplace')}
-          className="w-full py-3.5 rounded-2xl border border-white/20 text-white/70 font-semibold hover:bg-white/10 transition"
+          className="w-full border border-white/20 py-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-white/70 transition-colors hover:bg-white/10"
         >
           Back to Marketplace
         </button>
@@ -273,13 +275,13 @@ function BecomeSellerGate({ appMode }: { appMode: boolean }) {
 // ── Step Header ───────────────────────────────────────────────────────────────
 function StepHeader({ num, title, subtitle }: { num: string; title: string; subtitle?: string }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-        <span className="section-number text-sm font-semibold">{num}</span>
+    <div className="mb-6 flex items-center gap-3.5">
+      <div className="ui-mono ui-mono-sm flex h-8 w-8 flex-shrink-0 items-center justify-center border border-border text-ink-muted">
+        {num}
       </div>
-      <div>
-        <h3 className="text-sm font-semibold text-ink">{title}</h3>
-        {subtitle && <p className="text-xs text-ink-muted">{subtitle}</p>}
+      <div className="min-w-0">
+        <h3 className="text-sm font-medium text-ink">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-xs text-ink-secondary">{subtitle}</p>}
       </div>
     </div>
   )
@@ -1072,27 +1074,30 @@ export default function SellPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-4">
             <Link href={appMode ? '/marketplace?app=true' : '/marketplace'}
-              className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors flex-shrink-0">
-              <ArrowLeft className="w-4 h-4 text-white" />
+              className="group flex h-9 w-9 flex-shrink-0 items-center justify-center border border-white/20 transition-colors hover:border-white/40">
+              <ArrowLeft
+                className="h-4 w-4 text-white transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+                strokeWidth={1.75}
+              />
             </Link>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold text-white leading-tight">List a Product</h1>
-              <p className="text-white/50 text-xs">Sell to your campus community</p>
+            <div className="min-w-0 flex-1">
+              <p className="ui-mono ui-mono-sm mb-1.5 text-white/45">New listing</p>
+              <h1 className="text-lg leading-tight text-white">List a product</h1>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
-              {CatIcon ? <CatIcon className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} /> : <Crown className="w-3.5 h-3.5 text-white/70" strokeWidth={1.75} />}
-              <span className="text-[11px] font-semibold text-white/80">5% platform fee</span>
+            <div className="ui-mono ui-mono-sm flex flex-shrink-0 items-center gap-1.5 border border-white/20 px-3 py-2 text-white/70">
+              {CatIcon ? <CatIcon className="h-3.5 w-3.5" strokeWidth={2} /> : <Crown className="h-3.5 w-3.5" strokeWidth={2} />}
+              5% fee
             </div>
           </div>
         </div>
       </header>
 
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-28 space-y-4">
-        <div className="fade-up bg-danger/10 border border-danger/30 rounded-2xl px-4 py-3 flex items-start gap-3">
-          <Shield className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
+        <div className="fade-up flex items-start gap-3 border border-danger/25 bg-danger/5 px-4 py-3.5">
+          <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
           <div>
-            <p className="text-sm font-semibold text-danger">Prohibited listings are removed</p>
-            <p className="text-xs text-danger leading-relaxed mt-1">
+            <p className="text-sm font-medium text-danger">Prohibited listings are removed</p>
+            <p className="mt-1 text-xs leading-relaxed text-danger/85">
               Do not upload illegal drugs, explicit content, weapons, counterfeit goods, trafficking content, or anything illegal. Violations can result in indefinite account suspension.
             </p>
           </div>
@@ -1100,9 +1105,9 @@ export default function SellPage() {
 
         {/* Price preview banner */}
         {formData.price && parseFloat(formData.price) > 0 && (
-          <div className="fade-up bg-success/10 border border-success/30 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 text-success" />
+          <div className="fade-up flex items-center gap-3 border border-success/25 bg-success/5 px-4 py-3.5">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center border border-success/25 bg-card">
+              <Zap className="h-4 w-4 text-success" strokeWidth={1.75} />
             </div>
             <div className="text-sm">
               {!hasStructuredVariants ? (
@@ -1125,12 +1130,12 @@ export default function SellPage() {
         )}
 
         {/* ── STEP 1: Basic Info ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <div className="mb-4">
             <button
               type="button"
               onClick={clearSellForm}
-              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-danger/30 hover:bg-danger/10 hover:text-danger transition-colors"
+              className="mb-3 inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-ink-secondary hover:border-danger/30 hover:bg-danger/10 hover:text-danger transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Clear all fields
@@ -1146,7 +1151,7 @@ export default function SellPage() {
                 onChange={e => setFormData({ ...formData, name: limitText(e.target.value, SELL_LIMITS.productName) })}
                 required
                 maxLength={SELL_LIMITS.productName}
-                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                 placeholder='e.g. "iPhone 13 Pro Max 256GB"'
               />
             </div>
@@ -1160,7 +1165,7 @@ export default function SellPage() {
                   value={formData.price}
                   onChange={e => setFormData({ ...formData, price: limitDecimalInput(e.target.value, MAX_PRICE) })}
                   required min="0" max={MAX_PRICE} inputMode="decimal" step="0.01"
-                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="50000"
                 />
                 {hasStructuredVariants && (
@@ -1176,7 +1181,7 @@ export default function SellPage() {
                   value={formData.quantity}
                   onChange={e => setFormData({ ...formData, quantity: limitIntegerInput(e.target.value, MAX_STOCK, 1) })}
                   required min="1" max={MAX_STOCK} inputMode="numeric"
-                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="1"
                 />
               </div>
@@ -1185,7 +1190,7 @@ export default function SellPage() {
         </div>
 
         {/* ── STEP 2: Category ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader num="2" title="Category *" subtitle="Select the most relevant category" />
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {categories.map(cat => {
@@ -1209,9 +1214,9 @@ export default function SellPage() {
 
         {/* ── STEP 3: Subcategory ── */}
         {categoryKey && (
-          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+          <div className="step-card border border-border bg-card p-5 sm:p-6">
             <StepHeader num="3" title="Subcategory *" subtitle="Get more specific" />
-            <div className="mb-3 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary">
+            <div className="mb-4 border border-border bg-surface px-4 py-3 text-sm text-ink-secondary">
               <span className="mr-2">Selected:</span>
               <span>{selectedCategoryDisplay.category || 'Choose a category'}</span>
               {selectedCategoryDisplay.subcategory ? (
@@ -1242,7 +1247,7 @@ export default function SellPage() {
 
         {/* ── STEP 4: Category Attributes ── */}
         {categoryAttributes.length > 0 && (
-          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+          <div className="step-card border border-border bg-card p-5 sm:p-6">
             <StepHeader num="4" title="Category Details" subtitle="Structured attributes for smarter search and filters" />
             <div className="space-y-4">
               {categoryAttributes.map((attr) => {
@@ -1267,7 +1272,7 @@ export default function SellPage() {
                                   className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all inline-flex items-center gap-1 ${
                                     active
                                       ? 'bg-primary text-white border-transparent'
-                                      : 'bg-white text-ink-secondary border-border'
+                                      : 'bg-card text-ink-secondary border-border'
                                   }`}
                                 >
                                   {active ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3" />}{opt}
@@ -1304,7 +1309,7 @@ export default function SellPage() {
                                 addCustomSelectAttribute(attr.key)
                               }
                             }}
-                            className="flex-1 px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                            className="flex-1 px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-card focus:outline-none transition-all text-sm font-medium"
                             placeholder={`Add custom ${attr.label.toLowerCase()}...`}
                             maxLength={SELL_LIMITS.attributeText}
                           />
@@ -1330,7 +1335,7 @@ export default function SellPage() {
                                 type="button"
                                 onClick={() => toggleDetailAttributeOption(attr.key, opt)}
                                 className={`text-xs px-3 py-1.5 rounded-xl border font-semibold transition-all ${
-                                  active ? 'bg-primary text-white border-transparent' : 'bg-white text-ink-secondary border-border'
+                                  active ? 'bg-primary text-white border-transparent' : 'bg-card text-ink-secondary border-border'
                                 }`}
                               >
                                 {opt}
@@ -1365,7 +1370,7 @@ export default function SellPage() {
                         min="0"
                         max={SELL_LIMITS.attributeNumber}
                         inputMode="decimal"
-                        className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                        className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
                     )}
@@ -1386,7 +1391,7 @@ export default function SellPage() {
                         value={value ?? ''}
                         onChange={(e) => setAttributeValue(attr.key, e.target.value)}
                         maxLength={SELL_LIMITS.attributeText}
-                        className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                        className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                         placeholder={`Enter ${attr.label.toLowerCase()}`}
                       />
                     )}
@@ -1399,17 +1404,17 @@ export default function SellPage() {
 
         {/* ── STEP 5: Variant Inventory — automatic once any Category Detail above has 2+ values ── */}
         {variantFields.length > 0 && variantCombinations.length > 0 && (
-          <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+          <div className="step-card border border-border bg-card p-5 sm:p-6">
             <StepHeader
               num="5"
               title="Variant Inventory"
               subtitle="Price and stock for each combination from your Category Details above"
             />
-            <div className="border border-border rounded-2xl overflow-hidden">
+            <div className="overflow-hidden border border-border">
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-white border-b border-border">
+                      <tr className="bg-card border-b border-border">
                         {variantKeysForMatrix.map(key => (
                           <th key={key} className="text-left px-3 py-2 font-semibold text-ink-secondary capitalize">{key.replace(/_/g, ' ')}</th>
                         ))}
@@ -1461,7 +1466,7 @@ export default function SellPage() {
         )}
 
         {/* ── STEP 5: Description ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader
             num="5"
             title="Product Description"
@@ -1484,7 +1489,7 @@ export default function SellPage() {
                   setDescription(auto)
                   setDescriptionEdited(false)
                 }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-white text-xs font-semibold text-ink-secondary hover:border-primary/50 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-card text-xs font-semibold text-ink-secondary hover:border-primary/50 hover:text-primary transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Regenerate
@@ -1500,7 +1505,7 @@ export default function SellPage() {
               maxLength={500}
               rows={5}
               placeholder="Describe the product in a few clear words..."
-              className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium min-h-[140px] resize-none"
+              className="w-full resize-none border border-border bg-card px-4 py-3.5 text-sm leading-relaxed text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 min-h-[140px]"
             />
             <div className="flex items-center justify-between text-xs text-ink-muted">
               <span>{countWords(description)}/{DESCRIPTION_WORD_LIMIT} words</span>
@@ -1510,7 +1515,7 @@ export default function SellPage() {
         </div>
 
         {/* ── STEP 6: Images ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader
             num="6"
             title="Product Photos"
@@ -1573,7 +1578,7 @@ export default function SellPage() {
         </div>
 
         {/* ── STEP 6: Tags ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader
             num="7"
             title="Product Tags"
@@ -1600,10 +1605,10 @@ export default function SellPage() {
           <label
             htmlFor="campaign-tag-toggle"
             data-tour="tour-gfd-checkbox"
-            className={`step-card relative flex items-start gap-4 rounded-2xl border-2 p-5 sm:p-6 cursor-pointer transition-colors ${
+            className={`step-card relative flex cursor-pointer items-start gap-4 border p-5 transition-colors sm:p-6 ${
               campaignTagEnabled
                 ? 'border-rose-300 bg-gradient-to-br from-rose-50 to-pink-50'
-                : 'border-border bg-white hover:border-rose-200'
+                : 'border-border bg-card hover:border-rose-200'
             }`}
           >
             <div className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${campaignTagEnabled ? 'bg-rose-500' : 'bg-rose-50'}`}>
@@ -1629,7 +1634,7 @@ export default function SellPage() {
         )}
 
         {/* ── STEP 7: Location ── */}
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader
             num="8"
             title="Pickup Location"
@@ -1644,7 +1649,7 @@ export default function SellPage() {
                 onChange={e => setFormData({ ...formData, hostelName: limitText(e.target.value, SELL_LIMITS.location) })}
                 required
                 maxLength={SELL_LIMITS.location}
-                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                 placeholder="e.g., Python Hall, Aroma Lodge, Block C"
               />
             </div>
@@ -1656,7 +1661,7 @@ export default function SellPage() {
                 onChange={e => setFormData({ ...formData, roomNumber: limitText(e.target.value, SELL_LIMITS.roomNumber) })}
                 required
                 maxLength={SELL_LIMITS.roomNumber}
-                className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                 placeholder="e.g., Room 12, Block A"
               />
             </div>
@@ -1669,7 +1674,7 @@ export default function SellPage() {
                   value={formData.landmark}
                   onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
-                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium appearance-none"
+                  className="h-12 w-full appearance-none border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                 >
                   <option value="">Select delivery area</option>
                   {deliveryAreas.map(area => <option key={area} value={area}>{area}</option>)}
@@ -1681,7 +1686,7 @@ export default function SellPage() {
                   onChange={e => setFormData({ ...formData, landmark: limitText(e.target.value, SELL_LIMITS.landmark) })}
                   required
                   maxLength={SELL_LIMITS.landmark}
-                  className="w-full px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="h-12 w-full border border-border bg-card px-4 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="e.g., Near the water dispenser"
                 />
               )}
@@ -1692,17 +1697,17 @@ export default function SellPage() {
           </div>
         </div>
 
-        <div className="step-card bg-white rounded-2xl border border-border shadow-soft p-5 sm:p-6">
+        <div className="step-card border border-border bg-card p-5 sm:p-6">
           <StepHeader
             num="9"
             title="Motorcycle Delivery Check"
             subtitle="Required for rider safety and reliable fulfillment"
           />
           <div className="grid sm:grid-cols-3 gap-3 mb-4">
-            <input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium" />
-            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
+            <input type="number" min="0" max={SELL_LIMITS.weightKg} inputMode="decimal" step="0.1" value={estimatedWeightKg} onChange={(e) => setEstimatedWeightKg(limitDecimalInput(e.target.value, SELL_LIMITS.weightKg))} placeholder="Weight (kg, optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-card focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionL} onChange={(e) => setDimensionL(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Length cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-card focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionW} onChange={(e) => setDimensionW(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Width cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-card focus:outline-none transition-all text-sm font-medium" />
+            <input type="number" min="0" max={SELL_LIMITS.dimensionCm} inputMode="numeric" value={dimensionH} onChange={(e) => setDimensionH(limitIntegerInput(e.target.value, SELL_LIMITS.dimensionCm, 0))} placeholder="Height cm (optional)" className="px-4 py-3 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-card focus:outline-none transition-all text-sm font-medium sm:col-span-3" />
             <div className="sm:col-span-3">
               <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">
                 Estimated Delivery Time *
@@ -1714,7 +1719,7 @@ export default function SellPage() {
                   value={deliveryEstimate}
                   onChange={(e) => setDeliveryEstimate(limitIntegerInput(e.target.value, 30, 1))}
                   placeholder="e.g. 3"
-                  className="w-full px-4 py-3 pr-20 bg-surface border-2 border-transparent rounded-xl focus:border-primary focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                  className="h-12 w-full border border-border bg-card pl-4 pr-20 text-sm text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-muted pointer-events-none">
                   day{Number(deliveryEstimate) === 1 ? '' : 's'}
@@ -1733,7 +1738,7 @@ export default function SellPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="fade-up flex items-start gap-3 bg-danger/10 border border-danger/30 text-danger px-4 py-3.5 rounded-2xl text-sm">
+          <div className="fade-up flex items-start gap-3 border border-danger/25 bg-danger/5 px-4 py-3.5 text-sm text-danger">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -1743,7 +1748,7 @@ export default function SellPage() {
         <button
           type="submit"
           disabled={loading || (!allUploaded && images.length > 0)}
-          className="submit-btn w-full py-4 rounded-2xl font-semibold text-white text-base shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="submit-btn ui-btn-sweep w-full py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">

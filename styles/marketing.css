@@ -66,6 +66,25 @@ html.mk-active #ios-scroll-area {
   padding-bottom: 0 !important;
 }
 
+/* …and hand scrolling back to the window.
+   globals.css locks `html, body { height: 100%; overflow: hidden }` inside
+   `@supports (-webkit-touch-callout: none)`, which matches EVERY iOS browser,
+   not only the installed PWA it was written for. With the inner scroll
+   containers unwound above, that left marketing pages on iOS with nothing
+   able to scroll at all. Restoring html/body here is what makes the window —
+   and therefore Lenis and every scroll-linked animation — work on iPhone.
+
+   Both axes go back to `visible` deliberately: setting one axis to `hidden`
+   forces the other to compute as `auto`, which would make <body> its own
+   scroll container and fight Lenis for the window scroll. Horizontal
+   overflow is already clipped on `.mk` (`overflow-x: clip`), so nothing
+   needs to be trapped here. */
+html.mk-active,
+html.mk-active body {
+  height: auto !important;
+  overflow: visible !important;
+}
+
 /* Lenis */
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }

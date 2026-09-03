@@ -8,6 +8,7 @@ import {
   AlertTriangle, Clock, RefreshCw, ArrowUpRight, ArrowDownRight,
   Layers, Zap, Shield, CreditCard, UserCheck, Repeat, Building2,
 } from 'lucide-react'
+import { AdminHeader, AdminButton } from '@/components/admin/AdminUI'
 
 interface AnalyticsData {
   newUsers: number; totalUsers: number; newSellers: number; newRiders: number
@@ -40,54 +41,51 @@ function delta(val: number, good: 'up' | 'down' = 'up') {
 
 function SectionHeader({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="text-primary">{icon}</div>
-      <span className="text-[11px] font-semibold tracking-[0.2em] uppercase text-ink-secondary">{label}</span>
-      <div className="flex-1 h-px bg-border" />
-    </div>
+    <p className="ui-eyebrow mb-5">
+      <span className="text-ink-muted">{icon}</span>
+      {label}
+    </p>
   )
 }
 
+/**
+ * A single KPI. Deliberately monochrome — with twenty of these on one screen,
+ * per-tile accent colour was pure decoration, and it drowned out the trend
+ * arrows, which are the only thing here that genuinely signals good or bad.
+ */
 function KpiCard({
-  label, value, sub, icon, trend, trendGood = 'up', accent = 'red', trendNA = false,
+  label, value, sub, icon, trend, trendGood = 'up', trendNA = false,
 }: {
-  label: string; value: string | number; sub?: string; icon: React.ReactNode
+  label: string; value: string | number; sub?: string; icon?: React.ReactNode
   trend?: number | null; trendGood?: 'up' | 'down'
-  accent?: 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'orange' | 'cyan' | 'pink'
   trendNA?: boolean  // show "N/A" instead of a percentage
 }) {
-  // Design bible: admin charts/stats use --color-primary plus status colors only —
-  // every accent name collapses onto one of the four tokens, no rainbow variety.
-  const accentMap: Record<string, string> = {
-    red: 'border-danger/30 bg-danger/5', blue: 'border-primary/30 bg-primary/5',
-    green: 'border-success/30 bg-success/5', yellow: 'border-warning/30 bg-warning/5',
-    purple: 'border-primary/30 bg-primary/5', orange: 'border-warning/30 bg-warning/5',
-    cyan: 'border-primary/30 bg-primary/5', pink: 'border-primary/30 bg-primary/5',
-  }
-  const iconMap: Record<string, string> = {
-    red: 'text-danger', blue: 'text-primary', green: 'text-success',
-    yellow: 'text-warning', purple: 'text-primary', orange: 'text-warning',
-    cyan: 'text-primary', pink: 'text-primary',
-  }
-
   const hasTrend = trend !== undefined && trend !== null
   const { isPositive, isGood } = hasTrend ? delta(trend!, trendGood) : { isPositive: true, isGood: true }
 
   return (
-    <div className={`border ${accentMap[accent]} rounded-lg p-4 flex flex-col gap-2 relative overflow-hidden`}>
-      <div className="flex items-start justify-between">
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-ink-muted">{label}</span>
-        <span className={iconMap[accent]}>{icon}</span>
+    <div className="relative flex flex-col gap-3 bg-card p-4">
+      <div className="flex items-start justify-between gap-2">
+        <span className="ui-mono ui-mono-sm text-ink-muted">{label}</span>
+        {icon && <span className="flex-shrink-0 text-ink-muted">{icon}</span>}
       </div>
-      <p className="text-2xl font-semibold text-ink font-mono leading-none tracking-tight">{value}</p>
-      <div className="flex items-center justify-between mt-auto">
-        {sub && <span className="text-[11px] text-ink-muted">{sub}</span>}
-        {trendNA && (
-          <span className="text-[11px] text-ink-muted ml-auto">vs prev: N/A</span>
-        )}
+
+      <p className="ui-figure text-[clamp(1.35rem,2.6vw,1.75rem)] leading-none text-ink">{value}</p>
+
+      <div className="mt-auto flex items-center justify-between gap-2">
+        {sub && <span className="text-[11px] leading-snug text-ink-muted">{sub}</span>}
+        {trendNA && <span className="ui-mono ui-mono-sm ml-auto text-ink-muted">n/a</span>}
         {hasTrend && !trendNA && (
-          <span className={`flex items-center gap-0.5 text-[11px] font-semibold ml-auto ${isGood ? 'text-success' : 'text-danger'}`}>
-            {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          <span
+            className={`ml-auto flex flex-shrink-0 items-center gap-0.5 text-[11px] font-medium tabular-nums ${
+              isGood ? 'text-success' : 'text-danger'
+            }`}
+          >
+            {isPositive ? (
+              <ArrowUpRight className="h-3 w-3" strokeWidth={2} />
+            ) : (
+              <ArrowDownRight className="h-3 w-3" strokeWidth={2} />
+            )}
             {Math.abs(trend!).toFixed(1)}%
           </span>
         )}
@@ -99,15 +97,24 @@ function KpiCard({
 function DataRow({ label, value, sub, flag }: { label: string; value: string; sub?: string; flag?: 'ok' | 'warn' | 'danger' }) {
   const flagColor = flag === 'ok' ? 'bg-success' : flag === 'warn' ? 'bg-warning' : flag === 'danger' ? 'bg-danger' : 'bg-transparent'
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
-      <div className="flex items-center gap-2">
-        {flag && <span className={`w-1.5 h-1.5 rounded-full ${flagColor} flex-shrink-0`} />}
-        <span className="text-[12px] text-ink-secondary">{label}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-0">
+      <div className="flex min-w-0 items-center gap-2">
+        {flag && <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${flagColor}`} />}
+        <span className="text-[13px] text-ink-secondary">{label}</span>
       </div>
-      <div className="text-right">
-        <span className="text-[13px] text-ink font-mono font-semibold">{value}</span>
-        {sub && <p className="text-[10px] text-ink-muted">{sub}</p>}
+      <div className="flex-shrink-0 text-right">
+        <span className="ui-figure text-[14px] text-ink">{value}</span>
+        {sub && <p className="mt-0.5 text-[10px] text-ink-muted">{sub}</p>}
       </div>
+    </div>
+  )
+}
+
+/** Wraps a KPI row in the hairline grid the rest of the panel uses. */
+function KpiRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-2 gap-px border border-border bg-border lg:grid-cols-4">
+      {children}
     </div>
   )
 }
@@ -152,8 +159,8 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
@@ -161,55 +168,56 @@ export default function AnalyticsPage() {
   const d = data!
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-10 pb-10">
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Analytics</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">
-            <span className="text-ink font-medium">{selectedUniName}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* University switcher */}
-          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
-            <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
-            <select
-              value={selectedUni}
-              onChange={e => setSelectedUni(e.target.value)}
-              className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Universities</option>
-              {universities.map(u => (
-                <option key={u.id} value={u.id}>{u.shortName}</option>
-              ))}
-            </select>
-          </div>
-          {/* Range selector */}
-          <div className="flex bg-white border border-border rounded-xl overflow-hidden">
-            {[['7days', '7D'], ['30days', '30D'], ['90days', '90D'], ['all', 'All']].map(([v, label]) => (
-              <button
-                key={v}
-                onClick={() => setRange(v)}
-                className={`px-3 py-2 text-xs font-semibold transition-colors ${
-                  range === v
-                    ? 'bg-danger text-white'
-                    : 'text-ink-secondary hover:text-ink hover:bg-surface'
-                }`}
+      <AdminHeader
+        eyebrow="Insight"
+        title="Analytics"
+        description={
+          <>
+            Scoped to <span className="font-medium text-ink">{selectedUniName}</span>.
+          </>
+        }
+        actions={
+          <>
+            <div className="flex h-9 items-center gap-2 border border-border bg-card px-3">
+              <Building2 className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+              <select
+                value={selectedUni}
+                onChange={e => setSelectedUni(e.target.value)}
+                aria-label="University"
+                className="cursor-pointer bg-transparent text-[13px] text-ink focus:outline-none"
               >
-                {label}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={fetchAnalytics}
-            className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+                <option value="all">All universities</option>
+                {universities.map(u => (
+                  <option key={u.id} value={u.id}>{u.shortName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Range selector */}
+            <div className="flex border border-border bg-card">
+              {[['7days', '7D'], ['30days', '30D'], ['90days', '90D'], ['all', 'All']].map(([v, label]) => (
+                <button
+                  key={v}
+                  onClick={() => setRange(v)}
+                  aria-pressed={range === v}
+                  className={`h-9 px-3.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors duration-300 ${
+                    range === v
+                      ? 'bg-ink text-background'
+                      : 'text-ink-secondary hover:bg-surface hover:text-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <AdminButton onClick={fetchAnalytics} icon={RefreshCw}>Refresh</AdminButton>
+          </>
+        }
+      />
 
       {!data ? (
         <p className="text-ink-secondary text-center py-12">No data available</p>
@@ -217,61 +225,58 @@ export default function AnalyticsPage() {
         <>
           {/* ── Growth ── */}
           <div>
-            <SectionHeader label="Growth" icon={<TrendingUp className="w-4 h-4" />} />
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard label="New users"    value={fmt(d.newUsers)}    icon={<Users className="w-4 h-4" />}   accent="blue" />
-              <KpiCard label="New sellers"  value={fmt(d.newSellers)}  icon={<Store className="w-4 h-4" />}   accent="green" />
-              <KpiCard label="New riders"   value={fmt(d.newRiders)}   icon={<Bike className="w-4 h-4" />}    accent="cyan" />
-              <KpiCard label="New products" value={fmt(d.newProducts)} icon={<Package className="w-4 h-4" />} accent="purple" />
-            </div>
+            <SectionHeader label="Growth" icon={<TrendingUp className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+            <KpiRow>
+              <KpiCard label="New users"    value={fmt(d.newUsers)}    icon={<Users className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="New sellers"  value={fmt(d.newSellers)}  icon={<Store className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="New riders"   value={fmt(d.newRiders)}   icon={<Bike className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="New products" value={fmt(d.newProducts)} icon={<Package className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+            </KpiRow>
           </div>
 
           {/* ── Revenue ── */}
           <div>
-            <SectionHeader label="Revenue" icon={<DollarSign className="w-4 h-4" />} />
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* FIX #9: revenueTrend is null for 'all' range — show N/A badge */}
+            <SectionHeader label="Revenue" icon={<DollarSign className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+            <KpiRow>
+              {/* revenueTrend is null for the 'all' range — show N/A rather than 0% */}
               <KpiCard
                 label="GMV"
                 value={fmtNgn(d.gmv)}
-                icon={<ShoppingBag className="w-4 h-4" />}
-                accent="yellow"
+                icon={<ShoppingBag className="h-3.5 w-3.5" strokeWidth={1.75} />}
                 trend={d.revenueTrend ?? undefined}
                 trendNA={d.revenueTrend === null}
               />
-              <KpiCard label="Commission"  value={fmtNgn(d.platformCommission)} icon={<CreditCard className="w-4 h-4" />} accent="orange" />
+              <KpiCard label="Commission"  value={fmtNgn(d.platformCommission)} icon={<CreditCard className="h-3.5 w-3.5" strokeWidth={1.75} />} />
               {/* FIX #6: net revenue now correctly deducts Flutterwave fees — label updated */}
               <KpiCard
                 label="Net revenue"
                 value={fmtNgn(d.netRevenue)}
-                icon={<Shield className="w-4 h-4" />}
-                accent="green"
+                icon={<Shield className="h-3.5 w-3.5" strokeWidth={1.75} />}
                 sub={`−₦${fmt(Math.round(d.flutterwaveFees || 0))} Flutterwave fees`}
               />
-              <KpiCard label="Orders" value={fmt(d.totalOrders)} icon={<CheckCircle className="w-4 h-4" />} accent="blue" sub={`${d.completionRate}% completed`} />
-            </div>
+              <KpiCard label="Orders" value={fmt(d.totalOrders)} icon={<CheckCircle className="h-3.5 w-3.5" strokeWidth={1.75} />} sub={`${d.completionRate}% completed`} />
+            </KpiRow>
           </div>
 
           {/* ── Engagement ── */}
           <div>
-            <SectionHeader label="Engagement" icon={<Activity className="w-4 h-4" />} />
+            <SectionHeader label="Engagement" icon={<Activity className="h-3.5 w-3.5" strokeWidth={1.75} />} />
             {/* FIX #7: DAU/WAU/MAU labels clarified as rolling windows (not period-scoped) */}
             <p className="text-[11px] text-ink-muted mb-3 -mt-2">
               DAU / WAU / MAU are rolling windows (last 24h / 7d / 30d), not scoped to the selected range.
             </p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <KpiCard label="DAU (rolling 24h)"  value={fmt(d.dau)}  icon={<Zap className="w-4 h-4" />}       accent="red" />
-              <KpiCard label="WAU (rolling 7d)"   value={fmt(d.wau)}  icon={<Activity className="w-4 h-4" />}  accent="orange" />
-              <KpiCard label="MAU (rolling 30d)"  value={fmt(d.mau)}  icon={<Users className="w-4 h-4" />}     accent="purple" />
-              {/* FIX #3: repeatBuyerPct now uses total buyers as denominator */}
-              <KpiCard label="Repeat buyers" value={fmtPct(d.repeatBuyerPct)} icon={<Repeat className="w-4 h-4" />} accent="cyan" sub="of all buyers" />
-            </div>
+            <KpiRow>
+              <KpiCard label="DAU (24h)"  value={fmt(d.dau)}  icon={<Zap className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="WAU (7d)"   value={fmt(d.wau)}  icon={<Activity className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="MAU (30d)"  value={fmt(d.mau)}  icon={<Users className="h-3.5 w-3.5" strokeWidth={1.75} />} />
+              <KpiCard label="Repeat buyers" value={fmtPct(d.repeatBuyerPct)} icon={<Repeat className="h-3.5 w-3.5" strokeWidth={1.75} />} sub="of all buyers" />
+            </KpiRow>
           </div>
 
           {/* ── Marketplace Health + Logistics ── */}
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-surface border border-border rounded-2xl p-5">
-              <SectionHeader label="Marketplace health" icon={<BarChart2 className="w-4 h-4" />} />
+            <div className="ui-panel">
+              <SectionHeader label="Marketplace health" icon={<BarChart2 className="h-3.5 w-3.5" strokeWidth={1.75} />} />
               {/* FIX #5: activeSellers = sellers who received completed orders (not just listed) */}
               <DataRow label="Active sellers (with orders)"  value={fmt(d.activeSellers)}    flag={d.activeSellers > 10 ? 'ok' : 'warn'} />
               <DataRow label="Completed orders per seller"   value={d.ordersPerSeller.toFixed(1)} />
@@ -280,8 +285,8 @@ export default function AnalyticsPage() {
               {/* FIX #4: retentionDay1 is buyer activation rate — renamed for clarity */}
               <DataRow label="New buyer activation rate"     value={fmtPct(d.retentionDay1)} sub="new buyers who placed an order" />
             </div>
-            <div className="bg-surface border border-border rounded-2xl p-5">
-              <SectionHeader label="Logistics" icon={<Bike className="w-4 h-4" />} />
+            <div className="ui-panel">
+              <SectionHeader label="Logistics" icon={<Bike className="h-3.5 w-3.5" strokeWidth={1.75} />} />
               {/* FIX #2: avgDeliveryMinutes now uses deliveredAt (actual delivery time) */}
               <DataRow label="Avg delivery time (order→delivery)" value={fmtMin(d.avgDeliveryMinutes)} flag={d.avgDeliveryMinutes < 60 ? 'ok' : d.avgDeliveryMinutes < 120 ? 'warn' : 'danger'} />
               {/* FIX #1: riderCompletionRate is now actual rider delivery rate */}
@@ -292,9 +297,8 @@ export default function AnalyticsPage() {
           </div>
 
           {/* ── Top Categories ── */}
-          <div className="bg-surface border border-border rounded-2xl p-5">
-            {/* FIX #8: topCategories is now period-scoped — label updated */}
-            <SectionHeader label={`Top categories (${range === 'all' ? 'all time' : range})`} icon={<Target className="w-4 h-4" />} />
+          <div className="ui-panel">
+            <SectionHeader label={`Top categories · ${range === 'all' ? 'all time' : range}`} icon={<Target className="h-3.5 w-3.5" strokeWidth={1.75} />} />
             <div className="space-y-3">
               {d.topCategories.length === 0 ? (
                 <p className="text-ink-muted text-sm text-center py-4">No product listings in this period</p>
@@ -302,13 +306,13 @@ export default function AnalyticsPage() {
                 const max = d.topCategories[0]?.count || 1
                 return (
                   <div key={c.category} className="space-y-1">
-                    <div className="flex justify-between text-xs">
+                    <div className="flex items-baseline justify-between gap-3 text-xs">
                       <span className="text-ink-secondary">{c.category}</span>
-                      <span className="text-ink font-mono">{fmt(c.count)}</span>
+                      <span className="ui-figure text-[13px] text-ink">{fmt(c.count)}</span>
                     </div>
-                    <div className="h-1.5 bg-white rounded-full">
+                    <div className="h-[3px] bg-surface">
                       <div
-                        className="h-full bg-danger rounded-full transition-all duration-700"
+                        className="h-full bg-ink transition-[width] duration-700 ease-out"
                         style={{ width: `${(c.count / max) * 100}%` }}
                       />
                     </div>

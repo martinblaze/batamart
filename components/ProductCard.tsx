@@ -38,17 +38,25 @@ function TrustBadge({ trustLevel }: { trustLevel?: string }) {
   if (!trustLevel) return null
   const label = trustLevel === 'VERIFIED' ? 'Verified' : trustLevel === 'GOLD' ? 'Top seller' : trustLevel
   return (
-    <Badge status="verified" icon={BadgeCheck} className="text-[10px]">
-      {label}
-    </Badge>
+    <span className="inline-flex items-center gap-1 text-primary">
+      <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
+      <span className="font-mono text-[10px] uppercase tracking-[0.1em]">{label}</span>
+    </span>
   )
 }
 
-// Design bible section 8 — Product card. Element order: photo → title →
-// seller/verified → rating → price → delivery badge → stock status.
-// The whole card is one click target to its product page — no separate CTA button.
-// (Wishlist toggle is omitted: there is no wishlist API/store in this app yet,
-// and a heart icon with no destination would violate the "no dead buttons" rule.)
+/**
+ * Product card.
+ *
+ * Reworked around the photograph. The image is a tall 4:5 frame with no card
+ * border or fill boxing it in, and the metadata sits underneath on the page
+ * ground — the difference between a retail grid and a table of records.
+ *
+ * Order stays as the design bible sets it: photo → title → seller → rating →
+ * price → delivery → stock. The whole card is one click target; the only
+ * chrome that appears on hover is the delivery/stock strip sliding over the
+ * bottom of the image, and only on devices that actually have a pointer.
+ */
 export default function ProductCard({
   product,
   layout = 'grid',
@@ -70,56 +78,74 @@ export default function ProductCard({
   const stock = product.quantity ?? 0
   const campaignActive = isCampaignActive(product.campaignTag, product.campaignExpiresAt)
   const campaignLabel = campaignActive ? CAMPAIGNS[product.campaignTag as keyof typeof CAMPAIGNS]?.label : null
+  const soldOut = stock === 0
+
+  const flags = (
+    <div className="ui-tile__flags">
+      {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
+      {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
+      {product.isNew && <Badge status="ink">New</Badge>}
+      {product.isDeal && <Badge status="success">Deal</Badge>}
+    </div>
+  )
+
+  const sellerLine = showSeller ? (
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-secondary">
+      <span className="truncate">{product.seller?.name || 'Seller'}</span>
+      <TrustBadge trustLevel={product.seller?.trustLevel} />
+      {product.landmark && (
+        <span className="inline-flex items-center gap-1 text-ink-muted">
+          <MapPin className="h-3 w-3" strokeWidth={1.75} /> {product.landmark}
+        </span>
+      )}
+    </div>
+  ) : null
 
   if (layout === 'list') {
     return (
       <article
         onClick={onOpen}
-        className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-white transition-transform duration-150 ease-out hover:-translate-y-0.5 sm:flex-row ${className}`}
+        className={`ui-tile ui-card ui-card-hover group flex cursor-pointer flex-col overflow-hidden sm:flex-row ${className}`}
       >
-        <div className="relative aspect-square w-full flex-shrink-0 bg-surface sm:w-52">
-          <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
-          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-            {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
-            {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
-            {product.isNew && <Badge status="new">New</Badge>}
-            {product.isDeal && <Badge status="success">Deal</Badge>}
-          </div>
-        </div>
-        <div className="flex-1 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="line-clamp-2 text-[16px] font-medium leading-snug text-ink">{product.name}</h3>
-              {showSeller && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
-                  <span className="font-medium text-ink-secondary">{product.seller?.name || 'Seller'}</span>
-                  <TrustBadge trustLevel={product.seller?.trustLevel} />
-                  {product.landmark && (
-                    <span className="inline-flex items-center gap-1 text-ink-muted">
-                      <MapPin className="h-3 w-3" strokeWidth={1.75} /> {product.landmark}
-                    </span>
-                  )}
-                </div>
-              )}
+        <div className="ui-tile__media aspect-square w-full flex-shrink-0 sm:aspect-[4/5] sm:w-48">
+          <LoadedImage
+            src={image}
+            alt={product.name}
+            wrapperClassName="h-full w-full"
+            priority={priority}
+          />
+          {flags}
+          {soldOut && (
+            <div className="absolute inset-0 grid place-items-center bg-card/70">
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Sold out</span>
             </div>
-            <div className="text-right">
-              <p className="text-[18px] font-semibold text-ink">{price}</p>
+          )}
+        </div>
+
+        <div className="flex flex-1 flex-col justify-center gap-3 p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-5">
+            <div className="min-w-0">
+              <h3 className="line-clamp-2 text-[15px] font-medium leading-snug text-ink">{product.name}</h3>
+              {sellerLine}
+            </div>
+            <div className="flex-shrink-0 text-right">
+              <p className="ui-figure text-lg text-ink">{price}</p>
               {rating > 0 && (
-                <div className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-ink-secondary">
+                <div className="mt-1 inline-flex items-center gap-1 text-xs text-ink-secondary">
                   <Star className="h-3 w-3 fill-warning text-warning" strokeWidth={1.75} />
                   {rating.toFixed(1)}
                 </div>
               )}
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+
+          <div className="flex flex-wrap items-center gap-2">
             {product.deliveryEstimate && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-1 font-semibold text-success">
-                <Truck className="h-3 w-3" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-secondary">
+                <Truck className="h-3 w-3" strokeWidth={1.75} /> {product.deliveryEstimate}
               </span>
             )}
-            {stock === 0 && <Badge status="out-of-stock">Out of stock</Badge>}
-            {stock > 0 && stock <= 5 && <Badge status="low-stock">Only {stock} left</Badge>}
+            {!soldOut && stock <= 5 && <Badge status="low-stock">Only {stock} left</Badge>}
           </div>
         </div>
       </article>
@@ -127,61 +153,55 @@ export default function ProductCard({
   }
 
   return (
-    <article
-      onClick={onOpen}
-      className={`group cursor-pointer overflow-hidden rounded-xl border border-border bg-white transition-transform duration-150 ease-out hover:-translate-y-0.5 ${className}`}
-    >
-      <div className="relative aspect-square w-full bg-surface">
-        <LoadedImage src={image} alt={product.name} className="transition duration-500 group-hover:scale-105" wrapperClassName="h-full w-full" priority={priority} />
-        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-          {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
-          {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
-          {product.isNew && <Badge status="new">New</Badge>}
-          {product.isDeal && <Badge status="success">Deal</Badge>}
-        </div>
-        <div className="absolute bottom-3 left-3 rounded-md bg-white/92 px-2.5 py-1 text-[11px] font-medium text-ink-secondary backdrop-blur">
-          {stock > 0 ? `${stock} left` : 'Out of stock'}
-        </div>
+    <article onClick={onOpen} className={`ui-tile group cursor-pointer ${className}`}>
+      <div className="ui-tile__media aspect-[4/5] w-full">
+        <LoadedImage
+          src={image}
+          alt={product.name}
+          wrapperClassName="h-full w-full"
+          priority={priority}
+        />
+        {flags}
+
+        {soldOut ? (
+          <div className="absolute inset-0 grid place-items-center bg-card/70">
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Sold out</span>
+          </div>
+        ) : (
+          <div className="ui-tile__peek">
+            <div className="flex items-center justify-between gap-2 bg-slab/92 px-3 py-2 backdrop-blur-sm">
+              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slab-fg/85">
+                {product.deliveryEstimate ? `Delivery ${product.deliveryEstimate}` : 'View item'}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slab-fg/60">
+                {stock} left
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="p-4">
-        <h3 className="line-clamp-2 text-[15px] font-medium leading-snug text-ink">{product.name}</h3>
-        {showSeller && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
-            <span className="font-medium text-ink-secondary">{product.seller?.name || 'Seller'}</span>
-            <TrustBadge trustLevel={product.seller?.trustLevel} />
-            {product.landmark && (
-              <span className="inline-flex items-center gap-1 text-ink-muted">
-                <MapPin className="h-3 w-3" strokeWidth={1.75} /> {product.landmark}
-              </span>
-            )}
-          </div>
-        )}
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <p className="text-[17px] font-semibold text-ink">{price}</p>
+      <div className="pt-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-2 text-[14px] font-medium leading-snug text-ink">{product.name}</h3>
           {rating > 0 && (
-            <div className="inline-flex items-center gap-1 text-xs font-medium text-ink-secondary">
+            <span className="inline-flex flex-shrink-0 items-center gap-1 pt-0.5 text-xs text-ink-secondary">
               <Star className="h-3 w-3 fill-warning text-warning" strokeWidth={1.75} />
               {rating.toFixed(1)}
-            </div>
+            </span>
           )}
         </div>
-        {product.deliveryEstimate && (
-          <div className="mt-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-              <Truck className="h-2.5 w-2.5" strokeWidth={1.75} /> Delivery: {product.deliveryEstimate}
+
+        {sellerLine}
+
+        <div className="mt-2.5 flex items-center gap-2">
+          <p className="ui-figure text-[17px] text-ink">{price}</p>
+          {!soldOut && stock <= 5 && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-warning">
+              {stock} left
             </span>
-          </div>
-        )}
-        {stock === 0 ? (
-          <div className="mt-2">
-            <Badge status="out-of-stock">Out of stock</Badge>
-          </div>
-        ) : stock <= 5 ? (
-          <div className="mt-2">
-            <Badge status="low-stock">Only {stock} left</Badge>
-          </div>
-        ) : null}
+          )}
+        </div>
       </div>
     </article>
   )

@@ -35,6 +35,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { Shell, PageHeader, EmptyState, Skeleton, DataRow } from '@/components/ui/Shell';
+import { Badge, type BadgeStatus } from '@/components/ui/Badge';
 
 // ── Statuses where the order is still actively moving ─────────────────────────
 const ACTIVE_STATUSES = [
@@ -192,36 +194,22 @@ export default function OrderDetailPage() {
     }
   };
 
-  // Design bible: status colors reserved for true status only — no per-stage color variety.
-  const getStatusIcon = (status: string) => {
+  // Status colour is semantic only: success when the order has landed, danger
+  // when it has gone wrong, warning while it is still waiting on someone, and
+  // the accent for everything actively in motion.
+  const getStatusTone = (status: string): BadgeStatus => {
     switch (status) {
-      case 'PENDING': return <Clock className="w-5 h-5 text-warning" strokeWidth={1.75} />;
-      case 'PROCESSING': return <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />;
-      case 'SHIPPED': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
-      case 'RIDER_ASSIGNED': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
-      case 'PICKED_UP': return <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />;
-      case 'ON_THE_WAY': return <Truck className="w-5 h-5 text-primary" strokeWidth={1.75} />;
-      case 'DELIVERED': return <CheckCircle className="w-5 h-5 text-success" strokeWidth={1.75} />;
-      case 'COMPLETED': return <CheckCircle className="w-5 h-5 text-success" strokeWidth={1.75} />;
-      case 'CANCELLED': return <XCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />;
-      case 'DISPUTED': return <XCircle className="w-5 h-5 text-danger" strokeWidth={1.75} />;
-      default: return <Clock className="w-5 h-5 text-ink-secondary" strokeWidth={1.75} />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING': return 'bg-warning/10 text-warning border-warning/30';
-      case 'PROCESSING': return 'bg-primary/10 text-primary border-primary/30';
-      case 'SHIPPED': return 'bg-primary/10 text-primary border-primary/30';
-      case 'RIDER_ASSIGNED': return 'bg-primary/10 text-primary border-primary/30';
-      case 'PICKED_UP': return 'bg-primary/10 text-primary border-primary/30';
-      case 'ON_THE_WAY': return 'bg-primary/10 text-primary border-primary/30';
-      case 'DELIVERED': return 'bg-success/10 text-success border-success/30';
-      case 'COMPLETED': return 'bg-success/10 text-success border-success/30';
-      case 'CANCELLED': return 'bg-danger/10 text-danger border-danger/30';
-      case 'DISPUTED': return 'bg-danger/10 text-danger border-danger/30';
-      default: return 'bg-surface text-ink border-border';
+      case 'PENDING': return 'warning';
+      case 'DELIVERED':
+      case 'COMPLETED': return 'success';
+      case 'CANCELLED':
+      case 'DISPUTED': return 'danger';
+      case 'PROCESSING':
+      case 'SHIPPED':
+      case 'RIDER_ASSIGNED':
+      case 'PICKED_UP':
+      case 'ON_THE_WAY': return 'verified';
+      default: return 'neutral';
     }
   };
 
@@ -296,14 +284,30 @@ export default function OrderDetailPage() {
     !order?.reviews?.some((r: any) => r.type === 'RIDER');
 
   // ── Loading skeleton ───────────────────────────────────────────────────────
+  // Shaped like the page it is standing in for, so the layout does not jump
+  // when the order lands.
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-border rounded w-1/4 mb-6"></div>
-          <div className="h-64 bg-border rounded mb-6"></div>
-          <div className="h-32 bg-border rounded"></div>
-        </div>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell className="pt-8 sm:pt-12">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="mt-6 h-10 w-2/5" />
+          <Skeleton className="mt-4 h-4 w-3/5" />
+          <Skeleton className="mt-10 h-24 w-full" />
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <Skeleton className="h-52 w-full" />
+              <div className="grid gap-6 md:grid-cols-2">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-64 w-full" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+        </Shell>
       </div>
     );
   }
@@ -311,22 +315,24 @@ export default function OrderDetailPage() {
   // ── Network / server error state ───────────────────────────────────────────
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-lg text-center">
-        <div className="bg-white rounded-2xl border border-danger/20 shadow-soft p-8">
-          <WifiOff className="w-14 h-14 mx-auto text-danger mb-4" />
-          <h1 className="text-xl font-semibold text-ink mb-2">Couldn't Load Order</h1>
-          <p className="text-ink-secondary mb-6 text-sm leading-relaxed">{error}</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={() => fetchOrder()} className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Try Again
-            </Button>
-            <Button variant="outline" onClick={() => router.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <EmptyState
+            icon={WifiOff}
+            title="Couldn't load this order"
+            description={error}
+            action={
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <Button onClick={() => fetchOrder()} variant="ink" leftIcon={<RefreshCw className="h-4 w-4" />}>
+                  Try again
+                </Button>
+                <Button variant="secondary" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+                  Back
+                </Button>
+              </div>
+            }
+          />
+        </Shell>
       </div>
     );
   }
@@ -334,14 +340,19 @@ export default function OrderDetailPage() {
   // ── Order not found ────────────────────────────────────────────────────────
   if (!order) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <Package className="w-16 h-16 mx-auto text-ink-muted mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Order Not Found</h1>
-        <p className="text-ink-secondary mb-6">The order you're looking for doesn't exist or you don't have access to it.</p>
-        <Button onClick={() => router.back()}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <EmptyState
+            icon={Package}
+            title="Order not found"
+            description="This order doesn't exist, or it isn't one you have access to."
+            action={
+              <Button variant="ink" onClick={() => router.back()} leftIcon={<ArrowLeft className="h-4 w-4" />}>
+                Back
+              </Button>
+            }
+          />
+        </Shell>
       </div>
     );
   }
@@ -362,12 +373,11 @@ export default function OrderDetailPage() {
     }
   }
 
-  const getDisputeStatusBadge = (s: string) => {
-    if (s === 'OPEN') return 'bg-primary/10 text-primary'
-    if (s === 'UNDER_REVIEW') return 'bg-warning/10 text-warning'
-    if (s.startsWith('RESOLVED')) return 'bg-success/10 text-success'
-    if (s === 'DISMISSED') return 'bg-surface text-ink-secondary'
-    return 'bg-surface text-ink-secondary'
+  const getDisputeStatusTone = (s: string): BadgeStatus => {
+    if (s === 'OPEN') return 'verified'
+    if (s === 'UNDER_REVIEW') return 'warning'
+    if (s.startsWith('RESOLVED')) return 'success'
+    return 'neutral'
   }
 
   const getCheckpointLabel = (checkpoint: any) => {
@@ -388,25 +398,21 @@ export default function OrderDetailPage() {
     : null
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-
-      {/* Back button */}
-      <Button variant="ghost" onClick={() => router.back()} className="mb-6">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
+    <div className="min-h-screen bg-surface pb-20">
+      <Shell className="pt-8 sm:pt-12">
 
       {/* Inline update error banner — replaces alert() */}
       {updateError && (
-        <div className="mb-6 flex items-start gap-3 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
-          <AlertTriangle className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-danger">Action Failed</p>
-            <p className="text-sm text-danger mt-0.5">{updateError}</p>
+        <div className="mb-6 flex items-start gap-3 border border-danger/25 bg-danger/5 px-4 py-3.5">
+          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-danger">Action failed</p>
+            <p className="mt-0.5 text-sm text-danger">{updateError}</p>
           </div>
           <button
             onClick={() => setUpdateError(null)}
-            className="text-danger hover:text-danger text-lg leading-none flex-shrink-0"
+            aria-label="Dismiss"
+            className="flex-shrink-0 text-lg leading-none text-danger transition-opacity hover:opacity-70"
           >
             ×
           </button>
@@ -414,55 +420,56 @@ export default function OrderDetailPage() {
       )}
 
       {/* Order header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold mb-2">
-            Order #{order.orderNumber || order.id.slice(-8)}
-          </h1>
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border ${getStatusColor(order.status)}`}>
-              {getStatusIcon(order.status)}
-              <span className="font-medium">{order.status.replace(/_/g, ' ')}</span>
-            </div>
+      <PageHeader
+        eyebrow="Order"
+        back={{ href: '/orders', label: 'All orders' }}
+        title={<span className="ui-figure">#{order.orderNumber || order.id.slice(-8)}</span>}
+        description={
+          <span className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Badge status={getStatusTone(order.status)} icon={undefined}>
+              {order.status.replace(/_/g, ' ')}
+            </Badge>
 
             {isPolling && (
-              <div className="flex items-center gap-1.5 text-xs text-success font-semibold">
-                <span className="w-2 h-2 bg-success/100 rounded-full animate-pulse" />
+              <span className="ui-mono ui-mono-sm inline-flex items-center gap-1.5 text-success">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
                 Live
-              </div>
+              </span>
             )}
 
-            <div className="flex items-center gap-2 text-ink-secondary">
-              <Calendar className="w-4 h-4" />
-              <span>{format(new Date(order.createdAt), 'MMM dd, yyyy h:mm a')}</span>
-            </div>
-          </div>
-        </div>
-
-        {statusActions.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
-            {statusActions.map((action) => (
-              <Button
-                key={action.status}
-                variant={action.variant as 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success'}
-                onClick={() => updateOrderStatus(action.status)}
-                disabled={updating}
-              >
-                {updating ? 'Updating...' : action.label}
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
+            <span className="inline-flex items-center gap-2 text-sm text-ink-secondary">
+              <Calendar className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
+              {format(new Date(order.createdAt), 'MMM dd, yyyy · h:mm a')}
+            </span>
+          </span>
+        }
+        actions={
+          statusActions.length > 0 ? (
+            <>
+              {statusActions.map((action) => (
+                <Button
+                  key={action.status}
+                  variant={action.variant as 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success'}
+                  onClick={() => updateOrderStatus(action.status)}
+                  disabled={updating}
+                >
+                  {updating ? 'Updating…' : action.label}
+                </Button>
+              ))}
+            </>
+          ) : undefined
+        }
+      />
 
       {/* ── Order progress tracker ─────────────────────────────────────────── */}
       {ACTIVE_STATUSES.includes(order.status) && (
-        <div className="bg-white rounded-xl border border-border p-6 mb-6">
-          <h2 className="text-sm font-semibold text-ink-secondary uppercase tracking-wide mb-4">Order Progress</h2>
-          <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 right-0 top-4 h-0.5 bg-border z-0" />
+        <div className="ui-panel mt-8">
+          <p className="ui-eyebrow mb-7">In progress</p>
+          <div className="relative flex items-start justify-between">
+            {/* The rail sits behind the markers at their vertical centre. */}
+            <div className="absolute left-0 right-0 top-[13px] z-0 h-px bg-border" />
             <div
-              className="absolute left-0 top-4 h-0.5 bg-primary z-0 transition-all duration-500"
+              className="absolute left-0 top-[13px] z-0 h-px bg-ink transition-[width] duration-700 ease-out"
               style={{
                 width: `${order.status === 'PENDING' ? 0 :
                     order.status === 'PROCESSING' ? 20 :
@@ -479,23 +486,33 @@ export default function OrderDetailPage() {
               { key: 'PICKED_UP', label: 'Picked up', icon: Package },
               { key: 'ON_THE_WAY', label: 'On the way', icon: Truck },
               { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle },
-            ].map((step) => {
+            ].map((step, i) => {
               const statusOrder = ['PENDING', 'PROCESSING', 'SHIPPED', 'RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY', 'DELIVERED']
               const currentIdx = statusOrder.indexOf(order.status)
               const stepIdx = statusOrder.indexOf(step.key)
               const isDone = currentIdx >= stepIdx
               const StepIcon = step.icon
               return (
-                <div key={step.key} className="flex flex-col items-center z-10 flex-1">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${isDone
-                      ? 'bg-primary border-primary text-white'
-                      : 'bg-white border-border text-ink-muted'
-                    }`}>
-                    <StepIcon className="w-4 h-4" strokeWidth={1.75} />
+                <div key={step.key} className="z-10 flex flex-1 flex-col items-center">
+                  <div
+                    className={`flex h-[26px] w-[26px] items-center justify-center border transition-colors duration-500 ${
+                      isDone
+                        ? 'border-ink bg-ink text-background'
+                        : 'border-border bg-card text-ink-muted'
+                    }`}
+                  >
+                    <StepIcon className="h-3.5 w-3.5" strokeWidth={1.75} />
                   </div>
-                  <p className={`text-[10px] font-medium mt-1.5 text-center ${isDone ? 'text-primary' : 'text-ink-muted'}`}>
+                  <p
+                    className={`ui-mono ui-mono-sm mt-3 text-center leading-tight transition-colors duration-500 ${
+                      isDone ? 'text-ink' : 'text-ink-muted'
+                    }`}
+                  >
                     {step.label}
                   </p>
+                  <span className="ui-mono ui-mono-sm mt-1 text-ink-muted/60">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
                 </div>
               )
             })}
@@ -503,394 +520,368 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="mt-10 grid gap-10 lg:grid-cols-3 lg:gap-8">
         {/* ── Left column ───────────────────────────────────────────────────── */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-8 lg:col-span-2">
 
           {/* Product card */}
-          <div className="bg-white rounded-lg border border-border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Product Details</h2>
-              <Link href={`/product/${order.product?.id}`}>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <ExternalLink className="w-4 h-4" />
-                  View Product
-                </Button>
+          <section className="ui-panel">
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <p className="ui-eyebrow">Item</p>
+              <Link
+                href={`/product/${order.product?.id}`}
+                className="group ui-mono ui-mono-sm inline-flex flex-shrink-0 items-center gap-1.5 text-ink-secondary transition-colors hover:text-ink"
+              >
+                View product
+                <ExternalLink className="h-3 w-3" strokeWidth={2} />
               </Link>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
+
+            <div className="flex flex-col gap-6 sm:flex-row">
               {order.product?.images?.[0] && (
-                <img
-                  src={order.product.images[0]}
-                  alt={order.product.name}
-                  className="w-32 h-32 object-cover rounded-lg"
-                />
+                <Link
+                  href={`/product/${order.product?.id}`}
+                  className="ui-tile group block w-full flex-shrink-0 sm:w-40"
+                >
+                  <div className="ui-tile__media aspect-square">
+                    <img
+                      src={order.product.images[0]}
+                      alt={order.product.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                </Link>
               )}
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg">{order.product?.name || 'Product'}</h3>
-                <p className="text-ink-secondary mt-1">{order.product?.description || 'No description'}</p>
-                <div className="flex items-center justify-between mt-4">
-                  <div>
-                    <p className="text-sm text-ink-secondary">Price</p>
-                    <p className="font-semibold">₦{(order.productPrice || order.product?.price || 0).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-ink-secondary">Quantity</p>
-                    <p className="font-semibold">{order.quantity || 1}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-ink-secondary">Total</p>
-                    <p className="font-semibold">₦{((order.productPrice || order.product?.price || 0) * (order.quantity || 1)).toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Shipping & Payment */}
-          <div className="grid md:grid-cols-2 gap-6">
-
-            <div className="bg-white rounded-lg border border-border p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Truck className="w-5 h-5" />
-                Shipping Information
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-ink-secondary">Hostel</p>
-                  <p className="font-medium">{order.deliveryHostel || 'Not specified'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-ink-secondary">Room</p>
-                  <p className="font-medium">{order.deliveryRoom || 'Not specified'}</p>
-                </div>
-                {order.deliveryLandmark && (
-                  <div>
-                    <p className="text-sm text-ink-secondary">Landmark</p>
-                    <p className="font-medium">{order.deliveryLandmark}</p>
-                  </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg leading-snug text-ink">{order.product?.name || 'Product'}</h3>
+                {order.product?.description && (
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-secondary">
+                    {order.product.description}
+                  </p>
                 )}
-                {order.product?.landmark && order.deliveryLandmark && (
-                  <div>
-                    <p className="text-sm text-ink-secondary">Delivery Route</p>
-                    <p className="font-medium inline-flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-ink-muted" />
-                      {order.product.landmark} <ArrowRight className="w-3.5 h-3.5 text-ink-muted" /> {order.deliveryLandmark}
+
+                <div className="mt-6 grid grid-cols-3 gap-px border border-border bg-border">
+                  <div className="bg-card px-3 py-3">
+                    <p className="ui-mono ui-mono-sm text-ink-muted">Price</p>
+                    <p className="ui-figure mt-1.5 text-[15px] text-ink">
+                      ₦{(order.productPrice || order.product?.price || 0).toLocaleString()}
                     </p>
                   </div>
-                )}
-                <div>
-                  <p className="text-sm text-ink-secondary">Phone</p>
-                  <p className="font-medium">{order.deliveryPhone || 'Not specified'}</p>
-                </div>
-                {order.orderNote && (
-                  <div>
-                    <p className="text-sm text-ink-secondary">Note to rider</p>
-                    <p className="font-medium text-warning bg-warning/10 rounded-lg px-3 py-2 text-sm">{order.orderNote}</p>
+                  <div className="bg-card px-3 py-3">
+                    <p className="ui-mono ui-mono-sm text-ink-muted">Qty</p>
+                    <p className="ui-figure mt-1.5 text-[15px] text-ink">{order.quantity || 1}</p>
                   </div>
-                )}
+                  <div className="bg-card px-3 py-3">
+                    <p className="ui-mono ui-mono-sm text-ink-muted">Total</p>
+                    <p className="ui-figure mt-1.5 text-[15px] text-ink">
+                      ₦{((order.productPrice || order.product?.price || 0) * (order.quantity || 1)).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
+          </section>
 
-            <div className="bg-white rounded-lg border border-border p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Payment Information
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-ink-secondary">Subtotal</p>
-                  <p className="font-medium">₦{(order.productPrice || 0).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-ink-secondary">Delivery Fee</p>
-                  <p className="font-medium">₦{(order.deliveryFee || 0).toLocaleString()}</p>
-                </div>
-                <div className="pt-2 border-t">
-                  <p className="text-sm text-ink-secondary">Total Paid</p>
-                  <p className="font-semibold text-lg">₦{(order.totalAmount || 0).toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-ink-secondary">Payment Status</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {order.isPaid ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 text-success" />
-                        <span className="font-medium text-success">Paid</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-4 h-4 text-warning" />
-                        <span className="font-medium text-warning">Pending</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+          {/* Shipping & Payment */}
+          <div className="grid gap-6 md:grid-cols-2">
+
+            <section className="ui-panel">
+              <p className="ui-eyebrow mb-6">
+                <Truck className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Delivery
+              </p>
+              <div className="ui-divide">
+                <DataRow label="Hostel" value={order.deliveryHostel || 'Not specified'} />
+                <DataRow label="Room" value={order.deliveryRoom || 'Not specified'} />
+                {order.deliveryLandmark && (
+                  <DataRow label="Landmark" value={order.deliveryLandmark} />
+                )}
+                {order.product?.landmark && order.deliveryLandmark && (
+                  <DataRow
+                    label="Route"
+                    value={
+                      <span className="inline-flex flex-wrap items-center justify-end gap-1.5 text-sm">
+                        <MapPin className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
+                        {order.product.landmark}
+                        <ArrowRight className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
+                        {order.deliveryLandmark}
+                      </span>
+                    }
+                  />
+                )}
+                <DataRow label="Phone" value={order.deliveryPhone || 'Not specified'} />
               </div>
-            </div>
+
+              {order.orderNote && (
+                <div className="mt-5 border border-warning/25 bg-warning/5 px-3.5 py-3">
+                  <p className="ui-mono ui-mono-sm text-warning">Note to rider</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink">{order.orderNote}</p>
+                </div>
+              )}
+            </section>
+
+            <section className="ui-panel">
+              <p className="ui-eyebrow mb-6">
+                <CreditCard className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Payment
+              </p>
+              <div className="ui-divide">
+                <DataRow label="Subtotal" value={`₦${(order.productPrice || 0).toLocaleString()}`} />
+                <DataRow label="Delivery fee" value={`₦${(order.deliveryFee || 0).toLocaleString()}`} />
+                <DataRow
+                  label="Total paid"
+                  emphasis
+                  value={`₦${(order.totalAmount || 0).toLocaleString()}`}
+                />
+                <DataRow
+                  label="Status"
+                  value={
+                    order.isPaid ? (
+                      <Badge status="success" icon={CheckCircle}>Paid</Badge>
+                    ) : (
+                      <Badge status="warning" icon={Clock}>Pending</Badge>
+                    )
+                  }
+                />
+              </div>
+            </section>
           </div>
 
           {/* Reviews Section */}
           {(order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-            <div className="bg-white rounded-lg border border-border p-6">
-              <h2 className="text-lg font-semibold mb-6 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Reviews & Feedback
-              </h2>
+            <section className="ui-panel">
+              <p className="ui-eyebrow mb-6">
+                <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Feedback
+              </p>
 
-              <div className="flex items-center justify-between p-4 border border-border rounded-lg mb-4 bg-primary/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Package className="w-5 h-5 text-primary" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Rate this product</h3>
-                    <p className="text-sm text-ink-secondary">Share your experience with {order.product?.name}</p>
-                  </div>
-                </div>
-                {canReviewProduct ? (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => router.push(`/orders/${order.id}/review-product`)}
-                      className="flex items-center gap-2 bg-primary hover:brightness-95"
-                    >
-                      <Star className="w-4 h-4" strokeWidth={1.75} /> Review product
-                    </Button>
-                    <Button variant="ghost" onClick={() => setReviewModal({ isOpen: true, type: 'PRODUCT' })}>
-                      Quick Review
-                    </Button>
-                  </div>
-                ) : order.productReviews?.length > 0 ? (
-                  <span className="text-success font-medium flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" /> Product Reviewed
-                  </span>
-                ) : (
-                  <span className="text-ink-secondary text-sm">Review not available</span>
+              <div className="grid gap-px border border-border bg-border">
+                <ReviewPrompt
+                  icon={Package}
+                  title="Rate this product"
+                  description={`Share your experience with ${order.product?.name || 'this item'}.`}
+                  done={order.productReviews?.length > 0}
+                  doneLabel="Product reviewed"
+                  unavailableLabel="Review not available"
+                  action={
+                    canReviewProduct ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ink"
+                          onClick={() => router.push(`/orders/${order.id}/review-product`)}
+                          leftIcon={<Star className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                        >
+                          Review
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReviewModal({ isOpen: true, type: 'PRODUCT' })}
+                        >
+                          Quick
+                        </Button>
+                      </>
+                    ) : null
+                  }
+                />
+
+                <ReviewPrompt
+                  icon={User}
+                  title="Rate the seller"
+                  description={`How was dealing with ${order.seller?.name || 'the seller'}?`}
+                  done={order.reviews?.some((r: any) => r.type === 'SELLER')}
+                  doneLabel="Seller reviewed"
+                  unavailableLabel="Complete the product review first"
+                  action={
+                    canReviewSeller ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ink"
+                          onClick={() => router.push(`/orders/${order.id}/review-seller`)}
+                          leftIcon={<Star className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                        >
+                          Review
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setReviewModal({ isOpen: true, type: 'SELLER' })}
+                        >
+                          Quick
+                        </Button>
+                      </>
+                    ) : null
+                  }
+                />
+
+                {order.rider && (
+                  <ReviewPrompt
+                    icon={Truck}
+                    title="Rate the rider"
+                    description={`How was the delivery from ${order.rider.name}?`}
+                    done={order.reviews?.some((r: any) => r.type === 'RIDER')}
+                    doneLabel="Rider reviewed"
+                    unavailableLabel="Review not available"
+                    action={
+                      canReviewRider ? (
+                        <Button
+                          size="sm"
+                          variant="ink"
+                          onClick={() => setReviewModal({ isOpen: true, type: 'RIDER' })}
+                          leftIcon={<Star className="h-3.5 w-3.5" strokeWidth={1.75} />}
+                        >
+                          Review
+                        </Button>
+                      ) : null
+                    }
+                  />
                 )}
               </div>
-
-              <div className="flex items-center justify-between p-4 border rounded-lg mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Rate the Seller</h3>
-                    <p className="text-sm text-ink-secondary">How was your experience with {order.seller?.name || 'the seller'}?</p>
-                  </div>
-                </div>
-                {canReviewSeller ? (
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => router.push(`/orders/${order.id}/review-seller`)}
-                      className="flex items-center gap-2"
-                    >
-                      <Star className="w-4 h-4" /> Review Seller
-                    </Button>
-                    <Button variant="ghost" onClick={() => setReviewModal({ isOpen: true, type: 'SELLER' })}>
-                      Quick Review
-                    </Button>
-                  </div>
-                ) : order.reviews?.some((r: any) => r.type === 'SELLER') ? (
-                  <span className="text-success font-medium flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" /> Seller Reviewed
-                  </span>
-                ) : (
-                  <span className="text-ink-secondary text-sm">Complete product review first</span>
-                )}
-              </div>
-
-              {order.rider && (
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-success/10 rounded-lg">
-                      <Truck className="w-5 h-5 text-success" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Rate the Rider</h3>
-                      <p className="text-sm text-ink-secondary">How was your delivery with {order.rider.name}?</p>
-                    </div>
-                  </div>
-                  {canReviewRider ? (
-                    <Button onClick={() => setReviewModal({ isOpen: true, type: 'RIDER' })} className="flex items-center gap-2">
-                      <Star className="w-4 h-4" /> Review Rider
-                    </Button>
-                  ) : order.reviews?.some((r: any) => r.type === 'RIDER') ? (
-                    <span className="text-success font-medium flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4" /> Rider Reviewed
-                    </span>
-                  ) : (
-                    <span className="text-ink-secondary text-sm">Review not available</span>
-                  )}
-                </div>
-              )}
 
               {((order.reviews && order.reviews.length > 0) || (order.productReviews && order.productReviews.length > 0)) && (
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="font-semibold mb-4">Your Reviews</h3>
+                <div className="mt-8 border-t border-border pt-7">
+                  <p className="ui-eyebrow mb-5">Your reviews</p>
                   <ReviewList reviews={[...(order.reviews || []), ...(order.productReviews || [])]} />
                 </div>
               )}
-            </div>
+            </section>
           )}
         </div>
 
         {/* ── Right column ──────────────────────────────────────────────────── */}
-        <div className="space-y-6">
+        <div className="space-y-8">
 
           {/* Buyer Card */}
-          <div className="bg-white rounded-lg border border-border p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Buyer Information
-            </h3>
-            <div className="flex items-center gap-3">
-              {order.buyer?.profilePhoto ? (
-                <img src={order.buyer.profilePhoto} alt={order.buyer.name || 'Buyer'} className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
-                  <User className="w-6 h-6 text-ink-secondary" />
-                </div>
-              )}
-              <div>
-                <h4 className="font-medium">{order.buyer?.name || 'Anonymous'}</h4>
-                <p className="text-sm text-ink-secondary">{order.buyer?.phone || order.buyer?.email || ''}</p>
-              </div>
-            </div>
-          </div>
+          <PartyCard
+            eyebrow="Buyer"
+            name={order.buyer?.name || 'Anonymous'}
+            contact={order.buyer?.phone || order.buyer?.email || ''}
+            photo={order.buyer?.profilePhoto}
+          />
 
           {/* Seller Card */}
-          <div className="bg-white rounded-lg border border-border p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Seller Information
-            </h3>
-            <div className="flex items-center gap-3 mb-4">
-              {order.seller?.profilePhoto ? (
-                <img src={order.seller.profilePhoto} alt={order.seller.name || 'Seller'} className="w-12 h-12 rounded-full object-cover" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
-                  <User className="w-6 h-6 text-ink-secondary" />
-                </div>
-              )}
-              <div>
-                <Link href={`/seller/${order.seller?.id}`} className="font-medium text-primary hover:underline">
-                  {order.seller?.name || 'Seller'}
-                </Link>
-                <p className="text-sm text-ink-secondary">{order.seller?.phone || order.seller?.email || ''}</p>
-              </div>
-            </div>
+          <PartyCard
+            eyebrow="Seller"
+            name={order.seller?.name || 'Seller'}
+            contact={order.seller?.phone || order.seller?.email || ''}
+            photo={order.seller?.profilePhoto}
+            href={order.seller?.id ? `/seller/${order.seller.id}` : undefined}
+          >
             <RatingBadge
               rating={order.seller?.avgRating || 0}
               reviewCount={order.seller?.totalReviews || 0}
               trustLevel={order.seller?.trustLevel || 'BRONZE'}
             />
-            <Button variant="outline" size="sm" className="w-full mt-4" onClick={() => router.push(`/seller/${order.seller?.id}`)}>
-              View Seller Profile
+            <Button
+              variant="secondary"
+              size="sm"
+              fullWidth
+              className="mt-4"
+              onClick={() => router.push(`/seller/${order.seller?.id}`)}
+            >
+              View seller profile
             </Button>
-          </div>
+          </PartyCard>
 
           {/* Rider Card */}
           {order.rider && (
-            <div className="bg-white rounded-lg border border-border p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <Truck className="w-5 h-5" />
-                Rider Information
-              </h3>
-              <div className="flex items-center gap-3 mb-4">
-                {order.rider.profilePhoto ? (
-                  <img src={order.rider.profilePhoto} alt={order.rider.name || 'Rider'} className="w-12 h-12 rounded-full object-cover" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-border flex items-center justify-center">
-                    <User className="w-6 h-6 text-ink-secondary" />
-                  </div>
-                )}
-                <div>
-                  <h4 className="font-medium">{order.rider.name}</h4>
-                  <p className="text-sm text-ink-secondary">{order.rider.phone || order.rider.email || ''}</p>
-                </div>
-              </div>
+            <PartyCard
+              eyebrow="Rider"
+              name={order.rider.name}
+              contact={order.rider.phone || order.rider.email || ''}
+              photo={order.rider.profilePhoto}
+            >
               <RatingBadge
                 rating={order.rider.avgRating || 0}
                 reviewCount={order.rider.totalReviews || 0}
                 trustLevel={order.rider.trustLevel || 'BRONZE'}
               />
-            </div>
+            </PartyCard>
           )}
 
           {/* ── Dispute card ──────────────────────────────────────────────── */}
           {userRole === 'BUYER' && order.rider && LIVE_TRACKING_STATUSES.includes(order.status) && (
-            <div className="bg-white rounded-lg border border-border p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Navigation className="w-5 h-5 text-primary" />
-                  Rider Live Map
-                </h3>
+            <section className="ui-panel">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <p className="ui-eyebrow">
+                  <Navigation className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  Live map
+                </p>
                 {liveTrackingLoading && (
-                  <span className="text-xs text-ink-secondary flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Loading
+                  <span className="ui-mono ui-mono-sm inline-flex flex-shrink-0 items-center gap-1.5 text-ink-muted">
+                    <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
+                    Syncing
                   </span>
                 )}
               </div>
 
               {liveTrackingError && (
-                <p className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 mb-3">
+                <p className="mb-4 border border-danger/25 bg-danger/5 px-3.5 py-2.5 text-xs text-danger">
                   {liveTrackingError}
                 </p>
               )}
 
               {liveTracking?.latestPoint ? (
                 <>
-                  <div className="rounded-xl overflow-hidden border border-border mb-3">
+                  <div className="overflow-hidden border border-border">
                     <iframe
                       title="Rider live location map"
                       src={liveMapUrl || undefined}
-                      className="w-full h-56"
+                      className="h-56 w-full"
                       loading="lazy"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-primary/10 rounded-lg px-3 py-2">
-                      <p className="text-[11px] text-primary font-semibold">Last update</p>
-                      <p className="text-xs font-semibold text-primary">
+
+                  <div className="mt-4 grid grid-cols-2 gap-px border border-border bg-border">
+                    <div className="bg-card px-3 py-2.5">
+                      <p className="ui-mono ui-mono-sm text-ink-muted">Last ping</p>
+                      <p className="ui-figure mt-1 text-[13px] text-ink">
                         {format(new Date(liveTracking.latestPoint.at), 'h:mm:ss a')}
                       </p>
                     </div>
-                    <div className="bg-primary/10 rounded-lg px-3 py-2">
-                      <p className="text-[11px] text-primary font-semibold">Route points</p>
-                      <p className="text-xs font-semibold text-primary">{liveTracking.points?.length || 0} captured</p>
+                    <div className="bg-card px-3 py-2.5">
+                      <p className="ui-mono ui-mono-sm text-ink-muted">Route points</p>
+                      <p className="ui-figure mt-1 text-[13px] text-ink">
+                        {liveTracking.points?.length || 0}
+                      </p>
                     </div>
                   </div>
+
                   {openMapUrl && (
                     <a
                       href={openMapUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-lg border border-primary/30 text-primary font-semibold text-sm hover:bg-primary/10 transition-colors"
+                      className="ui-mono ui-mono-sm mt-4 inline-flex w-full items-center justify-center gap-2 border border-border py-3 text-ink-secondary transition-colors hover:border-ink/25 hover:text-ink"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
                       Open in Google Maps
                     </a>
                   )}
                 </>
               ) : (
-                <p className="text-sm text-ink-secondary bg-surface border border-border rounded-lg px-3 py-2">
-                  Waiting for rider location ping...
+                <p className="border border-dashed border-border bg-surface px-3.5 py-3 text-sm text-ink-secondary">
+                  Waiting for the rider&apos;s first location ping…
                 </p>
               )}
 
               {liveTracking?.checkpoints?.length > 0 && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs uppercase tracking-wide text-ink-secondary font-semibold mb-2 flex items-center gap-1.5">
-                    <Route className="w-3.5 h-3.5" />
-                    Delivery checkpoints
+                <div className="mt-6 border-t border-border pt-5">
+                  <p className="ui-eyebrow mb-4">
+                    <Route className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    Checkpoints
                   </p>
-                  <div className="space-y-2 max-h-40 overflow-auto">
+                  <div className="ui-divide max-h-44 overflow-auto border border-border">
                     {[...liveTracking.checkpoints].reverse().slice(0, 5).map((checkpoint: any) => (
-                      <div key={checkpoint.id} className="flex items-start justify-between gap-2 bg-surface rounded-lg px-3 py-2">
-                        <p className="text-xs text-ink-secondary font-medium">{getCheckpointLabel(checkpoint)}</p>
-                        <span className="text-[11px] text-ink-secondary whitespace-nowrap">
+                      <div
+                        key={checkpoint.id}
+                        className="flex items-start justify-between gap-3 bg-card px-3.5 py-2.5"
+                      >
+                        <p className="text-xs text-ink">{getCheckpointLabel(checkpoint)}</p>
+                        <span className="ui-mono ui-mono-sm whitespace-nowrap text-ink-muted">
                           {format(new Date(checkpoint.at), 'h:mm a')}
                         </span>
                       </div>
@@ -898,114 +889,103 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           )}
 
           {order.dispute ? (
-            <div className="bg-white rounded-lg border border-warning/30 p-6">
-              <h3 className="font-semibold mb-1 flex items-center gap-2 text-warning">
-                <Shield className="w-5 h-5" />
-                Dispute Filed
-              </h3>
-              <p className="text-sm text-ink-secondary mb-4">
-                A dispute has been opened for this order. Track your case and
-                communicate with the support team.
+            <section className="ui-panel border-warning/30">
+              <p className="ui-eyebrow mb-4 text-warning">
+                <Shield className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Dispute filed
               </p>
-              <div className="mb-4">
-                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getDisputeStatusBadge(order.dispute.status)}`}>
+              <p className="text-sm leading-relaxed text-ink-secondary">
+                A dispute has been opened on this order. Track the case and talk to the support
+                team from there.
+              </p>
+              <div className="mt-5">
+                <Badge status={getDisputeStatusTone(order.dispute.status)}>
                   {getDisputeStatusLabel(order.dispute.status)}
-                </span>
+                </Badge>
               </div>
               <Button
+                variant="ink"
+                fullWidth
+                className="mt-6"
                 onClick={() => router.push(`/disputes/${order.dispute.id}`)}
-                className="w-full bg-warning hover:brightness-95 text-white flex items-center justify-center gap-2"
+                leftIcon={<Shield className="h-4 w-4" strokeWidth={1.75} />}
               >
-                <Shield className="w-4 h-4" />
-                Track Dispute
+                Track dispute
               </Button>
 
               {canSellerConfirmReturn() && (
                 <Button
+                  variant="success"
+                  fullWidth
+                  className="mt-3"
                   onClick={handleSellerConfirmReturn}
-                  disabled={confirmingReturn}
-                  className="w-full mt-3 bg-success hover:brightness-95 text-white flex items-center justify-center gap-2"
+                  isLoading={confirmingReturn}
+                  loadingText="Confirming…"
+                  leftIcon={<CheckCircle className="h-4 w-4" strokeWidth={1.75} />}
                 >
-                  {confirmingReturn
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming...</>
-                    : <><CheckCircle className="w-4 h-4" /> I Received Returned Item</>
-                  }
+                  I received the returned item
                 </Button>
               )}
-            </div>
+            </section>
           ) : (
             userRole === 'BUYER' &&
             (order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-              <div className="bg-white rounded-lg border border-border p-6">
-                <h3 className="font-semibold mb-1 flex items-center gap-2 text-ink-secondary">
-                  <AlertTriangle className="w-5 h-5 text-warning" />
+              <section className="ui-panel">
+                <p className="ui-eyebrow mb-4">
+                  <AlertTriangle className="h-3.5 w-3.5 text-warning" strokeWidth={1.75} />
                   Something wrong?
-                </h3>
-                <p className="text-sm text-ink-secondary mb-4">
-                  If there's an issue with this order, you can open a dispute
-                  within 48 hours of delivery.
+                </p>
+                <p className="text-sm leading-relaxed text-ink-secondary">
+                  If there is a problem with this order, you can open a dispute within 48 hours of
+                  delivery.
                 </p>
                 <Button
-                  variant="outline"
+                  variant="secondary"
+                  fullWidth
+                  className="mt-6 border-warning/40 text-warning hover:bg-warning/5 hover:border-warning/60"
                   onClick={() => router.push(`/orders/${order.id}/dispute`)}
-                  className="w-full border-warning/30 text-warning hover:bg-warning/10"
                 >
-                  Open a Dispute
+                  Open a dispute
                 </Button>
-              </div>
+              </section>
             )
           )}
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg border border-border p-6">
-            <h3 className="font-semibold mb-4">Order Summary</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-ink-secondary">Subtotal</span>
-                <span>₦{(order.productPrice || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ink-secondary">Delivery Fee</span>
-                <span>₦{(order.deliveryFee || 0).toLocaleString()}</span>
-              </div>
-              <div className="border-t pt-3 flex justify-between font-semibold">
-                <span>Total</span>
-                <span>₦{(order.totalAmount || 0).toLocaleString()}</span>
-              </div>
+          <section className="ui-panel">
+            <p className="ui-eyebrow mb-5">Summary</p>
+            <div className="ui-divide">
+              <DataRow label="Subtotal" value={`₦${(order.productPrice || 0).toLocaleString()}`} />
+              <DataRow label="Delivery fee" value={`₦${(order.deliveryFee || 0).toLocaleString()}`} />
+              <DataRow label="Total" emphasis value={`₦${(order.totalAmount || 0).toLocaleString()}`} />
             </div>
-          </div>
+          </section>
 
           {/* Review Status Summary */}
           {(order.status === 'DELIVERED' || order.status === 'COMPLETED') && (
-            <div className="bg-white rounded-lg border border-border p-6">
-              <h3 className="font-semibold mb-4">Review Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-ink-secondary">Product Review</span>
-                  <span className={`px-2 py-1 rounded text-xs ${order.productReviews?.length > 0 ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                    {order.productReviews?.length > 0 ? 'Completed' : 'Pending'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-ink-secondary">Seller Review</span>
-                  <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'SELLER') ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                    {order.reviews?.some((r: any) => r.type === 'SELLER') ? 'Completed' : 'Pending'}
-                  </span>
-                </div>
+            <section className="ui-panel">
+              <p className="ui-eyebrow mb-5">Review status</p>
+              <div className="ui-divide">
+                <DataRow
+                  label="Product"
+                  value={<ReviewStatusBadge done={order.productReviews?.length > 0} />}
+                />
+                <DataRow
+                  label="Seller"
+                  value={<ReviewStatusBadge done={order.reviews?.some((r: any) => r.type === 'SELLER')} />}
+                />
                 {order.rider && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-ink-secondary">Rider Review</span>
-                    <span className={`px-2 py-1 rounded text-xs ${order.reviews?.some((r: any) => r.type === 'RIDER') ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                      {order.reviews?.some((r: any) => r.type === 'RIDER') ? 'Completed' : 'Pending'}
-                    </span>
-                  </div>
+                  <DataRow
+                    label="Rider"
+                    value={<ReviewStatusBadge done={order.reviews?.some((r: any) => r.type === 'RIDER')} />}
+                  />
                 )}
               </div>
-            </div>
+            </section>
           )}
         </div>
       </div>
@@ -1036,6 +1016,105 @@ export default function OrderDetailPage() {
           onReviewSubmitted={() => { fetchOrder(); setReviewModal({ isOpen: false, type: null }) }}
         />
       )}
+      </Shell>
     </div>
   );
+}
+
+/* ── Local pieces ─────────────────────────────────────────────────────────────
+   These three shapes each repeated two or three times in the markup above, so
+   they read better named than inlined. */
+
+/** One "rate the X" row: identity on the left, the action or its resolution on the right. */
+function ReviewPrompt({
+  icon: Icon,
+  title,
+  description,
+  done,
+  doneLabel,
+  unavailableLabel,
+  action,
+}: {
+  icon: React.ElementType
+  title: string
+  description: string
+  done?: boolean
+  doneLabel: string
+  unavailableLabel: string
+  action: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-4 bg-card p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="flex min-w-0 items-start gap-3.5">
+        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center border border-border bg-surface">
+          <Icon className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-medium text-ink">{title}</h3>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-secondary">{description}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-shrink-0 items-center gap-2 sm:pl-4">
+        {action ? (
+          action
+        ) : done ? (
+          <Badge status="success" icon={CheckCircle}>{doneLabel}</Badge>
+        ) : (
+          <span className="text-xs text-ink-muted">{unavailableLabel}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Buyer / seller / rider identity panel. */
+function PartyCard({
+  eyebrow,
+  name,
+  contact,
+  photo,
+  href,
+  children,
+}: {
+  eyebrow: string
+  name: string
+  contact?: string
+  photo?: string | null
+  href?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <section className="ui-panel">
+      <p className="ui-eyebrow mb-5">{eyebrow}</p>
+      <div className="flex items-center gap-3.5">
+        {photo ? (
+          <img src={photo} alt="" className="h-12 w-12 flex-shrink-0 object-cover" />
+        ) : (
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center border border-border bg-surface">
+            <User className="h-5 w-5 text-ink-muted" strokeWidth={1.5} />
+          </div>
+        )}
+        <div className="min-w-0">
+          {href ? (
+            <Link href={href} className="text-sm font-medium text-ink transition-colors hover:text-primary">
+              {name}
+            </Link>
+          ) : (
+            <h4 className="text-sm font-medium text-ink">{name}</h4>
+          )}
+          {contact && <p className="mt-0.5 truncate text-xs text-ink-secondary">{contact}</p>}
+        </div>
+      </div>
+      {children && <div className="mt-5">{children}</div>}
+    </section>
+  )
+}
+
+function ReviewStatusBadge({ done }: { done?: boolean }) {
+  return done ? (
+    <Badge status="success">Completed</Badge>
+  ) : (
+    <Badge status="warning">Pending</Badge>
+  )
 }

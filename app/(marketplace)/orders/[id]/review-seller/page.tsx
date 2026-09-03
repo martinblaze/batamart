@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Star, ArrowLeft, User, CheckCircle, AlertCircle, Store } from 'lucide-react';
+import { CheckCircle2, User } from 'lucide-react';
+import { Shell, EmptyState } from '@/components/ui/Shell';
+import { ReviewComposer, ReviewSubject } from '@/components/reviews/ReviewComposer';
 
 interface Seller {
   id: string;
@@ -34,9 +36,9 @@ export default function ReviewSellerPage() {
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
-  const [hoverRating, setHoverRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -69,7 +71,7 @@ export default function ReviewSellerPage() {
         // Check if seller already reviewed
         const hasSellerReview = data.reviews && data.reviews.some((r: any) => r.type === 'SELLER');
         if (hasSellerReview) {
-          setError('You have already reviewed this seller. Redirecting...');
+          setError('You have already reviewed this seller. Redirecting…');
           setTimeout(() => {
             router.push('/orders');
           }, 3000);
@@ -114,9 +116,10 @@ export default function ReviewSellerPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Show success message and redirect
-        alert('Thank you for your review!');
-        router.push('/orders');
+        // An alert() here interrupted the last step of the flow; show the
+        // confirmation in place instead, then hand off to the orders list.
+        setDone(true);
+        setTimeout(() => router.push('/orders'), 1800);
       } else {
         setError(data.error || 'Failed to submit review');
       }
@@ -134,178 +137,91 @@ export default function ReviewSellerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
+      </div>
+    );
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <div className="flex flex-col items-center border border-border bg-card px-6 py-20 text-center">
+            <CheckCircle2 className="mb-6 h-10 w-10 text-success" strokeWidth={1.5} />
+            <p className="ui-eyebrow mb-4 justify-center before:hidden after:hidden">Thank you</p>
+            <h1 className="text-[clamp(1.5rem,4vw,2rem)] leading-tight text-ink">
+              Your review is in
+            </h1>
+            <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-ink-secondary">
+              Feedback like yours is what keeps campus sellers accountable. Taking you back to your
+              orders…
+            </p>
+          </div>
+        </Shell>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <User className="w-16 h-16 mx-auto text-ink-muted mb-4" />
-        <h1 className="text-2xl font-semibold mb-2">Order Not Found</h1>
-        <p className="text-ink-secondary mb-6">The order you're looking for doesn't exist.</p>
-        <Button onClick={() => router.push('/orders')} className="mt-4">
-          Back to Orders
-        </Button>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <EmptyState
+            icon={User}
+            title="Order not found"
+            description="This order doesn't exist, or it isn't one you have access to."
+            action={
+              <Button variant="ink" onClick={() => router.push('/orders')}>
+                Back to orders
+              </Button>
+            }
+          />
+        </Shell>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-[#000000] py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/orders/${params.id}`)}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Order
-        </Button>
-
-        <div className="bg-white rounded-2xl shadow-soft p-8">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 bg-success/10 rounded-full">
-              <Store className="w-8 h-8 text-success" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-ink">Review Seller</h1>
-              <p className="text-ink-secondary">
-                Share your experience with {order.seller?.name}
-              </p>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg">
-              <div className="flex items-center gap-2 text-danger">
-                <AlertCircle className="w-5 h-5" />
-                <p className="font-medium">{error}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Seller Info */}
-          <div className="bg-surface rounded-xl p-6 mb-8">
-            <div className="flex items-center gap-4">
-              {order.seller?.profilePhoto ? (
-                <img
-                  src={order.seller.profilePhoto}
-                  alt={order.seller.name}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-soft"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center">
-                  <User className="w-8 h-8 text-ink-secondary" />
-                </div>
-              )}
-              <div>
-                <h3 className="font-semibold text-lg text-ink">{order.seller?.name}</h3>
-                <p className="text-ink-secondary text-sm mt-1">
-                  {order.seller?.email || 'Seller'}
-                </p>
-                <p className="text-ink-secondary text-sm mt-1">
-                  Product: {order.product?.name}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Rating Section */}
-          <div className="mb-8">
-            <h3 className="font-semibold text-ink mb-4">
-              How would you rate this seller?
-            </h3>
-            <div className="flex gap-2 mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoverRating(star)}
-                  onMouseLeave={() => setHoverRating(0)}
-                  className="p-2 hover:scale-110 transition-transform"
-                >
-                  <Star
-                    className={`w-12 h-12 ${star <= (hoverRating || rating)
-                        ? 'fill-warning text-warning'
-                        : 'text-ink-muted'
-                      }`}
-                  />
-                </button>
-              ))}
-            </div>
-            <p className="text-ink-secondary text-sm">
-              {rating === 0 ? 'Select a rating' : `You rated ${rating} star${rating > 1 ? 's' : ''}`}
-            </p>
-          </div>
-
-          {/* Comment Section */}
-          <div className="mb-8">
-            <h3 className="font-semibold text-ink mb-4">
-              Tell us more about your experience (Optional)
-            </h3>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="How was the seller's communication? Was the product as described? Would you buy from them again?"
-              className="w-full h-32 p-4 border border-border rounded-lg focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
-              maxLength={300}
-            />
-            <div className="flex justify-end mt-2">
-              <p className="text-sm text-ink-secondary">
-                {comment.length}/300 characters
-              </p>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={skipReview}
-              className="flex-1 py-3 text-ink-secondary hover:text-ink"
-            >
-              Skip Review
-            </Button>
-            <Button
-              onClick={submitReview}
-              disabled={submitting || rating === 0}
-              className="flex-1 py-3 bg-success hover:brightness-95 text-white font-semibold"
-            >
-              {submitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                  Submitting...
-                </>
-              ) : (
-                'Submit Review'
-              )}
-            </Button>
-          </div>
-
-          {/* Review Benefits */}
-          <div className="mt-8 pt-8 border-t border-border">
-            <h4 className="font-semibold text-ink mb-3">Why Seller Reviews Matter</h4>
-            <ul className="space-y-2 text-sm text-ink-secondary">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                Help maintain quality standards in the marketplace
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                Recognize excellent sellers and improve trust
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                Provide valuable feedback for seller improvement
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ReviewComposer
+      eyebrow="Step 02 — Seller"
+      title={
+        <>
+          Rate the <span className="ui-serif">seller</span>
+        </>
+      }
+      standfirst={`How was dealing with ${order.seller?.name || 'this seller'}? Communication, packaging, and whether the item matched the listing.`}
+      backHref={`/orders/${params.id}`}
+      subject={
+        <ReviewSubject
+          round
+          image={order.seller?.profilePhoto}
+          name={order.seller?.name || 'Seller'}
+          meta={
+            <>
+              {order.seller?.email && <p>{order.seller.email}</p>}
+              <p>Ordered: {order.product?.name}</p>
+            </>
+          }
+        />
+      }
+      ratingQuestion="How would you rate this seller?"
+      commentPlaceholder="Was communication good? Did the item match the description? Would you buy from them again?"
+      rating={rating}
+      onRatingChange={setRating}
+      comment={comment}
+      onCommentChange={setComment}
+      error={error}
+      submitting={submitting}
+      submitLabel="Submit review"
+      onSubmit={submitReview}
+      onSkip={skipReview}
+      benefitsTitle="Why this matters"
+      benefits={[
+        'Sets the standard other sellers on campus are held to.',
+        'Recognises the people who consistently get it right.',
+        'Gives buyers a reason to trust someone they have never met.',
+      ]}
+    />
   );
 }

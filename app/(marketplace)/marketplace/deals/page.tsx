@@ -11,6 +11,8 @@ import {
   UtensilsCrossed, Dumbbell, Car, BookOpen, Ticket, Baby, Palette,
   Zap, TrendingDown, Trophy, Wallet, type LucideIcon,
 } from 'lucide-react'
+import { getCategoryDisplayInfo } from '@/lib/variants'
+import { Badge } from '@/components/ui/Badge'
 
 // ─────────────────────────────────────────────
 // Constants
@@ -93,7 +95,7 @@ const DEALS_CSS = `
   }
 
   .dc-hero {
-    background: var(--color-primary);
+    background: var(--ui-slab);
   }
 `
 
@@ -141,22 +143,22 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <Star key={i} className={`w-3 h-3 ${i <= Math.round(rating) ? 'text-warning fill-warning' : 'text-border fill-border'}`} />
+        <Star key={i} className={`h-3 w-3 ${i <= Math.round(rating) ? 'fill-warning text-warning' : 'fill-border text-border'}`} strokeWidth={0} />
       ))}
-      <span className="text-xs font-semibold text-ink-muted ml-0.5">{rating.toFixed(1)}</span>
+      <span className="ml-1 text-[11px] tabular-nums text-ink-muted">{rating.toFixed(1)}</span>
     </div>
   )
 }
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-border shadow-soft">
-      <div className="aspect-square dc-shimmer" />
-      <div className="p-3 space-y-2">
-        <div className="h-2.5 dc-shimmer rounded-full w-1/2" />
-        <div className="h-3.5 dc-shimmer rounded-full w-full" />
-        <div className="h-3.5 dc-shimmer rounded-full w-3/4" />
-        <div className="h-5   dc-shimmer rounded-full w-1/3 mt-3" />
+    <div>
+      <div className="ui-skeleton aspect-[4/5]" />
+      <div className="mt-3.5 space-y-2">
+        <div className="ui-skeleton h-2.5 w-1/2" />
+        <div className="ui-skeleton h-3.5 w-full" />
+        <div className="ui-skeleton h-3.5 w-3/4" />
+        <div className="ui-skeleton mt-3 h-5 w-1/3" />
       </div>
     </div>
   )
@@ -175,99 +177,81 @@ function DealCard({ product, onClick, delay = 0 }: { product: any; onClick: () =
   return (
     <div
       onClick={onClick}
-      className="dc-card dc-enter bg-white rounded-2xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
+      className="ui-tile dc-enter group flex cursor-pointer flex-col"
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-surface overflow-hidden">
-        <img src={product.images?.[0] || '/placeholder.png'} alt={product.name} className="dc-img w-full h-full object-cover" />
+      <div className="ui-tile__media aspect-[4/5]">
+        <img
+          src={product.images?.[0] || '/placeholder.png'}
+          alt={product.name}
+          loading="lazy"
+          className="h-full w-full object-cover"
+        />
 
-        {/* Discount badge */}
-        {discount > 0 && (
-          <div className="absolute top-2.5 right-2.5">
-            <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-primary">
-              <span className="text-white font-semibold text-[13px] leading-none">-{discount}%</span>
-              <span className="text-white/80 font-medium text-[8px] leading-none mt-0.5">OFF</span>
-            </div>
-          </div>
-        )}
-
-        {/* Label badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
-          {isHot && !product.isDeal && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT
-            </span>
-          )}
-          {discount >= 30 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> MEGA DEAL
-            </span>
-          )}
-          {discount >= 20 && discount < 30 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Zap className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT DEAL
-            </span>
-          )}
-          {discount >= 12 && discount < 20 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Tag className="w-2.5 h-2.5" strokeWidth={1.75} /> DEAL
-            </span>
-          )}
+        {/* One flag, not four. The discount is the story on this page, so the
+            percentage carries it and the tier words are dropped. */}
+        <div className="ui-tile__flags">
+          {discount > 0 ? (
+            <Badge status="ink">
+              <Tag className="h-2.5 w-2.5" strokeWidth={2} /> {discount}% off
+            </Badge>
+          ) : isHot ? (
+            <Badge status="ink">
+              <Flame className="h-2.5 w-2.5" strokeWidth={2} /> Hot
+            </Badge>
+          ) : null}
         </div>
 
         {product.images?.length > 1 && (
-          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-semibold backdrop-blur-sm">
-            {product.images.length} photos
+          <div className="ui-mono ui-mono-sm absolute bottom-2 right-2 bg-ink/70 px-2 py-1 text-background backdrop-blur-sm">
+            {product.images.length}
           </div>
         )}
 
-        {/* Quick actions */}
-        <div className="dc-quick absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => e.stopPropagation()} className="w-7 h-7 bg-white/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
-            <Heart className="w-3.5 h-3.5 text-ink-secondary hover:text-primary" />
-          </button>
-          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-white/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
-            <Eye className="w-3.5 h-3.5 text-ink-secondary" />
+        {/* Quick look — desktop hover only, via .ui-tile__peek */}
+        <div className="ui-tile__peek">
+          <button
+            onClick={e => { e.stopPropagation(); onClick() }}
+            className="ui-mono ui-mono-sm inline-flex w-full items-center justify-center gap-1.5 bg-ink px-3 py-2 text-background"
+          >
+            <Eye className="h-3 w-3" strokeWidth={2} /> Quick look
           </button>
         </div>
       </div>
 
       {/* Info */}
-      <div className="p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-0.5">
+      <div className="flex flex-1 flex-col pt-3.5">
+        <p className="ui-mono ui-mono-sm line-clamp-1 text-ink-muted">
           {(() => {
             const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
             return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
           })()}
         </p>
-        <h3 className="font-semibold text-ink line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
-
-        {/* Savings pill */}
-        {savings > 0 && (
-          <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full ring-1 ${tier.bg} ${tier.color} ${tier.ring} text-[10px] font-semibold self-start`}>
-            <Tag className="w-2.5 h-2.5" /> Save {fmt(savings)}
-          </div>
-        )}
+        <h3 className="mt-1.5 line-clamp-2 flex-1 text-[13px] font-medium leading-snug text-ink sm:text-sm">
+          {product.name}
+        </h3>
 
         {/* Price row */}
-        <div className="mt-2 flex items-baseline gap-2 flex-wrap">
-          <span className="text-primary font-semibold text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
+          <span className="ui-figure text-base text-ink">{fmt(product.price)}</span>
           {originalPrice && (
-            <span className="text-ink-muted font-medium text-[11px] line-through">{fmt(originalPrice)}</span>
+            <span className="text-[11px] text-ink-muted line-through">{fmt(originalPrice)}</span>
           )}
         </div>
 
-        <StarRating rating={product.seller?.avgRating || 0} />
+        {savings > 0 && (
+          <p className="mt-1 text-[11px] font-medium text-success">Save {fmt(savings)}</p>
+        )}
+
+        <div className="mt-2.5">
+          <StarRating rating={product.seller?.avgRating || 0} />
+        </div>
 
         {/* Seller row */}
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-border">
-          <div className="flex items-center gap-1 min-w-0">
-            <span className="text-[10px] font-semibold text-ink-secondary truncate">{product.seller?.name}</span>
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-semibold ring-1 ring-primary/20 flex-shrink-0">
-              <BadgeCheck className="w-2.5 h-2.5" /> Verified
-            </span>
-          </div>
+        <div className="mt-3 flex min-w-0 items-center gap-1.5 border-t border-border pt-3">
+          <span className="ui-mono ui-mono-sm truncate text-ink-muted">{product.seller?.name}</span>
+          <BadgeCheck className="h-3 w-3 flex-shrink-0 text-primary" strokeWidth={2} />
         </div>
       </div>
     </div>
@@ -314,7 +298,7 @@ function FilterPanel({
   const set = (key: keyof Filters, val: string | number) => onChange({ ...filters, [key]: val })
 
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-soft p-5 space-y-5">
+    <div className="bg-card rounded-2xl border border-border shadow-soft p-5 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-primary" />
@@ -485,16 +469,16 @@ function DealsStatsStrip({ deals }: { deals: any[] }) {
   const totalSavings = deals.reduce((s, p) => s + (p.marketPrice > p.price ? p.marketPrice - p.price : 0), 0)
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-px bg-white/20">
       {[
-        { label: 'Deals live', value: deals.length.toString(), sub: 'active right now', icon: Flame },
-        { label: 'Avg discount', value: `${avgDiscount}%`, sub: 'off market price', icon: TrendingDown },
-        { label: 'Max deal',  value: `${maxDiscount}%`, sub: 'biggest saving', icon: Trophy },
+        { label: 'Deals live', value: deals.length.toString(), sub: 'right now' },
+        { label: 'Avg discount', value: `${avgDiscount}%`, sub: 'off market' },
+        { label: 'Max deal',  value: `${maxDiscount}%`, sub: 'biggest saving' },
       ].map(s => (
-        <div key={s.label} className="bg-white/15 border border-white/20 rounded-xl p-3 text-center">
-          <s.icon className="w-4 h-4 text-white mx-auto mb-1" strokeWidth={1.75} />
-          <p className="text-lg font-semibold text-white">{s.value}</p>
-          <p className="text-[10px] font-medium text-white/70 mt-0.5">{s.sub}</p>
+        <div key={s.label} className="bg-transparent px-3 py-4 backdrop-blur-sm">
+          <p className="ui-figure text-[clamp(1.35rem,3vw,1.9rem)] leading-none text-white">{s.value}</p>
+          <p className="ui-mono ui-mono-sm mt-2.5 text-white/85">{s.label}</p>
+          <p className="mt-1 text-[10px] text-white/55">{s.sub}</p>
         </div>
       ))}
     </div>
@@ -617,33 +601,40 @@ export default function DealsPage() {
       {/* ── Hero ── */}
       <div className="dc-hero">
         {/* Back nav */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-white/80 hover:text-white transition-colors font-semibold text-sm"
+            className="group ui-mono ui-mono-sm inline-flex items-center gap-2 text-white/70 transition-colors hover:text-white"
           >
-            <ChevronLeft className="w-4 h-4" /> Back to Marketplace
+            <ChevronLeft
+              className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+              strokeWidth={2}
+            />
+            Marketplace
           </button>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6 space-y-4">
+        <div className="mx-auto max-w-7xl space-y-7 px-4 pb-8 pt-7 sm:px-6">
           {/* Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center ring-2 ring-white/30">
-              <Flame className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-semibold text-white tracking-tight">Hot Deals</h1>
-              <p className="text-white/70 text-sm font-medium">Campus discounts — 12% to 50%+ off</p>
-            </div>
+          <div>
+            <p className="ui-mono ui-mono-sm mb-4 flex items-center gap-2 text-white/60">
+              <Flame className="h-3.5 w-3.5" strokeWidth={2} />
+              Live discounts
+            </p>
+            <h1 className="text-[clamp(2rem,6vw,3.25rem)] font-bold leading-[0.98] tracking-[-0.04em] text-white">
+              Hot deals
+            </h1>
+            <p className="mt-3 max-w-[46ch] text-sm leading-relaxed text-white/70">
+              Campus prices cut between 12% and 50% — while the stock lasts.
+            </p>
           </div>
 
           {/* Stats */}
           {!loading && allDeals.length > 0 && <DealsStatsStrip deals={allDeals} />}
 
           {/* Search */}
-          <div className="flex items-center gap-2 bg-white/15 hover:bg-white/20 rounded-xl px-4 py-2.5 transition-colors ring-1 ring-white/20 focus-within:ring-white/40 focus-within:bg-white/25">
-            <Search className="w-4 h-4 text-white/70 flex-shrink-0" />
+          <div className="flex items-center gap-2.5 border border-white/25 bg-white/10 px-4 py-3 transition-colors focus-within:border-white/50 focus-within:bg-white/15">
+            <Search className="h-4 w-4 flex-shrink-0 text-white/60" strokeWidth={1.75} />
             <input
               type="text"
               value={searchInput}
@@ -667,24 +658,19 @@ export default function DealsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowFilters(v => !v)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm border transition-all ${
-              showFilters || activeFilterCount > 0
-                ? 'bg-primary text-white border-primary shadow-soft'
-                : 'bg-white text-ink-secondary border-border hover:border-primary/30 hover:text-primary'
-            }`}
+            data-active={showFilters || activeFilterCount > 0}
+            className="ui-chip h-10"
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="h-3.5 w-3.5" strokeWidth={1.75} />
             Filters
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-white text-primary text-[10px] font-semibold flex items-center justify-center">
-                {activeFilterCount}
-              </span>
+              <span className="ui-mono ui-mono-sm opacity-70">{activeFilterCount}</span>
             )}
           </button>
 
           {/* Active filter chips */}
           {filters.category !== 'All' && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
+            <span className="ui-chip h-10">
               {filters.category}
               <button onClick={() => setFilters(f => ({ ...f, category: 'All' }))} className="text-ink-muted hover:text-primary ml-0.5">
                 <X className="w-3 h-3" strokeWidth={1.75} />
@@ -692,23 +678,23 @@ export default function DealsPage() {
             </span>
           )}
           {(filters.minPrice > 0 || filters.maxPrice < 500000) && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
-              {fmt(filters.minPrice)} - {fmt(filters.maxPrice)}
+            <span className="ui-chip h-10">
+              {fmt(filters.minPrice)} – {fmt(filters.maxPrice)}
               <button onClick={() => setFilters(f => ({ ...f, minPrice: 0, maxPrice: 500000 }))} className="text-ink-muted hover:text-primary ml-0.5">
                 <X className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </span>
           )}
           {(filters.minDiscount > HOT_DEAL_MIN_PERCENT || filters.maxDiscount < 100) && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-border text-[11px] font-medium text-ink-secondary">
-              <Percent className="w-3 h-3 text-primary" strokeWidth={1.75} /> {filters.minDiscount}% - {filters.maxDiscount}% OFF
+            <span className="ui-chip h-10">
+              <Percent className="h-3 w-3" strokeWidth={2} /> {filters.minDiscount}–{filters.maxDiscount}%
               <button onClick={() => setFilters(f => ({ ...f, minDiscount: HOT_DEAL_MIN_PERCENT, maxDiscount: 100 }))} className="text-ink-muted hover:text-primary ml-0.5">
                 <X className="w-3 h-3" strokeWidth={1.75} />
               </button>
             </span>
           )}
 
-          <div className="ml-auto text-[11px] text-ink-muted font-medium">
+          <div className="ui-mono ui-mono-sm ml-auto text-ink-muted">
             {loading ? 'Loading…' : `${filteredDeals.length} deal${filteredDeals.length !== 1 ? 's' : ''}`}
           </div>
         </div>
@@ -725,11 +711,11 @@ export default function DealsPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 md:grid-cols-4 lg:grid-cols-5">
             {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : filteredDeals.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl border border-border">
+          <div className="text-center py-20 bg-card rounded-xl border border-border">
             <Tag className="w-10 h-10 text-ink-muted mx-auto mb-4" strokeWidth={1.75} />
             <p className="text-ink-secondary font-semibold text-lg mb-1">No deals match your filters</p>
             <p className="text-ink-muted text-sm mb-5">Try adjusting the category, price or discount range</p>
@@ -755,7 +741,7 @@ export default function DealsPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 md:grid-cols-4 lg:grid-cols-5">
               {visible.map((p, i) => (
                 <DealCard
                   key={p.id}

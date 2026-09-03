@@ -2,7 +2,11 @@
 // app/(admin)/admin/revenue/page.tsx
 
 import { useState, useEffect } from 'react'
-import { DollarSign, AlertCircle, Users, Truck, Gift, Info, ShieldCheck, Building2, RefreshCw } from 'lucide-react'
+import { AlertCircle, Truck, Info, ShieldCheck, Building2, RefreshCw } from 'lucide-react'
+import {
+  AdminHeader, AdminPanel, StatGrid, AdminButton, type AdminStat,
+} from '@/components/admin/AdminUI'
+import { DataRow } from '@/components/ui/Shell'
 
 interface University { id: string; name: string; shortName: string }
 
@@ -47,8 +51,8 @@ export default function RevenuePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+      <div className="flex justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
@@ -69,209 +73,248 @@ export default function RevenuePage() {
     <div className="space-y-8">
 
       {/* ── Header with switcher ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Revenue</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">
-            <span className="text-ink font-medium">{selectedUniName}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white border border-border rounded-xl px-3 py-2">
-            <Building2 className="w-4 h-4 text-ink-secondary flex-shrink-0" />
-            <select
-              value={selectedUni}
-              onChange={e => setSelectedUni(e.target.value)}
-              className="bg-transparent text-ink text-sm font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Universities</option>
-              {universities.map(u => (
-                <option key={u.id} value={u.id}>{u.shortName} — {u.name}</option>
-              ))}
-            </select>
-          </div>
-          <button onClick={fetchRevenue} className="p-2 bg-white border border-border rounded-xl text-ink-secondary hover:text-ink">
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      <AdminHeader
+        eyebrow="Finance"
+        title="Revenue"
+        description={
+          <>
+            Scoped to <span className="font-medium text-ink">{selectedUniName}</span>.
+          </>
+        }
+        actions={
+          <>
+            <div className="flex h-9 items-center gap-2 border border-border bg-card px-3">
+              <Building2 className="h-3.5 w-3.5 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+              <select
+                value={selectedUni}
+                onChange={e => setSelectedUni(e.target.value)}
+                aria-label="University"
+                className="cursor-pointer bg-transparent text-[13px] text-ink focus:outline-none"
+              >
+                <option value="all">All universities</option>
+                {universities.map(u => (
+                  <option key={u.id} value={u.id}>{u.shortName} — {u.name}</option>
+                ))}
+              </select>
+            </div>
+            <AdminButton onClick={fetchRevenue} icon={RefreshCw}>Refresh</AdminButton>
+          </>
+        }
+      />
 
-      {/* ── Safe Withdrawal Banner ── */}
-      <div className="bg-success/10 border-2 border-success/40 rounded-2xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-success/10 rounded-xl shrink-0">
-            <ShieldCheck className="w-7 h-7 text-success" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold text-ink mb-1">Safe to Withdraw from Flutterwave-managed balance</h2>
-            <p className="text-ink-secondary text-sm mb-4">
-              Your actual profit after ALL deductions — including money still owed to sellers and riders.
-              {selectedUni !== 'all' && ` Scoped to ${selectedUniName}.`}
+      {/* ── Safe withdrawal ──────────────────────────────────────────────
+          The single most consequential number on the panel, so it gets the
+          page's only large figure and a full derivation underneath it. */}
+      <section className="border border-border bg-card">
+        <div className="flex items-start gap-4 border-b border-border p-5 sm:p-6">
+          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-success/30 bg-success/5">
+            <ShieldCheck className="h-5 w-5 text-success" strokeWidth={1.5} />
+          </span>
+          <div className="min-w-0">
+            <p className="ui-eyebrow mb-3">Safe to withdraw</p>
+            <p className="ui-figure text-[clamp(2rem,5vw,3rem)] leading-none text-success">
+              ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}
             </p>
-            <div className="bg-white/60 rounded-xl p-4 space-y-2 mb-4 font-mono text-sm">
-              <div className="flex justify-between text-ink-secondary">
-                <span>Gross platform commission (all time)</span>
-                <span className="text-ink">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-ink-secondary">
-                <span>Flutterwave fees (2% capped at ₦2,000)</span>
-                <span className="text-danger">− ₦{(breakdown.minusFlutterwaveFees || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-ink-secondary">
-                <span>Referral rewards paid to users</span>
-                <span className="text-danger">− ₦{(breakdown.minusReferralPayouts || 0).toLocaleString()}</span>
-              </div>
-              {/* ── NEW: show the seller/rider obligations deductions ── */}
-              <div className="flex justify-between text-ink-secondary">
-                <span>Seller balances (settled, not yet withdrawn)</span>
-                <span className="text-warning">− ₦{(breakdown.minusSellersAvailable || 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-ink-secondary">
-                <span>Rider balances (settled, not yet withdrawn)</span>
-                <span className="text-warning">− ₦{(breakdown.minusRidersAvailable || 0).toLocaleString()}</span>
-              </div>
-              <div className="border-t border-border pt-2 flex justify-between font-semibold text-lg">
-                <span className="text-ink">Your NET profit (safe to withdraw)</span>
-                <span className="text-success">= ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Warning if admin obligations eat into profit */}
-            {(breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0) > 0 && (
-              <div className="flex items-start gap-2 bg-warning/10 border border-warning/30 rounded-xl p-3 mb-4 text-sm text-warning">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>
-                  ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()} of Flutterwave-managed balance belongs to sellers/riders who haven't withdrawn yet.
-                  You must leave that amount in Flutterwave-managed balance.
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 text-success font-semibold text-lg">
-              <DollarSign className="w-5 h-5" />
-              Withdraw exactly ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()} from Flutterwave-managed balance
-            </div>
+            <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-secondary">
+              Your actual profit from the Flutterwave-managed balance, after every deduction —
+              including money still owed to sellers and riders.
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* ── Net Profit Cards ── */}
-      <div>
-        <h2 className="text-xl font-semibold text-ink mb-1">Net Platform Profit</h2>
-        <p className="text-ink-secondary text-sm mb-4">After Flutterwave fees. Referral payouts + user obligations deducted from all-time.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'All time NET',    value: withdrawal.safeToWithdraw || 0, sub: `Gross: ₦${(gross.allTime || 0).toLocaleString()}` },
-            { label: 'This month NET',  value: net.thisMonth || 0,             sub: `${revenue?.thisMonth?.orders || 0} orders` },
-            { label: 'Last month NET',  value: net.lastMonth || 0,             sub: `${revenue?.lastMonth?.orders || 0} orders` },
-            { label: 'Today NET',       value: net.today || 0,                 sub: `${revenue?.today?.orders || 0} orders` },
-          ].map(card => (
-            <div key={card.label} className="bg-primary rounded-2xl p-6 text-white">
-              <p className="text-white/75 text-sm mb-1">{card.label}</p>
-              <p className="text-3xl font-semibold">₦{card.value.toLocaleString()}</p>
-              <p className="text-white/75 text-xs mt-2">{card.sub}</p>
+        <div className="p-5 sm:p-6">
+          <p className="ui-eyebrow mb-4">How it derives</p>
+          <div className="ui-divide">
+            <DataRow
+              label="Gross commission (all time)"
+              value={<span className="text-ink">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Flutterwave fees (2%, capped ₦2,000)"
+              value={<span className="text-danger">− ₦{(breakdown.minusFlutterwaveFees || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Referral rewards paid out"
+              value={<span className="text-danger">− ₦{(breakdown.minusReferralPayouts || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Seller balances (settled, unwithdrawn)"
+              value={<span className="text-warning">− ₦{(breakdown.minusSellersAvailable || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Rider balances (settled, unwithdrawn)"
+              value={<span className="text-warning">− ₦{(breakdown.minusRidersAvailable || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Net profit"
+              emphasis
+              value={<span className="text-success">₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}</span>}
+            />
+          </div>
+
+          {(breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0) > 0 && (
+            <div className="mt-6 flex items-start gap-3 border border-warning/25 bg-warning/5 p-4 text-sm text-warning">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
+              <span className="leading-relaxed">
+                ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()}{' '}
+                of the managed balance belongs to sellers and riders who have not withdrawn yet.
+                That amount must stay in the account.
+              </span>
             </div>
-          ))}
+          )}
         </div>
+      </section>
+
+      {/* ── Net profit over time ── */}
+      <div>
+        <AdminHeader
+          eyebrow="Net profit"
+          title="Over time"
+          description="After Flutterwave fees, with referral payouts and user obligations deducted from the all-time figure."
+          className="mb-6"
+        />
+        <StatGrid
+          columns={4}
+          stats={[
+            {
+              label: 'All time',
+              value: `₦${(withdrawal.safeToWithdraw || 0).toLocaleString()}`,
+              note: `Gross ₦${(gross.allTime || 0).toLocaleString()}`,
+            },
+            {
+              label: 'This month',
+              value: `₦${(net.thisMonth || 0).toLocaleString()}`,
+              note: `${revenue?.thisMonth?.orders || 0} orders`,
+            },
+            {
+              label: 'Last month',
+              value: `₦${(net.lastMonth || 0).toLocaleString()}`,
+              note: `${revenue?.lastMonth?.orders || 0} orders`,
+            },
+            {
+              label: 'Today',
+              value: `₦${(net.today || 0).toLocaleString()}`,
+              note: `${revenue?.today?.orders || 0} orders`,
+            },
+          ] as AdminStat[]}
+        />
       </div>
 
       {/* ── Obligations ── */}
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-ink mb-1">Money Owed to Users</h3>
-        <p className="text-xs text-ink-secondary mb-4 flex items-center gap-1">
-          <Info className="w-3 h-3" /> Keep this amount in Flutterwave-managed balance — it belongs to sellers and riders
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-surface rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold text-ink">Sellers</span>
-            </div>
-            <p className="text-2xl font-semibold text-ink">₦{((obligations.totalOwedToSellers) || 0).toLocaleString()}</p>
-            <p className="text-xs text-ink-secondary mt-1">
-              ₦{(obligations.sellersAvailableNow || 0).toLocaleString()} available (must keep) Â· ₦{(obligations.sellersPending || 0).toLocaleString()} in escrow
+      <AdminPanel
+        title="Money owed to users"
+        description={
+          <span className="inline-flex items-center gap-1.5">
+            <Info className="h-3 w-3" strokeWidth={2} />
+            Keep this in the managed balance — it belongs to sellers and riders.
+          </span>
+        }
+        padded={false}
+      >
+        <div className="grid gap-px bg-border md:grid-cols-2">
+          <div className="bg-card p-5">
+            <p className="ui-mono ui-mono-sm text-ink-muted">Sellers</p>
+            <p className="ui-figure mt-2.5 text-2xl text-ink">
+              ₦{(obligations.totalOwedToSellers || 0).toLocaleString()}
+            </p>
+            <p className="mt-2 text-xs text-ink-secondary">
+              ₦{(obligations.sellersAvailableNow || 0).toLocaleString()} available (must keep) ·
+              ₦{(obligations.sellersPending || 0).toLocaleString()} in escrow
             </p>
           </div>
-          <div className="bg-surface rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Truck className="w-4 h-4 text-success" />
-              <span className="text-sm font-semibold text-ink">Riders</span>
-            </div>
-            <p className="text-2xl font-semibold text-ink">₦{((obligations.totalOwedToRiders) || 0).toLocaleString()}</p>
-            <p className="text-xs text-ink-secondary mt-1">
-              ₦{(obligations.ridersAvailableNow || 0).toLocaleString()} available (must keep) Â· ₦{(obligations.ridersPending || 0).toLocaleString()} in escrow
+          <div className="bg-card p-5">
+            <p className="ui-mono ui-mono-sm text-ink-muted">Riders</p>
+            <p className="ui-figure mt-2.5 text-2xl text-ink">
+              ₦{(obligations.totalOwedToRiders || 0).toLocaleString()}
+            </p>
+            <p className="mt-2 text-xs text-ink-secondary">
+              ₦{(obligations.ridersAvailableNow || 0).toLocaleString()} available (must keep) ·
+              ₦{(obligations.ridersPending || 0).toLocaleString()} in escrow
             </p>
           </div>
         </div>
-      </div>
+      </AdminPanel>
 
       {/* ── Referrals ── */}
-      <div className="bg-white border border-border rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Gift className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-ink">Referral Rewards</h3>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-surface rounded-xl p-4">
-            <p className="text-sm text-ink-secondary mb-1">Total Paid Out (All Time)</p>
-            <p className="text-2xl font-semibold text-ink">₦{(referrals.totalPaidOut || 0).toLocaleString()}</p>
+      <AdminPanel title="Referral rewards" padded={false}>
+        <div className="grid gap-px bg-border sm:grid-cols-2">
+          <div className="bg-card p-5">
+            <p className="ui-mono ui-mono-sm text-ink-muted">Total paid out</p>
+            <p className="ui-figure mt-2.5 text-2xl text-ink">
+              ₦{(referrals.totalPaidOut || 0).toLocaleString()}
+            </p>
           </div>
-          <div className="bg-surface rounded-xl p-4">
-            <p className="text-sm text-ink-secondary mb-1">Total Rewards Given</p>
-            <p className="text-2xl font-semibold text-ink">{(referrals.totalRewards || 0).toLocaleString()}</p>
+          <div className="bg-card p-5">
+            <p className="ui-mono ui-mono-sm text-ink-muted">Rewards given</p>
+            <p className="ui-figure mt-2.5 text-2xl text-ink">
+              {(referrals.totalRewards || 0).toLocaleString()}
+            </p>
           </div>
         </div>
-      </div>
+      </AdminPanel>
 
       {/* ── Top Sellers ── */}
       {topSellers.length > 0 && (
-        <div className="bg-white border border-border rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-ink mb-4">Top Sellers by Revenue</h3>
-          <div className="space-y-3">
+        <AdminPanel title="Top sellers by revenue" padded={false}>
+          <div className="ui-divide">
             {topSellers.map((seller: any, i: number) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-ink-muted text-sm w-5">{i + 1}</span>
-                  <div>
-                    <p className="text-ink text-sm font-medium">{seller.name}</p>
-                    <p className="text-ink-secondary text-xs">{seller.totalOrders} orders</p>
-                  </div>
+              <div key={i} className="flex items-center gap-4 px-5 py-3.5">
+                <span className="ui-mono ui-mono-sm w-5 flex-shrink-0 text-ink-muted">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-ink">{seller.name}</p>
+                  <p className="ui-mono ui-mono-sm mt-1 text-ink-muted">
+                    {seller.totalOrders} orders
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-ink text-sm font-semibold">₦{(seller.totalRevenue || 0).toLocaleString()}</p>
-                  <p className="text-ink-secondary text-xs">₦{(seller.platformEarned || 0).toLocaleString()} commission</p>
+                <div className="flex-shrink-0 text-right">
+                  <p className="ui-figure text-sm text-ink">
+                    ₦{(seller.totalRevenue || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">
+                    ₦{(seller.platformEarned || 0).toLocaleString()} commission
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </AdminPanel>
       )}
 
       {/* ── Top Delivery Routes ── */}
       {topRoutes.length > 0 && (
-        <div className="bg-white border border-border rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-ink mb-1 flex items-center gap-2">
-            <Truck className="w-5 h-5 text-primary" /> Top Delivery Routes
-          </h3>
-          <p className="text-ink-secondary text-xs mb-4">By completed order volume, all-time</p>
-          <div className="space-y-3">
+        <AdminPanel
+          title="Top delivery routes"
+          description="By completed order volume, all time."
+          padded={false}
+        >
+          <div className="ui-divide">
             {topRoutes.map((route: any, i: number) => (
-              <div key={i} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-ink-muted text-sm w-5">{i + 1}</span>
-                  <div>
-                    <p className="text-ink text-sm font-medium">{route.zoneA} ↔ {route.zoneB}</p>
-                    <p className="text-ink-secondary text-xs">{route.count} deliver{route.count === 1 ? 'y' : 'ies'}</p>
-                  </div>
+              <div key={i} className="flex items-center gap-4 px-5 py-3.5">
+                <span className="ui-mono ui-mono-sm w-5 flex-shrink-0 text-ink-muted">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-ink">
+                    {route.zoneA} ↔ {route.zoneB}
+                  </p>
+                  <p className="ui-mono ui-mono-sm mt-1 text-ink-muted">
+                    {route.count} deliver{route.count === 1 ? 'y' : 'ies'}
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-ink text-sm font-semibold">₦{(route.totalDeliveryFee || 0).toLocaleString()}</p>
-                  <p className="text-ink-secondary text-xs">₦{(route.riderTotal || 0).toLocaleString()} to riders</p>
+                <div className="flex-shrink-0 text-right">
+                  <p className="ui-figure text-sm text-ink">
+                    ₦{(route.totalDeliveryFee || 0).toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-ink-muted">
+                    ₦{(route.riderTotal || 0).toLocaleString()} to riders
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </AdminPanel>
       )}
     </div>
   )

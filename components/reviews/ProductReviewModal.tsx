@@ -81,7 +81,7 @@ export default function ProductReviewModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-md w-full p-6 relative">
+      <div className="bg-card rounded-xl max-w-md w-full p-6 relative">
         {/* Close button */}
         <button
           onClick={onClose}

@@ -28,22 +28,24 @@ const PROFILE_CSS = `
   .fade-up { animation: fadeUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
 
   .header-gradient {
-    background: var(--color-primary);
+    /* Ink, not accent. A full-bleed blue slab at the top of four different
+       screens was the loudest thing in the product and made every one of
+       them read as a different app. */
+    background: var(--ui-slab);
   }
 
   .nav-item {
     transition: background 0.12s ease, color 0.12s ease, padding-left 0.12s ease;
   }
   .nav-item:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    color: var(--color-primary);
-    padding-left: 20px;
+    background: var(--color-surface);
+    color: var(--ui-ink);
   }
 
   .section-card {
-    transition: box-shadow 0.2s ease;
+    transition: border-color 0.3s var(--ui-ease);
   }
-  .section-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  .section-card:hover { border-color: var(--ui-hairline-strong); }
 
   .input-field {
     transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -56,11 +58,11 @@ const PROFILE_CSS = `
   }
 
   .save-btn {
-    background: var(--color-primary);
-    transition: transform 0.2s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.2s ease;
+    background: var(--ui-slab);
+    transition: background-color 0.3s var(--ui-ease), transform 0.2s var(--ui-ease);
   }
-  .save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 35%, transparent); }
-  .save-btn:active:not(:disabled) { transform: scale(0.97); }
+  .save-btn:hover:not(:disabled) { background: var(--color-primary); }
+  .save-btn:active:not(:disabled) { transform: scale(0.985); }
 
   .product-thumb {
     transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
@@ -72,9 +74,8 @@ const PROFILE_CSS = `
     transition: all 0.15s cubic-bezier(0.34,1.4,0.64,1);
   }
   .tag-chip:hover {
-    background: var(--color-primary);
+    background: var(--ui-slab);
     color: white;
-    transform: scale(1.05);
   }
 
   .slide-menu {
@@ -279,7 +280,7 @@ export default function MyProfilePage() {
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => setShowIOSInstallModal(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-soft max-h-[88vh] overflow-y-auto">
+            <div className="w-full max-w-md bg-card rounded-3xl p-6 shadow-soft max-h-[88vh] overflow-y-auto">
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary">
@@ -296,7 +297,7 @@ export default function MyProfilePage() {
                   { icon: SquarePlus, bg: 'bg-primary/10', iconColor: 'text-primary', title: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet' },
                   { icon: CheckCircle2, bg: 'bg-success/10', iconColor: 'text-success', title: 'Tap "Add" to confirm', sub: 'BataMart appears on your home screen' },
                 ].map(({ icon: Icon, bg, iconColor, title, sub }) => (
-                  <div key={title} className={`flex items-center gap-3 ${bg} rounded-2xl px-4 py-3.5`}>
+                  <div key={title} className={`flex items-center gap-3 ${bg} px-4 py-3.5`}>
                     <Icon className={`w-5 h-5 flex-shrink-0 ${iconColor}`} strokeWidth={1.75} />
                     <div>
                       <p className="font-semibold text-sm text-ink">{title}</p>
@@ -321,7 +322,7 @@ export default function MyProfilePage() {
           <button onClick={() => setIsMobileMenuOpen(true)} className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
             <Menu className="w-5 h-5 text-white" />
           </button>
-          <h1 className="font-semibold text-white flex-1">My Account</h1>
+          <h1 className="flex-1 text-[17px] text-white">My account</h1>
           <div className={`px-2.5 py-1 ${roleColor} rounded-xl`}>
             <span className="text-[10px] font-semibold text-white">{roleLabel}</span>
           </div>
@@ -332,7 +333,7 @@ export default function MyProfilePage() {
       {isMobileMenuOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
-          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#0f1115] z-50 lg:hidden shadow-soft`}>
+          <div className={`slide-menu ${isMobileMenuOpen ? 'slide-menu-open' : ''} fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-card dark:bg-[#0f1115] z-50 lg:hidden shadow-soft`}>
             <div className="flex flex-col h-full">
               {/* Menu header */}
               <div className="header-gradient px-5 py-6">
@@ -380,12 +381,12 @@ export default function MyProfilePage() {
         <div className="max-w-6xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-sm text-white/50 mb-1">
-                <Link href="/marketplace" className="hover:text-white/80 transition font-medium">Marketplace</Link>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-white/80 font-semibold">My Account</span>
+              <div className="mb-2.5 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">
+                <Link href="/marketplace" className="transition-colors hover:text-white/80">Marketplace</Link>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-white/70">My account</span>
               </div>
-              <h1 className="text-xl font-semibold text-white">Account Overview</h1>
+              <h1 className="text-[clamp(1.3rem,2.6vw,1.85rem)] text-white">Account overview</h1>
             </div>
             <div className={`px-3 py-1.5 ${roleColor} rounded-xl shadow-soft`}>
               <span className="text-xs font-semibold text-white">{roleLabel}</span>
@@ -399,7 +400,7 @@ export default function MyProfilePage() {
 
           {/* ── Desktop Sidebar ── */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-border shadow-soft overflow-hidden sticky top-6">
+            <div className="border border-border bg-card sticky top-6">
               <div className="p-5 border-b border-border">
                 <div className="flex items-center gap-3">
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${roleColor} shadow-soft`}>
@@ -411,7 +412,7 @@ export default function MyProfilePage() {
                   </div>
                 </div>
                 {wallet && (
-                  <div className="mt-3 bg-primary/10 rounded-xl px-3 py-2.5 flex items-center justify-between">
+                  <div className="mt-3 flex items-center justify-between border border-border bg-surface px-3 py-2.5">
                     <span className="text-primary text-xs font-semibold">Balance</span>
                     <span className="text-primary font-semibold text-sm">₦{wallet.availableBalance.toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
                   </div>
@@ -439,7 +440,7 @@ export default function MyProfilePage() {
           <div className="lg:col-span-3 space-y-4">
 
             {/* Edit header */}
-            <div className="fade-up flex items-center justify-between bg-white rounded-2xl border border-border shadow-soft px-5 py-4">
+            <div className="fade-up flex items-center justify-between border border-border bg-card px-5 py-4">
               <div>
                 <h2 className="text-lg font-semibold text-ink">Profile Details</h2>
                 <p className="text-xs text-ink-muted mt-0.5">{isEditing ? 'Editing mode' : 'View & manage your account'}</p>
@@ -478,26 +479,26 @@ export default function MyProfilePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Account Details */}
-              <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="fade-up section-card border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                  <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-primary" />
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <User className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <h2 className="font-semibold text-ink text-sm">Account Details</h2>
+                  <h2 className="ui-mono ui-mono-sm text-ink">Account Details</h2>
                   {isEditing && <span className="ml-auto text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">EDITING</span>}
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Full Name</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Full Name</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.name || ''} onChange={e => setEditedUser({ ...editedUser, name: e.target.value })}
-                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
+                        className="input-field h-12 w-full border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
                     ) : (
                       <p className="text-ink font-semibold">{user.name}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Email</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Email</label>
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-ink-muted flex-shrink-0" />
                       <p className="text-ink-secondary font-semibold text-sm break-all">{user.email}</p>
@@ -505,14 +506,14 @@ export default function MyProfilePage() {
                     <p className="text-[11px] text-ink-muted mt-1">Cannot be changed</p>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Phone</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Phone</label>
                     {isEditing ? (
                       <div className="flex">
-                        <span className="inline-flex items-center px-3 bg-surface border-2 border-r-0 border-border rounded-l-xl text-ink-secondary text-xs font-semibold">+234</span>
+                        <span className="ui-mono ui-mono-sm inline-flex h-12 items-center border border-r-0 border-border bg-surface px-3 text-ink-secondary">+234</span>
                         <input type="tel" value={(editedUser.phone || '').replace(/^\+?234/, '')}
                           onChange={e => setEditedUser({ ...editedUser, phone: e.target.value.replace(/\D/g, '') })}
                           maxLength={11}
-                          className="input-field flex-1 px-3 py-3 bg-surface border-2 border-transparent rounded-r-xl text-sm font-semibold" />
+                          className="input-field h-12 flex-1 border border-border bg-card px-3 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -525,20 +526,20 @@ export default function MyProfilePage() {
               </div>
 
               {/* Address */}
-              <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="fade-up section-card border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                  <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-3.5 h-3.5 text-success" />
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <MapPin className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <h2 className="font-semibold text-ink text-sm">Delivery Address</h2>
+                  <h2 className="ui-mono ui-mono-sm text-ink">Delivery Address</h2>
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Hostel / Lodge</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Hostel / Lodge</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.hostelName || ''} onChange={e => setEditedUser({ ...editedUser, hostelName: e.target.value })}
                         placeholder="e.g. Boys Hostel, Block A"
-                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
+                        className="input-field h-12 w-full border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
                     ) : (
                       <div className="flex items-center gap-2">
                         <Home className="w-4 h-4 text-ink-muted flex-shrink-0" />
@@ -547,21 +548,21 @@ export default function MyProfilePage() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Room Number</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Room Number</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.roomNumber || ''} onChange={e => setEditedUser({ ...editedUser, roomNumber: e.target.value })}
                         placeholder="e.g. 205"
-                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
+                        className="input-field h-12 w-full border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
                     ) : (
                       <p className="text-ink font-semibold">{user.roomNumber || <span className="text-ink-muted font-medium">Not set</span>}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-1.5">Landmark</label>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Landmark</label>
                     {isEditing ? (
                       <input type="text" value={editedUser.landmark || ''} onChange={e => setEditedUser({ ...editedUser, landmark: e.target.value })}
                         placeholder="e.g. Near the cafeteria"
-                        className="input-field w-full px-3.5 py-3 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold" />
+                        className="input-field h-12 w-full border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
                     ) : (
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-ink-muted flex-shrink-0" />
@@ -574,12 +575,12 @@ export default function MyProfilePage() {
             </div>
 
             {/* Wallet balance card */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="fade-up section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Wallet className="w-3.5 h-3.5 text-primary" />
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                  <Wallet className="w-3.5 h-3.5 text-ink-secondary" />
                 </div>
-                <h2 className="font-semibold text-ink text-sm">BataMart Balance</h2>
+                <h2 className="ui-mono ui-mono-sm text-ink">BataMart Balance</h2>
               </div>
               <div className="p-5">
                 <div className="flex items-center gap-4">
@@ -600,12 +601,12 @@ export default function MyProfilePage() {
               </div>
             </div>
 
-            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="fade-up section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                <div className="w-7 h-7 bg-success/10 rounded-lg flex items-center justify-center">
-                  <Shield className="w-3.5 h-3.5 text-success" />
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                  <Shield className="w-3.5 h-3.5 text-ink-secondary" />
                 </div>
-                <h2 className="font-semibold text-ink text-sm">Withdrawal Biometrics</h2>
+                <h2 className="ui-mono ui-mono-sm text-ink">Withdrawal Biometrics</h2>
               </div>
               <div className="p-5">
                 {!biometricAvailable ? (
@@ -634,9 +635,9 @@ export default function MyProfilePage() {
             </div>
 
             {/* Notifications */}
-            <div className="section-card bg-white rounded-2xl border border-border overflow-hidden">
+            <div className="section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border">
-                <h3 className="font-semibold text-ink text-sm">Order Notifications</h3>
+                <h3 className="ui-mono ui-mono-sm text-ink">Order Notifications</h3>
                 <p className="text-xs text-ink-secondary mt-0.5">Get alerted when your order is picked up and delivered</p>
               </div>
 
@@ -698,7 +699,7 @@ export default function MyProfilePage() {
                       aria-checked={isSubscribed}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                        className={`inline-block h-4 w-4 transform rounded-full bg-card shadow transition-transform ${
                           isSubscribed ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
@@ -709,32 +710,32 @@ export default function MyProfilePage() {
             </div>
 
             {/* Appearance */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="fade-up section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center gap-2">
-                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
                   {activeTheme === 'dark'
-                    ? <Moon className="w-3.5 h-3.5 text-primary" />
-                    : <Sun className="w-3.5 h-3.5 text-primary" />}
+                    ? <Moon className="w-3.5 h-3.5 text-ink-secondary" />
+                    : <Sun className="w-3.5 h-3.5 text-ink-secondary" />}
                 </div>
-                <h2 className="font-semibold text-ink text-sm">Appearance</h2>
+                <h2 className="ui-mono ui-mono-sm text-ink">Appearance</h2>
               </div>
-              <div className="p-5 flex items-center justify-between gap-3">
-                <div>
+              <div className="p-5 flex items-center justify-between gap-4">
+                <div className="min-w-0">
                   <p className="font-semibold text-sm text-ink">
-                    {activeTheme === 'dark' ? 'Dark Mode On' : 'Light Mode On'}
+                    {activeTheme === 'dark' ? 'Dark mode on' : 'Light mode on'}
                   </p>
-                  <p className="text-xs text-ink-muted mt-0.5">
+                  <p className="text-xs text-ink-secondary mt-1 leading-relaxed">
                     {activeTheme === 'dark'
-                      ? 'Optimized for low-light viewing.'
-                      : 'Switch to dark mode for a softer night look.'}
+                      ? 'Applies while you shop. The storefront and admin stay light.'
+                      : 'A softer look for night. Applies while you shop — the storefront and admin stay light.'}
                   </p>
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className="theme-toggle flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white shadow-soft bg-primary hover:brightness-95"
+                  className="theme-toggle ui-btn-sweep ui-mono ui-mono-sm inline-flex h-10 flex-shrink-0 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-primary hover:text-white"
                 >
-                  {activeTheme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                  {activeTheme === 'dark' ? 'Use Light' : 'Use Dark'}
+                  {activeTheme === 'dark' ? <Sun className="w-3.5 h-3.5" strokeWidth={2} /> : <Moon className="w-3.5 h-3.5" strokeWidth={2} />}
+                  {activeTheme === 'dark' ? 'Use light' : 'Use dark'}
                 </button>
               </div>
             </div>
@@ -743,13 +744,13 @@ export default function MyProfilePage() {
             <div className="fade-up"><ReferralCard /></div>
 
             {/* Recommended */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="fade-up section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-warning/10 rounded-lg flex items-center justify-center">
-                    <Star className="w-3.5 h-3.5 text-warning" />
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                    <Star className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <h2 className="font-semibold text-ink text-sm">Recommended For You</h2>
+                  <h2 className="ui-mono ui-mono-sm text-ink">Recommended For You</h2>
                 </div>
                 <Link href={isApp ? '/marketplace?app=true' : '/marketplace'}
                   className="text-primary font-semibold text-xs flex items-center gap-1 hover:underline">
@@ -760,13 +761,13 @@ export default function MyProfilePage() {
             </div>
 
             {/* Search History */}
-            <div className="fade-up section-card bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="fade-up section-card border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 bg-surface rounded-lg flex items-center justify-center">
                     <Search className="w-3.5 h-3.5 text-ink-secondary" />
                   </div>
-                  <h2 className="font-semibold text-ink text-sm">Search History</h2>
+                  <h2 className="ui-mono ui-mono-sm text-ink">Search History</h2>
                 </div>
                 <button onClick={() => { localStorage.removeItem('BATAMART-recent-searches'); window.location.reload() }}
                   className="text-danger hover:text-danger text-xs font-semibold transition-colors">

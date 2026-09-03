@@ -221,18 +221,13 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-surface dark:bg-[#000000] py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-soft p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                <Bell className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-semibold text-ink">Notifications</h1>
-                <p className="text-sm text-ink-secondary">
-                  {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'}
-                </p>
-              </div>
+        <div className="mb-6 border-b border-border pb-6">
+          <div className="mb-4 flex items-end justify-between gap-6">
+            <div>
+              <p className="ui-eyebrow mb-2 max-w-[12rem]">
+                {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+              </p>
+              <h1 className="text-[clamp(1.6rem,3.4vw,2.4rem)] text-ink">Notifications</h1>
             </div>
 
             {/* Actions */}
@@ -240,7 +235,7 @@ export default function NotificationsPage() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                  className="rounded-lg border border-border px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink"
                 >
                   Mark all read
                 </button>
@@ -290,7 +285,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notifications List */}
-        <div className="bg-white rounded-xl shadow-soft overflow-hidden">
+        <div className="bg-card rounded-xl shadow-soft overflow-hidden">
           {loading ? (
             <div className="p-12 text-center">
               <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>

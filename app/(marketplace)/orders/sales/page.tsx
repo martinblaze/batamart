@@ -5,7 +5,10 @@ export const dynamic = 'force-dynamic'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CheckCircle2, ChevronRight, Loader2, MapPin, Package, ShoppingBag, Tag, User } from 'lucide-react'
+import { ArrowRight, CheckCircle2, ChevronRight, MapPin, Package, ShoppingBag, Tag, User } from 'lucide-react'
+import { Shell, PageHeader, EmptyState, Skeleton } from '@/components/ui/Shell'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/button'
 import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
 
 interface SalesItem {
@@ -29,6 +32,8 @@ interface SalesProduct {
   name: string
   images: string[]
   price: number
+  /** Pickup zone — used to show the delivery route on the card. */
+  landmark?: string | null
 }
 
 interface SalesOrder {
@@ -38,6 +43,8 @@ interface SalesOrder {
   orderNote: string | null
   totalAmount: number
   deliveryAddress: string
+  /** Drop-off zone — pairs with product.landmark to form the route. */
+  deliveryLandmark?: string | null
   createdAt: string
   buyer: SalesBuyer
   product: SalesProduct
@@ -46,27 +53,22 @@ interface SalesOrder {
 
 // Design bible: status colors are reserved for true status only — success/danger/warning,
 // plus primary for neutral in-progress states. No per-stage color variety.
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; ring: string; dot: string }> = {
-  PENDING: { label: 'Pending', color: 'text-warning', bg: 'bg-warning/10', ring: 'ring-warning/30', dot: 'bg-warning' },
-  PROCESSING: { label: 'Processing', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
-  SHIPPED: { label: 'Shipped', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
-  RIDER_ASSIGNED: { label: 'Rider assigned', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
-  PICKED_UP: { label: 'Picked up', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
-  ON_THE_WAY: { label: 'On the way', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
-  DELIVERED: { label: 'Delivered', color: 'text-success', bg: 'bg-success/10', ring: 'ring-success/30', dot: 'bg-success' },
-  COMPLETED: { label: 'Completed', color: 'text-success', bg: 'bg-success/10', ring: 'ring-success/30', dot: 'bg-success' },
-  CANCELLED: { label: 'Cancelled', color: 'text-danger', bg: 'bg-danger/10', ring: 'ring-danger/30', dot: 'bg-danger' },
-  DISPUTED: { label: 'Disputed', color: 'text-danger', bg: 'bg-danger/10', ring: 'ring-danger/30', dot: 'bg-danger' },
+const STATUS_CONFIG: Record<string, { label: string; tone: BadgeStatus }> = {
+  PENDING: { label: 'Pending', tone: 'warning' },
+  PROCESSING: { label: 'Processing', tone: 'verified' },
+  SHIPPED: { label: 'Shipped', tone: 'verified' },
+  RIDER_ASSIGNED: { label: 'Rider assigned', tone: 'verified' },
+  PICKED_UP: { label: 'Picked up', tone: 'verified' },
+  ON_THE_WAY: { label: 'On the way', tone: 'verified' },
+  DELIVERED: { label: 'Delivered', tone: 'success' },
+  COMPLETED: { label: 'Completed', tone: 'success' },
+  CANCELLED: { label: 'Cancelled', tone: 'danger' },
+  DISPUTED: { label: 'Disputed', tone: 'danger' },
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] ?? { label: status, color: "text-ink-secondary", bg: "bg-surface", ring: "ring-border", dot: "bg-ink-muted" }
-  return (
-    <span className={'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ' + cfg.bg + ' ' + cfg.color + ' ' + cfg.ring}>
-      <span className={'w-1.5 h-1.5 rounded-full ' + cfg.dot} />
-      {cfg.label}
-    </span>
-  )
+  const cfg = STATUS_CONFIG[status] ?? { label: status.replace(/_/g, ' '), tone: 'neutral' as BadgeStatus }
+  return <Badge status={cfg.tone}>{cfg.label}</Badge>
 }
 
 function VariantBadges({ orderNote }: { orderNote?: string | null }) {
@@ -166,77 +168,78 @@ export default function SalesOrdersPage() {
 
   return (
     <div className="min-h-screen bg-surface pb-20">
-      <div className="bg-white border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-ink">My Sales</h1>
-              <p className="text-sm text-ink-secondary mt-0.5">
-                {orders.length} incoming order{orders.length !== 1 ? "s" : ""}
-              </p>
-            </div>
+      <Shell width="reading" className="pt-8 sm:pt-12">
+        <PageHeader
+          eyebrow="Seller"
+          title={
+            <>
+              My <span className="ui-serif">sales</span>
+            </>
+          }
+          description={`${orders.length} incoming order${orders.length !== 1 ? 's' : ''} to fulfil.`}
+          actions={
             <Link
               href="/orders"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline transition-colors"
+              className="ui-mono ui-mono-sm inline-flex h-10 items-center gap-2 border border-border bg-card px-4 text-ink-secondary transition-colors hover:border-ink/25 hover:text-ink"
             >
-              <ShoppingBag className="w-4 h-4" /> My Orders
+              <ShoppingBag className="h-3.5 w-3.5" strokeWidth={2} /> My orders
             </Link>
-          </div>
-        </div>
-      </div>
+          }
+        />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mt-10">
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 animate-pulse">
+              <div key={i} className="border border-border bg-card p-5">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-border rounded-xl flex-shrink-0" />
+                  <Skeleton className="h-20 w-20 flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-border rounded-lg w-3/4" />
-                    <div className="h-3 bg-border rounded-lg w-1/2" />
-                    <div className="h-5 bg-border rounded-lg w-1/4 mt-3" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="mt-3 h-5 w-1/4" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-border">
-            <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center mb-5 ring-1 ring-border">
-              <Package className="w-9 h-9 text-ink-muted" />
-            </div>
-            <h3 className="text-xl font-semibold text-ink mb-1">No sales yet</h3>
-            <p className="text-ink-muted text-sm mb-6">Orders from buyers will show up here.</p>
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center gap-2 bg-primary hover:brightness-95 text-white px-6 py-3 rounded-xl font-semibold text-sm shadow-soft transition-all"
-            >
-              Browse Marketplace <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <EmptyState
+            icon={Package}
+            title="No sales yet"
+            description="When a buyer orders one of your listings, it lands here for you to accept."
+            action={
+              <Link
+                href="/marketplace"
+                className="inline-flex items-center gap-2 bg-ink px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-ink/90"
+              >
+                Browse marketplace <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              </Link>
+            }
+          />
         ) : (
           <div className="space-y-4">
             {orders.map((order) => {
               const { extraNote } = parseVariantNote(order.orderNote)
               const isHighlighted = highlightId === order.id
-              const cardClass = `bg-white rounded-2xl border shadow-soft hover:shadow-soft transition-all duration-200 overflow-hidden ${isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'border-border'}`
+              const cardClass = `border bg-card transition-colors duration-300 ${isHighlighted ? 'border-ink ring-1 ring-ink' : 'border-border'}`
               return (
                 <div
                   key={order.id}
                   id={`sales-order-${order.id}`}
                   className={cardClass}
                 >
-                  <div className="flex items-center justify-between px-5 py-3.5 border-b border-border bg-surface/50">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between gap-4 border-b border-border bg-surface px-5 py-3.5">
+                    <div className="flex items-center gap-5">
                       <div>
-                        <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Order</p>
-                        <p className="text-sm font-semibold text-ink">#{order.orderNumber || order.id.slice(-8).toUpperCase()}</p>
+                        <p className="ui-mono ui-mono-sm text-ink-muted">Order</p>
+                        <p className="ui-figure mt-1 text-[13px] text-ink">
+                          #{order.orderNumber || order.id.slice(-8).toUpperCase()}
+                        </p>
                       </div>
-                      <div className="hidden sm:block w-px h-8 bg-border" />
                       <div className="hidden sm:block">
-                        <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Date</p>
-                        <p className="text-sm font-semibold text-ink-secondary">
+                        <p className="ui-mono ui-mono-sm text-ink-muted">Date</p>
+                        <p className="mt-1 text-[13px] text-ink-secondary">
                           {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
@@ -246,7 +249,7 @@ export default function SalesOrdersPage() {
 
                   <div className="p-5">
                     <div className="flex gap-4">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-surface flex-shrink-0 border border-border">
+                      <div className="h-20 w-20 flex-shrink-0 overflow-hidden border border-border bg-surface sm:h-24 sm:w-24">
                         <img
                           src={order.product?.images?.[0] || '/placeholder.png'}
                           alt={order.product?.name || 'Product'}
@@ -256,52 +259,68 @@ export default function SalesOrdersPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-ink text-base sm:text-lg leading-snug line-clamp-2">
+                            <h3 className="line-clamp-2 text-base font-medium leading-snug text-ink sm:text-lg">
                               {order.product?.name || 'Product'}
                             </h3>
-                            <p className="text-xs font-semibold text-ink-secondary mt-1 inline-flex items-center gap-1.5">
-                              <User className="w-3.5 h-3.5" />
+                            <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-ink-secondary">
+                              <User className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
                               {order.buyer?.name || 'Buyer'}
                             </p>
                           </div>
-                          <p className="text-sm font-semibold text-primary whitespace-nowrap">{formatPrice(order.totalAmount)}</p>
+                          <p className="ui-figure whitespace-nowrap text-base text-ink">{formatPrice(order.totalAmount)}</p>
                         </div>
-                        <p className="text-xs text-ink-muted mt-1">Placed {new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
+                        <p className="ui-mono ui-mono-sm mt-2 text-ink-muted">
+                          Placed {new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        </p>
                         <VariantBadges orderNote={order.orderNote} />
-                        <div className="mt-3 grid gap-2 text-sm text-ink-secondary">
-                          <p className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-0.5 text-ink-muted flex-shrink-0" />{order.deliveryAddress}</p>
+                        <div className="mt-4 grid gap-2 text-sm text-ink-secondary">
+                          <p className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+                            {order.deliveryAddress}
+                          </p>
                           {order.product?.landmark && order.deliveryLandmark && (
-                            <p className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted">
-                              {order.product.landmark} <ArrowRight className="w-3 h-3" /> {order.deliveryLandmark}
+                            <p className="ui-mono ui-mono-sm flex items-center gap-1.5 text-ink-muted">
+                              {order.product.landmark}
+                              <ArrowRight className="h-3 w-3" strokeWidth={2} />
+                              {order.deliveryLandmark}
                             </p>
                           )}
-                          {extraNote && <p className="text-xs text-ink-secondary"><span className="font-semibold text-ink-secondary">Buyer's note:</span> {extraNote}</p>}
-                          <p className="text-xs text-ink-muted">
+                          {extraNote && (
+                            <p className="text-xs text-ink-secondary">
+                              <span className="font-medium text-ink">Buyer&apos;s note:</span> {extraNote}
+                            </p>
+                          )}
+                          <p className="ui-mono ui-mono-sm text-ink-muted">
                             {order.items?.length || 0} item{(order.items?.length || 0) !== 1 ? "s" : ""}
                           </p>
                         </div>
                         {acceptError?.orderId === order.id && (
-                          <p className="mt-3 text-xs font-semibold text-danger">{acceptError.message}</p>
+                          <p className="mt-4 border border-danger/25 bg-danger/5 px-3 py-2 text-xs text-danger">
+                            {acceptError.message}
+                          </p>
                         )}
-                        <div className="mt-4 flex items-center gap-3">
+                        <div className="mt-5 flex flex-wrap items-center gap-2">
                           {order.status === 'PENDING' && (
-                            <button
+                            <Button
+                              variant="success"
+                              size="sm"
                               onClick={() => acceptOrder(order.id)}
-                              disabled={acceptingId === order.id}
-                              className="inline-flex items-center gap-2 bg-success hover:brightness-95 disabled:opacity-60 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-soft transition-all"
+                              isLoading={acceptingId === order.id}
+                              loadingText="Accepting…"
+                              leftIcon={<CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />}
                             >
-                              {acceptingId === order.id ? (
-                                <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
-                              ) : (
-                                <><CheckCircle2 className="w-4 h-4" /> Accept Order</>
-                              )}
-                            </button>
+                              Accept order
+                            </Button>
                           )}
                           <Link
                             href={`/orders/${order.id}`}
-                            className="inline-flex items-center gap-2 bg-primary hover:brightness-95 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-soft transition-all"
+                            className="ui-mono ui-mono-sm group inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
                           >
-                            View details <ChevronRight className="w-4 h-4" />
+                            View details
+                            <ChevronRight
+                              className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5"
+                              strokeWidth={2}
+                            />
                           </Link>
                         </div>
                       </div>
@@ -312,7 +331,8 @@ export default function SalesOrdersPage() {
             })}
           </div>
         )}
-      </div>
+        </div>
+      </Shell>
     </div>
   )
 }

@@ -25,7 +25,7 @@ export default function ReviewStats({
   }).reverse(); // Show 5 stars first
 
   return (
-    <div className="bg-white rounded-lg border border-border p-6">
+    <div className="bg-card rounded-lg border border-border p-6">
       <div className="grid md:grid-cols-3 gap-6">
         {/* Average Rating */}
         <div className="text-center">

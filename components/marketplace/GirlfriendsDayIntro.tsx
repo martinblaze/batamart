@@ -84,7 +84,7 @@ export default function GirlfriendsDayIntro() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 ${
+        className={`w-full max-w-sm overflow-hidden rounded-3xl bg-card shadow-2xl transition-all duration-300 ${
           phase === 'visible' ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
         }`}
       >

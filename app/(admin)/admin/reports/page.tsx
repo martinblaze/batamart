@@ -3,8 +3,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Flag, Eye, Clock } from 'lucide-react'
+import { Flag, Eye } from 'lucide-react'
 import { ReportType, ReportStatus } from '@prisma/client'
+import {
+  AdminHeader, AdminEmpty, AdminLoading,
+} from '@/components/admin/AdminUI'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
 
 interface Report {
   id: string
@@ -51,112 +55,112 @@ export default function ReportsPage() {
     }
   }
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'PRODUCT': return 'bg-primary/10 text-primary'
-      case 'SELLER': return 'bg-success/10 text-success'
-      case 'RIDER': return 'bg-primary/10 text-primary'
-      case 'BUYER': return 'bg-warning/10 text-warning'
-      default: return 'bg-surface text-ink-secondary'
-    }
+  const getStatusTone = (status: string): BadgeStatus => {
+    if (status === 'PENDING') return 'warning'
+    if (status === 'UNDER_REVIEW') return 'verified'
+    if (status === 'RESOLVED') return 'success'
+    return 'neutral'
   }
 
+  const selectClass =
+    'h-9 border border-border bg-card px-3 text-[13px] text-ink transition-colors hover:border-ink/25 focus:border-ink/40 focus:outline-none'
+
   return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-3 bg-white border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          <option value="PENDING">Pending</option>
-          <option value="UNDER_REVIEW">Under Review</option>
-          <option value="RESOLVED">Resolved</option>
-          <option value="DISMISSED">Dismissed</option>
-          <option value="ALL">All Status</option>
-        </select>
+    <div className="space-y-8">
+      <AdminHeader
+        eyebrow="Moderation"
+        title="Reports"
+        description="Abuse and policy reports raised by users against a product, seller, rider or buyer."
+        actions={
+          <>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              aria-label="Filter by status"
+              className={selectClass}
+            >
+              <option value="PENDING">Pending</option>
+              <option value="UNDER_REVIEW">Under review</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="DISMISSED">Dismissed</option>
+              <option value="ALL">All statuses</option>
+            </select>
 
-        <select
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="px-4 py-3 bg-white border border-border rounded-xl text-ink focus:outline-none focus:ring-2 focus:ring-primary/40"
-        >
-          <option value="ALL">All Types</option>
-          <option value="PRODUCT">Product</option>
-          <option value="SELLER">Seller</option>
-          <option value="RIDER">Rider</option>
-          <option value="BUYER">Buyer</option>
-        </select>
-      </div>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              aria-label="Filter by type"
+              className={selectClass}
+            >
+              <option value="ALL">All types</option>
+              <option value="PRODUCT">Product</option>
+              <option value="SELLER">Seller</option>
+              <option value="RIDER">Rider</option>
+              <option value="BUYER">Buyer</option>
+            </select>
+          </>
+        }
+      />
 
-      {/* Reports List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          </div>
-        ) : reports.length === 0 ? (
-          <div className="text-center py-12 bg-white border border-border rounded-2xl">
-            <Flag className="w-16 h-16 text-ink-muted mx-auto mb-4" />
-            <p className="text-ink-secondary">No reports found</p>
-          </div>
-        ) : (
-          reports.map((report) => (
-            <div key={report.id} className="bg-white border border-border rounded-2xl p-6 hover:shadow-soft transition-all">
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-3 bg-danger/10 rounded-xl">
-                    <Flag className="w-6 h-6 text-danger" />
+      {loading ? (
+        <AdminLoading rows={4} />
+      ) : reports.length === 0 ? (
+        <AdminEmpty
+          icon={Flag}
+          title="No reports here"
+          description="Nothing matches these filters — widen them to see resolved and dismissed reports."
+        />
+      ) : (
+        <div className="ui-divide border border-border bg-card">
+          {reports.map((report) => (
+            <article key={report.id} className="p-5 transition-colors duration-300 hover:bg-surface">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge status="neutral">{report.type}</Badge>
+                    <Badge status="warning">{report.reason}</Badge>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(report.type)}`}>
-                        {report.type}
-                      </span>
-                      <span className="px-3 py-1 bg-warning/10 text-warning rounded-full text-xs font-semibold">
-                        {report.reason}
-                      </span>
-                    </div>
-                    <p className="text-ink font-medium mb-1">
-                      Reported by: {report.reporter.name}
+                  <p className="mt-3.5 text-sm text-ink">
+                    Reported by <span className="font-medium">{report.reporter.name}</span>
+                  </p>
+                  {report.reportedUser && (
+                    <p className="mt-1 text-sm text-ink-secondary">
+                      Against: {report.reportedUser.name}
                     </p>
-                    {report.reportedUser && (
-                      <p className="text-ink-secondary text-sm">Against: {report.reportedUser.name}</p>
-                    )}
-                    {report.reportedProduct && (
-                      <p className="text-ink-secondary text-sm">Product: {report.reportedProduct.name}</p>
-                    )}
-                  </div>
+                  )}
+                  {report.reportedProduct && (
+                    <p className="mt-1 text-sm text-ink-secondary">
+                      Product: {report.reportedProduct.name}
+                    </p>
+                  )}
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  report.status === 'PENDING' ? 'bg-warning/10 text-warning' :
-                  report.status === 'UNDER_REVIEW' ? 'bg-primary/10 text-primary' :
-                  report.status === 'RESOLVED' ? 'bg-success/10 text-success' :
-                  'bg-surface text-ink-secondary'
-                }`}>
-                  {report.status}
-                </span>
+                <Badge status={getStatusTone(report.status)}>
+                  {report.status.replace(/_/g, ' ')}
+                </Badge>
               </div>
 
-              <p className="text-ink-secondary mb-4">{report.description}</p>
+              {report.description && (
+                <p className="mt-5 max-w-[70ch] text-sm leading-relaxed text-ink-secondary">
+                  {report.description}
+                </p>
+              )}
 
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <span className="text-sm text-ink-muted">
+              <div className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-4">
+                <span className="ui-mono ui-mono-sm text-ink-muted">
                   {new Date(report.createdAt).toLocaleDateString()}
                 </span>
                 <Link
                   href={`/admin/reports/${report.id}`}
-                  className="px-4 py-2 bg-danger/10 text-danger rounded-lg hover:bg-danger/10 transition-colors font-semibold text-sm flex items-center gap-2"
+                  className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-3.5 w-3.5" strokeWidth={2} />
                   Review
                 </Link>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

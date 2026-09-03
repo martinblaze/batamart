@@ -135,7 +135,7 @@ export default function SpotlightTour({
 
       {/* Message bubble */}
       <div
-        className="absolute pointer-events-auto rounded-2xl bg-white shadow-2xl ring-1 ring-rose-100 p-4"
+        className="absolute pointer-events-auto rounded-2xl bg-card shadow-2xl ring-1 ring-rose-100 p-4"
         style={{
           width: BUBBLE_WIDTH,
           left: bubbleLeft,

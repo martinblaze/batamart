@@ -26,6 +26,18 @@ module.exports = {
         primary: withOpacity('--color-primary-rgb'),           // --color-primary #1E90FF — the only accent color
         background: withOpacity('--color-background-rgb'),     // --color-background
         surface: withOpacity('--color-surface-rgb'),            // --color-surface
+        // The raised surface a card sits on. White in light mode, a step
+        // *above* the page ground in dark — which is why a hardcoded white
+        // cannot serve here. See the .dark block in styles/app-ui.css.
+        card: withOpacity('--ui-card-rgb'),                      // --ui-card
+        // A full-bleed dark band that stays dark in BOTH themes, with light
+        // text on it. Distinct from `ink`, which deliberately inverts — a
+        // trust banner or hero rendered with `bg-ink` flips to a cream slab in
+        // dark mode and takes its translucent white text with it.
+        slab: {
+          DEFAULT: withOpacity('--ui-slab-rgb'),                 // --ui-slab
+          fg: withOpacity('--ui-slab-fg-rgb'),                   // --ui-slab-fg
+        },
         border: withOpacity('--color-border-rgb'),               // --color-border
         ink: {
           DEFAULT: withOpacity('--color-text-primary-rgb'),      // --color-text-primary
@@ -37,7 +49,27 @@ module.exports = {
         warning: withOpacity('--color-warning-rgb'),
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'Archivo', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Instrument Serif', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+
+      // Sharp edges are a brand rule (see styles/app-ui.css). Rather than
+      // rewrite the several thousand `rounded-lg`/`rounded-xl` utilities
+      // already in the codebase, the scale itself is flattened — every
+      // existing corner tightens at once, and `rounded-full` is left alone so
+      // avatars, pills and status dots stay circular.
+      borderRadius: {
+        none: '0px',
+        sm: '1px',
+        DEFAULT: '2px',
+        md: '2px',
+        lg: '2px',
+        xl: '3px',
+        '2xl': '4px',
+        '3xl': '6px',
+        full: '9999px',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
@@ -112,8 +144,11 @@ module.exports = {
         '44': '44px', // Touch-friendly minimum for mobile
       },
       boxShadow: {
-        // Design bible section 5: one soft shadow token, no glow/colored shadows.
-        'soft': '0 1px 2px rgba(17,24,39,0.06), 0 1px 3px rgba(17,24,39,0.08)',
+        // Design bible section 5: one soft shadow token, no glow/coloured
+        // shadows. Retuned warm and much lighter — with the radius scale
+        // flattened, the old two-layer grey shadow muddied every card edge.
+        // ~214 call sites inherit this, so the token is the place to fix it.
+        'soft': '0 1px 1px rgba(19,19,17,0.03), 0 10px 28px -20px rgba(19,19,17,0.22)',
       },
       scale: {
         '98': '0.98',

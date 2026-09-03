@@ -1,6 +1,7 @@
-﻿import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Archivo, Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
+import '@/styles/app-ui.css'
 
 import { NavbarWrapper } from '@/components/layout/NavbarWrapper'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
@@ -21,7 +22,32 @@ import { KeyboardVisibilityProvider } from '@/components/layout/KeyboardVisibili
 import GirlfriendsDayIntro from '@/components/marketplace/GirlfriendsDayIntro'
 import GirlfriendsDaySellTour from '@/components/tutorial/GirlfriendsDaySellTour'
 
-const inter = Inter({ subsets: ['latin'] })
+/* One type system for the whole product, not just the marketing pages.
+   — Inter carries body copy and UI text.
+   — Archivo sets headings, prices and figures: a tighter grotesque that gives
+     a number or a product title some authority at small sizes.
+   — Instrument Serif is the editorial accent, rationed to a word at a time.
+   — JetBrains Mono carries metadata: labels, order references, counts. */
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
+const display = Archivo({
+  subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
+  display: 'swap',
+})
+const serif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+})
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://batamart.com'
 
 export const metadata: Metadata = {
@@ -154,8 +180,20 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  // Must mirror isThemeableRoute() in
+                  // components/layout/ThemeProvider.tsx. Applying the saved
+                  // theme before hydration is what prevents a light flash on
+                  // app routes — but admin and the marketing site are always
+                  // light, so they must be excluded here too or they flash
+                  // *dark* until the provider mounts and strips the class.
+                  var p = window.location.pathname;
+                  var alwaysLight = ['/admin', '/admin-login', '/about', '/contact', '/privacy', '/terms'];
+                  var themeable = p !== '/' && !alwaysLight.some(function (prefix) {
+                    return p === prefix || p.indexOf(prefix + '/') === 0;
+                  });
+
                   var savedTheme = localStorage.getItem('batamart-theme');
-                  var theme = savedTheme === 'dark' ? 'dark' : 'light';
+                  var theme = (themeable && savedTheme === 'dark') ? 'dark' : 'light';
                   document.documentElement.classList.toggle('dark', theme === 'dark');
                   document.documentElement.style.colorScheme = theme;
                 } catch (e) {}
@@ -236,7 +274,9 @@ export default function RootLayout({
         }} />
       </head>
 
-      <body className={inter.className}>
+      <body
+        className={`${inter.variable} ${display.variable} ${serif.variable} ${mono.variable} ${inter.className}`}
+      >
         <KeyboardVisibilityProvider>
           <ThemeProvider>
             <RoutePrefetcher />

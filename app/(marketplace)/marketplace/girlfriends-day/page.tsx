@@ -36,21 +36,21 @@ function useCountdown(target: string) {
 
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg bg-white/15 px-2.5 py-2 min-w-[52px]">
-      <span className="text-lg font-semibold text-white tabular-nums leading-none">{String(value).padStart(2, '0')}</span>
-      <span className="mt-1 text-[9px] font-medium uppercase tracking-wider text-white/70">{label}</span>
+    <div className="flex min-w-[52px] flex-col items-center justify-center border border-white/25 bg-white/10 px-2.5 py-2">
+      <span className="ui-figure text-lg leading-none text-white">{String(value).padStart(2, '0')}</span>
+      <span className="ui-mono ui-mono-sm mt-1.5 text-white/65">{label}</span>
     </div>
   )
 }
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white">
-      <div className="aspect-square animate-pulse-slow bg-surface" />
-      <div className="space-y-2 p-4">
-        <div className="h-3.5 w-full animate-pulse-slow rounded-full bg-surface" />
-        <div className="h-3.5 w-2/3 animate-pulse-slow rounded-full bg-surface" />
-        <div className="h-4 w-1/3 animate-pulse-slow rounded-full bg-surface" />
+    <div>
+      <div className="ui-skeleton aspect-[4/5]" />
+      <div className="mt-3.5 space-y-2">
+        <div className="ui-skeleton h-3.5 w-full" />
+        <div className="ui-skeleton h-3.5 w-2/3" />
+        <div className="ui-skeleton mt-3 h-4 w-1/3" />
       </div>
     </div>
   )
@@ -124,7 +124,7 @@ export default function GirlfriendsDayPage() {
   const windowOpen = isCampaignWindowOpen(CAMPAIGN.key)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50/60 to-surface">
+    <div className="min-h-screen bg-surface">
       {/* ── Hero ── */}
       <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 via-rose-500 to-pink-600">
         <Heart className="pointer-events-none absolute -top-3 left-[8%] h-10 w-10 text-white/10 animate-float-slow" fill="currentColor" strokeWidth={0} />
@@ -136,29 +136,34 @@ export default function GirlfriendsDayPage() {
         <div className="relative mx-auto max-w-7xl px-4 pt-4 sm:px-6">
           <button
             onClick={() => router.push('/marketplace')}
-            className="flex items-center gap-2 text-sm font-semibold text-white/80 transition-colors hover:text-white"
+            className="group ui-mono ui-mono-sm inline-flex items-center gap-2 text-white/70 transition-colors hover:text-white"
           >
-            <ChevronLeft className="h-4 w-4" /> Back to Marketplace
+            <ChevronLeft
+              className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+              strokeWidth={2}
+            />
+            Marketplace
           </button>
         </div>
 
         <div className="relative mx-auto max-w-7xl space-y-5 px-4 pb-7 pt-5 sm:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 flex-shrink-0 animate-scale-in items-center justify-center rounded-2xl bg-white/20 ring-2 ring-white/30">
-                <Heart className="h-6 w-6 animate-heartbeat text-white" strokeWidth={1.75} fill="currentColor" />
-              </div>
-              <div className="animate-slide-in-left">
-                <h1 className="text-2xl font-semibold tracking-tight text-white">{CAMPAIGN.label}</h1>
-                <p className="text-sm font-medium text-white/80">{CAMPAIGN.tagline}</p>
-              </div>
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-0">
+              <p className="ui-mono ui-mono-sm mb-4 flex items-center gap-2 text-white/60">
+                <Heart className="h-3.5 w-3.5 animate-heartbeat" fill="currentColor" strokeWidth={0} />
+                Seasonal collection
+              </p>
+              <h1 className="text-[clamp(2rem,6vw,3.25rem)] font-bold leading-[0.98] tracking-[-0.04em] text-white">
+                {CAMPAIGN.label}
+              </h1>
+              <p className="mt-3 max-w-[46ch] text-sm leading-relaxed text-white/70">{CAMPAIGN.tagline}</p>
             </div>
 
             {!countdown.done && windowOpen && (
               <div className="flex items-center gap-1.5">
-                <div className="mr-1 flex items-center gap-1 text-white/70">
-                  <Clock className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider">Ends in</span>
+                <div className="mr-1 flex items-center gap-1.5 text-white/60">
+                  <Clock className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span className="ui-mono ui-mono-sm">Ends in</span>
                 </div>
                 <CountdownUnit value={countdown.days} label="days" />
                 <CountdownUnit value={countdown.hours} label="hrs" />
@@ -169,8 +174,8 @@ export default function GirlfriendsDayPage() {
           </div>
 
           {/* Search */}
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 ring-1 ring-white/20 transition-colors hover:bg-white/20 focus-within:bg-white/25 focus-within:ring-white/40">
-            <Search className="h-4 w-4 flex-shrink-0 text-white/70" />
+          <div className="flex items-center gap-2.5 border border-white/25 bg-white/10 px-4 py-3 transition-colors focus-within:border-white/50 focus-within:bg-white/15">
+            <Search className="h-4 w-4 flex-shrink-0 text-white/60" strokeWidth={1.75} />
             <input
               type="text"
               value={searchInput}
@@ -189,40 +194,38 @@ export default function GirlfriendsDayPage() {
 
       {/* ── Body ── */}
       <div className="mx-auto max-w-7xl space-y-4 px-4 py-5 pb-28 sm:px-6">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-ink-secondary">
-            {loading ? 'Loading gifts…' : `${filtered.length} gift${filtered.length !== 1 ? 's' : ''} tagged for ${CAMPAIGN.label}`}
+        <div className="flex items-center justify-between border-b border-border pb-5">
+          <p className="ui-mono ui-mono-sm text-ink-muted">
+            {loading ? 'Loading gifts…' : `${filtered.length} gift${filtered.length !== 1 ? 's' : ''} tagged`}
           </p>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 md:grid-cols-4 lg:grid-cols-5">
             {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-white px-6 py-20 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10">
-              <Gift className="h-7 w-7 text-rose-500" strokeWidth={1.75} />
-            </div>
-            <p className="mb-1 text-lg font-semibold text-ink-secondary">
-              {searchInput ? 'No gifts match your search' : 'No gifts tagged yet'}
-            </p>
-            <p className="mx-auto mb-5 max-w-sm text-sm text-ink-muted">
+          <div className="flex flex-col items-center border border-dashed border-border bg-card px-6 py-20 text-center">
+            <Gift className="mb-6 h-7 w-7 text-rose-500" strokeWidth={1.5} />
+            <h2 className="text-lg text-ink">
+              {searchInput ? 'No gifts match that search' : 'No gifts tagged yet'}
+            </h2>
+            <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-ink-secondary">
               {searchInput
                 ? 'Try a different search term.'
-                : 'Sellers are still adding products to this collection — check back soon.'}
+                : 'Sellers are still adding to this collection — check back soon.'}
             </p>
             <button
               onClick={() => searchInput ? setSearchInput('') : router.push('/sell')}
-              className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-colors hover:bg-rose-600"
+              className="mt-7 inline-flex items-center gap-2 bg-rose-500 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-600"
             >
-              {searchInput ? <X className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
-              {searchInput ? 'Clear search' : 'List a gift for Girlfriend’s Day'}
+              {searchInput ? <X className="h-4 w-4" strokeWidth={2} /> : <ShoppingBag className="h-4 w-4" strokeWidth={1.75} />}
+              {searchInput ? 'Clear search' : 'List a gift'}
             </button>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 md:grid-cols-4 lg:grid-cols-5">
               {visible.map((p, i) => (
                 <div key={p.id} className="gfd-enter" style={{ animationDelay: `${(i % PAGE_SIZE) * 30}ms` }}>
                   <ProductCard product={p} onOpen={() => handleProductClick(p.id)} />
@@ -230,15 +233,15 @@ export default function GirlfriendsDayPage() {
               ))}
             </div>
 
-            <div ref={loaderRef} className="flex items-center justify-center py-8">
+            <div ref={loaderRef} className="flex items-center justify-center py-12">
               {hasMore ? (
-                <div className="flex items-center gap-2 text-sm font-medium text-ink-muted">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Loading more…
+                <div className="ui-mono ui-mono-sm flex items-center gap-2 text-ink-muted">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} /> Loading more
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-1 text-ink-muted">
-                  <CheckCircle className="h-5 w-5" />
-                  <p className="text-xs font-semibold">You&apos;ve seen every gift in the collection</p>
+                <div className="flex flex-col items-center gap-2.5 text-ink-muted">
+                  <CheckCircle className="h-5 w-5" strokeWidth={1.5} />
+                  <p className="ui-mono ui-mono-sm">That&apos;s the whole collection</p>
                 </div>
               )}
             </div>
@@ -246,19 +249,21 @@ export default function GirlfriendsDayPage() {
         )}
 
         {/* ── Seller callout ── */}
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-rose-200/60 bg-gradient-to-r from-rose-50 to-pink-50 px-5 py-5 sm:px-7">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500/10">
-              <HandHeart className="h-5 w-5 text-rose-500" strokeWidth={1.75} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-ink">Selling something gift-worthy?</p>
-              <p className="text-xs text-ink-muted">Tag your listing for {CAMPAIGN.label} to appear in this collection — no discount required.</p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-5 border border-rose-500/25 bg-rose-500/5 px-5 py-6 sm:px-7">
+          <div className="flex items-start gap-3.5">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-rose-500/25 bg-card">
+              <HandHeart className="h-5 w-5 text-rose-500" strokeWidth={1.5} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-ink">Selling something gift-worthy?</p>
+              <p className="mt-1 max-w-[52ch] text-xs leading-relaxed text-ink-secondary">
+                Tag your listing for {CAMPAIGN.label} and it shows up here — no discount required.
+              </p>
             </div>
           </div>
           <button
             onClick={() => router.push('/sell')}
-            className="flex-shrink-0 rounded-xl bg-rose-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-600"
+            className="ui-mono ui-mono-sm inline-flex h-10 flex-shrink-0 items-center bg-rose-500 px-5 text-white transition-colors hover:bg-rose-600"
           >
             List a product
           </button>

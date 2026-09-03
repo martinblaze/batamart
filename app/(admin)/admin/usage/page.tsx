@@ -1,16 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, RefreshCw } from 'lucide-react'
 import {
-  AlertTriangle,
-  Bell,
-  Database,
-  HardDrive,
-  Package,
-  RefreshCw,
-  ShoppingBag,
-  Users,
-} from 'lucide-react'
+  AdminHeader, AdminPanel, StatGrid, AdminButton, type AdminStat,
+} from '@/components/admin/AdminUI'
+import { DataRow } from '@/components/ui/Shell'
 
 interface UsageData {
   dbSize: string | null
@@ -37,34 +32,6 @@ function parseSizeToMb(size: string | null) {
   if (unit === 'gb') return value * 1024
   if (unit === 'tb') return value * 1024 * 1024
   return null
-}
-
-function UsageCard({
-  label,
-  value,
-  sub,
-  icon,
-  accent,
-}: {
-  label: string
-  value: string
-  sub: string
-  icon: React.ReactNode
-  accent: string
-}) {
-  return (
-    <div className="bg-white border border-border rounded-2xl p-6 hover:border-border transition-colors">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl ${accent}`}>
-          {icon}
-        </div>
-        <span className="text-xs text-ink-muted bg-surface px-2 py-1 rounded-full">Live</span>
-      </div>
-      <h3 className="text-ink-secondary text-sm font-medium mb-1">{label}</h3>
-      <p className="text-3xl font-semibold text-ink mb-2 font-mono">{value}</p>
-      <p className="text-sm text-ink-muted">{sub}</p>
-    </div>
-  )
 }
 
 export default function AdminUsagePage() {
@@ -103,109 +70,74 @@ export default function AdminUsagePage() {
   }, [])
 
   const dbSizeMb = useMemo(() => parseSizeToMb(usage?.dbSize ?? null), [usage?.dbSize])
-  const dbSizeSub = dbSizeMb === null
-    ? 'Supabase database size estimate'
-    : `${Math.max(0, Math.round((500 - dbSizeMb) * 10) / 10).toLocaleString()} MB before the 500 MB free-tier storage mark`
+  const headroomMb = dbSizeMb === null ? null : Math.max(0, Math.round((500 - dbSizeMb) * 10) / 10)
+
+  // Storage is the only figure with a ceiling, so it is the only one that
+  // earns a colour — and only once it is actually close to that ceiling.
+  const storageTone: AdminStat['tone'] =
+    headroomMb === null ? 'default' : headroomMb < 50 ? 'danger' : headroomMb < 150 ? 'warning' : 'default'
+
+  const stats: AdminStat[] = usage
+    ? [
+        {
+          label: 'Database size',
+          value: usage.dbSize || 'Unknown',
+          note:
+            headroomMb === null
+              ? 'Supabase size estimate'
+              : `${headroomMb.toLocaleString()} MB before the 500 MB free-tier mark`,
+          tone: storageTone,
+        },
+        { label: 'Users', value: numberFmt(usage.userCount), note: 'Total accounts' },
+        { label: 'Products', value: numberFmt(usage.productCount), note: 'Total product records' },
+        { label: 'Orders', value: numberFmt(usage.orderCount), note: 'Total order records' },
+        {
+          label: 'Notifications',
+          value: numberFmt(usage.notificationCount),
+          note: 'Grows fastest — prune here first',
+        },
+      ]
+    : []
 
   return (
-    <div className="space-y-6 pb-10">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-ink">Usage</h1>
-          <p className="text-sm text-ink-secondary mt-0.5">
-            Database size and table counts for free-tier monitoring
-          </p>
-        </div>
-        <button
-          onClick={fetchUsage}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-border rounded-xl text-sm font-semibold text-ink-secondary hover:text-ink hover:border-border disabled:opacity-60 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-8 pb-10">
+      <AdminHeader
+        eyebrow="Infrastructure"
+        title="Usage"
+        description="Database size and table counts, for keeping the deployment inside its free-tier limits."
+        actions={
+          <AdminButton onClick={fetchUsage} disabled={loading} icon={RefreshCw}>
+            Refresh
+          </AdminButton>
+        }
+      />
 
       {error && (
-        <div className="flex items-start gap-3 bg-danger/10 border border-danger/30 rounded-2xl p-4">
-          <AlertTriangle className="w-5 h-5 text-danger shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 border border-danger/25 bg-danger/5 p-4">
+          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
           <div>
-            <p className="text-sm font-semibold text-danger">Usage data unavailable</p>
-            <p className="text-sm text-danger/80 mt-1">{error}</p>
+            <p className="text-sm font-medium text-danger">Usage data unavailable</p>
+            <p className="mt-1 text-sm text-danger/80">{error}</p>
           </div>
         </div>
       )}
 
       {loading && !usage ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-white border border-border rounded-2xl p-6 animate-pulse">
-              <div className="h-12 w-12 rounded-xl bg-surface mb-4" />
-              <div className="h-4 w-24 bg-surface rounded mb-2" />
-              <div className="h-8 w-20 bg-surface rounded" />
-            </div>
-          ))}
-        </div>
+        <StatGrid stats={Array.from({ length: 5 }, () => ({ label: '', value: '' }))} loading />
       ) : usage ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <UsageCard
-              label="Database Size"
-              value={usage.dbSize || 'Unknown'}
-              sub={dbSizeSub}
-              icon={<HardDrive className="w-6 h-6 text-primary" />}
-              accent="bg-primary/10"
-            />
-            <UsageCard
-              label="Users"
-              value={numberFmt(usage.userCount)}
-              sub="Total accounts in the database"
-              icon={<Users className="w-6 h-6 text-primary" />}
-              accent="bg-primary/10"
-            />
-            <UsageCard
-              label="Products"
-              value={numberFmt(usage.productCount)}
-              sub="Total product records"
-              icon={<Package className="w-6 h-6 text-success" />}
-              accent="bg-success/10"
-            />
-            <UsageCard
-              label="Orders"
-              value={numberFmt(usage.orderCount)}
-              sub="Total order records"
-              icon={<ShoppingBag className="w-6 h-6 text-primary" />}
-              accent="bg-primary/10"
-            />
-            <UsageCard
-              label="Notifications"
-              value={numberFmt(usage.notificationCount)}
-              sub="Rows that can grow quickly over time"
-              icon={<Bell className="w-6 h-6 text-warning" />}
-              accent="bg-warning/100/10"
-            />
-          </div>
+          <StatGrid stats={stats} columns={3} />
 
-          <div className="bg-white border border-border rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Database className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold text-ink">Free-Tier Watchlist</h2>
+          <AdminPanel title="Free-tier watchlist">
+            <div className="ui-divide">
+              <DataRow label="Supabase storage" value={usage.dbSize || 'Unknown'} />
+              <DataRow label="Prune this table first" value="Notifications" />
+              <DataRow
+                label="Last refreshed"
+                value={lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}
+              />
             </div>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-4 py-3 border-b border-border/60">
-                <span className="text-ink-secondary">Supabase storage</span>
-                <span className="font-mono text-ink">{usage.dbSize || 'Unknown'}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4 py-3 border-b border-border/60">
-                <span className="text-ink-secondary">Most likely table to prune first</span>
-                <span className="font-mono text-ink">Notifications</span>
-              </div>
-              <div className="flex items-center justify-between gap-4 py-3">
-                <span className="text-ink-secondary">Last refreshed</span>
-                <span className="font-mono text-ink">{lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}</span>
-              </div>
-            </div>
-          </div>
+          </AdminPanel>
         </>
       ) : null}
     </div>

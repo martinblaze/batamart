@@ -57,7 +57,10 @@ const SHOP_CSS = `
   .filter-chip:hover { transform: scale(1.03); }
 
   .header-gradient {
-    background: var(--color-primary);
+    /* Ink, not accent. A full-bleed blue slab at the top of four different
+       screens was the loudest thing in the product and made every one of
+       them read as a different app. */
+    background: var(--ui-slab);
   }
 
   .shimmer {
@@ -102,7 +105,7 @@ function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }: {
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm">
-      <div className="scale-in bg-white rounded-3xl shadow-soft p-6 max-w-sm w-full">
+      <div className="scale-in bg-card rounded-3xl shadow-soft p-6 max-w-sm w-full">
         <div className="flex items-start gap-4 mb-5">
           <div className="w-12 h-12 bg-danger/10 rounded-2xl flex items-center justify-center flex-shrink-0">
             <AlertTriangle className="w-6 h-6 text-danger" />
@@ -290,10 +293,13 @@ export default function MyShopPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-xl font-semibold text-white">
+              <p className="ui-eyebrow mb-2 max-w-[14rem] !text-white/45">
+                {isSellerMode ? 'Seller' : 'Buyer'}
+              </p>
+              <h1 className="text-[clamp(1.35rem,3vw,2rem)] text-white">
                 {isSellerMode ? 'My shop' : 'My purchases'}
               </h1>
-              <p className="text-white/50 text-xs mt-0.5">
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-white/45">
                 {isSellerMode ? `${products.length} products · ${totalOrders} total orders` : 'Your purchase history'}
               </p>
             </div>
@@ -302,13 +308,13 @@ export default function MyShopPage() {
                 <div className="flex items-center bg-white/10 rounded-xl p-1 border border-white/15">
                   <button
                     onClick={() => !isSellerMode && toggleSellerMode()}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${isSellerMode ? 'bg-white text-primary shadow-soft' : 'text-white/60 hover:text-white/80'}`}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${isSellerMode ? 'bg-card text-primary shadow-soft' : 'text-white/60 hover:text-white/80'}`}
                   >
                     <ShoppingBag className="w-3.5 h-3.5" /> Seller
                   </button>
                   <button
                     onClick={() => isSellerMode && toggleSellerMode()}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${!isSellerMode ? 'bg-white text-primary shadow-soft' : 'text-white/60 hover:text-white/80'}`}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${!isSellerMode ? 'bg-card text-primary shadow-soft' : 'text-white/60 hover:text-white/80'}`}
                   >
                     <Package className="w-3.5 h-3.5" /> Buyer
                   </button>
@@ -341,7 +347,7 @@ export default function MyShopPage() {
                 { icon: <XCircle className="w-5 h-5 text-danger" />, bg: 'bg-danger/10', value: outOfStockCount, label: 'Out of Stock', sub: 'Needs restocking', color: 'text-danger', gradient: false },
                 { icon: <TrendingUp className="w-5 h-5 text-white" />, bg: 'bg-white/20', value: totalOrders, label: 'Total Orders', sub: 'All time sales', color: 'text-white', gradient: true },
               ].map(({ icon, bg, value, label, sub, color, gradient }) => (
-                <div key={label} className={`stat-card rounded-2xl border shadow-soft p-4 sm:p-5 ${gradient ? 'border-transparent text-white' : 'bg-white border-border'}`}
+                <div key={label} className={`stat-card rounded-2xl border shadow-soft p-4 sm:p-5 ${gradient ? 'border-transparent text-white' : 'bg-card border-border'}`}
                   style={gradient ? { background: 'var(--color-primary)' } : {}}>
                   <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center mb-3`}>{icon}</div>
                   <p className={`text-2xl sm:text-3xl font-semibold ${color}`}>{value}</p>
@@ -352,7 +358,7 @@ export default function MyShopPage() {
             </div>
 
             {/* ── Toolbar ── */}
-            <div className="bg-white rounded-2xl border border-border shadow-soft p-4">
+            <div className="bg-card rounded-2xl border border-border shadow-soft p-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" />
@@ -360,7 +366,7 @@ export default function MyShopPage() {
                     type="text" value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder="Search your products…"
-                    className="w-full pl-10 pr-4 py-2.5 bg-surface rounded-xl border-2 border-transparent focus:border-primary focus:bg-white focus:outline-none text-sm font-medium transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-surface rounded-xl border-2 border-transparent focus:border-primary focus:bg-card focus:outline-none text-sm font-medium transition-all"
                   />
                   {searchTerm && (
                     <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink-secondary">
@@ -385,10 +391,10 @@ export default function MyShopPage() {
                 </div>
 
                 <div className="flex items-center gap-1 bg-surface p-1 rounded-xl ml-auto flex-shrink-0">
-                  <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-primary shadow-soft' : 'text-ink-secondary hover:text-ink-secondary'}`}>
+                  <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-card text-primary shadow-soft' : 'text-ink-secondary hover:text-ink-secondary'}`}>
                     <Grid className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-primary shadow-soft' : 'text-ink-secondary hover:text-ink-secondary'}`}>
+                  <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-card text-primary shadow-soft' : 'text-ink-secondary hover:text-ink-secondary'}`}>
                     <List className="w-4 h-4" />
                   </button>
                 </div>
@@ -397,7 +403,7 @@ export default function MyShopPage() {
 
             {/* ── Products ── */}
             {filteredProducts.length === 0 ? (
-              <div className="fade-up flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-border">
+              <div className="fade-up flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-dashed border-border">
                 <div className="w-20 h-20 rounded-3xl bg-surface flex items-center justify-center mb-5 ring-1 ring-border">
                   <Package className="w-10 h-10 text-ink-muted" />
                 </div>
@@ -414,7 +420,7 @@ export default function MyShopPage() {
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredProducts.map((product, i) => (
-                  <div key={product.id} className="product-row fade-up bg-white rounded-2xl border border-border shadow-soft overflow-hidden group"
+                  <div key={product.id} className="product-row fade-up bg-card rounded-2xl border border-border shadow-soft overflow-hidden group"
                     style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="product-img-wrap relative aspect-square bg-surface">
                       <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
@@ -484,7 +490,7 @@ export default function MyShopPage() {
               /* List view */
               <div className="space-y-3">
                 {filteredProducts.map((product, i) => (
-                  <div key={product.id} className="product-row fade-up bg-white rounded-2xl border border-border shadow-soft overflow-hidden group flex"
+                  <div key={product.id} className="product-row fade-up bg-card rounded-2xl border border-border shadow-soft overflow-hidden group flex"
                     style={{ animationDelay: `${i * 35}ms` }}>
                     <div className="product-img-wrap w-28 sm:w-36 flex-shrink-0 relative bg-surface" style={{ minHeight: '120px' }}>
                       <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover absolute inset-0" />
@@ -556,7 +562,7 @@ export default function MyShopPage() {
                             <div className="flex items-center gap-2">
                               <input type="number" min="1" value={restockAmount}
                                 onChange={e => setRestockAmount(parseInt(e.target.value) || 1)}
-                                className="w-20 px-3 py-2 border-2 border-primary/20 rounded-xl focus:outline-none focus:border-primary text-sm font-semibold bg-white"
+                                className="w-20 px-3 py-2 border-2 border-primary/20 rounded-xl focus:outline-none focus:border-primary text-sm font-semibold bg-card"
                               />
                               <button onClick={() => handleRestock(product.id)}
                                 className="px-3 py-2 bg-success/100 hover:bg-success text-white rounded-xl font-semibold text-sm transition-all">
@@ -596,7 +602,7 @@ export default function MyShopPage() {
         ) : (
           /* ── Buyer mode ── */
           <div className="space-y-4">
-            <div className="fade-up bg-white rounded-2xl border border-border shadow-soft p-8 sm:p-10 text-center">
+            <div className="fade-up bg-card rounded-2xl border border-border shadow-soft p-8 sm:p-10 text-center">
               <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-soft"
                 style={{ background: 'var(--color-primary)' }}>
                 <ShoppingBag className="w-10 h-10 text-white" />

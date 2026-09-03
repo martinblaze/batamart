@@ -15,10 +15,44 @@ import { isSplashPending } from '@/components/SplashScreen'
 import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider'
 import { Logo } from '@/components/layout/Logo'
 import SearchAutocomplete from '@/components/SearchAutocomplete'
+import { motion, useScroll, useTransform } from 'framer-motion'
 
 function BATAMARTLogo({ appMode = false }: { appMode?: boolean }) {
   const href = appMode ? '/marketplace?app=true' : '/'
   return <Logo href={href} size={30} />
+}
+
+/**
+ * The top bar's backing plate, matched to the marketing nav.
+ *
+ * The bar itself is fully transparent at the top of the page and the plate
+ * fades in underneath as you scroll, so content passes *under* the navigation
+ * rather than stopping at a hard white band. The blur is fixed and the whole
+ * plate is animated as one composited layer — ramping a `backdrop-filter`
+ * directly is what makes this effect stutter on mid-range phones.
+ *
+ * The hairline is held back until later than the fill so the bar gains weight
+ * in two stages instead of snapping into place.
+ */
+function TopBarPlate() {
+  const { scrollY } = useScroll()
+  const plateOpacity = useTransform(scrollY, [0, 80, 200], [0, 0.45, 1])
+  const lineOpacity = useTransform(scrollY, [120, 240], [0, 1])
+
+  return (
+    <>
+      <motion.span
+        aria-hidden
+        style={{ opacity: plateOpacity }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-card/92 backdrop-blur-xl"
+      />
+      <motion.span
+        aria-hidden
+        style={{ opacity: lineOpacity }}
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-px bg-border"
+      />
+    </>
+  )
 }
 
 function AppTopBar({
@@ -29,7 +63,8 @@ function AppTopBar({
   cartCount: number
 }) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 isolate">
+      <TopBarPlate />
       <div className="flex items-center justify-between h-14 px-4">
         <BATAMARTLogo appMode />
         <div className="flex items-center gap-1">
@@ -51,7 +86,7 @@ function AppTopBar({
           ) : (
             <Link
               href="/login?app=true"
-              className="px-4 py-1.5 rounded-lg text-sm font-medium text-white bg-primary hover:brightness-95 transition-all"
+              className="rounded-lg bg-ink px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-ink/85"
             >
               Login
             </Link>
@@ -70,7 +105,8 @@ function RiderTopBar({
   userName: string
 }) {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 isolate">
+      <TopBarPlate />
       <div className="flex items-center justify-between h-14 px-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary">
@@ -167,7 +203,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-card/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           willChange: 'transform',
           backfaceVisibility: 'hidden',
@@ -195,7 +231,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-primary" />
+                  <span className="absolute left-1/2 top-0 h-[2px] w-10 -translate-x-1/2 bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -237,7 +273,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-primary" />
+                  <span className="absolute left-1/2 top-0 h-[2px] w-10 -translate-x-1/2 bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -268,7 +304,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
             onClick={() => setProfileOpen(false)}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-2xl shadow-soft border-t border-border bg-white"
+            className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-2xl shadow-soft border-t border-border bg-card"
             style={{
               paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))',
             }}
@@ -375,7 +411,7 @@ function AppBottomNav({
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-white/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-card/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           willChange: 'transform',
           WebkitBackfaceVisibility: 'hidden',
@@ -401,7 +437,7 @@ function AppBottomNav({
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-primary rounded-b-full" />
+                  <span className="absolute left-1/2 top-0 h-[2px] w-10 -translate-x-1/2 bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -437,7 +473,7 @@ function AppBottomNav({
                 }`}
               >
                 {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-primary rounded-b-full" />
+                  <span className="absolute left-1/2 top-0 h-[2px] w-10 -translate-x-1/2 bg-primary" />
                 )}
                 <span className={active ? 'scale-110 transition-transform' : 'transition-transform'}>
                   {icon}
@@ -478,7 +514,7 @@ function AppBottomNav({
             onClick={() => setProfileOpen(false)}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-white rounded-t-2xl shadow-soft"
+            className="fixed bottom-0 left-0 right-0 z-[70] bg-card rounded-t-2xl shadow-soft"
             style={{ paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))' }}
           >
             <div className="flex justify-center pt-3 pb-2">
@@ -533,7 +569,7 @@ function AppBottomNav({
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}
                         >
                           <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
                               isSellerMode ? 'translate-x-6' : 'translate-x-1'
                             }`}
                           />
@@ -797,7 +833,7 @@ export function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border shadow-soft transition-transform duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-50 border-b border-border bg-card/88 backdrop-blur-xl backdrop-saturate-150 transition-transform duration-500 ease-out ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
@@ -819,17 +855,17 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => runNavSearch(navSearch)}
-              className="relative z-50 flex-shrink-0 px-3 py-2.5 bg-primary hover:brightness-95 text-white rounded-xl font-medium text-xs transition-colors flex items-center gap-1.5"
+              className="relative z-50 flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-ink px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-ink/85"
             >
-              <Search className="w-3.5 h-3.5" strokeWidth={1.75} /> Search
+              <Search className="h-3.5 w-3.5" strokeWidth={2} /> Search
             </button>
           </div>
 
           <div className="hidden md:flex items-center space-x-2 flex-shrink-0 ml-auto">
             {universityShortName && (
-              <span className="flex items-center gap-1 text-xs font-medium text-ink-secondary whitespace-nowrap pr-2 border-r border-border mr-1">
-                <MapPin className="w-3.5 h-3.5 text-ink-muted flex-shrink-0" strokeWidth={1.75} />
-                Deliver to <span className="text-ink font-semibold">{universityShortName}</span>
+              <span className="mr-1 flex items-center gap-1.5 whitespace-nowrap border-r border-border pr-3 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={1.75} />
+                Deliver to <span className="text-ink">{universityShortName}</span>
               </span>
             )}
             {isLoggedIn && (
@@ -877,7 +913,7 @@ export function Navbar() {
                   <ChevronDown className={`w-4 h-4 text-ink-secondary transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={1.75} />
                 </button>
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-soft border border-border py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-64 bg-card rounded-xl shadow-soft border border-border py-2 z-50">
                     {/* Rider-specific dropdown */}
                     {userRole === 'RIDER' ? (
                       <>
@@ -932,7 +968,7 @@ export function Navbar() {
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-ink-secondary">Mode</span>
                               <button onClick={toggleRoleMode} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSellerMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${isSellerMode ? 'translate-x-6' : 'translate-x-1'}`} />
                               </button>
                               <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
                             </div>
@@ -953,8 +989,18 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link href="/login" className="font-medium text-ink hover:text-primary transition-colors">Login</Link>
-                <Link href="/signup" className="text-white px-4 py-2 rounded-lg font-medium transition-all text-sm bg-primary hover:brightness-95">Sign up</Link>
+                <Link
+                  href="/login"
+                  className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:text-ink"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="rounded-lg bg-ink px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-ink/85"
+                >
+                  Sign up
+                </Link>
               </div>
             )}
           </div>
@@ -971,7 +1017,7 @@ export function Navbar() {
       </div>
 
       {isMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white max-h-[calc(100dvh-4rem)] overflow-y-auto">
+        <div className="md:hidden border-t border-border bg-card max-h-[calc(100dvh-4rem)] overflow-y-auto">
           <div className="px-4 py-4">
             <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-border">
               {isLoggedIn && userRole !== 'RIDER' && (
@@ -1046,7 +1092,7 @@ export function Navbar() {
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
                         <button onClick={toggleRoleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSellerMode ? 'translate-x-5' : 'translate-x-1'}`} />
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${isSellerMode ? 'translate-x-5' : 'translate-x-1'}`} />
                         </button>
                       </div>
                     )}

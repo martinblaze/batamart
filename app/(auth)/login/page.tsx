@@ -99,15 +99,16 @@ function LoginForm() {
       <div className="max-w-md w-full">
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center mb-4">
-            <Logo size={40} />
+        <div className="mb-8 text-center">
+          <div className="mb-6 inline-flex items-center">
+            <Logo size={34} />
           </div>
-          <h1 className="text-[28px] font-semibold text-ink mb-2">Welcome back</h1>
-          <p className="text-ink-secondary">Log in to your BataMart account</p>
+          <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Account</p>
+          <h1 className="text-[clamp(1.9rem,5vw,2.6rem)] leading-[1.02] text-ink">Welcome back</h1>
+          <p className="mt-3 text-[15px] text-ink-secondary">Log in to your BataMart account</p>
         </div>
 
-        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
+        <div className="border border-border bg-card p-6 sm:p-8">
 
           {/* Suspension message */}
           {suspensionMessage && (
@@ -154,14 +155,14 @@ function LoginForm() {
             />
           </div>
 
-          <p className="text-center text-xs text-ink-muted mb-5">
+          <p className="mb-5 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">
             Recommended — fast and secure
           </p>
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
             <div className="h-px bg-border flex-1" />
-            <span className="text-xs text-ink-muted font-medium">or continue with email</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">or continue with email</span>
             <div className="h-px bg-border flex-1" />
           </div>
 
@@ -169,7 +170,7 @@ function LoginForm() {
           {!showEmailForm ? (
             <button
               onClick={() => setShowEmailForm(true)}
-              className="w-full h-11 rounded-lg border border-border text-ink-secondary font-medium text-sm hover:bg-surface transition-all flex items-center justify-center gap-2"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink"
             >
               <Mail className="w-4 h-4" strokeWidth={1.75} />
               Use email & password instead
@@ -177,27 +178,27 @@ function LoginForm() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email address</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Email address</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Password</label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+                  className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
                   placeholder="Enter your password"
                 />
               </div>
@@ -211,7 +212,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
+                className="h-12 w-full rounded-lg bg-ink font-mono text-[11px] uppercase tracking-[0.16em] text-background transition-colors duration-300 hover:bg-primary disabled:opacity-50"
               >
                 {loading ? 'Logging in…' : 'Log in'}
               </button>
@@ -242,7 +243,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-surface">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     }>
       <LoginForm />

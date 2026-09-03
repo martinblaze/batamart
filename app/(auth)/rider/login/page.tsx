@@ -6,6 +6,12 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Bike } from 'lucide-react'
+import {
+  AuthShell,
+  AuthField,
+  AuthNotice,
+  AuthSubmit,
+} from '@/components/auth/AuthShell'
 
 function RiderLoginForm() {
   const router = useRouter()
@@ -72,108 +78,73 @@ function RiderLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center mb-4">
-            <div className="w-11 h-11 bg-primary rounded-xl flex items-center justify-center">
-              <Bike className="w-6 h-6 text-white" strokeWidth={1.75} />
-            </div>
-          </div>
-          <h1 className="text-[28px] font-semibold text-ink mb-2">Rider login</h1>
-          <p className="text-ink-secondary">Log in to see available deliveries</p>
-        </div>
+    <AuthShell
+      eyebrow="Deliveries"
+      title="Rider login"
+      subtitle="Log in to see the runs available to you right now."
+      icon={Bike}
+      footer={
+        <>
+          Not a rider?{' '}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Regular login
+          </Link>
+        </>
+      }
+    >
+      {wasForceLoggedOut && (
+        <AuthNotice tone="warning" icon={AlertTriangle} title="Access denied" className="mb-5">
+          Rider accounts can only reach the rider dashboard, wallet and notifications. You have been
+          logged out — use a regular account for the marketplace.
+          <Link
+            href="/login"
+            className="mt-2 block font-medium underline transition-all hover:no-underline"
+          >
+            Use a regular account
+          </Link>
+        </AuthNotice>
+      )}
 
-        <div className="bg-white border border-border rounded-xl shadow-soft p-8">
-          {wasForceLoggedOut && (
-            <div className="mb-5 bg-warning/5 border border-warning/20 rounded-lg p-4 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" strokeWidth={1.75} />
-              <div>
-                <p className="font-medium text-ink text-sm">Access denied</p>
-                <p className="text-ink-secondary text-sm mt-1">
-                  Rider accounts can only access the rider dashboard, wallet, and notifications.
-                  You have been logged out. Please use a regular account to access the marketplace.
-                </p>
-                <Link
-                  href="/login"
-                  className="inline-block mt-2 text-sm text-warning font-medium underline hover:no-underline"
-                >
-                  Use a regular account
-                </Link>
-              </div>
-            </div>
-          )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          label="Email address"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+        />
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Email address</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                autoComplete="email"
-                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors"
-                placeholder="Email address"
-              />
-            </div>
+        <AuthField
+          label="Password"
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          required
+          autoComplete="current-password"
+          placeholder="Enter your password"
+        />
 
-            <div>
-              <label className="block text-[13px] font-medium text-ink-secondary mb-1.5">Password</label>
-              <input
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                autoComplete="current-password"
-                className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 transition-colors"
-                placeholder="Password"
-              />
-            </div>
+        {error && <AuthNotice>{error}</AuthNotice>}
 
-            {error && (
-              <div className="bg-danger/5 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 bg-primary hover:brightness-95 text-white rounded-lg font-medium text-[15px] disabled:opacity-50 transition-all"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  Logging in…
-                </span>
-              ) : (
-                'Log in as rider'
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-ink-secondary text-sm">
-              Not a rider?{' '}
-              <Link href="/login" className="text-primary hover:underline font-medium">
-                Regular login
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+        <AuthSubmit type="submit" loading={loading} loadingText="Logging in…">
+          Log in as rider
+        </AuthSubmit>
+      </form>
+    </AuthShell>
   )
 }
 
 export default function RiderLoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-surface">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-surface">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
+        </div>
+      }
+    >
       <RiderLoginForm />
     </Suspense>
   )

@@ -57,7 +57,7 @@ export default function InstallPrompt() {
         }
       `}</style>
 
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-white shadow-soft border border-primary/20">
+      <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-card shadow-soft border border-primary/20">
         {/* Top accent bar */}
         <div className="h-1 w-full bg-primary" />
 
@@ -96,7 +96,7 @@ export default function InstallPrompt() {
             <button
               onClick={install}
               disabled={installing}
-              className="bg-primary hover:brightness-95 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-opacity min-w-[72px]"
+              className="bg-ink hover:bg-primary text-background text-xs font-semibold px-4 py-2 rounded-xl transition-opacity min-w-[72px]"
               style={{ opacity: installing ? 0.7 : 1 }}
             >
               {installing ? 'Opening…' : 'Install'}

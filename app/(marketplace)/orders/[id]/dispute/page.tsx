@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Shield, Upload, AlertCircle, Truck, MapPin, Phone, Loader2, X } from 'lucide-react'
+import { Upload, AlertCircle, Truck, MapPin, Phone, Loader2, X } from 'lucide-react'
 import { DISPUTE_WINDOW_HOURS } from '@/lib/escrow'
+import { Shell, PageHeader, EmptyState, DataRow } from '@/components/ui/Shell'
+import { Button } from '@/components/ui/button'
 
 interface Order {
   id: string
@@ -177,20 +179,27 @@ export default function OpenDisputePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-warning border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-16 h-16 text-danger mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-ink mb-2">Order Not Found</h2>
-          <p className="text-ink-secondary">{error}</p>
-        </div>
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-16 sm:pt-24">
+          <EmptyState
+            icon={AlertCircle}
+            title="Order not found"
+            description={error || "This order doesn't exist, or it isn't one you have access to."}
+            action={
+              <Button variant="ink" onClick={() => router.push('/orders')}>
+                Back to orders
+              </Button>
+            }
+          />
+        </Shell>
       </div>
     )
   }
@@ -210,164 +219,281 @@ export default function OpenDisputePage() {
     else if (!isWithinTimeWindow) msg = `Dispute window has expired (must be within ${DISPUTE_WINDOW_HOURS} hours of delivery).`
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface px-4">
-        <div className="text-center max-w-md bg-white p-8 rounded-xl shadow-soft">
-          <AlertCircle className="w-16 h-16 text-warning mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-ink mb-2">Cannot Open Dispute</h2>
-          <p className="text-ink-secondary mb-6">{msg}</p>
-          <div className="mb-6 p-4 bg-surface rounded-lg text-left">
-            <p className="text-sm text-ink-secondary mb-1"><strong>Order Status:</strong> {order.status}</p>
-            <p className="text-sm text-ink-secondary"><strong>Delivered At:</strong> {deliveredDate ? deliveredDate.toLocaleString() : 'Not set'}</p>
-            {deadline && <p className="text-sm text-ink-secondary mt-1"><strong>Deadline:</strong> {deadline.toLocaleString()}</p>}
+      <div className="min-h-screen bg-surface pb-20">
+        <Shell width="narrow" className="pt-12 sm:pt-20">
+          <div className="border border-border bg-card p-6 sm:p-10">
+            <AlertCircle className="mb-6 h-9 w-9 text-warning" strokeWidth={1.5} />
+            <p className="ui-eyebrow mb-4">Not eligible</p>
+            <h1 className="text-[clamp(1.5rem,4vw,2rem)] leading-tight text-ink">
+              This order can&apos;t be disputed
+            </h1>
+            <p className="mt-3 text-[15px] leading-relaxed text-ink-secondary">{msg}</p>
+
+            <div className="ui-divide mt-8 border-t border-border">
+              <DataRow label="Order status" value={order.status.replace(/_/g, ' ')} />
+              <DataRow
+                label="Delivered"
+                value={deliveredDate ? deliveredDate.toLocaleString() : 'Not set'}
+              />
+              {deadline && <DataRow label="Deadline" value={deadline.toLocaleString()} />}
+            </div>
+
+            <Button variant="ink" size="lg" fullWidth className="mt-8" onClick={() => router.back()}>
+              Go back
+            </Button>
           </div>
-          <button onClick={() => router.back()} className="px-6 py-3 bg-border hover:brightness-95 text-ink rounded-lg font-medium transition-colors">
-            Go Back
-          </button>
-        </div>
+        </Shell>
       </div>
     )
   }
 
-  return (
-    <div className="min-h-screen bg-surface dark:bg-[#000000] py-8 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl shadow-soft p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-8 h-8 text-danger" />
-            <div>
-              <h1 className="text-2xl font-semibold text-ink">Open a Dispute</h1>
-              <p className="text-sm text-ink-secondary">Order #{order.orderNumber}</p>
-            </div>
-          </div>
+  const labelClass =
+    'mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary'
+  const controlClass =
+    'w-full border border-border bg-card px-4 text-[15px] text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15'
 
-          <div className="mb-6 p-4 bg-surface rounded-lg flex gap-4">
-            <img src={order.product.images[0] || '/placeholder.png'} alt={order.product.name} className="w-20 h-20 object-cover rounded" />
-            <div className="flex-1">
-              <h3 className="font-semibold text-ink">{order.product.name}</h3>
-              <p className="text-sm font-semibold text-warning mt-1">₦{order.totalAmount.toLocaleString()}</p>
+  return (
+    <div className="min-h-screen bg-surface pb-24">
+      <Shell width="reading" className="pt-8 sm:pt-12">
+        <PageHeader
+          eyebrow="Support"
+          back={{ href: `/orders/${orderId}`, label: `Order #${order.orderNumber}` }}
+          title={
+            <>
+              Open a <span className="ui-serif">dispute</span>
+            </>
+          }
+          description={`Tell us what went wrong. Disputes must be filed within ${DISPUTE_WINDOW_HOURS} hours of delivery and need photo evidence.`}
+        />
+
+        <div className="mt-10 space-y-8">
+          {/* Subject of the dispute */}
+          <div className="flex items-center gap-4 border border-border bg-card p-4 sm:p-5">
+            <img
+              src={order.product.images[0] || '/placeholder.png'}
+              alt=""
+              className="h-20 w-20 flex-shrink-0 object-cover"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="ui-mono ui-mono-sm text-ink-muted">#{order.orderNumber}</p>
+              <h2 className="mt-1.5 truncate text-base font-medium text-ink">
+                {order.product.name}
+              </h2>
+              <p className="ui-figure mt-1 text-[15px] text-ink">
+                ₦{order.totalAmount.toLocaleString()}
+              </p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-danger/10 border border-danger/30 rounded-lg">
+            <div className="flex items-start gap-3 border border-danger/25 bg-danger/5 p-4">
+              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-danger" strokeWidth={1.75} />
               <p className="text-sm text-danger">{error}</p>
             </div>
           )}
 
-          <div className="mb-6 p-4 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning">
-            <strong>Note:</strong> Disputes must be filed within {DISPUTE_WINDOW_HOURS} hours after delivery, with evidence images.
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-9">
+            {/* ── What went wrong ─────────────────────────────────────────── */}
+            <section>
+              <p className="ui-eyebrow mb-6">What went wrong</p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-ink-secondary mb-2">Reason *</label>
-              <select
-                value={formData.reason}
-                onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-warning/40 focus:border-transparent text-sm mb-3"
-                required
-              >
-                <option value="">Select reason</option>
-                {REASON_OPTIONS.map(reason => (
-                  <option key={reason} value={reason}>{reason.replace(/_/g, ' ')}</option>
-                ))}
-              </select>
-
-              <label className="block text-sm font-medium text-ink-secondary mb-2">Description *</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-warning/40 focus:border-transparent min-h-36 resize-none"
-                placeholder="Explain exactly what is wrong with the product..."
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-ink-secondary mb-3">Resolution</label>
-              <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-warning bg-warning/10">
-                <div className="p-2 rounded-lg mt-0.5 bg-warning/10">
-                  <Truck className="w-4 h-4 text-warning" />
+              <div className="space-y-5">
+                <div>
+                  <label className={labelClass}>Reason *</label>
+                  <select
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                    className={`${controlClass} h-12`}
+                    required
+                  >
+                    <option value="">Select a reason</option>
+                    {REASON_OPTIONS.map((reason) => (
+                      <option key={reason} value={reason}>
+                        {reason.replace(/_/g, ' ')}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm text-warning">Refund + Return Item</p>
-                  <p className="text-xs text-ink-secondary mt-0.5">A rider will collect the item and return it before refund is released.</p>
+
+                <div>
+                  <label className={labelClass}>Description *</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className={`${controlClass} min-h-36 resize-none py-3.5 leading-relaxed`}
+                    placeholder="Explain exactly what is wrong with the item — the more specific, the faster this resolves."
+                    required
+                  />
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <MapPin className="w-4 h-4 text-ink-secondary" />
-                <label className="text-sm font-medium text-ink-secondary">Confirm Pickup Address</label>
+            {/* ── Resolution ──────────────────────────────────────────────── */}
+            <section>
+              <p className="ui-eyebrow mb-6">Resolution</p>
+              <div className="flex items-start gap-4 border border-border bg-card p-4 sm:p-5">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center border border-border bg-surface">
+                  <Truck className="h-4 w-4 text-ink-secondary" strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-ink">Refund and return the item</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">
+                    A rider collects the item and returns it to the seller. Your refund is released
+                    once the return is confirmed.
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-ink-secondary mb-3">Pre-filled from your delivery address. Edit if needed.</p>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+            </section>
+
+            {/* ── Pickup address ──────────────────────────────────────────── */}
+            <section>
+              <p className="ui-eyebrow mb-2">
+                <MapPin className="h-3.5 w-3.5" strokeWidth={1.75} />
+                Pickup address
+              </p>
+              <p className="mb-6 text-[13px] text-ink-secondary">
+                Pre-filled from your delivery address. Edit it if the item is somewhere else.
+              </p>
+
+              <div className="space-y-5">
+                <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="block text-xs text-ink-secondary mb-1">Hostel / Area *</label>
-                    <input type="text" value={formData.pickupHostel} onChange={(e) => setFormData({ ...formData, pickupHostel: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
+                    <label className={labelClass}>Hostel / area *</label>
+                    <input
+                      type="text"
+                      value={formData.pickupHostel}
+                      onChange={(e) => setFormData({ ...formData, pickupHostel: e.target.value })}
+                      className={`${controlClass} h-12`}
+                      required
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs text-ink-secondary mb-1">Room Number *</label>
-                    <input type="text" value={formData.pickupRoom} onChange={(e) => setFormData({ ...formData, pickupRoom: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
+                    <label className={labelClass}>Room number *</label>
+                    <input
+                      type="text"
+                      value={formData.pickupRoom}
+                      onChange={(e) => setFormData({ ...formData, pickupRoom: e.target.value })}
+                      className={`${controlClass} h-12`}
+                      required
+                    />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-xs text-ink-secondary mb-1">Landmark</label>
-                  <input type="text" value={formData.pickupLandmark} onChange={(e) => setFormData({ ...formData, pickupLandmark: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" />
+                  <label className={labelClass}>Landmark</label>
+                  <input
+                    type="text"
+                    value={formData.pickupLandmark}
+                    onChange={(e) => setFormData({ ...formData, pickupLandmark: e.target.value })}
+                    className={`${controlClass} h-12`}
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-xs text-ink-secondary mb-1 flex items-center gap-1"><Phone className="w-3 h-3" /> Contact Number *</label>
-                  <input type="tel" value={formData.pickupPhone} onChange={(e) => setFormData({ ...formData, pickupPhone: e.target.value })} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm focus:ring-2 focus:ring-warning/40 focus:border-transparent" required />
+                  <label className={`${labelClass} flex items-center gap-1.5`}>
+                    <Phone className="h-3 w-3" strokeWidth={2} />
+                    Contact number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.pickupPhone}
+                    onChange={(e) => setFormData({ ...formData, pickupPhone: e.target.value })}
+                    className={`${controlClass} h-12`}
+                    required
+                  />
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <label className="block text-sm font-medium text-ink-secondary mb-2">Evidence Images (required)</label>
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                <Upload className="w-8 h-8 text-ink-muted mx-auto mb-2" />
-                <p className="text-sm text-ink-secondary">Upload clear photos showing the issue (max 5)</p>
+            {/* ── Evidence ────────────────────────────────────────────────── */}
+            <section>
+              <p className="ui-eyebrow mb-2">Evidence</p>
+              <p className="mb-6 text-[13px] text-ink-secondary">
+                Clear photos of the problem. Required — up to five.
+              </p>
 
-                <label className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-warning/100 hover:brightness-95 text-white rounded-lg text-sm font-semibold cursor-pointer transition-colors">
-                  {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {uploading ? 'Uploading...' : 'Choose Images'}
-                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => uploadEvidenceFiles(e.target.files)} disabled={uploading} />
+              <div className="border border-dashed border-border bg-card p-8 text-center">
+                <Upload className="mx-auto mb-4 h-7 w-7 text-ink-muted" strokeWidth={1.5} />
+                <p className="text-sm text-ink-secondary">
+                  Show the damage, the wrong item, or whatever the issue is.
+                </p>
+
+                <label className="ui-mono ui-mono-sm mt-5 inline-flex cursor-pointer items-center gap-2 bg-ink px-5 py-3 text-background transition-colors hover:bg-ink/90">
+                  {uploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" strokeWidth={2} />
+                  )}
+                  {uploading ? 'Uploading…' : 'Choose images'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => uploadEvidenceFiles(e.target.files)}
+                    disabled={uploading}
+                  />
                 </label>
 
-                <p className="text-xs text-ink-muted mt-2">{formData.evidence.length} / 5 uploaded</p>
+                <p className="ui-mono ui-mono-sm mt-4 text-ink-muted">
+                  {formData.evidence.length} / 5 uploaded
+                </p>
 
                 {formData.evidence.length > 0 && (
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-5">
                     {formData.evidence.map((url, idx) => (
-                      <div key={`${url}-${idx}`} className="relative">
-                        <img src={url} alt={`Evidence ${idx + 1}`} className="w-full h-20 object-cover rounded-md border border-border" />
+                      <div key={`${url}-${idx}`} className="group relative">
+                        <img
+                          src={url}
+                          alt={`Evidence ${idx + 1}`}
+                          className="h-20 w-full border border-border object-cover"
+                        />
                         <button
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, evidence: prev.evidence.filter((_, i) => i !== idx) }))}
-                          className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center"
+                          aria-label={`Remove evidence ${idx + 1}`}
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              evidence: prev.evidence.filter((_, i) => i !== idx),
+                            }))
+                          }
+                          className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-background transition-transform duration-200 hover:scale-110"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="h-3 w-3" strokeWidth={2.5} />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
+            </section>
 
-            <div className="flex gap-3">
-              <button type="button" onClick={() => router.back()} className="flex-1 px-6 py-3 border border-border rounded-lg font-medium text-ink-secondary hover:bg-surface transition-colors" disabled={submitting || uploading}>
+            <div className="flex flex-col gap-3 border-t border-border pt-8 sm:flex-row">
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                onClick={() => router.back()}
+                disabled={submitting || uploading}
+                className="sm:flex-1"
+              >
                 Cancel
-              </button>
-              <button type="submit" className="flex-1 px-6 py-3 bg-danger hover:brightness-95 text-white rounded-lg font-semibold disabled:opacity-50 transition-colors" disabled={submitting || uploading || !!order.dispute}>
-                {submitting ? 'Submitting...' : 'Submit Dispute'}
-              </button>
+              </Button>
+              <Button
+                type="submit"
+                variant="danger"
+                size="lg"
+                isLoading={submitting}
+                loadingText="Submitting…"
+                disabled={uploading || !!order.dispute}
+                className="sm:flex-[2]"
+              >
+                Submit dispute
+              </Button>
             </div>
           </form>
         </div>
-      </div>
+      </Shell>
     </div>
   )
 }

@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white border border-border rounded-2xl shadow-soft p-8 text-center">
+          <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-soft p-8 text-center">
             <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-danger" strokeWidth={1.75} />
             </div>
@@ -56,14 +56,14 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-primary hover:brightness-95 text-white rounded-lg font-medium transition-all"
+                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-ink hover:bg-primary text-background rounded-lg font-medium transition-all"
               >
                 <RefreshCw className="w-4 h-4" strokeWidth={1.75} />
                 Reload page
               </button>
               <Link
                 href="/"
-                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-white border border-border hover:bg-surface text-ink rounded-lg font-medium transition-all"
+                className="flex-1 flex items-center justify-center gap-2 h-11 px-4 bg-card border border-border hover:bg-surface text-ink rounded-lg font-medium transition-all"
               >
                 <Home className="w-4 h-4" strokeWidth={1.75} />
                 Go home
@@ -134,7 +134,7 @@ export function EmptyState({
       {action && (
         <button
           onClick={action.onClick}
-          className="h-11 px-4 bg-primary hover:brightness-95 text-white rounded-lg font-medium transition-all"
+          className="h-11 px-4 bg-ink hover:bg-primary text-background rounded-lg font-medium transition-all"
         >
           {action.label}
         </button>

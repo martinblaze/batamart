@@ -10,11 +10,13 @@ import {
 } from 'lucide-react'
 import { getCategoryDisplayInfo } from '@/lib/variants'
 import { CAMPAIGNS, isValidCampaignKey } from '@/lib/campaigns'
+import { AdminPanel, AdminEmpty, AdminButton } from '@/components/admin/AdminUI'
+import { Badge, type BadgeStatus } from '@/components/ui/Badge'
 
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: 'bg-warning/10 text-warning border-warning/30',
-  APPROVED: 'bg-success/10 text-success border-success/30',
-  REJECTED: 'bg-danger/10 text-danger border-danger/30',
+const STATUS_TONES: Record<string, BadgeStatus> = {
+  PENDING: 'warning',
+  APPROVED: 'success',
+  REJECTED: 'danger',
 }
 
 function fmt(n: number) {
@@ -109,19 +111,23 @@ export default function AdminProductDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-24">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-ink" />
       </div>
     )
   }
 
   if (!product) {
     return (
-      <div className="py-24 text-center text-ink-secondary">
-        <p className="mb-4">Product not found.</p>
-        <button onClick={() => router.push('/admin/products')} className="text-primary font-semibold hover:underline">
-          Back to products
-        </button>
-      </div>
+      <AdminEmpty
+        icon={Package}
+        title="Product not found"
+        description="This listing may have been deleted by its seller or removed in moderation."
+        action={
+          <AdminButton tone="ink" onClick={() => router.push('/admin/products')}>
+            Back to products
+          </AdminButton>
+        }
+      />
     )
   }
 
@@ -133,17 +139,21 @@ export default function AdminProductDetailPage() {
     <div className="space-y-6 pb-16">
       <button
         onClick={() => router.push('/admin/products')}
-        className="flex items-center gap-2 text-sm font-semibold text-ink-secondary hover:text-primary transition-colors"
+        className="group ui-mono ui-mono-sm inline-flex items-center gap-2 text-ink-secondary transition-colors hover:text-ink"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Products
+        <ArrowLeft
+          className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
+          strokeWidth={2}
+        />
+        Back to products
       </button>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* ── Left: images + details ── */}
         <div className="space-y-6">
-          <div className="bg-white border border-border rounded-2xl overflow-hidden">
+          <div className="border border-border bg-card">
             <div className="aspect-square bg-surface">
-              <img src={images[activeImage]} alt={product.name} className="w-full h-full object-cover" />
+              <img src={images[activeImage]} alt={product.name} className="h-full w-full object-cover" />
             </div>
             {images.length > 1 && (
               <div className="flex gap-2 p-3 overflow-x-auto">
@@ -151,7 +161,7 @@ export default function AdminProductDetailPage() {
                   <button
                     key={i}
                     onClick={() => setActiveImage(i)}
-                    className={`w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 ${activeImage === i ? 'border-primary' : 'border-transparent'}`}
+                    className={`h-16 w-16 flex-shrink-0 overflow-hidden border transition-colors ${activeImage === i ? 'border-ink' : 'border-border'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -160,77 +170,79 @@ export default function AdminProductDetailPage() {
             )}
           </div>
 
-          <div className="bg-white border border-border rounded-2xl p-6 space-y-4">
+          <div className="ui-panel space-y-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${STATUS_STYLES[product.moderationStatus] || ''}`}>
+              <Badge status={STATUS_TONES[product.moderationStatus] ?? 'neutral'}>
                 {product.moderationStatus}
-              </span>
+              </Badge>
               {product.isFlagged && (
-                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border bg-warning/10 text-warning border-warning/30">
-                  <ShieldAlert className="w-3.5 h-3.5" /> Flagged
-                </span>
+                <Badge status="warning" icon={ShieldAlert}>Flagged</Badge>
               )}
               {campaignActive && (
-                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border bg-rose-500/10 text-rose-600 border-rose-200">
-                  <Heart className="w-3.5 h-3.5" fill="currentColor" strokeWidth={0} /> {CAMPAIGNS[product.campaignTag as keyof typeof CAMPAIGNS].label}
-                </span>
+                <Badge status="campaign" icon={Heart}>
+                  {CAMPAIGNS[product.campaignTag as keyof typeof CAMPAIGNS].label}
+                </Badge>
               )}
               {product.conditionType && (
-                <span className="px-3 py-1.5 rounded-full text-xs font-semibold border bg-surface text-ink-secondary border-border">
-                  {product.conditionType}
-                </span>
+                <Badge status="neutral">{product.conditionType}</Badge>
               )}
             </div>
 
             <div>
-              <h1 className="text-xl font-semibold text-ink">{product.name}</h1>
-              <p className="text-sm text-ink-secondary mt-1">
+              <p className="ui-mono ui-mono-sm text-ink-muted">
                 {category}{subcategory ? ` · ${subcategory}` : ''}
               </p>
+              <h1 className="mt-2 text-[clamp(1.25rem,2.6vw,1.6rem)] leading-tight text-ink">
+                {product.name}
+              </h1>
             </div>
 
-            <div className="flex items-center gap-4">
-              <span className="text-2xl font-semibold text-ink">{fmt(product.price)}</span>
+            <div className="flex flex-wrap items-baseline gap-4">
+              <span className="ui-figure text-2xl text-ink">{fmt(product.price)}</span>
               {product.basePrice && product.basePrice !== product.price && (
                 <span className="text-sm text-ink-muted line-through">{fmt(product.basePrice)}</span>
               )}
-              <span className="text-sm text-ink-secondary">Stock: {product.quantity}</span>
+              <span className="ui-mono ui-mono-sm text-ink-muted">Stock {product.quantity}</span>
             </div>
 
             {product.moderationStatus === 'REJECTED' && product.rejectionReason && (
-              <div className="rounded-xl border border-danger/30 bg-danger/10 p-3">
-                <p className="text-xs font-semibold text-danger mb-1">Rejection Reason</p>
-                <p className="text-xs text-danger/80">{product.rejectionReason}</p>
+              <div className="border border-danger/25 bg-danger/5 p-3.5">
+                <p className="ui-mono ui-mono-sm text-danger">Rejected because</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-danger/80">{product.rejectionReason}</p>
               </div>
             )}
 
             {product.isFlagged && (
-              <div className="rounded-xl border border-warning/30 bg-warning/10 p-3">
-                <p className="text-xs font-semibold text-warning mb-1">Flag Reason</p>
-                <p className="text-xs text-warning/80">{product.flagReason || 'No reason provided.'}</p>
+              <div className="border border-warning/25 bg-warning/5 p-3.5">
+                <p className="ui-mono ui-mono-sm text-warning">Flagged because</p>
+                <p className="mt-1.5 text-xs leading-relaxed text-warning/80">
+                  {product.flagReason || 'No reason provided.'}
+                </p>
               </div>
             )}
 
             <div>
-              <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">Description</p>
-              <p className="text-sm text-ink-secondary whitespace-pre-wrap">{product.description || 'No description provided.'}</p>
+              <p className="ui-eyebrow mb-3">Description</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-secondary">
+                {product.description || 'No description provided.'}
+              </p>
             </div>
 
             {product.attributeValues?.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-2">Specifications</p>
-                <div className="flex flex-wrap gap-2">
+                <p className="ui-eyebrow mb-3">Specifications</p>
+                <div className="flex flex-wrap gap-1.5">
                   {product.attributeValues.map((attr: any) => (
-                    <span key={attr.id} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface text-xs font-medium text-ink-secondary">
-                      <Tag className="w-3 h-3 text-ink-muted" />
-                      {attr.label}: <span className="font-semibold text-ink">{Array.isArray(attr.value) ? attr.value.join(', ') : String(attr.value)}</span>
+                    <span key={attr.id} className="inline-flex items-center gap-1.5 border border-border bg-surface px-2.5 py-1 text-xs text-ink-secondary">
+                      <Tag className="h-3 w-3 text-ink-muted" strokeWidth={1.75} />
+                      {attr.label}: <span className="font-medium text-ink">{Array.isArray(attr.value) ? attr.value.join(', ') : String(attr.value)}</span>
                     </span>
                   ))}
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border">
+            <div className="grid grid-cols-2 gap-3 border-t border-border pt-5 sm:grid-cols-4">
               <div className="flex items-center gap-2 text-xs text-ink-secondary">
                 <Truck className="w-4 h-4 text-ink-muted" /> {product.deliveryEstimate || 'Not set'}
               </div>
@@ -252,60 +264,59 @@ export default function AdminProductDetailPage() {
           </div>
 
           {product.variants?.length > 0 && (
-            <div className="bg-white border border-border rounded-2xl p-6">
-              <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3">
-                Variants ({product.variants.length})
-              </p>
-              <div className="space-y-2">
+            <AdminPanel title={`Variants · ${product.variants.length}`} padded={false}>
+              <div className="ui-divide">
                 {product.variants.map((v: any) => (
-                  <div key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+                  <div key={v.id} className="flex items-center justify-between gap-3 p-4">
                     <div className="flex flex-wrap gap-1.5">
                       {Object.entries(v.combination || {}).map(([key, value]) => (
-                        <span key={key} className="px-2 py-0.5 rounded-full bg-surface text-[11px] font-medium text-ink-secondary">
+                        <span key={key} className="border border-border bg-surface px-2 py-0.5 text-[11px] text-ink-secondary">
                           {key}: {String(value)}
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0 text-xs font-semibold text-ink">
-                      <span>{fmt(v.price)}</span>
-                      <span className="text-ink-secondary">Stock: {v.stock}</span>
+                    <div className="flex flex-shrink-0 items-center gap-3 text-xs">
+                      <span className="ui-figure text-[13px] text-ink">{fmt(v.price)}</span>
+                      <span className="ui-mono ui-mono-sm text-ink-muted">Stock {v.stock}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </AdminPanel>
           )}
 
           {product.productReports?.length > 0 && (
-            <div className="bg-white border border-border rounded-2xl p-6">
-              <p className="flex items-center gap-2 text-xs font-semibold text-warning uppercase tracking-wider mb-3">
-                <Flag className="w-3.5 h-3.5" /> Reports ({product.productReports.length})
-              </p>
-              <div className="space-y-2">
+            <AdminPanel title={`Reports · ${product.productReports.length}`} padded={false}>
+              <div className="ui-divide">
                 {product.productReports.map((r: any) => (
-                  <div key={r.id} className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-ink-secondary">
-                    <p>{r.reason || 'No reason provided.'}</p>
-                    <p className="text-ink-muted mt-1">{new Date(r.createdAt).toLocaleDateString()}</p>
+                  <div key={r.id} className="p-4">
+                    <p className="flex items-start gap-2 text-sm leading-relaxed text-ink-secondary">
+                      <Flag className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-warning" strokeWidth={1.75} />
+                      {r.reason || 'No reason provided.'}
+                    </p>
+                    <p className="ui-mono ui-mono-sm mt-2 pl-5 text-ink-muted">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 ))}
               </div>
-            </div>
+            </AdminPanel>
           )}
         </div>
 
         {/* ── Right: seller + actions ── */}
         <div className="space-y-6">
-          <div className="bg-white border border-border rounded-2xl p-6 space-y-3">
-            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Seller</p>
+          <div className="ui-panel space-y-3.5">
+            <p className="ui-eyebrow mb-5">Seller</p>
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary font-semibold">{(product.seller?.name || 'S')[0]}</span>
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center bg-ink">
+                <span className="font-display font-bold text-white">{(product.seller?.name || 'S')[0]}</span>
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-ink truncate">{product.seller?.name}</p>
+                <p className="truncate text-sm font-medium text-ink">{product.seller?.name}</p>
                 {product.seller?.trustLevel && (
-                  <span className="inline-flex items-center gap-1 text-xs text-primary font-semibold">
-                    <BadgeCheck className="w-3 h-3" /> {product.seller.trustLevel}
+                  <span className="ui-mono ui-mono-sm mt-1 inline-flex items-center gap-1 text-ink-secondary">
+                    <BadgeCheck className="h-3 w-3" strokeWidth={2} /> {product.seller.trustLevel}
                   </span>
                 )}
               </div>
@@ -332,7 +343,9 @@ export default function AdminProductDetailPage() {
               </div>
             )}
             {product.seller?.isSuspended && (
-              <p className="text-xs font-semibold text-danger">⚠ This seller is currently suspended</p>
+              <div className="border border-danger/25 bg-danger/5 px-3 py-2">
+                <p className="text-xs font-medium text-danger">This seller is currently suspended.</p>
+              </div>
             )}
             {product._count && (
               <div className="flex items-center gap-2 text-xs text-ink-secondary pt-2 border-t border-border">
@@ -342,50 +355,55 @@ export default function AdminProductDetailPage() {
           </div>
 
           {product.moderationStatus === 'PENDING' ? (
-            <div className="bg-white border border-border rounded-2xl p-6 space-y-3">
-              <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Moderation</p>
-              <button
+            <div className="ui-panel space-y-2.5">
+              <p className="ui-eyebrow mb-5">Moderation</p>
+              <AdminButton
+                tone="success"
                 onClick={() => moderate('approve')}
                 disabled={actionLoading}
-                className="w-full px-4 py-3 bg-success/10 text-success hover:bg-success/20 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                icon={actionLoading ? Loader2 : CheckCircle}
+                className="h-11 w-full"
               >
-                {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Approve Product
-              </button>
-              <button
+                Approve product
+              </AdminButton>
+              <AdminButton
                 onClick={() => setShowReasonInput((v) => !v)}
-                className="w-full px-4 py-3 bg-danger/10 text-danger hover:bg-danger/20 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                icon={XCircle}
+                className="h-11 w-full hover:border-danger/40 hover:text-danger"
               >
-                <XCircle className="w-4 h-4" /> Reject Product
-              </button>
+                Reject product
+              </AdminButton>
               {showReasonInput && (
-                <div className="space-y-2">
+                <div className="space-y-2 pt-1">
                   <textarea
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Enter rejection reason..."
+                    placeholder="Why is this being rejected? The seller sees this."
                     maxLength={500}
                     rows={3}
-                    className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-ink text-sm focus:outline-none focus:ring-2 focus:ring-danger/40 resize-none"
+                    className="w-full resize-none border border-border bg-card px-3 py-2.5 text-sm leading-relaxed text-ink transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-danger focus:outline-none focus:ring-2 focus:ring-danger/15"
                   />
-                  <button
+                  <AdminButton
+                    tone="danger"
                     onClick={() => moderate('reject')}
                     disabled={actionLoading}
-                    className="w-full px-4 py-2.5 bg-danger hover:brightness-95 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+                    className="h-11 w-full"
                   >
-                    {actionLoading ? 'Rejecting...' : 'Confirm Rejection'}
-                  </button>
+                    {actionLoading ? 'Rejecting…' : 'Confirm rejection'}
+                  </AdminButton>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-white border border-border rounded-2xl p-6">
-              <button
+            <div className="ui-panel">
+              <p className="ui-eyebrow mb-5">Danger zone</p>
+              <AdminButton
                 onClick={handleDelete}
-                className="w-full px-4 py-3 bg-danger/10 text-danger hover:bg-danger/20 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                icon={Trash2}
+                className="h-11 w-full hover:border-danger/40 hover:text-danger"
               >
-                <Trash2 className="w-4 h-4" /> Delete Product
-              </button>
+                Delete product
+              </AdminButton>
             </div>
           )}
         </div>

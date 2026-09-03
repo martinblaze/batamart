@@ -168,7 +168,7 @@ function Sheet({ open, title, onClose, children }: { open: boolean; title: strin
   return (
     <div className={`fixed inset-0 z-[70] md:hidden ${open ? 'pointer-events-auto' : 'pointer-events-none'}`}>
       <div className={`absolute inset-0 bg-black/40 transition-opacity ${open ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
-      <div className={`absolute inset-x-0 bottom-0 max-h-[88vh] overflow-auto rounded-t-[28px] bg-white p-4 shadow-soft transition-transform ${open ? 'translate-y-0' : 'translate-y-full'}`}>
+      <div className={`absolute inset-x-0 bottom-0 max-h-[88vh] overflow-auto rounded-t-[28px] bg-card p-4 shadow-soft transition-transform ${open ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-border" />
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-ink">{title}</h3>
@@ -384,13 +384,15 @@ function SearchPage() {
 
   const filterPanel = (
     <div className="space-y-4">
-      <div className="rounded-3xl border border-border bg-white p-4 shadow-soft">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-ink">Filters</h2>
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">{activeCount}</span>
+      <div className="border border-border bg-card p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Filters</h2>
+            {activeCount > 0 && (
+              <span className="bg-ink px-1.5 py-0.5 font-mono text-[10px] tracking-[0.08em] text-background">{activeCount}</span>
+            )}
           </div>
-          {activeCount > 0 && <button onClick={clearAll} className="text-xs font-semibold text-primary hover:underline">Clear all</button>}
+          {activeCount > 0 && <button onClick={clearAll} className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted transition-colors hover:text-ink">Clear all</button>}
         </div>
 
         <div className="space-y-4">
@@ -413,7 +415,7 @@ function SearchPage() {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-muted">Subcategory</p>
               <div className="grid grid-cols-2 gap-2">
                 {knownSubcategories.map(([key, sub]) => (
-                  <button key={key} type="button" onClick={() => updateSubcategory(key)} className={`rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${subcategoryKey === key ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-white text-ink-secondary hover:bg-surface'}`}>
+                  <button key={key} type="button" onClick={() => updateSubcategory(key)} className={`rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${subcategoryKey === key ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-card text-ink-secondary hover:bg-surface'}`}>
                     {sub.label}
                   </button>
                 ))}
@@ -425,7 +427,7 @@ function SearchPage() {
 
           <FilterGroup title="Condition" options={conditionOptions} selectedValues={filters.condition || []} onChange={(value) => toggleFilterValue('condition', value)} />
 
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-ink">Rating</h3>
               {minRating > 0 && <button onClick={() => { setMinRating(0); setPage(1) }} className="text-xs font-semibold text-primary hover:underline">Clear</button>}
@@ -440,18 +442,18 @@ function SearchPage() {
             </div>
           </div>
 
-          <label className="flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 shadow-soft">
+          <label className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
             <span><span className="block text-sm font-semibold text-ink">In stock only</span><span className="block text-xs text-ink-muted">Hide out-of-stock listings</span></span>
             <input type="checkbox" checked={inStockOnly} onChange={(e) => { setInStockOnly(e.target.checked); setPage(1) }} className="h-5 w-5 rounded border-border text-primary" />
           </label>
 
-          <label className="flex items-center justify-between rounded-2xl border border-border bg-white px-4 py-3 shadow-soft">
+          <label className="flex items-center justify-between rounded-2xl border border-border bg-card px-4 py-3 shadow-soft">
             <span><span className="block text-sm font-semibold text-ink">Fast delivery</span><span className="block text-xs text-ink-muted">Prioritize quicker delivery estimates</span></span>
             <input type="checkbox" checked={deliveryFast} onChange={(e) => { setDeliveryFast(e.target.checked); setPage(1) }} className="h-5 w-5 rounded border-border text-primary" />
           </label>
 
           {availableZones.length > 0 && (
-            <div className="rounded-2xl border border-border bg-white p-4 shadow-soft">
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="flex items-center gap-1.5 text-sm font-semibold text-ink"><MapPin className="h-4 w-4 text-ink-muted" /> Delivery zone</h3>
                 {zone && <button onClick={() => { setZone(''); setPage(1) }} className="text-xs font-semibold text-primary hover:underline">Clear</button>}
@@ -473,10 +475,10 @@ function SearchPage() {
   )
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <div className="sticky top-0 z-40 border-b border-border bg-white/95 backdrop-blur/95">
+      <div className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur/95">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4">
           <div className="flex items-center gap-2">
-            <button onClick={() => router.push('/marketplace')} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-white text-ink-secondary shadow-soft"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => router.push('/marketplace')} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-ink-secondary shadow-soft"><ChevronLeft className="h-4 w-4" /></button>
             {/* Desktop already has a search bar in the navbar — only show this one on mobile, where the navbar collapses to an icon. */}
             <div className="min-w-0 flex-1 md:hidden">
               <SearchAutocomplete
@@ -504,9 +506,9 @@ function SearchPage() {
             })}
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 md:hidden">
-            <button onClick={() => setFilterSheetOpen(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink-secondary shadow-soft"><Filter className="h-4 w-4" /> Filter {activeCount > 0 && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">{activeCount}</span>}</button>
-            <button onClick={() => setSortSheetOpen(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-ink-secondary shadow-soft"><SlidersHorizontal className="h-4 w-4" /> Sort</button>
-            <div className="flex items-center gap-1 rounded-2xl border border-border bg-white p-1 shadow-soft"><button onClick={() => setViewMode('grid')} className={`rounded-xl p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><Grid2x2 className="h-4 w-4" /></button><button onClick={() => setViewMode('list')} className={`rounded-xl p-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><List className="h-4 w-4" /></button></div>
+            <button onClick={() => setFilterSheetOpen(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-ink-secondary shadow-soft"><Filter className="h-4 w-4" /> Filter {activeCount > 0 && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">{activeCount}</span>}</button>
+            <button onClick={() => setSortSheetOpen(true)} className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-ink-secondary shadow-soft"><SlidersHorizontal className="h-4 w-4" /> Sort</button>
+            <div className="flex items-center gap-1 rounded-2xl border border-border bg-card p-1 shadow-soft"><button onClick={() => setViewMode('grid')} className={`rounded-xl p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><Grid2x2 className="h-4 w-4" /></button><button onClick={() => setViewMode('list')} className={`rounded-xl p-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><List className="h-4 w-4" /></button></div>
           </div>
         </div>
       </div>
@@ -516,12 +518,12 @@ function SearchPage() {
         <div className="grid gap-4 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
           <aside className="sticky top-[132px] hidden max-h-[calc(100vh-150px)] overflow-auto rounded-3xl md:block">{filterPanel}</aside>
           <main className="min-w-0">
-            <div className="rounded-3xl border border-border bg-white p-4 shadow-soft">
+            <div className="rounded-3xl border border-border bg-card p-4 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div><p className="text-sm font-semibold text-ink">Showing {Math.min((page - 1) * 40 + 1, total)}-{Math.min(page * 40, total)} of {total} results</p><p className="mt-1 text-xs text-ink-muted">{query ? <>for &quot;{query}&quot;</> : 'Browse campus products'} {searchWithinSeller}</p></div>
                 <div className="hidden items-center gap-2 md:flex">
-                  <div className="inline-flex rounded-2xl border border-border bg-surface p-1">{SORT_OPTIONS.map((option) => (<button key={option.value} type="button" onClick={() => { setSortBy(option.value); setPage(1) }} className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${sortBy === option.value ? 'bg-primary text-white shadow-soft shadow-soft' : 'text-ink-secondary hover:bg-white'}`}>{option.label}</button>))}</div>
-                  <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-white p-1 shadow-soft"><button onClick={() => setViewMode('grid')} className={`rounded-xl p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><Grid2x2 className="h-4 w-4" /></button><button onClick={() => setViewMode('list')} className={`rounded-xl p-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><List className="h-4 w-4" /></button></div>
+                  <div className="inline-flex rounded-2xl border border-border bg-surface p-1">{SORT_OPTIONS.map((option) => (<button key={option.value} type="button" onClick={() => { setSortBy(option.value); setPage(1) }} className={`rounded-xl px-3 py-2 text-xs font-semibold transition ${sortBy === option.value ? 'bg-primary text-white shadow-soft shadow-soft' : 'text-ink-secondary hover:bg-card'}`}>{option.label}</button>))}</div>
+                  <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-card p-1 shadow-soft"><button onClick={() => setViewMode('grid')} className={`rounded-xl p-2 ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><Grid2x2 className="h-4 w-4" /></button><button onClick={() => setViewMode('list')} className={`rounded-xl p-2 ${viewMode === 'list' ? 'bg-primary text-white' : 'text-ink-secondary'}`}><List className="h-4 w-4" /></button></div>
                 </div>
               </div>
             </div>
@@ -532,14 +534,14 @@ function SearchPage() {
               <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}</div>
             ) : products.length === 0 ? (
               <div className="mt-4 space-y-4">
-                <div className="rounded-3xl border border-dashed border-border bg-white p-8 text-center shadow-soft"><div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface"><Search className="h-8 w-8 text-ink-muted" /></div><h2 className="text-xl font-semibold text-ink">No results for &quot;{query || 'your search'}&quot;</h2><p className="mx-auto mt-2 max-w-lg text-sm text-ink-secondary">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-4"><button onClick={() => { setQuery(suggestion); setQueryDraft(suggestion); setPage(1) }} className="rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-soft shadow-soft">Did you mean {suggestion}?</button></div>}<div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={clearAll} className="rounded-2xl bg-surface px-4 py-2.5 text-sm font-semibold text-ink-secondary">Broaden search</button><Link href="/marketplace" className="rounded-2xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary">Browse marketplace</Link></div></div>
+                <div className="border border-dashed border-border bg-card px-6 py-14 text-center"><span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center border border-border bg-surface"><Search className="h-6 w-6 text-ink-muted" strokeWidth={1.5} /></span><h2 className="text-xl text-ink">No results for &ldquo;{query || 'your search'}&rdquo;</h2><p className="mx-auto mt-2.5 max-w-[46ch] text-sm leading-relaxed text-ink-secondary">Try broadening the search, switching categories, or clearing filters.</p>{suggestion && suggestion !== query.toLowerCase() && <div className="mt-6"><button onClick={() => { setQuery(suggestion); setQueryDraft(suggestion); setPage(1) }} className="rounded-lg bg-ink px-5 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-primary">Did you mean {suggestion}?</button></div>}<div className="mt-6 flex flex-wrap justify-center gap-2.5"><button onClick={clearAll} className="ui-chip">Broaden search</button><Link href="/marketplace" className="ui-chip">Browse marketplace</Link></div></div>
                 {topProducts.length > 0 && <div><div className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink"><Crown className="h-4 w-4 text-primary" /> Popular right now</div><div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-1'}`}>{topProducts.slice(0, 4).map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={index < 2} />))}</div></div>}
               </div>
             ) : (
               <>
                 <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{products.map((product, index) => (<ProductCard key={product.id} product={product} layout={viewMode} onOpen={() => router.push(`/product/${product.id}`)} priority={page === 1 && index < 4} />))}</div>
                 {loadingMore && <div className={`mt-4 grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>{Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}</div>}
-                {hasMore && <div className="mt-6 flex justify-center"><button onClick={() => setPage((current) => current + 1)} className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-ink shadow-soft ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-soft">{loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpDown className="h-4 w-4" />} Load more</button></div>}
+                {hasMore && <div className="mt-6 flex justify-center"><button onClick={() => setPage((current) => current + 1)} className="inline-flex items-center gap-2 rounded-2xl bg-card px-5 py-3 text-sm font-semibold text-ink shadow-soft ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-soft">{loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUpDown className="h-4 w-4" />} Load more</button></div>}
               </>
             )}
           </main>
@@ -547,7 +549,7 @@ function SearchPage() {
       </div>
 
       <Sheet open={filterSheetOpen} title="Filters" onClose={() => setFilterSheetOpen(false)}>{filterPanel}</Sheet>
-      <Sheet open={sortSheetOpen} title="Sort by" onClose={() => setSortSheetOpen(false)}><div className="space-y-2">{SORT_OPTIONS.map((option) => (<label key={option.value} className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 ${sortBy === option.value ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-white text-ink-secondary'}`}><span className="text-sm font-semibold">{option.label}</span><input type="radio" checked={sortBy === option.value} onChange={() => { setSortBy(option.value); setPage(1); setSortSheetOpen(false) }} className="h-4 w-4 accent-primary" /></label>))}</div></Sheet>
+      <Sheet open={sortSheetOpen} title="Sort by" onClose={() => setSortSheetOpen(false)}><div className="space-y-2">{SORT_OPTIONS.map((option) => (<label key={option.value} className={`flex cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 ${sortBy === option.value ? 'border-primary/20 bg-primary/10 text-primary' : 'border-border bg-card text-ink-secondary'}`}><span className="text-sm font-semibold">{option.label}</span><input type="radio" checked={sortBy === option.value} onChange={() => { setSortBy(option.value); setPage(1); setSortSheetOpen(false) }} className="h-4 w-4 accent-primary" /></label>))}</div></Sheet>
     </div>
   )
 }

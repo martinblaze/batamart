@@ -64,11 +64,12 @@ export default function BecomeSellerPage() {
   if (done) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl border border-border p-10 max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <PartyPopper className="w-7 h-7 text-primary" strokeWidth={1.75} />
-          </div>
-          <h1 className="text-2xl font-semibold text-ink mb-3">You&apos;re a seller</h1>
+        <div className="w-full max-w-md border border-border bg-card p-8 text-center sm:p-10">
+          <span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center border border-border bg-surface">
+            <PartyPopper className="h-6 w-6 text-ink" strokeWidth={1.5} />
+          </span>
+          <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Approved</p>
+          <h1 className="mb-3 text-2xl text-ink">You&apos;re a seller</h1>
           <p className="text-ink-secondary text-sm mb-8">
             You can now list products. Set a withdrawal PIN in your wallet to enable payouts.
           </p>
@@ -100,13 +101,16 @@ export default function BecomeSellerPage() {
   return (
     <div className="min-h-screen bg-surface py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="text-primary hover:underline mb-6 inline-flex items-center gap-1.5 text-sm font-medium">
-          <ArrowLeft className="w-4 h-4" strokeWidth={1.75} /> Back to home
+        <Link href="/" className="group mb-6 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-secondary transition-colors duration-300 hover:text-ink">
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5" strokeWidth={2} /> Back to home
         </Link>
 
-        <div className="bg-white rounded-2xl border border-border p-8">
-          <h1 className="text-[28px] font-semibold text-ink mb-2">Become a seller</h1>
-          <p className="text-ink-secondary mb-8">Start selling your products to thousands of students on campus</p>
+        <div className="border border-border bg-card p-6 sm:p-8">
+          <p className="ui-eyebrow mb-3 max-w-[14rem]">Seller access</p>
+          <h1 className="text-[clamp(1.7rem,3.6vw,2.4rem)] text-ink">Become a seller</h1>
+          <p className="mb-8 mt-3 max-w-[52ch] text-[15px] leading-relaxed text-ink-secondary">
+            Start selling to students across your campus. Listing is free, and you are only charged when a sale completes.
+          </p>
 
           {error && (
             <div className="bg-danger/10 border border-danger/30 text-danger px-4 py-3 rounded-lg mb-6 text-sm">

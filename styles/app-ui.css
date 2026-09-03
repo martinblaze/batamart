@@ -1,0 +1,488 @@
+/* ==========================================================================
+   BATAMART — Product UI layer
+   --------------------------------------------------------------------------
+   Loaded after globals.css for every route in the app (root layout).
+
+   This file is deliberately systemic rather than page-by-page. Three things
+   here change the feel of all 57 screens at once:
+
+     1. Warmer neutrals. The stock cool greys (#F8FAFC / #6B7280) read as
+        "admin dashboard"; warm ones read as retail, and they tie the product
+        back to the bone-and-ink marketing surface.
+     2. A real type system. Headings, prices and figures pick up the display
+        face; metadata picks up mono. Both apply through element selectors, so
+        pages inherit them without being rewritten.
+     3. Near-square corners, set on Tailwind's radius scale in the config so
+        every existing `rounded-lg` in the codebase sharpens at once.
+
+   Page-level classes below (.ui-*) are the vocabulary the restyled screens
+   use directly.
+   ========================================================================== */
+
+/* No `@layer base` wrapper: this file is a separate PostCSS entry from
+   globals.css, so Tailwind's layer directives are not in scope here. Plain
+   rules are what we want anyway — the file is loaded after globals.css, so
+   these land after Tailwind's base reset while still losing to any utility
+   class on specificity, which is the correct precedence. */
+:root {
+  /* Warm neutrals — retail, not dashboard. */
+  --color-surface: #F6F4F1;
+  --color-border: #E4E0D9;
+  --color-text-primary: #131311;
+  --color-text-secondary: #6E6A63;
+  --color-text-muted: #9A958C;
+
+  --color-surface-rgb: 246 244 241;
+  --color-border-rgb: 228 224 217;
+  --color-text-primary-rgb: 19 19 17;
+  --color-text-secondary-rgb: 110 106 99;
+  --color-text-muted-rgb: 154 149 140;
+
+  /* Page ground sits a shade below card white so cards read as objects. */
+  --ui-page: #F6F4F1;
+  --ui-card: #FFFFFF;
+  --ui-card-rgb: 255 255 255;
+  --ui-hairline: rgba(19, 19, 17, 0.10);
+  --ui-hairline-strong: rgba(19, 19, 17, 0.18);
+  --ui-ink: #131311;
+  --ui-accent: var(--color-primary);
+
+  /* A slab that stays dark in BOTH themes, with light text on it.
+     `--ui-ink` deliberately inverts (so `bg-ink` + `text-background` flips to
+     a light button with dark text), but the full-bleed page headers and the
+     primary CTAs want to stay dark slabs in dark mode — inverting those gives
+     you a white banner with white text on it. Anything that hardcodes light
+     text on a dark background belongs on this token, not on --ui-ink. */
+  --ui-slab: #131311;
+  --ui-slab-fg: #F6F4F1;
+  --ui-slab-rgb: 19 19 17;
+  --ui-slab-fg-rgb: 246 244 241;
+
+  --ui-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ui-shadow: 0 1px 2px rgba(19, 19, 17, 0.04), 0 8px 24px -16px rgba(19, 19, 17, 0.18);
+}
+
+/* ==========================================================================
+   Dark
+   --------------------------------------------------------------------------
+   This block has to restate the `--color-*` tokens, not just the `--ui-*`
+   ones. globals.css defines its dark palette in a `.dark` block, but the
+   `:root` above re-declares those same warm neutrals — and `:root` and
+   `.dark` have identical specificity (0,1,0), so the later rule wins. Since
+   this file loads after globals.css, the light values were overriding the
+   dark ones and every `text-ink` / `border-border` / `bg-surface` utility
+   stayed on its light value in dark mode.
+
+   The palette is warm rather than the stock cool greys, so dark mode reads as
+   the same brand rather than a different product with the lights off.
+
+   Selector is `html.dark`, not `.dark`, on purpose: (0,1,1) beats both the
+   `:root` above and globals.css's own `.dark` (both 0,1,0), so which palette
+   wins no longer depends on the order the CSS chunks happen to load in.
+   ========================================================================== */
+html.dark {
+  --color-background: #0B0B0A;
+  --color-surface: #161614;
+  --color-border: #2B2A26;
+  --color-text-primary: #F0ECE4;
+  --color-text-secondary: #A5A199;
+  --color-text-muted: #736F68;
+
+  --color-background-rgb: 11 11 10;
+  --color-surface-rgb: 22 22 20;
+  --color-border-rgb: 43 42 38;
+  --color-text-primary-rgb: 240 236 228;
+  --color-text-secondary-rgb: 165 161 153;
+  --color-text-muted-rgb: 115 111 104;
+
+  /* Cards sit *above* the page ground here — the inverse of light mode,
+     because raising a surface in the dark means lightening it. */
+  --ui-page: #0B0B0A;
+  --ui-card: #161614;
+  --ui-card-rgb: 22 22 20;
+  --ui-hairline: rgba(240, 236, 228, 0.13);
+  --ui-hairline-strong: rgba(240, 236, 228, 0.24);
+  --ui-ink: #F0ECE4;
+
+  /* Lifted just clear of the page ground so the slab still reads as a raised
+     band against #0B0B0A, while keeping ample contrast for light text. */
+  --ui-slab: #24231F;
+  --ui-slab-fg: #F0ECE4;
+  --ui-slab-rgb: 36 35 31;
+  --ui-slab-fg-rgb: 240 236 228;
+
+  --ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -16px rgba(0, 0, 0, 0.8);
+}
+
+body {
+  background: var(--ui-page);
+  color: var(--ui-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings take the display face everywhere. This is the single largest
+   visual change to pages that are never individually touched. */
+h1, h2, h3, h4 {
+  font-family: var(--font-display), Archivo, system-ui, sans-serif;
+  letter-spacing: -0.028em;
+  font-weight: 600;
+}
+h1 { letter-spacing: -0.036em; }
+
+/* Native controls should not look like 1998 on the pages we do not rewrite. */
+input, textarea, select, button { font-family: inherit; }
+
+::selection { background: rgb(var(--color-primary-rgb) / 0.22); }
+
+/* One focus treatment for the whole product. */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-primary-rgb) / 0.55);
+  outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   Type vocabulary
+   ========================================================================== */
+.ui-display {
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.ui-serif {
+  font-family: var(--font-serif), 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.ui-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.ui-mono-sm { font-size: 0.625rem; letter-spacing: 0.18em; }
+
+/* Prices and figures: display face, tabular so columns of money line up. */
+.ui-figure {
+  font-family: var(--font-display), Archivo, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section header — mono eyebrow, hairline rule, title. Replaces the solid
+   blue banner bars that made every section shout at the same volume. */
+.ui-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.ui-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ui-hairline);
+}
+
+/* On a dark slab the default hairline is ink-on-ink and disappears, so the
+   eyebrow's trailing rule is redrawn in the slab's own foreground. */
+.bg-slab .ui-eyebrow::after {
+  background: rgb(var(--ui-slab-fg-rgb) / 0.2);
+}
+
+/* ==========================================================================
+   Surfaces
+   ========================================================================== */
+.ui-card {
+  background: var(--ui-card);
+  border: 1px solid var(--ui-hairline);
+}
+.ui-card-hover {
+  transition: border-color 0.35s var(--ui-ease), box-shadow 0.35s var(--ui-ease),
+    transform 0.35s var(--ui-ease);
+}
+.ui-card-hover:hover {
+  border-color: var(--ui-hairline-strong);
+  box-shadow: var(--ui-shadow);
+  transform: translateY(-2px);
+}
+
+.ui-panel {
+  background: var(--ui-card);
+  border: 1px solid var(--ui-hairline);
+  padding: clamp(1.1rem, 2.4vw, 1.75rem);
+}
+
+.ui-divide > * + * { border-top: 1px solid var(--ui-hairline); }
+
+.ui-shell {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 3.5vw, 2.5rem);
+}
+
+/* ==========================================================================
+   Product tiles
+   --------------------------------------------------------------------------
+   Image first and large, metadata quiet underneath. The card is one target;
+   the only chrome that appears on hover is a quick-look affordance.
+   ========================================================================== */
+.ui-tile { position: relative; display: block; background: var(--ui-card); }
+.ui-tile__media {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+/* LoadedImage fades the photo in on load with its own utility class; this
+   selector out-specifies it, so the opacity transition has to be restated
+   here or images would pop in instead of fading. */
+.ui-tile__media img {
+  transition: transform 1.05s var(--ui-ease), opacity 0.3s ease;
+}
+.ui-tile:hover .ui-tile__media img { transform: scale(1.045); }
+
+.ui-tile__flags {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Slides up over the image on hover — desktop only; on touch it would just
+   sit there permanently covering the photograph. */
+.ui-tile__peek {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 2;
+  padding: 0.6rem;
+  transform: translateY(101%);
+  transition: transform 0.45s var(--ui-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ui-tile:hover .ui-tile__peek { transform: translateY(0); }
+}
+@media (hover: none), (pointer: coarse) {
+  .ui-tile__peek { display: none; }
+}
+
+/* ==========================================================================
+   Chips / filter rail
+   ========================================================================== */
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--ui-hairline);
+  background: var(--ui-card);
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.25s var(--ui-ease), border-color 0.25s var(--ui-ease),
+    background-color 0.25s var(--ui-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.ui-chip:hover { color: var(--ui-ink); border-color: var(--ui-hairline-strong); }
+.ui-chip[data-active='true'] {
+  background: var(--ui-ink);
+  border-color: var(--ui-ink);
+  color: var(--ui-card);
+}
+
+/* ==========================================================================
+   Interactive rows — order lists, settings, wallet history
+   ========================================================================== */
+.ui-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem clamp(0.85rem, 2vw, 1.4rem);
+  background: var(--ui-card);
+  transition: background-color 0.3s var(--ui-ease);
+}
+.ui-row:hover { background: var(--color-surface); }
+
+/* ==========================================================================
+   Skeletons
+   ========================================================================== */
+.ui-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.ui-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--color-text-muted-rgb) / 0.13),
+    transparent
+  );
+  animation: ui-sweep 1.6s infinite;
+}
+@keyframes ui-sweep { to { transform: translateX(100%); } }
+
+/* ==========================================================================
+   Sticky action bar — cart, checkout, product detail on mobile
+   ========================================================================== */
+.ui-actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  background: rgb(var(--color-background-rgb) / 0.9);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  border-top: 1px solid var(--ui-hairline);
+}
+
+/* ==========================================================================
+   Scrollbars — the app has many horizontal rails
+   ========================================================================== */
+.ui-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x proximity;
+}
+.ui-rail::-webkit-scrollbar { display: none; }
+.ui-rail > * { scroll-snap-align: start; flex: none; }
+
+/* ==========================================================================
+   The rubber button
+   --------------------------------------------------------------------------
+   Same gesture as the marketing surface's `.mk-btn`, rebuilt on the product
+   tokens so it also works in dark mode. The colour arrives as a circle far
+   wider than the button, grown from the exact point the cursor crossed the
+   edge — so the wipe always agrees with the direction of the gesture rather
+   than washing in from a fixed side.
+
+   The magnetic follow, label parallax and stretch are driven from React (see
+   <RubberButton> in components/ui/button.tsx); everything static lives here.
+   ========================================================================== */
+.ui-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid currentColor;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+  transition: color 0.45s var(--ui-ease), border-color 0.45s var(--ui-ease);
+}
+.ui-btn__fill {
+  position: absolute;
+  z-index: -1;
+  width: 170%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: scale(0);
+  pointer-events: none;
+}
+.ui-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  will-change: transform;
+}
+
+/* Solid ink → wipes to the accent. */
+.ui-btn--ink {
+  background: var(--ui-ink);
+  color: var(--ui-card);
+  border-color: var(--ui-ink);
+}
+.ui-btn--ink .ui-btn__fill { background: rgb(var(--color-primary-rgb)); }
+.ui-btn--ink[data-hot='true'] { color: #fff; }
+
+/* Quiet outline → wipes to ink. */
+.ui-btn--ghost {
+  color: var(--ui-ink);
+  border-color: var(--ui-hairline-strong);
+  background: var(--ui-card);
+}
+.ui-btn--ghost .ui-btn__fill { background: var(--ui-ink); }
+.ui-btn--ghost[data-hot='true'] {
+  color: var(--ui-card);
+  border-color: var(--ui-ink);
+}
+
+/* Destructive — same gesture, danger palette. */
+.ui-btn--danger {
+  background: rgb(var(--color-danger-rgb));
+  color: #fff;
+  border-color: rgb(var(--color-danger-rgb));
+}
+.ui-btn--danger .ui-btn__fill { background: var(--ui-ink); }
+
+.ui-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* The cheap cousin, for the hundreds of ordinary controls that must not carry
+   per-pointer-move work. A wash of the button's own text colour wipes up from
+   the bottom edge on hover. Because it is `currentColor` at low opacity it
+   works on every variant — light or dark, tinted or solid — without needing a
+   hover colour configured per variant. Composited transform + opacity only. */
+.ui-btn-sweep {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.ui-btn-sweep::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.42s var(--ui-ease), opacity 0.42s var(--ui-ease);
+  pointer-events: none;
+}
+.ui-btn-sweep:hover::after,
+.ui-btn-sweep:focus-visible::after {
+  opacity: 0.12;
+  transform: scaleY(1);
+}
+.ui-btn-sweep:disabled::after { display: none; }
+
+/* ==========================================================================
+   Reduced motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton::after { animation: none; }
+  .ui-tile:hover .ui-tile__media img { transform: none; }
+  /* The fill still wipes — it is a colour change, not motion — but the
+     magnetic chase is suppressed in the component itself. */
+  .ui-btn { transition: none; }
+}

@@ -456,7 +456,8 @@ html.dark.app-mode #ios-scroll-area {
 }
 
 html.app-mode .bg-white.rounded-2xl {
-  border-radius: 1rem;
+  /* Follows the flattened radius scale in tailwind.config.ts. */
+  border-radius: 4px;
   border-color: var(--color-border) !important;
 }
 
@@ -539,7 +540,7 @@ html.app-mode .marketplace-top-row {
 }
 
 html.app-mode .marketplace-search-input {
-  border-radius: 0.5rem;
+  border-radius: 2px;
 }
 
 html.app-mode .marketplace-categories {
@@ -547,7 +548,7 @@ html.app-mode .marketplace-categories {
 }
 
 html.app-mode .marketplace-categories .cat-btn {
-  border-radius: 0.5rem;
+  border-radius: 2px;
 }
 
 html.app-mode .marketplace-categories .cat-btn.cat-active {

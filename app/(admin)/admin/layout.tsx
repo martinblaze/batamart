@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-surface">
 
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-white border-b border-border">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-16 px-4 bg-card border-b border-border">
         <Logo size={28} href="/admin" />
         <button
           onClick={() => setSidebarOpen(prev => !prev)}
@@ -93,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           transform: sidebarTransform,
           transition: 'transform 300ms ease-in-out',
         }}
-        className="fixed top-0 left-0 z-[70] h-full w-64 bg-white border-r border-border"
+        className="fixed top-0 left-0 z-[70] h-full w-64 bg-card border-r border-border"
       >
         <div className="flex flex-col h-full">
 
@@ -102,8 +102,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link href="/admin" className="flex items-center gap-2">
               <Logo size={28} showWordmark={false} />
               <div>
-                <h1 className="text-[16px] font-semibold text-ink leading-none">BataMart</h1>
-                <p className="text-xs text-ink-muted mt-0.5">Admin panel</p>
+                <h1 className="text-[15px] leading-none text-ink">BataMart</h1>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted">
+                  Admin panel
+                </p>
               </div>
             </Link>
           </div>
@@ -118,13 +120,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <button
                   key={route.href}
                   onClick={() => handleNavClick(route.href)}
-                  className={`w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all text-left ${
+                  className={`group relative flex w-full items-center px-3 py-2.5 text-left text-[13px] font-medium transition-colors duration-300 ${
                     isActive
-                      ? 'bg-primary/10 text-primary'
+                      ? 'bg-surface text-ink before:absolute before:inset-y-1 before:left-0 before:w-[2px] before:bg-primary'
                       : 'text-ink-secondary hover:bg-surface hover:text-ink'
                   }`}
                 >
-                  <Icon className="mr-3 h-5 w-5 shrink-0" strokeWidth={1.75} />
+                  <Icon className="mr-3 h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {route.label}
                 </button>
               )
@@ -135,9 +137,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-4 border-t border-border">
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-danger bg-danger/10 rounded-lg hover:bg-danger/20 transition-all"
+              className="flex w-full items-center justify-center rounded-lg border border-border px-4 py-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-danger/40 hover:text-danger"
             >
-              <LogOut className="mr-2 h-5 w-5" strokeWidth={1.75} />
+              <LogOut className="mr-2 h-4 w-4" strokeWidth={1.75} />
               Logout
             </button>
           </div>
@@ -147,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <div className="md:pl-64 pt-16 md:pt-0">
-        <main className="min-h-screen p-6">
+        <main className="min-h-screen p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

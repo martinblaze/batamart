@@ -130,14 +130,17 @@ export default function ReferralsPage() {
     <div className="min-h-screen bg-surface pb-16">
 
       {/* Hero Banner */}
-      <div className="bg-primary text-white">
-        <div className="max-w-3xl mx-auto px-4 py-10 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 mb-4 text-sm font-medium">
-            <Gift className="w-4 h-4" strokeWidth={1.75} />
+      <div className="border-b border-border bg-slab text-slab-fg">
+        <div className="mx-auto max-w-3xl px-4 py-14 text-center">
+          <p className="ui-eyebrow mb-5 justify-center !text-slab-fg/45 before:hidden after:hidden">
+            <Gift className="h-3.5 w-3.5" strokeWidth={2} />
             Referral programme
-          </div>
-          <h1 className="text-3xl font-semibold mb-2">Invite friends, earn cash</h1>
-          <p className="text-white/80 text-base max-w-md mx-auto">
+          </p>
+          <h1 className="text-[clamp(2rem,5vw,3.2rem)] leading-[1.02] text-slab-fg">
+            Invite friends,
+            <span className="ui-serif text-[#4DABFF]"> earn cash.</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-slab-fg/60">
             Invite friends and earn from every order they make. No cap. No expiry.
           </p>
         </div>
@@ -146,7 +149,7 @@ export default function ReferralsPage() {
       <div className="max-w-3xl mx-auto px-4 -mt-6 space-y-5">
 
         {/* Referral Code Card */}
-        <div className="bg-white rounded-2xl shadow-soft border border-border p-5">
+        <div className="bg-card rounded-2xl shadow-soft border border-border p-5">
           <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-3">Your Referral Code</p>
 
           <div className="flex items-center gap-3 bg-surface rounded-xl px-4 py-3 mb-4 border border-border">
@@ -201,7 +204,7 @@ export default function ReferralsPage() {
         </div>
 
         {/* How It Works */}
-        <div className="bg-white rounded-2xl border border-border p-5">
+        <div className="bg-card rounded-2xl border border-border p-5">
           <h2 className="font-semibold text-ink mb-4">How It Works</h2>
           <div className="space-y-3">
             {[
@@ -226,7 +229,7 @@ export default function ReferralsPage() {
             { icon: <TrendingUp className="w-5 h-5" />, label: 'Orders', value: stats.totalReferralOrders, color: 'text-success bg-success/10' },
             { icon: <Award className="w-5 h-5" />, label: 'Earned', value: fmt(stats.totalEarnings), color: 'text-primary bg-primary/10' },
           ].map((stat, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-border p-4 text-center">
+            <div key={i} className="bg-card rounded-2xl border border-border p-4 text-center">
               <div className={`w-9 h-9 rounded-full ${stat.color} flex items-center justify-center mx-auto mb-2`}>
                 {stat.icon}
               </div>
@@ -238,7 +241,7 @@ export default function ReferralsPage() {
 
         {/* Recent Rewards */}
         {stats.recentRewards.length > 0 && (
-          <div className="bg-white rounded-2xl border border-border overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <h2 className="font-semibold text-ink">Recent Earnings</h2>
               <Link href="/wallet" className="text-sm text-primary font-medium flex items-center gap-1">
@@ -261,7 +264,7 @@ export default function ReferralsPage() {
 
         {/* Friends List */}
         {stats.referrals.length > 0 && (
-          <div className="bg-white rounded-2xl border border-border overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border">
               <h2 className="font-semibold text-ink">Your Referrals ({stats.totalReferrals})</h2>
             </div>
@@ -282,7 +285,7 @@ export default function ReferralsPage() {
         )}
 
         {stats.referrals.length === 0 && (
-          <div className="bg-white rounded-2xl border border-border p-8 text-center">
+          <div className="bg-card rounded-2xl border border-border p-8 text-center">
             <Share2 className="w-12 h-12 text-ink-muted mx-auto mb-3" />
             <p className="font-semibold text-ink-secondary mb-1">No referrals yet</p>
             <p className="text-sm text-ink-muted">Share your link above to start earning!</p>

@@ -49,7 +49,7 @@ export function ReferralCard() {
   if (loading) return null
 
   return (
-    <div className="bg-white rounded-xl border border-border overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="px-4 lg:px-5 py-3 lg:py-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Gift className="w-4 h-4 text-primary" />

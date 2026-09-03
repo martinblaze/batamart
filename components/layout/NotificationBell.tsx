@@ -252,7 +252,7 @@ export default function NotificationBell() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-          <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[384px] bg-white rounded-2xl shadow-soft border border-border z-50 flex flex-col overflow-hidden"
+          <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-[384px] bg-card rounded-2xl shadow-soft border border-border z-50 flex flex-col overflow-hidden"
             style={{ maxHeight: '75vh' }}
           >
             {/* Header */}

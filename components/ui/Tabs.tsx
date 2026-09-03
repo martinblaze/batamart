@@ -62,13 +62,24 @@ export function TabsTrigger({ value, children, className }: { value: string; chi
       aria-selected={isActive}
       onClick={() => setValue(value)}
       className={cn(
-        'relative px-4 py-3 text-[15px] font-medium whitespace-nowrap transition-colors duration-150',
-        isActive ? 'text-primary' : 'text-ink-secondary hover:text-ink',
+        'relative px-4 py-3.5 text-sm font-medium whitespace-nowrap',
+        'transition-colors duration-300 ease-out',
+        // The active tab goes to ink rather than to the accent: with the rule
+        // underneath already carrying the accent, colouring the label too
+        // makes a row of tabs read as a row of links.
+        isActive ? 'text-ink' : 'text-ink-secondary hover:text-ink',
         className
       )}
     >
       {children}
-      {isActive && <span className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary rounded-full" />}
+      <span
+        aria-hidden
+        className={cn(
+          'absolute left-0 right-0 -bottom-px h-[2px] bg-primary origin-left',
+          'transition-transform duration-500 ease-out',
+          isActive ? 'scale-x-100' : 'scale-x-0'
+        )}
+      />
     </button>
   );
 }

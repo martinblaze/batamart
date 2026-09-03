@@ -41,7 +41,10 @@ const WALLET_CSS = `
   }
 
   .header-gradient {
-    background: var(--color-primary);
+    /* Ink, not accent. A full-bleed blue slab at the top of four different
+       screens was the loudest thing in the product and made every one of
+       them read as a different app. */
+    background: var(--ui-slab);
   }
 
   .balance-card {
@@ -153,7 +156,7 @@ function ModalShell({ onClose, children }: { onClose: () => void; children: Reac
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="absolute inset-0" onClick={onClose} />
-      <div className="scale-in relative bg-white rounded-3xl w-full max-w-md shadow-soft max-h-[88vh] overflow-y-auto">
+      <div className="scale-in relative bg-card rounded-3xl w-full max-w-md shadow-soft max-h-[88vh] overflow-y-auto">
         <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-1" />
         {children}
       </div>
@@ -471,12 +474,12 @@ export default function WalletPage() {
       <header className="header-gradient sticky top-0 z-40 shadow-soft">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3">
-            <Link href="/marketplace" className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0">
+            <Link href="/marketplace" aria-label="Back to marketplace" className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-white/15 transition-colors duration-300 hover:border-white/40">
               <ArrowLeft className="w-4 h-4 text-white" />
             </Link>
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-white">Wallet & Payouts</h1>
-              <p className="text-white/50 text-xs">Manage your earnings</p>
+              <p className="ui-eyebrow mb-1.5 max-w-[12rem] !text-white/45">Manage your earnings</p>
+              <h1 className="text-[clamp(1.25rem,2.6vw,1.75rem)] text-white">Wallet &amp; payouts</h1>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -515,12 +518,12 @@ export default function WalletPage() {
             <p className="text-4xl sm:text-5xl font-semibold mb-1 tracking-tight">
               {hideBalance ? '₦ ••••••' : fmt(wallet.availableBalance)}
             </p>
-            <p className="text-white/50 text-xs mb-6">Ready to withdraw Â· No fees</p>
+            <p className="text-white/50 text-xs mb-6">Ready to withdraw · No fees</p>
 
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={openWithdrawModal}
-                className="flex items-center gap-2 bg-white text-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-soft transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 bg-card text-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-soft transition-all hover:scale-105 active:scale-95"
               >
                 <ArrowUpRight className="w-4 h-4" /> Withdraw
               </button>
@@ -539,7 +542,7 @@ export default function WalletPage() {
             { icon: <TrendingDown className="w-4 h-4 text-danger" />, bg: 'bg-danger/10', label: 'Withdrawn', value: fmtShort(totalWithdrawn), color: 'text-danger' },
             { icon: <Zap className="w-4 h-4 text-primary" />, bg: 'bg-primary/10', label: wallet.role === 'RIDER' ? 'Deliveries' : 'Orders', value: String(wallet.completedOrders), color: 'text-primary' },
           ].map(({ icon, bg, label, value, color }) => (
-            <div key={label} className="stat-card fade-up bg-white rounded-2xl border border-border shadow-soft p-3.5 sm:p-4">
+            <div key={label} className="stat-card fade-up bg-card rounded-2xl border border-border shadow-soft p-3.5 sm:p-4">
               <div className={`w-7 h-7 ${bg} rounded-lg flex items-center justify-center mb-2`}>{icon}</div>
               <p className={`font-semibold text-sm sm:text-base ${color} truncate`}>{value}</p>
               <p className="text-[10px] text-ink-muted font-semibold mt-0.5 uppercase tracking-wider">{label}</p>
@@ -567,7 +570,7 @@ export default function WalletPage() {
         )}
 
         {/* ── Transaction History ── */}
-        <div className="fade-up bg-white rounded-2xl border border-border shadow-soft overflow-hidden">
+        <div className="fade-up bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-ink">Transaction History</h2>
@@ -682,7 +685,7 @@ export default function WalletPage() {
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted font-semibold text-sm">₦</span>
                   <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)}
                     placeholder="0.00" min="1000" max={wallet.availableBalance}
-                    className="w-full pl-8 pr-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full pl-8 pr-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold focus:border-primary focus:bg-card focus:outline-none transition-all"
                     required />
                 </div>
                 <div className="flex justify-between mt-1.5">
@@ -705,7 +708,7 @@ export default function WalletPage() {
                       <ChevronDown className="w-4 h-4 text-ink-muted" />
                     </button>
                   ) : (
-                    <div className="border-2 border-primary rounded-xl overflow-hidden bg-white shadow-soft">
+                    <div className="border-2 border-primary rounded-xl overflow-hidden bg-card shadow-soft">
                       <div className="relative border-b border-border">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" />
                         <input type="text" value={bankSearch} onChange={e => setBankSearch(e.target.value)}
@@ -735,7 +738,7 @@ export default function WalletPage() {
                 <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Account Number</label>
                 <input type="text" value={accountNumber} onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                   placeholder="10-digit account number" maxLength={10}
-                  className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-mono tracking-widest focus:border-primary focus:bg-white focus:outline-none transition-all"
+                  className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-mono tracking-widest focus:border-primary focus:bg-card focus:outline-none transition-all"
                   required />
               </div>
 
@@ -744,7 +747,7 @@ export default function WalletPage() {
                 <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Account Name</label>
                 <input type="text" value={accountName} onChange={e => setAccountName(e.target.value)}
                   placeholder="As it appears on your bank account"
-                  className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-medium focus:border-primary focus:bg-white focus:outline-none transition-all"
+                  className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-medium focus:border-primary focus:bg-card focus:outline-none transition-all"
                   required />
               </div>
 
@@ -804,7 +807,7 @@ export default function WalletPage() {
               type="password" inputMode="numeric" maxLength={6}
               value={pinValue} onChange={e => setPinValue(e.target.value.replace(/\D/g, ''))}
               onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
-              className="w-full px-4 py-4 border-2 border-border rounded-2xl text-center text-3xl font-semibold tracking-[0.6em] focus:border-primary focus:outline-none transition-all bg-surface focus:bg-white"
+              className="w-full px-4 py-4 border-2 border-border rounded-2xl text-center text-3xl font-semibold tracking-[0.6em] focus:border-primary focus:outline-none transition-all bg-surface focus:bg-card"
               placeholder="••••••" autoFocus
             />
             {pinError && (
@@ -860,7 +863,7 @@ export default function WalletPage() {
                     </div>
                     <input type="password" inputMode="numeric" maxLength={6} value={currentPin}
                       onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ''))}
-                      className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                      className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                       placeholder="••••••" autoFocus />
                   </div>
                 )}
@@ -868,14 +871,14 @@ export default function WalletPage() {
                   <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={newPin}
                     onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                     placeholder="••••••" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Confirm New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={confirmPin}
                     onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                     placeholder="••••••" />
                 </div>
                 {savePinError && (
@@ -943,21 +946,21 @@ export default function WalletPage() {
                   <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">OTP Code</label>
                   <input type="text" inputMode="numeric" maxLength={6} value={forgotOtp}
                     onChange={e => setForgotOtp(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                     placeholder="••••••" autoFocus />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={forgotNew}
                     onChange={e => setForgotNew(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                     placeholder="••••••" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-ink-secondary uppercase tracking-wider mb-2">Confirm New PIN</label>
                   <input type="password" inputMode="numeric" maxLength={6} value={forgotConfirm}
                     onChange={e => setForgotConfirm(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-white focus:outline-none transition-all"
+                    className="w-full px-4 py-3.5 bg-surface border-2 border-transparent rounded-2xl text-center text-2xl font-semibold tracking-[0.5em] focus:border-primary focus:bg-card focus:outline-none transition-all"
                     placeholder="••••••" />
                 </div>
                 {forgotError && <p className="text-danger text-sm font-semibold flex items-center gap-1.5"><AlertCircle className="w-4 h-4" /> {forgotError}</p>}
