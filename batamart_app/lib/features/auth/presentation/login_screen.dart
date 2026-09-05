@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '../../../core/api/api_exception.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/widgets/auth_scaffold.dart';
 import '../../../core/api/auth_error_message.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
@@ -99,118 +105,115 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final palette = context.palette;
+
+    return AuthScaffold(
+      image: 'assets/images/auth-hero.webp',
+      eyebrow: 'Account',
+      title: 'Welcome',
+      titleAccent: 'back.',
+      subtitle: 'Log in to pick up where you left off.',
+      onBack: () => context.pop(),
+      children: [
+        AppTextField(
+          controller: _emailController,
+          label: 'Email',
+          keyboardType: TextInputType.emailAddress,
+          prefixIcon: LucideIcons.mail,
+        ).enter(index: 0),
+        const SizedBox(height: AppSpacing.md),
+        AppTextField(
+          controller: _passwordController,
+          label: 'Password',
+          obscureText: _obscurePassword,
+          prefixIcon: LucideIcons.lock,
+          suffixIcon: IconButton(
+            tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+            icon: Icon(
+              _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
+              size: 18,
+            ),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
+          ),
+        ).enter(index: 1),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => context.push(AppRoutes.forgotPassword),
+            child: Text('Forgot password?', style: AppTypography.label(size: 10)),
+          ),
+        ).enter(index: 2),
+        if (_error != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _ErrorNote(_error!).enter(),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        PrimaryButton(
+          label: 'Log in',
+          onPressed: _submit,
+          isLoading: _isLoading,
+        ).enter(index: 3),
+        const SizedBox(height: AppSpacing.xl),
+        Row(
+          children: [
+            Expanded(child: Divider(color: palette.hairline)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                'OR CONTINUE WITH',
+                style: AppTypography.label(size: 10, color: palette.inkMuted),
+              ),
+            ),
+            Expanded(child: Divider(color: palette.hairline)),
+          ],
+        ).enter(index: 4),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            Expanded(
+              child: _SocialButton(
+                label: 'Google',
+                mark: 'G',
+                isLoading: _isGoogleLoading,
+                onTap: _isGoogleLoading ? null : _continueWithGoogle,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: _SocialButton(
+                label: 'Facebook',
+                mark: 'f',
+                onTap: () =>
+                    _showGoogleSignInStub(context, provider: 'Facebook'),
+              ),
+            ),
+          ],
+        ).enter(index: 5),
+        const SizedBox(height: AppSpacing.xl),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Welcome Back 👋',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+              Text(
+                "Don't have an account? ",
+                style: TextStyle(color: palette.inkSecondary, fontSize: 14),
               ),
-              const SizedBox(height: 4),
-              const Text(
-                'Login to your account',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              AppTextField(
-                controller: _emailController,
-                label: 'Email',
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: Icons.mail_outline,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(
-                controller: _passwordController,
-                label: 'Password',
-                obscureText: _obscurePassword,
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: IconButton(
-                  tooltip: _obscurePassword ? 'Show password' : 'Hide password',
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              Pressable(
+                onTap: () => context.push(AppRoutes.signup),
+                child: const Text(
+                  'Sign up',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => context.push(AppRoutes.forgotPassword),
-                  child: const Text('Forget password?'),
-                ),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Text(_error!, style: const TextStyle(color: AppColors.danger)),
-              ],
-              const SizedBox(height: AppSpacing.md),
-              PrimaryButton(
-                label: 'Login',
-                onPressed: _submit,
-                isLoading: _isLoading,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                    child: Text(
-                      'or continue with',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _SocialButton(
-                    label: 'Google',
-                    icon: Icons.g_mobiledata,
-                    isLoading: _isGoogleLoading,
-                    onTap: _isGoogleLoading ? null : _continueWithGoogle,
-                  ),
-                  const SizedBox(width: AppSpacing.lg),
-                  _SocialButton(
-                    label: 'Facebook',
-                    icon: Icons.facebook,
-                    onTap: () =>
-                        _showGoogleSignInStub(context, provider: 'Facebook'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    GestureDetector(
-                      onTap: () => context.push(AppRoutes.signup),
-                      child: const Text(
-                        'Sign up',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],
           ),
-        ),
-      ),
+        ).enter(index: 6),
+      ],
     );
   }
 
@@ -228,31 +231,93 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
+/// Outlined, mono-labelled, and pressable — the same tactile treatment the
+/// primary action gets, so a secondary path doesn't feel like a dead end.
 class _SocialButton extends StatelessWidget {
   const _SocialButton({
     required this.label,
-    required this.icon,
+    required this.mark,
     required this.onTap,
     this.isLoading = false,
   });
 
   final String label;
-  final IconData icon;
+
+  /// The provider's letterform, set in the display face. Lucide carries no
+  /// brand glyphs, and a generic icon in their place reads as a bug.
+  final String mark;
   final VoidCallback? onTap;
   final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: isLoading
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(icon),
-      label: Text(label),
+    final palette = context.palette;
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: palette.card,
+          border: Border.all(color: palette.hairline),
+          borderRadius: BorderRadius.circular(AppRadii.md),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 15,
+                height: 15,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Text(
+                mark,
+                style: AppTypography.display(size: 17, color: palette.ink),
+              ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              label.toUpperCase(),
+              style: AppTypography.label(size: 10, color: palette.ink),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline auth error. Bordered rather than filled, so a failed attempt informs
+/// without turning the whole form red.
+class _ErrorNote extends StatelessWidget {
+  const _ErrorNote(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.06),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.28)),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(LucideIcons.circleAlert, size: 16, color: AppColors.danger),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.danger, fontSize: 13, height: 1.45),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

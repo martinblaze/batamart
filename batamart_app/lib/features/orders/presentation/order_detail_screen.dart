@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/status_chip.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -20,6 +22,7 @@ import '../../rider/state/rider_providers.dart';
 import '../../seller/state/seller_providers.dart';
 import '../data/order_models.dart';
 import '../state/orders_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// WEB_PAGES_REFERENCE.md's "Order Detail" is a **universal** screen that
 /// renders differently by viewer role — this is the buyer view (seller/
@@ -171,7 +174,7 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
           children: [
             Text(
               'Order #${order.orderNumber}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: AppTypography.display(size: 18, weight: FontWeight.w700),
             ),
             StatusChip(status: order.status),
           ],
@@ -179,8 +182,8 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
         if (order.createdAt != null)
           Text(
             DateFormat.yMMMd().add_jm().format(order.createdAt!),
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: context.palette.inkSecondary,
               fontSize: 12,
             ),
           ),
@@ -220,13 +223,13 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
                   ),
                   Text(
                     'Qty: ${order.quantity}',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: context.palette.inkSecondary),
                   ),
                 ],
               ),
             ),
             Text(
-              '₦${order.totalAmount.toStringAsFixed(0)}',
+              naira(order.totalAmount),
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
           ],
@@ -246,10 +249,10 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              const Icon(
+              Icon(
                 LucideIcons.user,
                 size: 18,
-                color: AppColors.textSecondary,
+                color: context.palette.inkSecondary,
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
@@ -393,19 +396,34 @@ class _TrackingStepper extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 12,
-                  backgroundColor: i <= stepIndex
-                      ? AppColors.primary
-                      : AppColors.border,
+                // Square, not a circle — this is a progress marker, and the
+                // system reserves full radius for avatars and status dots.
+                Container(
+                  width: 24,
+                  height: 24,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: i <= stepIndex
+                        ? context.palette.ink
+                        : context.palette.card,
+                    border: Border.all(
+                      color: i <= stepIndex
+                          ? context.palette.ink
+                          : context.palette.hairline,
+                    ),
+                  ),
                   child: Icon(
                     i < stepIndex
                         ? Icons.check
                         : i == stepIndex
                         ? Icons.radio_button_checked
                         : Icons.circle,
-                    size: 12,
-                    color: Colors.white,
+                    size: 11,
+                    // The icon has to follow its own background: a white glyph
+                    // on the unreached step's pale fill was invisible.
+                    color: i <= stepIndex
+                        ? context.palette.card
+                        : context.palette.inkMuted,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -416,7 +434,7 @@ class _TrackingStepper extends StatelessWidget {
                     fontSize: 10,
                     color: i <= stepIndex
                         ? AppColors.primary
-                        : AppColors.textSecondary,
+                        : context.palette.inkSecondary,
                   ),
                 ),
               ],
@@ -426,7 +444,7 @@ class _TrackingStepper extends StatelessWidget {
             Expanded(
               child: Container(
                 height: 2,
-                color: i < stepIndex ? AppColors.primary : AppColors.border,
+                color: i < stepIndex ? AppColors.primary : context.palette.hairline,
               ),
             ),
         ],
@@ -445,7 +463,7 @@ class _RiderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Row(
@@ -489,7 +507,7 @@ class _LiveLocationSection extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.palette.page,
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Column(
@@ -510,10 +528,10 @@ class _LiveLocationSection extends ConsumerWidget {
             data: (location) {
               final point = location.latestPoint;
               if (point == null) {
-                return const Text(
+                return Text(
                   'No location updates yet — the rider hasn\'t started broadcasting GPS.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: context.palette.inkSecondary,
                     fontSize: 12,
                   ),
                 );
@@ -522,8 +540,8 @@ class _LiveLocationSection extends ConsumerWidget {
                 'Last seen at ${point.lat.toStringAsFixed(5)}, ${point.lng.toStringAsFixed(5)}'
                 '${point.at != null ? ' • ${DateFormat.jm().format(point.at!)}' : ''}\n'
                 '(Map view needs a Google Maps API key — not yet supplied.)',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.palette.inkSecondary,
                   fontSize: 12,
                 ),
               );

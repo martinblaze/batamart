@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/upload/upload_providers.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -173,14 +174,14 @@ class _FileDisputeScreenState extends ConsumerState<FileDisputeScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.palette.hairline),
                       borderRadius: BorderRadius.circular(AppRadii.sm),
                     ),
                     child: _isUploading
                         ? const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.add, color: AppColors.textSecondary),
+                        : Icon(Icons.add, color: context.palette.inkSecondary),
                   ),
                 ),
               ],

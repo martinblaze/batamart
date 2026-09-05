@@ -53,6 +53,21 @@ dependencies:
   google_sign_in: ^7.2.0
   cached_network_image: ^3.4.1
   lucide_icons_flutter: ^3.1.15
+  flutter_animate: ^4.5.2
+# google_sign_in ^7.2.0 endorses google_sign_in_android 7.2.17, which applies
+# only `com.android.library` and then configures a bare `kotlin { }` block —
+# it relies on AGP's built-in Kotlin to compile its src/main/kotlin. This app
+# must keep android.builtInKotlin=false, because most other plugins still
+# apply kotlin-android and AGP 9 refuses to have both. The result was 20
+# "cannot find symbol: ResultUtilsKt" errors at
+# :google_sign_in_android:compileReleaseJavaWithJavac.
+#
+# 7.2.11 is the last release that applies the Kotlin plugin itself, so it
+# builds under either setting. Drop this override once the rest of the plugin
+# set has migrated to built-in Kotlin and the flag above can flip to true.
+dependency_overrides:
+  google_sign_in_android: 7.2.11
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -94,6 +109,29 @@ flutter:
 
   assets:
     - assets/branding/
+    - assets/images/
+
+  # Bundled rather than fetched. `GoogleFonts.config.allowRuntimeFetching`
+  # was false with nothing bundled, so every one of these families silently
+  # fell back to the platform default — the type system existed in code but
+  # never rendered. Archivo, Inter and JetBrains Mono ship upstream as
+  # variable fonts; Flutter maps `fontWeight` onto the weight axis, so one
+  # file per family covers every weight the app asks for.
+  fonts:
+    - family: Archivo
+      fonts:
+        - asset: assets/fonts/Archivo.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono.ttf
+    - family: InstrumentSerif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Regular.ttf
+        - asset: assets/fonts/InstrumentSerif-Italic.ttf
+          style: italic
 
   # To add assets to your application, add an assets section, like this:
   # assets:

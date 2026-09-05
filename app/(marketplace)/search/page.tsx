@@ -10,6 +10,7 @@ import { CATEGORY_TREE } from '@/lib/variants'
 import { getCategoryIcon } from '@/lib/category-icons'
 import { authFetch } from '@/lib/auth-client'
 import SearchAutocomplete from '@/components/SearchAutocomplete'
+import { PwaSearchTarget } from '@/components/layout/PwaSearchField'
 import FilterGroup from '@/components/FilterGroup'
 import PriceRangeSlider from '@/components/PriceRangeSlider'
 import ProductCard from '@/components/ProductCard'
@@ -101,9 +102,21 @@ function didYouMean(query: string) {
   return bestScore <= 2 ? best : ''
 }
 
+/**
+ * Params that drive app chrome rather than the search itself. They must survive
+ * every URL rewrite the page does, or navigating into search from the PWA's
+ * navbar field drops the shell back to browser layout mid-transition.
+ */
+const CHROME_PARAMS = ['app', 'android', 'focus'] as const
+
 function parseArrayParams(params: URLSearchParams): Record<string, string[]> {
   const out: Record<string, string[]> = {}
-  const skip = new Set(['q', 'search', 'categoryKey', 'category', 'subcategoryKey', 'sub', 'sellerId', 'page', 'limit', 'sort', 'sortBy', 'minPrice', 'maxPrice', 'minRating', 'rating', 'inStock', 'delivery', 'view', 'attributes', 'hostel', 'zone', 'fastDelivery'])
+  // Anything not named here is treated as a product-attribute facet, so every
+  // param the page does not own has to be listed. CHROME_PARAMS in particular:
+  // they used to fall through, get stored as filters, and come back out of
+  // buildParams as `app[]=true` — which knocked the search page out of PWA mode,
+  // killed the autofocus flag, and shipped both to the API as real filters.
+  const skip = new Set(['q', 'search', 'categoryKey', 'category', 'subcategoryKey', 'sub', 'sellerId', 'page', 'limit', 'sort', 'sortBy', 'minPrice', 'maxPrice', 'minRating', 'rating', 'inStock', 'delivery', 'view', 'attributes', 'hostel', 'zone', 'fastDelivery', ...CHROME_PARAMS])
   const raw = params.get('attributes')
   if (raw) {
     try {
@@ -139,8 +152,13 @@ function stateFromParams(params: URLSearchParams): SearchState {
   }
 }
 
-function buildParams(state: SearchState) {
+function buildParams(state: SearchState, carry?: URLSearchParams) {
   const params = new URLSearchParams()
+  // Carried through untouched so a filter change never strips app mode.
+  CHROME_PARAMS.forEach((key) => {
+    const value = carry?.get(key)
+    if (value) params.set(key, value)
+  })
   if (state.query.trim()) params.set('q', state.query.trim())
   if (state.categoryKey !== 'all') params.set('categoryKey', state.categoryKey)
   if (state.subcategoryKey) params.set('subcategoryKey', state.subcategoryKey)
@@ -264,7 +282,7 @@ function SearchPage() {
   }, [searchParamsString, parsed])
 
   useEffect(() => {
-    const next = buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode })
+    const next = buildParams({ query, categoryKey, subcategoryKey, sellerId, filters, minPrice, maxPrice, minRating, inStockOnly, deliveryFast, zone, sortBy, page, viewMode }, params)
     const nextString = next.toString()
     if (nextString === searchParamsString) return
     lastUrlRef.current = nextString
@@ -478,25 +496,19 @@ function SearchPage() {
       <div className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur/95">
         <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4">
           <div className="flex items-center gap-2">
-            <button onClick={() => router.push('/marketplace')} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-ink-secondary shadow-soft"><ChevronLeft className="h-4 w-4" /></button>
+            <button onClick={() => router.back()} aria-label="Back" className="group flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-card text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink"><ChevronLeft className="h-4 w-4 transition-transform duration-300 ease-out group-hover:-translate-x-0.5" /></button>
             {/* Desktop already has a search bar in the navbar — only show this one on mobile, where the navbar collapses to an icon. */}
             <div className="min-w-0 flex-1 md:hidden">
-              <SearchAutocomplete
-                value={queryDraft}
-                onChange={setQueryDraft}
-                onSubmit={() => { setQuery(queryDraft); setPage(1) }}
-                onSelect={(text) => { setQueryDraft(text); setQuery(text); setPage(1) }}
-                autoFocus={params.get('focus') === '1'}
-              />
+              <PwaSearchTarget>
+                <SearchAutocomplete
+                  value={queryDraft}
+                  onChange={setQueryDraft}
+                  onSubmit={() => { setQuery(queryDraft); setPage(1) }}
+                  onSelect={(text) => { setQueryDraft(text); setQuery(text); setPage(1) }}
+                  autoFocus={params.get('focus') === '1'}
+                />
+              </PwaSearchTarget>
             </div>
-            <button
-              type="button"
-              onClick={() => { setQuery(queryDraft); setPage(1) }}
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-soft md:hidden"
-              aria-label="Search"
-            >
-              <Search className="h-4 w-4" strokeWidth={1.75} />
-            </button>
             {query && <p className="hidden md:block min-w-0 flex-1 truncate text-sm font-medium text-ink-secondary">Results for &quot;{query}&quot;</p>}
           </div>
           <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">

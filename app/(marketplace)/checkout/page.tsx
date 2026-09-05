@@ -10,11 +10,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { PageHeader } from '@/components/marketplace/DetailChrome'
+import { Reveal } from '@/components/motion/AppMotion'
 import { useCartStore } from '@/lib/cart-store'
 import { authFetch } from '@/lib/auth-client'
 import { formatVariantSelection } from '@/lib/variants'
 import {
-  ChevronLeft, Lock, Shield, Truck, CheckCircle,
+  Lock, Shield, Truck, CheckCircle,
   MapPin, Phone, User, Home, Loader2, AlertCircle,
   MessageSquare, Info, ArrowRight, Package, Tag,
 } from 'lucide-react'
@@ -249,29 +251,21 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-surface pb-20">
 
-      {/* ── Sticky header ── */}
-      <div className="bg-card border-b border-border sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={() => router.push('/cart')}
-            className="flex items-center gap-1.5 text-sm font-semibold text-ink-secondary hover:text-primary transition-colors group"
-          >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            Back to Cart
-          </button>
-          <div className="flex items-center gap-2 text-sm font-semibold text-ink-secondary">
-            <Lock className="w-4 h-4 text-success" />
-            Secure Checkout
-          </div>
-        </div>
-      </div>
+      {/* A back bar and a page title were two headers doing one job, and only
+          the bar survived a scroll. One header now, and it stays opaque in the
+          installed app where a blurred bar smears over the content. */}
+      <PageHeader
+        title="Checkout"
+        back="/cart"
+        eyebrow="Final step"
+        actions={
+          <span className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted sm:flex">
+            <Lock className="h-3.5 w-3.5 text-success" strokeWidth={1.75} /> Secure
+          </span>
+        }
+      />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
-        <div className="mb-8 border-b border-border pb-6">
-          <p className="ui-eyebrow mb-2.5 max-w-[14rem]">Final step</p>
-          <h1 className="text-[clamp(1.7rem,3.6vw,2.5rem)] text-ink">Checkout</h1>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
 
@@ -279,7 +273,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-3 space-y-5">
 
             {/* ── Delivery address ── */}
-            <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+            <div className="overflow-hidden border border-border bg-card">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <MapPin className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
@@ -309,13 +303,11 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Order items + notes ── */}
-            <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
-              <div className="px-5 py-4 border-b border-border flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Package className="w-4 h-4 text-primary" />
-                </div>
-                <h2 className="font-semibold text-ink">Your Items</h2>
-                <span className="text-xs font-semibold text-ink-muted bg-surface px-2 py-0.5 rounded-full">
+            <div className="overflow-hidden border border-border bg-card">
+              <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+                <Package className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
+                <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Your items</h2>
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
                   {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
@@ -328,8 +320,9 @@ export default function CheckoutPage() {
                   return (
                     <div key={index} className="p-5">
                       <div className="flex gap-4 mb-4">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border border-border flex-shrink-0">
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        {/* 64px was a thumbnail of a thumbnail. */}
+                        <div className="h-24 w-20 flex-shrink-0 overflow-hidden border border-border bg-surface sm:h-28 sm:w-24">
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-ink text-sm sm:text-base line-clamp-2">{item.name}</h3>
@@ -340,8 +333,8 @@ export default function CheckoutPage() {
                           {variantEntries.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {variantEntries.map(([key, val]) => (
-                                <span key={key} className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary font-semibold px-2.5 py-0.5 rounded-full">
-                                  <Tag className="w-2.5 h-2.5" />
+                                <span key={key} className="inline-flex items-center gap-1 border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-secondary">
+                                  <Tag className="h-2.5 w-2.5" strokeWidth={1.75} />
                                   {String(val)}
                                 </span>
                               ))}
@@ -349,9 +342,9 @@ export default function CheckoutPage() {
                           )}
 
                           <div className="flex items-center gap-3 mt-2">
-                            <span className="text-primary font-semibold text-base">{formatPrice(item.price * item.quantity)}</span>
-                            <span className="text-xs text-ink-muted bg-surface px-2 py-0.5 rounded-full font-semibold">
-                              Qty: {item.quantity}
+                            <span className="ui-figure text-lg text-ink">{formatPrice(item.price * item.quantity)}</span>
+                            <span className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                              Qty {item.quantity}
                             </span>
                           </div>
                         </div>
@@ -409,12 +402,10 @@ export default function CheckoutPage() {
             </div>
 
             {/* ── Escrow info ── */}
-            <div className="bg-card rounded-2xl border border-border shadow-soft p-5">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-success" />
-                </div>
-                <h3 className="font-semibold text-ink">Secure Escrow Payment</h3>
+            <Reveal className="border border-border bg-card p-5">
+              <div className="mb-5 flex items-center gap-3">
+                <Shield className="h-4 w-4 text-success" strokeWidth={1.75} />
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Secure escrow payment</h3>
               </div>
               <div className="space-y-2.5">
                 {[
@@ -429,7 +420,7 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Reveal>
 
             {/* Error banner — context-aware messaging */}
             {error && (() => {
@@ -479,8 +470,8 @@ export default function CheckoutPage() {
 
           {/* ── RIGHT: Summary + CTA ── */}
           <div className="lg:col-span-2">
-            <div className="bg-card rounded-2xl border border-border shadow-soft p-5 sticky top-20">
-              <p className="text-xs font-semibold text-ink-muted uppercase tracking-widest mb-4">Order Summary</p>
+            <div className="border border-border bg-card p-5 lg:sticky lg:top-24">
+              <p className="ui-eyebrow mb-5">Order summary</p>
 
               <div className="space-y-3 pb-4 border-b border-border">
                 <div className="flex justify-between text-sm">
@@ -498,9 +489,9 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between mt-4 mb-5">
-                <span className="font-semibold text-ink">Total</span>
-                <span className="font-semibold text-primary text-xl">{formatPrice(totalAmount)}</span>
+              <div className="mt-4 mb-6 flex items-baseline justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink">Total</span>
+                <span className="ui-figure text-2xl text-ink">{formatPrice(totalAmount)}</span>
               </div>
 
               {hasNotes && (
@@ -525,7 +516,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed}
-                className="w-full flex items-center justify-center gap-2.5 bg-primary hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-semibold text-base shadow-soft shadow-primary/25 hover:shadow-soft transition-all active:scale-[0.98]"
+                className="pay-cta ui-btn-sweep flex h-14 w-full items-center justify-center gap-2.5 rounded-lg font-mono text-[11px] uppercase tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>

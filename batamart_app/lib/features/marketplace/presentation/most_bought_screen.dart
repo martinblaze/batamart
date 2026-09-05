@@ -9,6 +9,7 @@ import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../state/products_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// `GET /api/products/people-like-you?mode=daily` (BACKEND_REFERENCE.md
 /// §3.3). The web groups results by `dateKey` with infinite scroll; this
@@ -48,7 +49,7 @@ class MostBoughtScreen extends ConsumerWidget {
                 return ProductCard(
                   imageUrl: product.thumbnail,
                   name: product.name,
-                  price: '₦${product.price.toStringAsFixed(0)}',
+                  price: naira(product.price),
                   rating: product.avgRating > 0 ? product.avgRating : null,
                   reviewCount: product.totalReviews,
                   location: product.landmark,

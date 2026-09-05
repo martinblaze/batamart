@@ -486,3 +486,84 @@ input, textarea, select, button { font-family: inherit; }
      magnetic chase is suppressed in the component itself. */
   .ui-btn { transition: none; }
 }
+
+/* ==========================================================================
+   Installed-app feel
+   --------------------------------------------------------------------------
+   These only apply in the PWA (html.app-mode, set by IOSAppShell). A browser
+   tab should still behave like a browser tab — text selection, native
+   overscroll and momentum are all correct there and wrong in a standalone app.
+   ========================================================================== */
+
+/* Momentum scrolling with no rubber-band at the document level. On iOS the
+   page bouncing away from the status bar is the single clearest tell that a
+   PWA is a web page in a costume. */
+html.app-mode,
+html.app-mode body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* A long-press that selects the UI chrome, or a tap that flashes a grey
+   rectangle, immediately reads as a web page. Inputs keep selection, because
+   editing text without it is genuinely worse. */
+html.app-mode {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+html.app-mode body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+html.app-mode input,
+html.app-mode textarea,
+html.app-mode [contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Smooth in-page jumps everywhere, honoured only when the reader has not
+   asked for less motion. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Scroll-driven reveals fall back to fully-visible when the feature is
+   unsupported, so nothing is ever stuck at opacity 0. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Sticky chrome on pushed screens.
+
+   In a browser tab a blurred bar over scrolling content reads as depth. In the
+   installed PWA it does not: iOS composites a backdrop filter one frame behind
+   the scroll, so the bar smears and visibly lags the content beneath it. Same
+   reason the tab bar is flat. Opaque in the app, blurred in a tab.
+   ────────────────────────────────────────────────────────────────────────── */
+.ui-chrome-solid {
+  background-color: rgb(var(--ui-card-rgb) / 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+html.app-mode .ui-chrome-solid {
+  background-color: var(--ui-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* The single action a checkout screen exists for. Ink at rest so it reads as
+   the page's own primary, accent on hover — same contract as every other
+   primary button in the system. */
+.pay-cta {
+  background: var(--ui-slab);
+  color: var(--ui-slab-fg);
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pay-cta:hover:not(:disabled) { background: var(--color-primary); }

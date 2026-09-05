@@ -5,11 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCartStore } from '@/lib/cart-store'
 import { Magnetic } from '@/components/ui/button'
-import {
-  ShoppingCart, Trash2, Plus, Minus, ChevronLeft,
-  Package, Lock, Truck, Shield, ArrowRight, X,
-  Sparkles, MapPin, BadgeCheck, Zap, Tag,
-} from 'lucide-react'
+import { EmptyFigure, PageHeader } from '@/components/marketplace/DetailChrome'
+import { Reveal } from '@/components/motion/AppMotion'
+import { Plus, Minus, Lock, Truck, Shield, X, BadgeCheck, Tag } from 'lucide-react'
 // variants import not needed in cart - variant data comes from cart store's selectedVariants field
 
 const CART_CSS = `
@@ -86,22 +84,18 @@ export default function CartPage() {
   )
 
   if (items.length === 0) return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
-      <div className="fade-up w-full max-w-md border border-dashed border-border bg-card px-8 py-16 text-center sm:py-20">
-        <span className="mx-auto mb-7 flex h-14 w-14 items-center justify-center border border-border bg-surface">
-          <ShoppingCart className="h-6 w-6 text-ink-muted" strokeWidth={1.5} />
-        </span>
-        <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Nothing here yet</p>
-        <h1 className="mb-3 text-2xl text-ink">Your cart is empty</h1>
-        <p className="mx-auto mb-9 max-w-[32ch] text-sm leading-relaxed text-ink-secondary">
-          Browse what students around you are selling and add anything you want to keep.
-        </p>
-        <button
-          onClick={() => router.push('/marketplace')}
-          className="checkout-btn ui-btn-sweep inline-flex h-12 items-center gap-2.5 rounded-lg px-8 font-mono text-[11px] uppercase tracking-[0.16em] text-white"
-        >
-          Start shopping
-        </button>
+    <div className="min-h-screen bg-surface">
+      <PageHeader title="My cart" back="/marketplace" />
+      <div className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">
+        <EmptyFigure
+          image="/images/marketing/empty-cart.webp"
+          eyebrow="Nothing here yet"
+          title="Your cart is"
+          accent="empty."
+          body="Browse what students around you are selling, and anything you add will wait for you here."
+          href="/marketplace"
+          cta="Start shopping"
+        />
       </div>
     </div>
   )
@@ -116,40 +110,26 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-surface pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card/88 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-4 sm:px-6">
-          <button
-            onClick={() => router.push('/marketplace')}
-            aria-label="Back to marketplace"
-            className="group flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-ink-secondary transition-colors hover:bg-surface hover:text-ink"
-          >
-            <ChevronLeft
-              className="h-5 w-5 transition-transform duration-300 ease-out group-hover:-translate-x-0.5"
-              strokeWidth={1.75}
-            />
-          </button>
-          <div className="min-w-0 flex-1">
-            <p className="ui-eyebrow mb-1 max-w-[14rem]">
-              {items.length} item{items.length !== 1 ? 's' : ''} · {uniqueSellers} seller{uniqueSellers !== 1 ? 's' : ''}
-            </p>
-            <h1 className="text-xl text-ink sm:text-2xl">My cart</h1>
-          </div>
+      <PageHeader
+        title="My cart"
+        back="/marketplace"
+        eyebrow={`${items.length} item${items.length !== 1 ? 's' : ''} · ${uniqueSellers} seller${uniqueSellers !== 1 ? 's' : ''}`}
+        actions={
           <button
             onClick={clearCart}
-            className="flex-shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted transition-colors duration-300 hover:text-danger"
+            className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted transition-colors duration-300 hover:text-danger"
           >
             Clear all
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
         <div className="grid lg:grid-cols-3 gap-5">
 
           {/* Items */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="fade-up border border-border bg-card">
+            <Reveal className="border border-border bg-card">
               <div className="divide-y divide-border">
                 {items.map((item) => {
                   const variantEntries = Object.entries(item.selectedVariants || {}).filter(([, v]) => v)
@@ -235,12 +215,12 @@ export default function CartPage() {
                   )
                 })}
               </div>
-            </div>
+            </Reveal>
           </div>
 
           {/* Summary */}
           <div className="space-y-4">
-            <div className="fade-up border border-border bg-card p-5 lg:sticky lg:top-28">
+            <Reveal className="border border-border bg-card p-5 lg:sticky lg:top-28">
               <p className="ui-eyebrow mb-5">Order summary</p>
               <div className="divide-y divide-border">
                 <div className="flex items-baseline justify-between py-2.5">
@@ -278,10 +258,10 @@ export default function CartPage() {
                   Fast delivery
                 </span>
               </div>
-            </div>
+            </Reveal>
 
             <Link href="/marketplace"
-              className="fade-up flex h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink">
+              className="flex h-12 items-center justify-center gap-2 rounded-lg border border-border bg-card font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:border-ink/25 hover:text-ink">
               Continue shopping
             </Link>
           </div>

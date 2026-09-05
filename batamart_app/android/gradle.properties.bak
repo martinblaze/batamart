@@ -1,0 +1,24 @@
+# This machine has only ~7.6GB total RAM — the Flutter template's default
+# (-Xmx8G, more than the whole machine has) caused the JVM to thrash/swap
+# instead of actually compiling, which looked like a hang rather than an
+# OOM crash. Sized to leave headroom for the OS, the Dart/Flutter tool
+# itself, and the editor.
+org.gradle.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=512m -XX:ReservedCodeCacheSize=256m -XX:+HeapDumpOnOutOfMemoryError
+# Raised from Gradle's short defaults (~30-60s) because this network's route
+# to storage.googleapis.com (Flutter's precompiled engine artifacts) is
+# severely throttled (~20-30 KB/s, confirmed via direct curl) rather than
+# broken — without this, Gradle kills the still-progressing download and
+# misreports it as a TLS handshake failure.
+systemProp.org.gradle.internal.http.connectionTimeout=180000
+systemProp.org.gradle.internal.http.socketTimeout=180000
+# One worker at a time instead of Gradle's default (one per CPU core) — on
+# an 8-core machine that could mean 8x the peak memory spike simultaneously,
+# which is what likely caused the earlier hang on this 7.6GB-RAM machine.
+# Slower, but far less likely to thrash.
+org.gradle.workers.max=1
+org.gradle.parallel=false
+android.useAndroidX=true
+# This newDsl flag was added by the Flutter template
+android.newDsl=false
+# This builtInKotlin flag was added by the Flutter template
+android.builtInKotlin=false

@@ -4,12 +4,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../cart/state/cart_controller.dart';
 import '../data/payments_repository.dart';
+import '../../../core/utils/money.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/theme/app_typography.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 final paymentsRepositoryProvider = Provider<PaymentsRepository>(
   (ref) => PaymentsRepository(),
@@ -111,29 +116,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Delivery Address',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+            _CheckoutSection(
+              icon: LucideIcons.mapPin,
+              label: 'Delivery address',
+              trailing: Pressable(
+                onTap: () => context.push(AppRoutes.profileSetup),
+                child: Text(
+                  'EDIT',
+                  style: AppTypography.label(size: 10, color: AppColors.primary),
                 ),
-                TextButton(
-                  onPressed: () => context.push(AppRoutes.profileSetup),
-                  child: const Text('Edit'),
-                ),
-              ],
-            ),
-            Text(addressLines.isEmpty ? 'No address on file' : addressLines),
-            Text(
-              user?.landmark ?? '',
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            const Text(
-              'Order Notes (Optional)',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    addressLines.isEmpty ? 'No address on file' : addressLines,
+                    style: const TextStyle(fontWeight: FontWeight.w500, height: 1.45),
+                  ),
+                  if ((user?.landmark ?? '').isNotEmpty)
+                    Text(
+                      user!.landmark!,
+                      style: TextStyle(color: context.palette.inkSecondary, height: 1.45),
+                    ),
+                ],
+              ),
+            ).enter(index: 0),
+            const SizedBox(height: AppSpacing.lg),
+            _CheckoutSection(
+              icon: LucideIcons.messageSquare,
+              label: 'Order notes (optional)',
+              child: const SizedBox.shrink(),
+            ).enter(index: 1),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _noteController,
@@ -156,39 +169,92 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
             const SizedBox(height: AppSpacing.sm),
             Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppRadii.md),
+                color: context.palette.card,
+                border: Border.all(color: context.palette.hairline),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.shield_outlined, color: AppColors.info, size: 20),
-                  SizedBox(width: AppSpacing.sm),
+                  const Icon(LucideIcons.shieldCheck, color: AppColors.success, size: 18),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(
-                      'Escrow Protection\nYour payment is held safely and released to the seller '
-                      'only when you confirm delivery.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ESCROW PROTECTION',
+                          style: AppTypography.label(
+                            size: 10,
+                            color: context.palette.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          'Your payment is held safely and released to the seller only when you confirm delivery.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: context.palette.inkSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
+            ).enter(index: 2),
             const SizedBox(height: AppSpacing.xl),
-            const Text(
-              'Order Summary',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _SummaryRow(label: 'Subtotal', value: subtotal),
-            _SummaryRow(label: 'Delivery Fee', value: deliveryFee),
-            const Divider(),
-            _SummaryRow(label: 'Total', value: total, isBold: true),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: context.palette.card,
+                border: Border.all(color: context.palette.hairline),
+              ),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'ORDER SUMMARY',
+                      style: AppTypography.label(
+                        size: 10,
+                        color: context.palette.inkSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _SummaryRow(label: 'Subtotal', value: subtotal),
+                  _SummaryRow(label: 'Delivery fee', value: deliveryFee),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    child: Divider(height: 1, color: context.palette.hairline),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'TOTAL',
+                        style: AppTypography.label(
+                          size: 10,
+                          color: context.palette.ink,
+                        ),
+                      ),
+                      CountUp(
+                        value: total,
+                        format: (v) => naira(v),
+                        style: AppTypography.figure(
+                          size: 26,
+                          color: context.palette.ink,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ).enter(index: 3),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(_error!, style: const TextStyle(color: AppColors.danger)),
@@ -196,14 +262,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: AppSpacing.lg),
             PrimaryButton(
               label: 'Pay with Flutterwave',
+              icon: LucideIcons.lock,
               onPressed: items.isEmpty ? null : _pay,
               isLoading: _isSubmitting,
-            ),
-            const SizedBox(height: AppSpacing.sm),
+            ).enter(index: 4),
+            const SizedBox(height: AppSpacing.md),
             Center(
-              child: TextButton(
-                onPressed: () => context.pop(),
-                child: const Text('Back to Cart'),
+              child: Pressable(
+                onTap: () => context.pop(),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  child: Text(
+                    'BACK TO CART',
+                    style: AppTypography.label(
+                      size: 10,
+                      color: context.palette.inkSecondary,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -217,29 +293,70 @@ class _SummaryRow extends StatelessWidget {
   const _SummaryRow({
     required this.label,
     required this.value,
-    this.isBold = false,
   });
 
   final String label;
   final double value;
-  final bool isBold;
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontWeight: isBold ? FontWeight.w800 : FontWeight.w400,
-      fontSize: isBold ? 16 : 14,
-      color: isBold ? null : AppColors.textSecondary,
-    );
+    const style = TextStyle(fontWeight: FontWeight.w500, fontSize: 14);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: style),
-          Text('₦${value.toStringAsFixed(0)}', style: style),
+          Text(
+            label.toUpperCase(),
+            style: AppTypography.label(
+              size: 10,
+              color: context.palette.inkSecondary,
+            ),
+          ),
+          Text(naira(value), style: style),
         ],
       ),
+    );
+  }
+}
+
+
+/// A labelled block on the checkout page. Mono kicker, optional trailing
+/// action, hairline rule — so the page reads as a sequence of named steps
+/// rather than a run of bold paragraphs.
+class _CheckoutSection extends StatelessWidget {
+  const _CheckoutSection({
+    required this.icon,
+    required this.label,
+    required this.child,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: palette.inkMuted),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              label.toUpperCase(),
+              style: AppTypography.label(size: 10, color: palette.inkSecondary),
+            ),
+            if (trailing != null) ...[const Spacer(), trailing!],
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        child,
+      ],
     );
   }
 }

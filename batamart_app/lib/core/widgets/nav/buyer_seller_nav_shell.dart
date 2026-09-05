@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
+import '../../motion/motion.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_typography.dart';
 
 /// The buyer/seller shared bottom nav — Home / Deals / Cart / Orders /
 /// Profile, per `docs/mockups/README.md` and `WEB_PAGES_REFERENCE.md`'s
@@ -39,9 +42,9 @@ class BuyerSellerBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: context.palette.card,
+        border: Border(top: BorderSide(color: context.palette.hairline)),
       ),
       child: SafeArea(
         child: SizedBox(
@@ -85,52 +88,75 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.textSecondary;
+    final p = context.palette;
+    // Selected reads as ink, not accent: the accent is spent once per screen
+    // on the primary action, and a permanently-blue tab would outshout it.
+    final color = isSelected ? p.ink : p.inkMuted;
 
-    return InkWell(
+    return Pressable(
       onTap: onTap,
+      scale: 0.9,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
+          // The rule sits in the same column as the icon rather than floating
+          // over the cell, so it cannot drift out of alignment — which it did
+          // on Cart, where the unread badge pulls the icon's mass right.
+          AnimatedContainer(
+            duration: Motion.base,
+            curve: Motion.ease,
+            width: isSelected ? 34 : 0,
+            height: 2,
+            color: p.ink,
+          ),
+          const SizedBox(height: 9),
+          Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 22),
-              if (badgeCount > 0)
-                Positioned(
-                  right: -6,
-                  top: -4,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: AppColors.danger,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(minWidth: 14),
-                    child: Text(
-                      '$badgeCount',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AnimatedScale(
+                    scale: isSelected ? 1.06 : 1,
+                    duration: Motion.base,
+                    curve: Motion.ease,
+                    child: Icon(icon, color: color, size: 21),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: -7,
+                      top: -5,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: AppColors.danger,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(minWidth: 15),
+                        child: Text(
+                          badgeCount > 9 ? '9+' : '$badgeCount',
+                          textAlign: TextAlign.center,
+                          style: AppTypography.label(
+                            size: 8,
+                            color: Colors.white,
+                            weight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              AnimatedDefaultTextStyle(
+                duration: Motion.base,
+                curve: Motion.ease,
+                style: AppTypography.label(size: 9, color: color),
+                child: Text(label.toUpperCase()),
+              ),
             ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
           ),
         ],
       ),

@@ -15,6 +15,8 @@ import { isSplashPending } from '@/components/SplashScreen'
 import { useKeyboardVisibility } from '@/components/layout/KeyboardVisibilityProvider'
 import { Logo } from '@/components/layout/Logo'
 import SearchAutocomplete from '@/components/SearchAutocomplete'
+import { PwaSearchField } from '@/components/layout/PwaSearchField'
+import { isDetailRoute } from '@/lib/app-chrome'
 import { motion, useScroll, useTransform } from 'framer-motion'
 
 function BATAMARTLogo({ appMode = false }: { appMode?: boolean }) {
@@ -65,12 +67,13 @@ function AppTopBar({
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 isolate">
       <TopBarPlate />
-      <div className="flex items-center justify-between h-14 px-4">
-        <BATAMARTLogo appMode />
-        <div className="flex items-center gap-1">
-          <Link href="/search?app=true&focus=1" className="p-2 text-ink-secondary" aria-label="Search">
-            <Search className="w-5 h-5" strokeWidth={1.75} />
-          </Link>
+      <div className="flex h-14 items-center gap-2 px-4">
+        {/* The wordmark is gone in app mode: the user opened this from a
+            home-screen icon that already says BataMart, so the widest strip on
+            the screen went to information they had a second ago. The field
+            takes that space instead. */}
+        <PwaSearchField />
+        <div className="flex flex-shrink-0 items-center gap-1">
           {isLoggedIn ? (
             <>
               <Link href="/cart?app=true" className="relative p-2 text-ink-secondary">
@@ -203,7 +206,7 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-card/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           willChange: 'transform',
           backfaceVisibility: 'hidden',
@@ -411,7 +414,7 @@ function AppBottomNav({
   return (
     <>
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-card/92 backdrop-blur-xl border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        className={`fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-soft transition-transform transition-opacity duration-200 ease-out ${isKeyboardOpen ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style={{
           willChange: 'transform',
           WebkitBackfaceVisibility: 'hidden',
@@ -662,21 +665,27 @@ export function Navbar() {
     }
   }, [isApp, isRider, riderRouteAllowed, router])
 
-  const [splashDone, setSplashDone] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true
-    return !isSplashPending()
-  })
+  // Starts true so the first client render matches the server's.
+  //
+  // This used to call isSplashPending() in the initializer, which reads
+  // window.matchMedia — false on the server, true inside an installed PWA. The
+  // mismatch made React throw out the hydrated tree in standalone mode only.
+  // Nothing flashes by deferring: html.splash-pending hides the page
+  // synchronously, before hydration, and the effect below re-gates on mount.
+  const [splashDone, setSplashDone] = useState<boolean>(true)
 
   useEffect(() => {
-    if (splashDone) return
+    if (!isSplashPending()) return
+    setSplashDone(false)
     const handler = () => setSplashDone(true)
     window.addEventListener('batamart:splash-done', handler)
+    // SplashScreen dispatches at 3s; this only covers it never getting there.
     const fallback = setTimeout(() => setSplashDone(true), 4000)
     return () => {
       window.removeEventListener('batamart:splash-done', handler)
       clearTimeout(fallback)
     }
-  }, [splashDone])
+  }, [])
 
   const [isMenuOpen, setIsMenuOpen]               = useState(false)
   const [isLoggedIn, setIsLoggedIn]               = useState(false)
@@ -806,6 +815,12 @@ export function Navbar() {
   if (isAndroid) return null
   if (!splashDone) return null
   if (pathname === '/' || pathname?.startsWith('/rider/login')) return null
+
+  // In the installed app, detail screens own the whole viewport — the same
+  // rule the Flutter client follows. See lib/app-chrome.ts for why, and note
+  // NavbarWrapper reads the identical helper so the spacer disappears with
+  // the bar rather than leaving a dead strip.
+  if (isApp && isDetailRoute(pathname)) return null
 
   if (isApp) {
     if (isRider) {

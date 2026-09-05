@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/data/category_tree.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/picklist.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -16,6 +18,9 @@ import '../../../core/widgets/states/error_state.dart';
 import '../../../core/widgets/states/loading_skeleton.dart';
 import '../../auth/state/auth_controller.dart';
 import '../state/products_providers.dart';
+import '../state/recent_searches.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/utils/money.dart';
 
 /// Matches WEB_PAGES_REFERENCE.md's "Search" page. Backed by
 /// `GET /api/products` (BACKEND_REFERENCE.md §3.3): category, zone
@@ -48,6 +53,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       query: value,
       page: 1,
     );
+    ref.read(recentSearchesProvider.notifier).add(value);
+  }
+
+  /// Runs a term from the discovery pane, keeping the field in sync so the
+  /// user can see and edit what they just ran.
+  void _runTerm(String term) {
+    _controller.text = term;
+    _controller.selection =
+        TextSelection.collapsed(offset: term.length);
+    _submit(term);
   }
 
   @override
@@ -74,9 +89,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     autofocus: true,
                     textInputAction: TextInputAction.search,
                     onSubmitted: _submit,
-                    decoration: const InputDecoration(
+                    onChanged: (_) => setState(() {}),
+                    decoration: InputDecoration(
                       hintText: 'Search products, sellers...',
-                      prefixIcon: Icon(Icons.search),
+                      prefixIcon: const Icon(LucideIcons.search, size: 18),
+                      suffixIcon: _controller.text.isEmpty
+                          ? null
+                          : IconButton(
+                              tooltip: 'Clear',
+                              icon: const Icon(LucideIcons.x, size: 16),
+                              onPressed: () {
+                                _controller.clear();
+                                ref.read(searchQueryProvider.notifier).state =
+                                    ref.read(searchQueryProvider).copyWith(
+                                          query: '',
+                                          page: 1,
+                                        );
+                                setState(() {});
+                              },
+                            ),
                     ),
                   ),
                 ),
@@ -162,12 +193,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Expanded(
             child: resultsAsync.when(
               data: (result) {
+                // Before anything is typed, the screen offers somewhere to
+                // start rather than an empty box. An idle search field asking
+                // "what do you want?" is the least useful state in any app.
                 if ((query.query ?? '').isEmpty &&
                     query.activeFilterCount == 0) {
-                  return const EmptyState(
-                    title: 'Search BataMart',
-                    message: 'Find products and sellers across campus.',
-                  );
+                  return _SearchDiscovery(onTerm: _runTerm);
                 }
                 if (result.products.isEmpty) {
                   return const EmptyState(
@@ -192,7 +223,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       return ProductCard(
                         imageUrl: product.thumbnail,
                         name: product.name,
-                        price: '₦${product.price.toStringAsFixed(0)}',
+                        price: naira(product.price),
                         percentOff: product.hasDiscount
                             ? product.discountPercent
                             : null,
@@ -256,10 +287,10 @@ class _FilterButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: activeCount > 0
               ? AppColors.primary.withValues(alpha: 0.1)
-              : AppColors.background,
+              : context.palette.page,
           borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(
-            color: activeCount > 0 ? AppColors.primary : AppColors.border,
+            color: activeCount > 0 ? AppColors.primary : context.palette.hairline,
           ),
         ),
         child: Stack(
@@ -269,7 +300,7 @@ class _FilterButton extends StatelessWidget {
               LucideIcons.slidersHorizontal,
               color: activeCount > 0
                   ? AppColors.primary
-                  : AppColors.textSecondary,
+                  : context.palette.inkSecondary,
               size: 20,
             ),
             if (activeCount > 0)
@@ -348,9 +379,9 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Filters',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: AppTypography.display(size: 18, weight: FontWeight.w700),
                   ),
                   TextButton(
                     onPressed: () => setState(() {
@@ -490,6 +521,168 @@ class _SearchLoadingSkeleton extends StatelessWidget {
       ),
       itemCount: 6,
       itemBuilder: (context, index) => const ProductCardSkeleton(),
+    );
+  }
+}
+
+
+/// Shown while the search field is empty: what you looked for before, and
+/// what is worth looking for.
+class _SearchDiscovery extends ConsumerWidget {
+  const _SearchDiscovery({required this.onTerm});
+
+  final ValueChanged<String> onTerm;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final palette = context.palette;
+    final recent = ref.watch(recentSearchesProvider);
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        if (recent.isNotEmpty) ...[
+          Row(
+            children: [
+              Text(
+                'RECENT SEARCHES',
+                style: AppTypography.label(size: 10, color: palette.inkSecondary),
+              ),
+              const Spacer(),
+              Pressable(
+                onTap: () => ref.read(recentSearchesProvider.notifier).clear(),
+                child: Text(
+                  'CLEAR ALL',
+                  style: AppTypography.label(size: 10, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              for (final (i, term) in recent.indexed)
+                _TermChip(
+                  label: term,
+                  icon: LucideIcons.clock3,
+                  onTap: () => onTerm(term),
+                  onRemove: () =>
+                      ref.read(recentSearchesProvider.notifier).remove(term),
+                ).enter(index: i),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.section),
+        ],
+
+        Text(
+          'POPULAR ON CAMPUS',
+          style: AppTypography.label(size: 10, color: palette.inkSecondary),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            for (final (i, term) in trendingSearches.indexed)
+              _TermChip(
+                label: term,
+                icon: LucideIcons.trendingUp,
+                onTap: () => onTerm(term),
+              ).enter(index: i),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.section),
+        Text(
+          'BROWSE BY CATEGORY',
+          style: AppTypography.label(size: 10, color: palette.inkSecondary),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (final (i, category) in productCategories.indexed)
+          Pressable(
+            onTap: () {
+              ref.read(searchQueryProvider.notifier).state = ProductSearchQuery(
+                category: category.label,
+                categoryKey: category.key,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: palette.hairline)),
+              ),
+              child: Row(
+                children: [
+                  Icon(category.icon, size: 16, color: palette.inkMuted),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: Text(category.label, style: const TextStyle(fontSize: 14))),
+                  Text(
+                    '${(productSubcategories[category.key] ?? const []).length}',
+                    style: AppTypography.label(size: 10, color: palette.inkMuted),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(LucideIcons.chevronRight, size: 15, color: palette.inkMuted),
+                ],
+              ),
+            ),
+          ).enter(index: i),
+      ],
+    );
+  }
+}
+
+/// A tappable search term. Recent terms can be dismissed individually.
+class _TermChip extends StatelessWidget {
+  const _TermChip({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.onRemove,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Pressable(
+      onTap: onTap,
+      scale: 0.95,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm + 2,
+          onRemove == null ? AppSpacing.md : AppSpacing.sm,
+          AppSpacing.sm + 2,
+        ),
+        decoration: BoxDecoration(
+          color: palette.card,
+          border: Border.all(color: palette.hairline),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: palette.inkMuted),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 12.5)),
+            if (onRemove != null) ...[
+              const SizedBox(width: 4),
+              Pressable(
+                onTap: onRemove,
+                child: Padding(
+                  padding: const EdgeInsets.all(3),
+                  child: Icon(LucideIcons.x, size: 12, color: palette.inkMuted),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

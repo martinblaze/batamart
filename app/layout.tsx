@@ -4,6 +4,7 @@ import '@/styles/globals.css'
 import '@/styles/app-ui.css'
 
 import { NavbarWrapper } from '@/components/layout/NavbarWrapper'
+import { RouteTransition } from '@/components/motion/AppMotion'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { NotificationPrompt } from '@/hooks/usePushSubscription'
 import { SuspensionGuard } from '@/components/layout/SuspensionGuard'
@@ -247,9 +248,15 @@ export default function RootLayout({
 
                   if (!isAndroid && ((isStandalone || isAppParam) || shouldGuardIOSMarketplace) && !splashShown) {
                     document.documentElement.classList.add('splash-pending');
+                    // The rule MUST stay scoped to html.splash-pending. It used
+                    // to be injected unscoped, which made it permanent: removing
+                    // the class when the splash finished left every child of
+                    // <body> hidden forever, so a first PWA launch rendered a
+                    // blank screen. The stylesheets above already cover this;
+                    // this only re-asserts it in case globals.css is slow.
                     document.addEventListener('DOMContentLoaded', function() {
                       var style = document.createElement('style');
-                      style.textContent = 'body > *:not(#__splash_screen) { visibility: hidden !important; }';
+                      style.textContent = 'html.splash-pending body > *:not(#__splash_screen) { visibility: hidden !important; }';
                       document.head.appendChild(style);
                     });
                   }
@@ -292,7 +299,12 @@ export default function RootLayout({
             <NavbarWrapper />
             <NotificationPrompt />
             <IOSAppShell>
-              {children}
+              {/* Inside the shell, not around it: the shell owns the scroll
+                  container on iOS, and animating a transform on its ancestor
+                  would make position:fixed children resolve against the
+                  transformed element instead of the viewport — which detaches
+                  the tab bar from the bottom of the screen. */}
+              <RouteTransition>{children}</RouteTransition>
             </IOSAppShell>
             <ToastContainer />
           </ThemeProvider>

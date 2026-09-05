@@ -61,6 +61,13 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+
+            // Skip native debug symbol packaging — we don't upload native
+            // crash symbols anywhere, and this task is what was crashing
+            // the release build (zipflinger internal error).
+            ndk {
+                debugSymbolLevel = "none"
+            }
         }
     }
 }

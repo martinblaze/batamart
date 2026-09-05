@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/images/app_network_image.dart';
@@ -11,6 +13,9 @@ import '../../../core/widgets/states/empty_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../data/cart_models.dart';
 import '../state/cart_controller.dart';
+import '../../../core/utils/money.dart';
+import '../../../core/motion/motion.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Matches the collage's "My Cart" frame: items grouped by seller, qty
 /// steppers, delivery-to summary, delivery fee, total, "Secure Checkout".
@@ -24,9 +29,12 @@ class CartScreen extends ConsumerWidget {
     final quoteAsync = ref.watch(deliveryQuoteProvider);
 
     if (items.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
+        icon: LucideIcons.shoppingBag,
         title: 'Your cart is empty',
-        message: 'Browse the marketplace to find something you like.',
+        message: 'Browse what students around you are selling and add anything you want to keep.',
+        actionLabel: 'Start shopping',
+        onActionTap: () => context.go(AppRoutes.home),
       );
     }
 
@@ -49,57 +57,103 @@ class CartScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
-        for (final entry in bySeller.entries) _SellerGroup(items: entry.value),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        for (final (i, entry) in bySeller.entries.indexed)
+          _SellerGroup(items: entry.value).enter(index: i),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Delivery address — a named value, not a loose line of text.
+        _CartPanel(
           children: [
-            const Text(
-              'Delivery to',
-              style: TextStyle(color: AppColors.textSecondary),
+            Row(
+              children: [
+                Icon(LucideIcons.mapPin, size: 14, color: context.palette.inkMuted),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'DELIVERING TO',
+                  style: AppTypography.label(
+                    size: 10,
+                    color: context.palette.inkSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Pressable(
+                  onTap: () => context.push(AppRoutes.profileSetup),
+                  child: Text(
+                    'CHANGE',
+                    style: AppTypography.label(
+                      size: 10,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => context.push(AppRoutes.profileSetup),
-              child: const Text('Change'),
-            ),
-          ],
-        ),
-        Text(
-          deliveryAddress.isEmpty
-              ? 'No delivery address on file'
-              : deliveryAddress,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Delivery Fee',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            Text('₦${deliveryFee.toStringAsFixed(0)}'),
-          ],
-        ),
-        const Divider(height: AppSpacing.xl),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
+            const SizedBox(height: AppSpacing.sm),
             Text(
-              'Total (${ref.read(cartControllerProvider.notifier).totalItems} items)',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-            Text(
-              '₦${total.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              deliveryAddress.isEmpty
+                  ? 'No delivery address on file'
+                  : deliveryAddress,
+              style: const TextStyle(fontWeight: FontWeight.w500, height: 1.45),
             ),
           ],
-        ),
+        ).enter(index: bySeller.length),
+
+        const SizedBox(height: AppSpacing.md),
+
+        // Order summary. The total counts up, so a delivery quote resolving
+        // reads as the figure moving rather than the label being swapped.
+        _CartPanel(
+          children: [
+            _SummaryRow(label: 'Subtotal', value: naira(subtotal)),
+            const SizedBox(height: AppSpacing.sm),
+            _SummaryRow(
+              label: 'Delivery fee',
+              value: quoteAsync.isLoading ? 'Calculating…' : naira(deliveryFee),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              child: Divider(height: 1, color: context.palette.hairline),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'TOTAL · ${ref.read(cartControllerProvider.notifier).totalItems} ITEMS',
+                  style: AppTypography.label(
+                    size: 10,
+                    color: context.palette.ink,
+                  ),
+                ),
+                CountUp(
+                  value: total,
+                  format: (v) => naira(v),
+                  style: AppTypography.figure(
+                    size: 26,
+                    color: context.palette.ink,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ).enter(index: bySeller.length + 1),
+
         const SizedBox(height: AppSpacing.lg),
         PrimaryButton(
-          label: 'Secure Checkout',
+          label: 'Secure checkout',
+          icon: LucideIcons.lock,
           onPressed: () => context.push(AppRoutes.checkout),
-        ),
+        ).enter(index: bySeller.length + 2),
+        const SizedBox(height: AppSpacing.sm),
+        Center(
+          child: Text(
+            'ESCROW PROTECTED · RELEASED ON DELIVERY',
+            style: AppTypography.label(
+              size: 9,
+              color: context.palette.inkMuted,
+            ),
+          ),
+        ).enter(index: bySeller.length + 3),
       ],
     );
   }
@@ -189,7 +243,7 @@ class _CartItemRow extends ConsumerWidget {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          '₦${item.price.toStringAsFixed(0)}',
+                          naira(item.price),
                           style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
@@ -259,15 +313,61 @@ class _StepperButton extends StatelessWidget {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.hairline),
           borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
         child: Icon(
           icon,
           size: 16,
-          color: onTap == null ? AppColors.textDisabled : null,
+          color: onTap == null ? context.palette.inkMuted : null,
         ),
       ),
+    );
+  }
+}
+
+
+/// Hairline panel used by the cart's address and summary blocks. Keeps the
+/// two reading as one system rather than two loose stacks of text.
+class _CartPanel extends StatelessWidget {
+  const _CartPanel({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: palette.card,
+        border: Border.all(color: palette.hairline),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+    );
+  }
+}
+
+/// One label/figure pair in the order summary.
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTypography.label(size: 10, color: palette.inkSecondary),
+        ),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
+      ],
     );
   }
 }

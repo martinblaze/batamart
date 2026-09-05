@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 
 /// Disk+memory-cached replacement for raw `Image.network`, used everywhere
 /// a product/evidence photo is rendered so scrolling back to something
@@ -26,7 +26,7 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (url.isEmpty) return _placeholder();
+    if (url.isEmpty) return _placeholder(context);
     final dpr = MediaQuery.devicePixelRatioOf(context);
     return CachedNetworkImage(
       imageUrl: url,
@@ -35,14 +35,14 @@ class AppNetworkImage extends StatelessWidget {
       fit: fit,
       memCacheWidth: width == null ? null : (width! * dpr).round(),
       memCacheHeight: height == null ? null : (height! * dpr).round(),
-      placeholder: (context, url) => _placeholder(loading: true),
-      errorWidget: (context, url, error) => _placeholder(),
+      placeholder: (context, url) => _placeholder(context, loading: true),
+      errorWidget: (context, url, error) => _placeholder(context),
     );
   }
 
-  Widget _placeholder({bool loading = false}) {
+  Widget _placeholder(BuildContext context, {bool loading = false}) {
     return Container(
-      color: AppColors.background,
+      color: context.palette.page,
       alignment: Alignment.center,
       child: loading
           ? const SizedBox(
@@ -50,7 +50,7 @@ class AppNetworkImage extends StatelessWidget {
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : const Icon(LucideIcons.image, color: AppColors.textDisabled),
+          : Icon(LucideIcons.image, color: context.palette.inkMuted),
     );
   }
 }

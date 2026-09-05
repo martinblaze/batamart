@@ -2,6 +2,7 @@
 
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
+import { isDetailRoute } from '@/lib/app-chrome'
 import { Suspense, useState, useEffect } from 'react'
 
 function NavbarContent() {
@@ -42,6 +43,9 @@ function NavbarContent() {
   // DO NOT add h-16 here — that was causing the giant gap at the top.
   // Bottom nav spacing belongs inside each page's content, not here.
   if (isApp) {
+    // No bar on a detail route means no spacer either — otherwise the screen
+    // opens with an empty 56px band where the bar would have been.
+    if (isDetailRoute(pathname)) return <Navbar />
     return (
       <>
         <Navbar />

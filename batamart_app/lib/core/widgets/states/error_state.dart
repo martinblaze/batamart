@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
 import '../buttons/app_buttons.dart';
+import 'empty_state.dart';
 
-/// Error-state placeholder for a failed API call. Distinct from
-/// [EmptyState] (zero results is not an error).
+/// A failed request. Deliberately the same shape as [EmptyState] — zero
+/// results is not an error, and the two must not be confused — but it carries
+/// a retry, because the useful thing to offer someone here is another attempt.
 class ErrorState extends StatelessWidget {
   const ErrorState({
     super.key,
@@ -21,40 +25,58 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              LucideIcons.alertTriangle,
-              size: 56,
-              color: AppColors.danger,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: DottedBorderBox(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.section,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  LucideIcons.triangleAlert,
+                  size: 28,
+                  color: AppColors.danger,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.display(
+                    size: 18,
+                    color: p.ink,
+                    weight: FontWeight.w600,
+                    height: 1.25,
+                  ),
+                ),
+                if (message != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    message!,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: p.inkSecondary,
+                      height: 1.55,
+                    ),
+                  ),
+                ],
+                if (onRetry != null) ...[
+                  const SizedBox(height: AppSpacing.xl),
+                  SecondaryButton(
+                    label: 'Try again',
+                    onPressed: onRetry,
+                    expand: false,
+                  ),
+                ],
+              ],
             ),
-            if (message != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                message!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-            ],
-            if (onRetry != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              SecondaryButton(
-                label: 'Try Again',
-                onPressed: onRetry,
-                expand: false,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/chrome/app_bottom_sheet.dart';
@@ -170,7 +171,7 @@ class _ProductRow extends ConsumerWidget {
         style: TextStyle(
           color: !product.isActive || product.isOutOfStock
               ? AppColors.danger
-              : AppColors.textSecondary,
+              : context.palette.inkSecondary,
         ),
       ),
       onTap: () => context.push(AppRoutes.productDetailPath(product.id)),

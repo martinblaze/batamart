@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/empty_state.dart';
@@ -191,7 +191,7 @@ class _SaleRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.hairline),
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
         child: Row(
@@ -214,8 +214,8 @@ class _SaleRow extends StatelessWidget {
                   if (order.createdAt != null)
                     Text(
                       DateFormat.yMMMd().format(order.createdAt!),
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.palette.inkSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -225,7 +225,7 @@ class _SaleRow extends StatelessWidget {
             if (onAccept != null)
               FilledButton(onPressed: onAccept, child: const Text('Accept'))
             else
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              Icon(Icons.chevron_right, color: context.palette.inkSecondary),
           ],
         ),
       ),

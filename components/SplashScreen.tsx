@@ -44,7 +44,21 @@ export function isSplashPending(): boolean {
 }
 
 export default function SplashScreen() {
-  const [visible, setVisible] = useState<boolean>(() => isSplashPending())
+  // Must start false, matching the server.
+  //
+  // This used to be `useState(() => isSplashPending())`. That initializer runs
+  // during the first client render, which is the render React compares against
+  // the server HTML — and it reads `window.matchMedia`, so on the server it
+  // returned false and in an installed PWA it returned true. The client then
+  // rendered a <div> the server never sent, React threw "Hydration failed…"
+  // and discarded the whole tree, re-rendering the entire app on the client.
+  // It only ever reproduced in standalone display mode, which is why a browser
+  // tab looked fine.
+  //
+  // Nothing is lost by deferring: the effect below calls setVisible(true) once
+  // the logo has preloaded, and the page is already hidden by the
+  // `splash-pending` class the inline script in the layout sets synchronously.
+  const [visible, setVisible] = useState<boolean>(false)
   const [phase, setPhase] = useState<'idle' | 'in' | 'out'>('idle')
 
   const router = useRouter()

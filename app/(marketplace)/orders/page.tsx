@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { EmptyFigure, PageHeader } from '@/components/marketplace/DetailChrome'
+import { Reveal, RevealItem } from '@/components/motion/AppMotion'
 import {
   Star, CheckCircle, Loader2, Package, MapPin, User,
   Bike, ChevronRight, ArrowRight, ShoppingBag, Clock,
@@ -251,16 +253,15 @@ export default function OrdersPage() {
         <OrderNotificationBanner postPayment={postPayment} />
       </div>
 
-      {/* ── Page header ───────────────────────────────────────────────── */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="ui-eyebrow mb-2 max-w-[12rem]">
-                {orders.length} order{orders.length !== 1 ? 's' : ''} total
-              </p>
-              <h1 className="text-[clamp(1.6rem,3.4vw,2.4rem)] text-ink">My orders</h1>
-            </div>
+      {/* Orders is a bottom-nav tab, so it gets the static title treatment —
+          a sticky bar here would sit directly under the app's own top bar. */}
+      <PageHeader
+        variant="title"
+        title="My orders"
+        back={false}
+        eyebrow={`${orders.length} order${orders.length !== 1 ? 's' : ''} total`}
+        actions={
+          <>
             <Link
               href="/marketplace"
               className="hidden items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors duration-300 hover:text-ink sm:flex"
@@ -273,59 +274,65 @@ export default function OrdersPage() {
             >
               <Package className="h-3.5 w-3.5" /> Selling
             </Link>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {peopleLikeYouBought.length > 0 && (
-          <div className="mb-6 bg-card rounded-2xl border border-border shadow-soft p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-ink">People Like You Bought</h2>
+          <Reveal className="mb-8">
+            <div className="mb-4 flex items-end justify-between gap-6">
+              <div className="min-w-0">
+                <p className="ui-eyebrow mb-2.5 max-w-[16rem]">Bought by students like you</p>
+                <h2 className="text-[clamp(1.05rem,2.2vw,1.5rem)] text-ink">
+                  Popular right<span className="ui-serif"> now.</span>
+                </h2>
+              </div>
               <button
                 onClick={() => router.push('/most-bought')}
-                className="text-xs font-semibold text-primary flex items-center gap-1 hover:underline"
+                className="group flex flex-shrink-0 items-center gap-1.5 pb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-primary"
               >
-                See more <ChevronRight className="w-3.5 h-3.5" />
+                See all
+                <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5" />
               </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            <div className="ui-rail -mx-1 px-1 pb-1">
               {peopleLikeYouBought.map((item) => (
-                <div
+                <button
                   key={item.key}
                   onClick={() => router.push(`/product/${item.product.id}`)}
-                  className="flex-shrink-0 w-36 sm:w-44 rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-soft transition-shadow bg-card"
+                  className="group w-36 flex-shrink-0 overflow-hidden border border-border bg-card text-left transition-colors duration-300 hover:border-ink/20 sm:w-44"
                 >
-                  <div className="aspect-square bg-surface overflow-hidden">
+                  <div className="aspect-[4/5] overflow-hidden bg-surface">
                     <img
                       src={item.product.images?.[0] || '/placeholder.png'}
                       alt={item.product.name}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                     />
                   </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{item.product.name}</p>
-                    <p className="text-xs font-semibold text-primary mt-1">{formatPrice(item.product.price)}</p>
-                    <p className="text-[10px] text-ink-secondary mt-1">{item.soldCount} bought</p>
+                  <div className="p-3">
+                    <p className="line-clamp-2 text-xs font-medium leading-snug text-ink">{item.product.name}</p>
+                    <p className="ui-figure mt-1.5 text-sm text-ink">{formatPrice(item.product.price)}</p>
+                    <p className="ui-mono ui-mono-sm mt-1.5 text-ink-muted">{item.soldCount} bought</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
-          </div>
+          </Reveal>
         )}
 
         {/* Loading skeletons */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-card rounded-2xl p-5 animate-pulse">
+              <div key={i} className="border border-border bg-card p-5">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-border rounded-xl flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-border rounded-lg w-3/4" />
-                    <div className="h-3 bg-border rounded-lg w-1/2" />
-                    <div className="h-5 bg-border rounded-lg w-1/4 mt-3" />
+                  <div className="ui-skeleton h-28 w-24 flex-shrink-0 sm:h-36 sm:w-32" />
+                  <div className="flex-1 space-y-2.5 pt-1">
+                    <div className="ui-skeleton h-4 w-3/4" />
+                    <div className="ui-skeleton h-3 w-1/2" />
+                    <div className="ui-skeleton mt-4 h-6 w-1/3" />
                   </div>
                 </div>
               </div>
@@ -333,33 +340,27 @@ export default function OrdersPage() {
           </div>
 
         ) : orders.length === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-dashed border-border">
-            <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center mb-5 ring-1 ring-border">
-              <ShoppingBag className="w-9 h-9 text-ink-muted" />
-            </div>
-            <h3 className="text-xl font-semibold text-ink mb-1">No orders yet</h3>
-            <p className="text-ink-muted text-sm mb-6">Start shopping on BATAMART marketplace!</p>
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center gap-2 bg-ink hover:bg-primary text-background px-6 py-3 rounded-xl font-semibold text-sm shadow-soft transition-all"
-            >
-              Browse Products <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <EmptyFigure
+            image="/images/marketing/empty-orders.webp"
+            eyebrow="No orders yet"
+            title="Nothing on its"
+            accent="way."
+            body="Everything you buy shows up here — from payment to the moment it reaches your hostel."
+            href="/marketplace"
+            cta="Browse products"
+          />
 
         ) : (
           <div className="space-y-4">
-            {orders.map((order) => {
+            {orders.map((order, orderIndex) => {
               const isGfd = isGirlfriendsDayOrder(order)
               const gfdLabel = isGfd ? CAMPAIGNS[order.campaignTag as keyof typeof CAMPAIGNS].label : null
               return (
-              <div
+              <RevealItem
                 key={order.id}
-                className={`rounded-2xl border shadow-soft hover:shadow-soft transition-all duration-200 overflow-hidden ${
-                  isGfd
-                    ? 'bg-gradient-to-br from-rose-50 to-white border-rose-200/70 ring-1 ring-rose-100'
-                    : 'bg-card border-border'
+                index={orderIndex}
+                className={`overflow-hidden border transition-colors duration-300 ${
+                  isGfd ? 'border-rose-200/70 bg-rose-50/60' : 'border-border bg-card hover:border-ink/20'
                 }`}
               >
 
@@ -369,18 +370,18 @@ export default function OrdersPage() {
                 }`}>
                   <div className="flex items-center gap-3">
                     <div>
-                      <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Order</p>
-                      <p className="text-sm font-semibold text-ink">#{order.orderNumber || order.id.slice(-8).toUpperCase()}</p>
+                      <p className="ui-mono ui-mono-sm text-ink-muted">Order</p>
+                      <p className="ui-figure mt-0.5 text-sm text-ink">#{order.orderNumber || order.id.slice(-8).toUpperCase()}</p>
                     </div>
                     <div className="hidden sm:block w-px h-8 bg-border" />
                     <div className="hidden sm:block">
-                      <p className="text-xs font-semibold text-ink-muted uppercase tracking-wider">Date</p>
-                      <p className="text-sm font-semibold text-ink-secondary">
+                      <p className="ui-mono ui-mono-sm text-ink-muted">Date</p>
+                      <p className="ui-figure mt-0.5 text-sm text-ink-secondary">
                         {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
                     {isGfd && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 text-[10px] font-semibold uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 border border-rose-300/70 bg-rose-500/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-rose-600">
                         <Heart className="w-2.5 h-2.5" strokeWidth={2} fill="currentColor" /> {gfdLabel}
                       </span>
                     )}
@@ -391,11 +392,13 @@ export default function OrdersPage() {
                 {/* ── Product row ── */}
                 <div className="p-5">
                   <div className="flex gap-4">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-surface flex-shrink-0 border border-border">
+                    {/* The item is what the reader is scanning for. At 80px it
+                        was an icon; at 4:5 it is recognisable at a glance. */}
+                    <div className="group h-28 w-24 flex-shrink-0 overflow-hidden border border-border bg-surface sm:h-36 sm:w-32">
                       <img
                         src={order.product?.images?.[0] || '/placeholder.png'}
-                        alt={order.product?.name}
-                        className="w-full h-full object-cover"
+                        alt={order.product?.name || ''}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -419,9 +422,9 @@ export default function OrdersPage() {
                       {/* ── Variant badges from order note ── */}
                       <VariantBadges orderNote={order.orderNote} />
                       <div className="flex items-center gap-3 mt-2.5">
-                        <span className="text-primary font-semibold text-lg">{formatPrice(order.totalAmount)}</span>
-                        <span className="text-xs text-ink-muted bg-surface px-2 py-1 rounded-full font-semibold">
-                          Qty: {order.quantity || 1}
+                        <span className="ui-figure text-xl text-ink">{formatPrice(order.totalAmount)}</span>
+                        <span className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                          Qty {order.quantity || 1}
                         </span>
                       </div>
                     </div>
@@ -452,19 +455,19 @@ export default function OrdersPage() {
                   {/* ── Review status bar ── */}
                   {canReview(order) && (
                     <div className="mt-4 flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ring-1 ${hasReviewedProduct(order)
-                          ? 'bg-success/10 text-success ring-success/30'
-                          : 'bg-warning/10 text-warning ring-warning/30'
+                      <span className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] ${hasReviewedProduct(order)
+                          ? 'border-success/40 bg-success/10 text-success'
+                          : 'border-warning/40 bg-warning/10 text-warning'
                         }`}>
                         {hasReviewedProduct(order) ? <BadgeCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                        Product {hasReviewedProduct(order) ? 'Reviewed' : 'Not Reviewed'}
+                        Product {hasReviewedProduct(order) ? 'reviewed' : 'not reviewed'}
                       </span>
-                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ring-1 ${hasReviewedSeller(order)
-                          ? 'bg-success/10 text-success ring-success/30'
-                          : 'bg-warning/10 text-warning ring-warning/30'
+                      <span className={`inline-flex items-center gap-1.5 border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] ${hasReviewedSeller(order)
+                          ? 'border-success/40 bg-success/10 text-success'
+                          : 'border-warning/40 bg-warning/10 text-warning'
                         }`}>
                         {hasReviewedSeller(order) ? <BadgeCheck className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                        Seller {hasReviewedSeller(order) ? 'Reviewed' : 'Not Reviewed'}
+                        Seller {hasReviewedSeller(order) ? 'reviewed' : 'not reviewed'}
                       </span>
                     </div>
                   )}
@@ -539,7 +542,7 @@ export default function OrdersPage() {
                     )}
                   </div>
                 </div>
-              </div>
+              </RevealItem>
             )})}
           </div>
         )}

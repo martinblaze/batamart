@@ -46,9 +46,9 @@ class _KitchenSinkScreenState extends State<KitchenSinkScreen> {
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              _swatch('Brand gradient', gradient: AppColors.brandGradient),
+              _swatch('Accent', color: AppColors.primary),
               _swatch('Primary', color: AppColors.primary),
-              _swatch('Campaign pink', color: AppColors.campaignPink),
+              _swatch('Campaign pink', color: AppColors.campaignRose),
               _swatch('Success', color: AppColors.success),
               _swatch('Warning', color: AppColors.warning),
               _swatch('Danger', color: AppColors.danger),

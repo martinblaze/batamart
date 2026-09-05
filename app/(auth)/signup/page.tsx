@@ -1,5 +1,7 @@
 'use client'
 
+import { AuthLayout } from '@/components/auth/AuthLayout'
+
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -90,23 +92,31 @@ const PageShell = ({
   children: React.ReactNode
   selectedUniversity: University | null
 }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-surface">
-    <div className="w-full max-w-md">
-      <div className="mb-8 text-center">
-        <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Campus marketplace</p>
-        <h1 className="text-[clamp(1.9rem,5vw,2.6rem)] leading-[1.02] text-ink">BataMart</h1>
-        {selectedUniversity && (
-          <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-            <MapPin className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
-            <span className="text-primary text-xs font-medium">
-              {selectedUniversity.shortName} — {selectedUniversity.location}
-            </span>
-          </div>
-        )}
-      </div>
+  <AuthLayout
+    eyebrow="Join BataMart"
+    title="Create your"
+    titleAccent="account."
+    subtitle={
+      selectedUniversity
+        ? `Delivering across ${selectedUniversity.shortName} — ${selectedUniversity.location}.`
+        : 'Start with your email — we will send a code to confirm it.'
+    }
+    back={{ href: '/login', label: 'I have an account' }}
+    image="/images/marketing/sell-cta.webp"
+    quote="Listing is free. You are only charged when a sale actually completes."
+  >
+    <>
+      {selectedUniversity && (
+        <div className="mb-5 inline-flex items-center gap-1.5 border border-border px-3 py-1.5">
+          <MapPin className="h-3.5 w-3.5 text-primary" strokeWidth={1.75} />
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-secondary">
+            {selectedUniversity.shortName} — {selectedUniversity.location}
+          </span>
+        </div>
+      )}
       {children}
-    </div>
-  </div>
+    </>
+  </AuthLayout>
 )
 
 const ErrorBox = ({ error }: { error: string }) =>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/empty_state.dart';
@@ -27,7 +29,7 @@ class WalletScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isRider = ref.watch(authControllerProvider).user?.isRider ?? false;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.palette.page,
       appBar: BataAppBar(
         title: isRider ? 'Earnings' : 'Wallet',
         showBack: true,
@@ -74,9 +76,9 @@ class WalletBody extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.palette.card,
                 borderRadius: BorderRadius.circular(AppRadii.lg),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: context.palette.hairline),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -116,9 +118,9 @@ class WalletBody extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Recent Transactions',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  style: AppTypography.display(size: 15, weight: FontWeight.w700),
                 ),
                 TextButton(
                   onPressed: () => context.push(AppRoutes.walletTransactions),
@@ -142,9 +144,9 @@ class WalletBody extends ConsumerWidget {
                 final shown = transactions.take(5).toList();
                 return Container(
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.palette.card,
                     borderRadius: BorderRadius.circular(AppRadii.lg),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.palette.hairline),
                   ),
                   child: Column(
                     children: [
@@ -224,8 +226,8 @@ class _BalanceCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        gradient: AppColors.brandGradient,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
+        color: context.palette.slab,
+        borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -464,8 +466,8 @@ class TransactionRow extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         DateFormat.yMMMd().format(transaction.createdAt!),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: context.palette.inkSecondary,
                           fontSize: 11,
                         ),
                       ),

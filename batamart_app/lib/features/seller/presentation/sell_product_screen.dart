@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/editorial.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/data/category_tree.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -13,6 +16,7 @@ import '../../../core/widgets/images/app_network_image.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../auth/state/auth_controller.dart';
 import '../state/seller_providers.dart';
+import '../../../core/utils/money.dart';
 
 class _VariantDraft {
   String label = '';
@@ -293,11 +297,8 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Basic Info',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        const SizedBox(height: AppSpacing.md),
+        Eyebrow('01 — Basic Info'),
+        const SizedBox(height: AppSpacing.xl),
         const Text(
           'Add Product Images',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -320,16 +321,16 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
                   width: 72,
                   height: 72,
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.palette.hairline),
                     borderRadius: BorderRadius.circular(AppRadii.sm),
                   ),
                   child: _isUploadingImage
                       ? const Center(
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(
+                      : Icon(
                           LucideIcons.plus,
-                          color: AppColors.textSecondary,
+                          color: context.palette.inkSecondary,
                         ),
                 ),
               ),
@@ -410,11 +411,8 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Pricing & Stock',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        const SizedBox(height: AppSpacing.md),
+        Eyebrow('02 — Pricing & Stock'),
+        const SizedBox(height: AppSpacing.xl),
         AppTextField(
           controller: _priceController,
           label: 'Price (₦)',
@@ -492,11 +490,8 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Delivery',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        const SizedBox(height: AppSpacing.md),
+        Eyebrow('03 — Delivery'),
+        const SizedBox(height: AppSpacing.xl),
         AppTextField(
           controller: _hostelController,
           label: 'Hostel (pickup location)',
@@ -587,14 +582,14 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Review & Confirm',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          style: AppTypography.display(size: 16, weight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
           _nameController.text,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          style: AppTypography.display(size: 16, weight: FontWeight.w600),
         ),
         Text('₦${price.toStringAsFixed(0)} • Qty ${_quantityController.text}'),
         const SizedBox(height: AppSpacing.lg),
@@ -624,16 +619,16 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
                 children: [
                   const Text('You receive per unit sold'),
                   Text(
-                    '₦${youReceive.toStringAsFixed(0)}',
+                    naira(youReceive),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
+              Text(
                 'A further cut (30% of the delivery fee) is also deducted per order — it varies by '
                 'the buyer\'s delivery zone, so it isn\'t known until an order is actually placed.',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
               ),
             ],
           ),
@@ -665,9 +660,9 @@ class _CategoryPickerField extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: context.palette.page,
           borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.hairline),
         ),
         child: Row(
           children: [
@@ -676,10 +671,10 @@ class _CategoryPickerField extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
             ],
             Expanded(child: Text(label)),
-            const Icon(
+            Icon(
               LucideIcons.chevronRight,
               size: 18,
-              color: AppColors.textSecondary,
+              color: context.palette.inkSecondary,
             ),
           ],
         ),
@@ -714,7 +709,7 @@ class _CategoryGrid extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: AppColors.background,
+              color: context.palette.page,
               borderRadius: BorderRadius.circular(AppRadii.md),
             ),
             child: Column(
@@ -777,7 +772,7 @@ class _ConfirmListingContentState extends State<_ConfirmListingContent> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Listing price'),
-                  Text('₦${widget.price.toStringAsFixed(0)}'),
+                  Text(naira(widget.price)),
                 ],
               ),
               Row(
@@ -796,7 +791,7 @@ class _ConfirmListingContentState extends State<_ConfirmListingContent> {
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    '₦${youReceive.toStringAsFixed(0)}',
+                    naira(youReceive),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ],
@@ -804,7 +799,7 @@ class _ConfirmListingContentState extends State<_ConfirmListingContent> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'To net ₦${widget.price.toStringAsFixed(0)}, list at ₦${(widget.price / 0.95).toStringAsFixed(0)} instead.',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
               ),
             ],
           ),
@@ -843,11 +838,11 @@ class _StepIndicator extends StatelessWidget {
         for (var i = 0; i < 4; i++) ...[
           CircleAvatar(
             radius: 14,
-            backgroundColor: i <= step ? AppColors.primary : AppColors.border,
+            backgroundColor: i <= step ? AppColors.primary : context.palette.hairline,
             child: Text(
               '${i + 1}',
               style: TextStyle(
-                color: i <= step ? Colors.white : AppColors.textSecondary,
+                color: i <= step ? Colors.white : context.palette.inkSecondary,
                 fontSize: 12,
               ),
             ),
@@ -856,7 +851,7 @@ class _StepIndicator extends StatelessWidget {
             Expanded(
               child: Container(
                 height: 2,
-                color: i < step ? AppColors.primary : AppColors.border,
+                color: i < step ? AppColors.primary : context.palette.hairline,
               ),
             ),
         ],

@@ -62,6 +62,7 @@ class ProductsRepository {
     String? query,
     String? category,
     String? categoryKey,
+    String? subcategoryKey,
     String? sellerId,
     String? zone,
     String? hostel,
@@ -87,6 +88,11 @@ class ProductsRepository {
           'categoryKey': categoryKey
         else if (category != null && category.isNotEmpty && category != 'All')
           'category': category,
+        // Resolved server-side against the parent categoryKey
+        // (resolveSubcategoryKey in app/api/products/route.ts), so sending a
+        // subcategory key as `categoryKey` would silently match nothing.
+        if (subcategoryKey != null && subcategoryKey.isNotEmpty)
+          'subcategoryKey': subcategoryKey,
         'sellerId': ?sellerId,
         if (zone != null && zone.isNotEmpty && zone != 'All') 'zone': zone,
         if (hostel != null && hostel.isNotEmpty && hostel != 'All')

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/empty_state.dart';
@@ -103,7 +104,7 @@ class _DistributionChart extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: (entry['count'] as int? ?? 0) / maxCount,
                       minHeight: 8,
-                      backgroundColor: AppColors.border,
+                      backgroundColor: context.palette.hairline,
                       valueColor: const AlwaysStoppedAnimation(AppColors.star),
                     ),
                   ),
@@ -159,7 +160,7 @@ class _ReviewTile extends StatelessWidget {
                   (i) => Icon(
                     Icons.star_rounded,
                     size: 14,
-                    color: i < rating ? AppColors.star : AppColors.border,
+                    color: i < rating ? AppColors.star : context.palette.hairline,
                   ),
                 ),
               ),

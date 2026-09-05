@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/utils/picklist.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -79,9 +80,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Where should orders be delivered? This is required before you can check out.',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: AppSpacing.xl),
               hostels.isNotEmpty

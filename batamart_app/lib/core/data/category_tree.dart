@@ -124,3 +124,31 @@ const productSubcategories = <String, List<ProductCategory>>{
     ProductCategory(key: 'musical_instruments', label: 'Musical Instruments', icon: LucideIcons.music),
   ],
 };
+
+
+/// The top-level category a subcategory key belongs to, or null if [key] is
+/// already top-level (or unknown).
+///
+/// The API resolves `subcategoryKey` *within* a parent `categoryKey`
+/// (see `resolveSubcategoryKey` in app/api/products/route.ts), so a
+/// subcategory filter is meaningless without its parent. Callers need this to
+/// send both.
+String? parentCategoryOf(String key) {
+  for (final entry in productSubcategories.entries) {
+    if (entry.value.any((c) => c.key == key)) return entry.key;
+  }
+  return null;
+}
+
+/// Looks up a category or subcategory anywhere in the tree.
+ProductCategory? findCategory(String key) {
+  for (final c in productCategories) {
+    if (c.key == key) return c;
+  }
+  for (final list in productSubcategories.values) {
+    for (final c in list) {
+      if (c.key == key) return c;
+    }
+  }
+  return null;
+}

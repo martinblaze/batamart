@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/status_chip.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -137,10 +139,7 @@ class _DisputeDetailBodyState extends ConsumerState<_DisputeDetailBody> {
                     dispute.orderNumber != null
                         ? 'Order #${dispute.orderNumber}'
                         : 'Dispute',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTypography.display(size: 16, weight: FontWeight.w700),
                   ),
                   StatusChip(status: dispute.status),
                 ],
@@ -254,9 +253,9 @@ class _MessagesList extends ConsumerWidget {
     return messagesAsync.when(
       data: (messages) {
         if (messages.isEmpty) {
-          return const Text(
+          return Text(
             'No messages yet.',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: context.palette.inkSecondary),
           );
         }
         return ListView.builder(
@@ -289,7 +288,7 @@ class _MessageBubble extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 260),
         decoration: BoxDecoration(
           color: isAdmin
-              ? AppColors.background
+              ? context.palette.page
               : AppColors.primary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(AppRadii.md),
         ),
@@ -304,9 +303,9 @@ class _MessageBubble extends StatelessWidget {
             if (message.createdAt != null)
               Text(
                 DateFormat.jm().format(message.createdAt!),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.textSecondary,
+                  color: context.palette.inkSecondary,
                 ),
               ),
           ],

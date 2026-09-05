@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -74,7 +75,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             children: [
               Text(
                 'Enter the code sent to ${widget.email} and choose a new password.',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(

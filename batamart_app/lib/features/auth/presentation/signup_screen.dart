@@ -6,10 +6,13 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/widgets/auth_scaffold.dart';
 import '../../../core/utils/picklist.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
-import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../universities/presentation/universities_provider.dart';
 import '../data/auth_models.dart';
@@ -188,14 +191,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final universitiesAsync = ref.watch(universitiesProvider);
 
-    return Scaffold(
-      appBar: const BataAppBar(title: 'Create Account', showBack: true),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return AuthScaffold(
+      image: 'assets/images/auth-hero.webp',
+      eyebrow: 'Join BataMart',
+      title: 'Create your',
+      titleAccent: 'account.',
+      subtitle: _isVerified
+          ? 'Tell us where on campus to deliver.'
+          : 'Start with your email — we will send a code to confirm it.',
+      onBack: () => context.pop(),
+      children: [
+              // Two steps: confirm the email, then the delivery details. The
+              // rule makes the flow's length legible up front.
+              AuthSteps(current: _isVerified ? 2 : 1, total: 2),
               AppTextField(
                 controller: _emailController,
                 label: 'Email',
@@ -210,7 +218,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   isLoading: _isSendingOtp,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                const Row(
+                Row(
                   children: [
                     Expanded(child: Divider()),
                     Padding(
@@ -218,24 +226,57 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         horizontal: AppSpacing.sm,
                       ),
                       child: Text(
-                        'or',
-                        style: TextStyle(color: AppColors.textSecondary),
+                        'OR',
+                        style: AppTypography.label(
+                          size: 10,
+                          color: context.palette.inkMuted,
+                        ),
                       ),
                     ),
                     Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                OutlinedButton.icon(
-                  onPressed: _isGoogleLoading ? null : _continueWithGoogle,
-                  icon: _isGoogleLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.g_mobiledata),
-                  label: const Text('Sign up with Google'),
+                Pressable(
+                  onTap: _isGoogleLoading ? null : _continueWithGoogle,
+                  child: Container(
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: context.palette.card,
+                      border: Border.all(color: context.palette.hairline),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isGoogleLoading)
+                          const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          // Lucide ships no brand glyphs; a set letterform is
+                          // honest where a stand-in icon would read as a bug.
+                          Text(
+                            'G',
+                            style: AppTypography.display(
+                              size: 17,
+                              color: context.palette.ink,
+                            ),
+                          ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          'SIGN UP WITH GOOGLE',
+                          style: AppTypography.label(
+                            size: 10,
+                            color: context.palette.ink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
               if (_isVerified) ...[
@@ -327,10 +368,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 const SizedBox(height: AppSpacing.sm),
                 Text(_error!, style: const TextStyle(color: AppColors.danger)),
               ],
-            ],
-          ),
-        ),
-      ),
+      ],
     );
   }
 }

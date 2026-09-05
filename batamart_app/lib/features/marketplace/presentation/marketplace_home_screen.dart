@@ -3,15 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/data/category_images.dart';
 import '../../../core/data/category_tree.dart';
+import '../../../core/motion/motion.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/cards/product_card.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../../core/widgets/states/loading_skeleton.dart';
 import '../data/product_models.dart';
 import '../state/products_providers.dart';
+import 'widgets/home_sections.dart';
+import 'hot_deals_screen.dart';
+import '../../../core/utils/money.dart';
 
 /// A representative subset of the full 12-category tree for the compact
 /// home-page icon row (matches the mockup's 5-icon layout) — the full list
@@ -19,9 +26,16 @@ import '../state/products_providers.dart';
 const _homeCategoryKeys = [
   'fashion',
   'electronics',
-  'beauty',
   'groceries',
+  'beauty',
+  'computing',
   'home_kitchen',
+  'sports',
+  'books',
+  'kids',
+  'vehicles',
+  'tickets',
+  'arts_crafts',
 ];
 
 /// Matches the collage's "Marketplace home" frame: search bar, campaign
@@ -30,13 +44,64 @@ const _homeCategoryKeys = [
 /// `universityId`, so unlike the web this can't be shown to a guest (see
 /// README "Phase 4 status").
 class MarketplaceHomeScreen extends ConsumerWidget {
-  const MarketplaceHomeScreen({this.onCategorySelected, super.key});
+  const MarketplaceHomeScreen({
+    this.onCategorySelected,
+    this.onSeeAllDeals,
+    super.key,
+  });
+
+  /// Switches the shell to the Deals tab. Hot deals' "see all" belongs there
+  /// rather than on a pushed lookalike list.
+  final VoidCallback? onSeeAllDeals;
 
   /// Called with a tapped category so the parent shell (which owns the
   /// bottom-nav tab state) can switch to the Deals tab with that category
   /// pre-applied. If null (e.g. this screen is ever used standalone),
   /// falls back to pushing Search with the category set instead.
   final ValueChanged<ProductCategory>? onCategorySelected;
+
+  /// Opens Search pre-sorted. Each feed row now leads somewhere that actually
+  /// reflects the row — previously all four pointed at /most-bought.
+  void _openSearch(WidgetRef ref, BuildContext context, {required String sortBy}) {
+    ref.read(searchQueryProvider.notifier).state =
+        ProductSearchQuery(sortBy: sortBy);
+    context.push(AppRoutes.search);
+  }
+
+  /// Sets the Deals filter and switches to that tab. Everything on this feed
+  /// that narrows the catalogue lands here, so a tap always ends on a screen
+  /// showing filtered results rather than an empty search box.
+  void _openDeals(
+    WidgetRef ref,
+    BuildContext context, {
+    double? maxPrice,
+    ProductCategory? category,
+    String sortBy = 'popular',
+  }) {
+    // A subcategory only filters when its parent travels with it — the API
+    // resolves subcategoryKey *within* categoryKey. Sending a subcategory key
+    // on its own as categoryKey matches nothing, and left the Deals rail with
+    // no row highlighted and no way back up the tree.
+    final key = category?.key;
+    final parent = key == null ? null : parentCategoryOf(key);
+    final isSub = parent != null;
+
+    ref.read(dealsQueryProvider.notifier).state = ProductSearchQuery(
+      sortBy: sortBy,
+      maxPrice: maxPrice,
+      category: isSub
+          ? findCategory(parent)?.label
+          : category?.label,
+      categoryKey: isSub ? parent : key,
+      subcategoryKey: isSub ? key : null,
+    );
+    final switchTab = onSeeAllDeals;
+    if (switchTab != null) {
+      switchTab();
+    } else {
+      context.push(AppRoutes.search);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,6 +114,16 @@ class MarketplaceHomeScreen extends ConsumerWidget {
         children: [
           _SearchBar(onTap: () => context.push(AppRoutes.search)),
           const SizedBox(height: AppSpacing.lg),
+
+          // What the platform actually promises, before any merchandising.
+          const PromiseCarousel().enter(),
+          const SizedBox(height: AppSpacing.section),
+
+          const FeedSection(
+            eyebrow: 'Shop by category',
+            title: 'Find it',
+            accent: 'faster.',
+          ),
           _CategoryChipsRow(
             onCategoryTap: (category) {
               final onCategorySelected = this.onCategorySelected;
@@ -62,35 +137,81 @@ class MarketplaceHomeScreen extends ConsumerWidget {
               context.push(AppRoutes.search);
             },
           ),
-          const SizedBox(height: AppSpacing.lg),
-          const _CampaignBanner(),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.section),
+          BudgetBands(
+            onPick: (maxPrice, category) => _openDeals(
+              ref,
+              context,
+              maxPrice: maxPrice,
+              category: category,
+              sortBy: 'price_asc',
+            ),
+          ),
+          const SizedBox(height: AppSpacing.section),
+          const _CampaignBanner().enter(),
+          const SizedBox(height: AppSpacing.section),
+          const FlashPicks(),
+          const SizedBox(height: AppSpacing.section),
           const _TrustStrip(),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.section),
           feedAsync.when(
             data: (feed) => Column(
               children: [
                 _ProductRow(
-                  title: 'Hot Deals 🔥',
+                  eyebrow: 'Discounted now',
+                  title: 'Hot',
+                  accent: 'deals.',
                   products: feed.hotProducts,
-                  onSeeAll: () => context.push(AppRoutes.mostBought),
+                  // Pushes the dedicated Hot Deals page — the Deals tab is a
+                  // browsable catalogue, this is the discount surface proper.
+                  onSeeAll: () => context.push(AppRoutes.hotDeals),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 if (feed.forYouProducts.isNotEmpty) ...[
                   _ProductRow(
-                    title: 'Picked For You',
+                    eyebrow: 'Based on what you view',
+                    title: 'Picked for',
+                    accent: 'you.',
                     products: feed.forYouProducts,
-                    onSeeAll: () => context.push(AppRoutes.mostBought),
+                    // No see-all: this row is a personalised selection, not the
+                    // head of a longer list there is an endpoint for.
+                    onSeeAll: null,
                   ),
                   const SizedBox(height: AppSpacing.xl),
                 ],
                 _ProductRow(
-                  title: 'Just Dropped',
+                  eyebrow: 'New on campus',
+                  title: 'Just',
+                  accent: 'dropped.',
                   products: feed.newListings,
-                  onSeeAll: () => context.push(AppRoutes.mostBought),
+                  onSeeAll: () => _openSearch(ref, context, sortBy: 'newest'),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 const _PeopleLikeYouRow(),
+                const SizedBox(height: AppSpacing.section),
+
+                // Image-led category panels. Each subcategory chip filters
+                // Deals directly rather than dumping the user on Search.
+                for (final key in const [
+                  'electronics',
+                  'fashion',
+                  'beauty',
+                  'home_kitchen',
+                ]) ...[
+                  CategorySpotlight(
+                    categoryKey: key,
+                    onCategory: (category) =>
+                        _openDeals(ref, context, category: category),
+                    onSubcategory: (sub) =>
+                        _openDeals(ref, context, category: sub),
+                  ).enter(),
+                  const SizedBox(height: AppSpacing.section),
+                ],
+
+                SellCta(
+                  onTap: () => context.push(AppRoutes.sellProduct),
+                ).enter(),
+                const SizedBox(height: AppSpacing.xl),
               ],
             ),
             loading: () => const _FeedLoadingSkeleton(),
@@ -116,40 +237,102 @@ class _CategoryChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Two rows of tiles that scroll sideways as a block. A photograph per
+    // category, its name set over a scrim at the foot.
     return SizedBox(
-      height: 78,
-      child: ListView.separated(
+      height: 232,
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (context, index) =>
-            const SizedBox(width: AppSpacing.md),
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          return InkWell(
-            borderRadius: BorderRadius.circular(AppRadii.md),
-            onTap: () => onCategoryTap(category),
-            child: SizedBox(
-              width: 64,
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(category.icon, color: AppColors.primary),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    category.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                ],
-              ),
+        padding: EdgeInsets.zero,
+        itemCount: (_categories.length / 2).ceil(),
+        itemBuilder: (context, column) {
+          final first = _categories[column * 2];
+          final secondIndex = column * 2 + 1;
+          final second =
+              secondIndex < _categories.length ? _categories[secondIndex] : null;
+          return Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: Column(
+              children: [
+                _CategoryTile(category: first, onTap: () => onCategoryTap(first))
+                    .enterX(index: column),
+                const SizedBox(height: AppSpacing.md),
+                if (second != null)
+                  _CategoryTile(
+                    category: second,
+                    onTap: () => onCategoryTap(second),
+                  ).enterX(index: column),
+              ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// One category, told by its photograph.
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({required this.category, required this.onTap});
+
+  final ProductCategory category;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = categoryImage(category.key);
+    final palette = context.palette;
+
+    return Pressable(
+      onTap: onTap,
+      scale: 0.96,
+      child: SizedBox(
+        width: 132,
+        height: 108,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (image != null)
+                Image.asset(image, fit: BoxFit.cover)
+              else
+                Container(
+                  color: palette.card,
+                  alignment: Alignment.center,
+                  child: Icon(category.icon, color: palette.inkMuted),
+                ),
+              // Foot-weighted scrim: enough to hold the label, light enough
+              // that the photograph still reads.
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0x1A000000), Color(0xD9000000)],
+                    stops: [0, 0.45, 1],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: AppSpacing.sm + 2,
+                right: AppSpacing.sm,
+                bottom: AppSpacing.sm + 1,
+                child: Text(
+                  category.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.display(
+                    size: 13,
+                    color: Colors.white,
+                    weight: FontWeight.w600,
+                    height: 1.15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -169,27 +352,36 @@ class _TrustStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final point in _points)
-          Expanded(
-            child: Column(
-              children: [
-                Icon(point.$1, color: AppColors.primary, size: 22),
-                const SizedBox(height: 4),
-                Text(
-                  point.$2,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+    final palette = context.palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: palette.hairline),
+          bottom: BorderSide(color: palette.hairline),
+        ),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < _points.length; i++) ...[
+            if (i > 0)
+              Container(width: 1, height: 22, color: palette.hairline),
+            Expanded(
+              child: Column(
+                children: [
+                  Icon(_points[i].$1, color: palette.inkMuted, size: 16),
+                  const SizedBox(height: 6),
+                  Text(
+                    _points[i].$2.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.label(size: 9, color: palette.inkSecondary),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-      ],
+          ],
+        ],
+      ),
     );
   }
 }
@@ -205,8 +397,12 @@ class _PeopleLikeYouRow extends ConsumerWidget {
 
     return peopleLikeYouAsync.when(
       data: (products) => _ProductRow(
-        title: 'People Like You Bought',
+        eyebrow: 'Most bought today',
+        title: 'What others',
+        accent: 'are buying.',
         products: products,
+        // This row *is* the most-bought list, so /most-bought is the correct
+        // destination for it — and only for it.
         onSeeAll: () => context.push(AppRoutes.mostBought),
       ),
       loading: () => const SizedBox.shrink(),
@@ -231,17 +427,17 @@ class _SearchBar extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: context.palette.page,
           borderRadius: BorderRadius.circular(AppRadii.md),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.hairline),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.search, color: AppColors.textSecondary),
+            Icon(Icons.search, color: context.palette.inkSecondary),
             SizedBox(width: AppSpacing.sm),
             Text(
               'Search products, sellers...',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.palette.inkSecondary),
             ),
           ],
         ),
@@ -259,54 +455,82 @@ class _CampaignBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.campaignPink,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'CAMPAIGN SPECIAL',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.lg),
+      child: SizedBox(
+        height: 148,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // The photograph drifts continuously behind the copy. Campaign
+            // rose survives as the scrim tint, so the slot is still
+            // unmistakably the campaign without being a flat block of colour.
+            KenBurns(
+              child: Image.asset(
+                'assets/images/banner-market.webp',
+                fit: BoxFit.cover,
+              ),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    AppColors.campaignRose.withValues(alpha: 0.95),
+                    AppColors.campaignRose.withValues(alpha: 0.55),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Up to 30% Off!',
-                  style: TextStyle(color: Colors.white, fontSize: 13),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(AppRadii.pill),
-                  ),
-                  child: const Text(
-                    'Shop Now',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'CAMPAIGN SPECIAL',
+                    style: AppTypography.label(
+                      size: 10,
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.sm),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Up to 30%',
+                          style: AppTypography.display(size: 27, color: Colors.white),
+                        ),
+                        TextSpan(
+                          text: ' off.',
+                          style: AppTypography.serif(size: 27, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                    ),
+                    child: Text(
+                      'SHOP NOW',
+                      style: AppTypography.label(size: 10, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.card_giftcard, color: Colors.white, size: 48),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -314,14 +538,18 @@ class _CampaignBanner extends StatelessWidget {
 
 class _ProductRow extends StatelessWidget {
   const _ProductRow({
+    required this.eyebrow,
     required this.title,
     required this.products,
     required this.onSeeAll,
+    this.accent,
   });
 
+  final String eyebrow;
+  final String? accent;
   final String title;
   final List<Product> products;
-  final VoidCallback onSeeAll;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -330,23 +558,21 @@ class _ProductRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            TextButton(onPressed: onSeeAll, child: const Text('See all')),
-          ],
+        FeedSection(
+          eyebrow: eyebrow,
+          title: title,
+          accent: accent,
+          onSeeAll: onSeeAll,
         ),
         SizedBox(
-          height: 260,
+          // 4:5 art on a 150pt tile is 187pt, plus room for the metadata
+          // block underneath without clipping the second title line.
+          height: 320,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: products.length,
             separatorBuilder: (context, index) =>
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: AppSpacing.lg),
             itemBuilder: (context, index) {
               final product = products[index];
               return SizedBox(
@@ -354,7 +580,7 @@ class _ProductRow extends StatelessWidget {
                 child: ProductCard(
                   imageUrl: product.thumbnail,
                   name: product.name,
-                  price: '₦${product.price.toStringAsFixed(0)}',
+                  price: naira(product.price),
                   percentOff: product.hasDiscount
                       ? product.discountPercent
                       : null,
@@ -364,7 +590,7 @@ class _ProductRow extends StatelessWidget {
                   onTap: () =>
                       context.push(AppRoutes.productDetailPath(product.id)),
                 ),
-              );
+              ).enterX(index: index);
             },
           ),
         ),

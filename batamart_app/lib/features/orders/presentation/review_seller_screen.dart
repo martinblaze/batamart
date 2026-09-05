@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -72,9 +73,9 @@ class _ReviewSellerScreenState extends ConsumerState<ReviewSellerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'How was the seller?',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: AppTypography.display(size: 18, weight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.lg),
             Center(

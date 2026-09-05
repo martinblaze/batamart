@@ -27,6 +27,7 @@ import '../widgets/nav/buyer_seller_nav_shell.dart';
 import '../../features/home/presentation/rider_home_shell.dart';
 import '../../features/kitchen_sink/presentation/kitchen_sink_screen.dart';
 import '../../features/marketplace/data/product_models.dart';
+import '../../features/marketplace/presentation/hot_deals_screen.dart';
 import '../../features/marketplace/presentation/most_bought_screen.dart';
 import '../../features/marketplace/presentation/product_detail_screen.dart';
 import '../../features/marketplace/presentation/product_reviews_screen.dart';
@@ -71,6 +72,7 @@ class AppRoutes {
 
   static const search = '/search';
   static const mostBought = '/most-bought';
+  static const hotDeals = '/hot-deals';
   static const checkout = '/checkout';
   static const paymentWebview = '/payment-webview';
   static const productDetail = '/product/:id';
@@ -232,6 +234,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.search,
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.hotDeals,
+        builder: (context, state) => const HotDealsScreen(),
       ),
       GoRoute(
         path: AppRoutes.mostBought,

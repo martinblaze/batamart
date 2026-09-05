@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_typography.dart';
 import '../badges/status_chip.dart';
 import '../buttons/app_buttons.dart';
 
-/// Order summary row used in My Orders / Sales / Order Tracking lists —
-/// order number, date, item count, total, status chip, and up to two
-/// actions. One action ("View Details", "Accept") renders full-width and
-/// filled; a second ("Review", alongside "View Details" per the mockup's
-/// Delivered state) renders outlined, matching the collage exactly.
+/// One order, in My Orders / Sales / tracking lists.
+///
+/// The order number is mono and the total is the display face with tabular
+/// figures, so a column of orders lines up down the page instead of jittering
+/// with each amount's digit widths. That alignment is most of why a list of
+/// records reads as a ledger rather than a pile of cards.
 class OrderCard extends StatelessWidget {
   const OrderCard({
     super.key,
@@ -38,53 +40,66 @@ class OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+
     return InkWell(
-      borderRadius: BorderRadius.circular(AppRadii.lg),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(color: AppColors.border),
+          color: p.card,
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(color: p.hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  orderNumber,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        orderNumber.toUpperCase(),
+                        style: AppTypography.label(size: 10, color: p.inkMuted),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        total,
+                        style: AppTypography.figure(size: 20, color: p.ink),
+                      ),
+                    ],
+                  ),
                 ),
                 StatusChip(status: status),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              date,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
+
+            const SizedBox(height: AppSpacing.md),
+            Container(height: 1, color: p.hairline),
+            const SizedBox(height: AppSpacing.md),
+
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  itemsLabel,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                Expanded(
+                  child: Text(
+                    itemsLabel,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: p.inkSecondary,
+                    ),
+                  ),
                 ),
                 Text(
-                  total,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  date.toUpperCase(),
+                  style: AppTypography.label(size: 9, color: p.inkMuted),
                 ),
               ],
             ),
+
             if (actionLabel != null && secondaryActionLabel != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
@@ -98,18 +113,13 @@ class OrderCard extends StatelessWidget {
                     child: PrimaryButton(
                       label: actionLabel!,
                       onPressed: onActionTap,
-                      expand: true,
                     ),
                   ),
                 ],
               ),
             ] else if (actionLabel != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              PrimaryButton(
-                label: actionLabel!,
-                onPressed: onActionTap,
-                expand: true,
-              ),
+              const SizedBox(height: AppSpacing.lg),
+              PrimaryButton(label: actionLabel!, onPressed: onActionTap),
             ],
           ],
         ),

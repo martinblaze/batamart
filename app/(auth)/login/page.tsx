@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle, Bike, Mail } from 'lucide-react'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import { Logo } from '@/components/layout/Logo'
+import { AuthLayout } from '@/components/auth/AuthLayout'
 
 function LoginForm() {
   const router = useRouter()
@@ -95,20 +96,26 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mb-6 inline-flex items-center">
-            <Logo size={34} />
-          </div>
-          <p className="ui-eyebrow mb-3 justify-center before:hidden after:hidden">Account</p>
-          <h1 className="text-[clamp(1.9rem,5vw,2.6rem)] leading-[1.02] text-ink">Welcome back</h1>
-          <p className="mt-3 text-[15px] text-ink-secondary">Log in to your BataMart account</p>
-        </div>
-
-        <div className="border border-border bg-card p-6 sm:p-8">
+    <AuthLayout
+      eyebrow="Account"
+      title="Welcome"
+      titleAccent="back."
+      subtitle="Log in to pick up where you left off."
+      back={{ href: '/', label: 'Back to home' }}
+      quote="Buy and sell with students on your campus — with escrow on every order."
+      footer={
+        <>
+          Don&apos;t have an account?{' '}
+          <Link
+            href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'}
+            className="font-medium text-primary hover:underline"
+          >
+            Sign up
+          </Link>
+        </>
+      }
+    >
+      <>
 
           {/* Suspension message */}
           {suspensionMessage && (
@@ -227,15 +234,8 @@ function LoginForm() {
             </form>
           )}
 
-          <div className="mt-6 text-center">
-            <p className="text-ink-secondary text-sm">
-              Don&apos;t have an account?{' '}
-              <Link href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'} className="text-primary font-medium hover:underline">Sign up</Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+      </>
+    </AuthLayout>
   )
 }
 

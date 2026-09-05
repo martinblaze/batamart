@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 
@@ -57,12 +58,12 @@ class SettingsScreen extends ConsumerWidget {
                 color: AppColors.info.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(AppRadii.md),
               ),
-              child: const Text(
+              child: Text(
                 'In-app notifications always work (pull to refresh on the '
                 'Notifications screen). Push alerts to your device require a '
                 'small remaining backend setup on our end — you\'ll get them '
                 'automatically once that\'s live.',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
               ),
             ),
           ],
@@ -83,10 +84,10 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w700,
           fontSize: 13,
-          color: AppColors.textSecondary,
+          color: context.palette.inkSecondary,
         ),
       ),
     );
@@ -111,9 +112,9 @@ class _SettingsTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
       ),
       child: Row(
         children: [
@@ -131,9 +132,9 @@ class _SettingsTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: context.palette.inkSecondary,
                   ),
                 ),
               ],

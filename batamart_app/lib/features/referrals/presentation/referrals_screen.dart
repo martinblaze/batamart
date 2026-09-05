@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../data/referrals_repository.dart';
+import '../../../core/utils/money.dart';
 
 final referralsRepositoryProvider = Provider<ReferralsRepository>(
   (ref) => ReferralsRepository(),
@@ -38,19 +41,16 @@ class ReferralsScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              const Text(
+              Text(
                 'Your Referral Code',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Text(
                     info.referralCode,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: AppTypography.display(size: 24, weight: FontWeight.w700),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   IconButton(
@@ -66,9 +66,9 @@ class ReferralsScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Share and earn ₦500 for each friend',
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
@@ -98,7 +98,7 @@ class ReferralsScreen extends ConsumerWidget {
                   Expanded(
                     child: _StatBox(
                       label: 'Total Earned',
-                      value: '₦${info.totalEarnings.toStringAsFixed(0)}',
+                      value: naira(info.totalEarnings),
                       valueColor: AppColors.success,
                     ),
                   ),
@@ -146,7 +146,7 @@ class _StatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.palette.page,
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
@@ -163,8 +163,8 @@ class _StatBox extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: context.palette.inkSecondary,
               fontSize: 12,
             ),
           ),

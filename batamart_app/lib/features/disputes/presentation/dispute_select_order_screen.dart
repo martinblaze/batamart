@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/status_chip.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -58,10 +58,10 @@ class DisputeSelectOrderScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final order = eligible[index];
                 return ListTile(
-                  tileColor: AppColors.surface,
+                  tileColor: context.palette.card,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadii.lg),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: context.palette.hairline),
                   ),
                   title: Text('Order #${order.orderNumber}'),
                   subtitle: Text(

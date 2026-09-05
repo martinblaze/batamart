@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/widgets/badges/campaign_badge.dart';
 import '../../../core/widgets/badges/trust_badge.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -19,6 +22,7 @@ import '../../auth/state/auth_controller.dart';
 import '../../cart/state/cart_controller.dart';
 import '../data/product_models.dart';
 import '../state/products_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// Matches the collage's "Product Detail" frame (Canvas Sneakers), extended
 /// with the richer gallery/variant behavior confirmed against the web app's
@@ -50,9 +54,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     super.initState();
     // Fire-and-forget view telemetry (BACKEND_REFERENCE.md §3.3 — call the
     // dedicated /view route, don't rely on the GET's cruder side effect).
+    //
+    // The catch matters: this future is never awaited, so without a handler a
+    // failed call (no signal, a 5xx, a timeout) becomes an unhandled async
+    // error and takes the screen down. Telemetry must never cost the user the
+    // page they asked for, so a failure here is silently dropped.
     Future.microtask(
       () => ref.read(productsRepositoryProvider).recordView(widget.productId),
-    );
+    ).catchError((_) {});
   }
 
   @override
@@ -208,43 +217,35 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productDetailProvider(widget.productId));
 
-    return Scaffold(
-      appBar: BataAppBar(
-        title: '',
-        showBack: true,
-        actions: [
-          IconButton(
-            tooltip: 'Share',
-            icon: const Icon(Icons.share_outlined),
-            onPressed: _share,
-          ),
-          IconButton(
-            tooltip: 'Report this listing',
-            icon: const Icon(Icons.flag_outlined),
-            onPressed: _report,
-          ),
-        ],
+    return productAsync.when(
+      data: (product) => _ProductDetailBody(
+        product: product,
+        selectedAttributes: _selectedAttributes,
+        quantity: _quantity,
+        noteController: _noteController,
+        onAttributeSelected: (key, value) => setState(() {
+          if (value == null) {
+            _selectedAttributes.remove(key);
+          } else {
+            _selectedAttributes[key] = value;
+          }
+          _quantity = 1;
+        }),
+        onQuantityChanged: (q) => setState(() => _quantity = q),
+        onAddToCart: _addToCart,
+        onBuyNow: _buyNow,
+        onShare: _share,
+        onReport: _report,
       ),
-      body: productAsync.when(
-        data: (product) => _ProductDetailBody(
-          product: product,
-          selectedAttributes: _selectedAttributes,
-          quantity: _quantity,
-          noteController: _noteController,
-          onAttributeSelected: (key, value) => setState(() {
-            if (value == null) {
-              _selectedAttributes.remove(key);
-            } else {
-              _selectedAttributes[key] = value;
-            }
-            _quantity = 1;
-          }),
-          onQuantityChanged: (q) => setState(() => _quantity = q),
-          onAddToCart: _addToCart,
-          onBuyNow: _buyNow,
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => ErrorState(
+      // The loading and error states keep a conventional bar — there is no
+      // photograph yet for a hero to hold.
+      loading: () => const Scaffold(
+        appBar: BataAppBar(title: '', showBack: true),
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => Scaffold(
+        appBar: const BataAppBar(title: '', showBack: true),
+        body: ErrorState(
           message: 'Could not load this product.\n$error',
           onRetry: () =>
               ref.invalidate(productDetailProvider(widget.productId)),
@@ -316,6 +317,8 @@ class _ProductDetailBody extends ConsumerStatefulWidget {
     required this.onQuantityChanged,
     required this.onAddToCart,
     required this.onBuyNow,
+    required this.onShare,
+    required this.onReport,
   });
 
   final Product product;
@@ -327,6 +330,8 @@ class _ProductDetailBody extends ConsumerStatefulWidget {
   final void Function(ProductVariant? variant, bool variantRequired)
   onAddToCart;
   final void Function(ProductVariant? variant, bool variantRequired) onBuyNow;
+  final VoidCallback onShare;
+  final VoidCallback onReport;
 
   @override
   ConsumerState<_ProductDetailBody> createState() =>
@@ -367,25 +372,41 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
     final effectiveStock = matchedVariant?.stock ?? product.quantity;
     final relatedAsync = ref.watch(relatedProductsProvider(product.id));
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        _Gallery(
-          images: product.images,
-          activeIndex: _activeImage,
-          controller: _pageController,
-          quantity: product.quantity,
-          onPageChanged: (i) => setState(() => _activeImage = i),
-          onThumbnailTap: (i) {
-            setState(() => _activeImage = i);
-            _pageController.animateToPage(
-              i,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-            );
-          },
+    return Scaffold(
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        slivers: [
+          // The photograph is the page's header. Scrolling shrinks it into a
+          // compact bar that picks up the product's name — so the title is
+          // always available without a second, redundant heading.
+          _ProductHeroBar(
+            product: product,
+            activeIndex: _activeImage,
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _activeImage = i),
+            onShare: widget.onShare,
+            onReport: widget.onReport,
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+        if (product.images.length > 1)
+          _GalleryThumbs(
+            images: product.images,
+            activeIndex: _activeImage,
+            onThumbnailTap: (i) {
+              setState(() => _activeImage = i);
+              _pageController.animateToPage(
+                i,
+                duration: Motion.base,
+                curve: Motion.ease,
+              );
+            },
+          ),
+        if (product.images.length > 1) const SizedBox(height: AppSpacing.lg),
         Row(
           children: [
             if (product.campaignTag != null) ...[
@@ -393,62 +414,92 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
               const SizedBox(width: AppSpacing.sm),
             ],
             if (product.category != null)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                ),
-                child: Text(
-                  product.category!,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
+              Text(
+                product.category!.toUpperCase(),
+                style: AppTypography.label(
+                  size: 9,
+                  color: context.palette.inkMuted,
                 ),
               ),
           ],
-        ),
+        ).enter(index: 0),
         const SizedBox(height: AppSpacing.sm),
         Text(
           product.name,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 4),
-        RatingStars(
-          rating: product.avgRating,
-          reviewCount: product.totalReviews,
-        ),
-        const SizedBox(height: AppSpacing.md),
+          style: AppTypography.display(size: 25, weight: FontWeight.w700, height: 1.12),
+        ).enter(index: 1),
+        const SizedBox(height: AppSpacing.sm),
+
+        // Social proof reads as one line of evidence: rating, review count,
+        // and units sold together, the way a shopper actually weighs them.
         Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
           children: [
-            Text(
-              '₦${displayPrice.toStringAsFixed(0)}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-            ),
-            if (product.marketPrice != null &&
-                product.marketPrice! > displayPrice) ...[
+            RatingStars(rating: product.avgRating, reviewCount: product.totalReviews),
+            if (product.orderCount > 0) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Container(width: 1, height: 11, color: context.palette.hairline),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                '₦${product.marketPrice!.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  decoration: TextDecoration.lineThrough,
-                ),
+                '${product.orderCount} SOLD',
+                style: AppTypography.label(size: 9, color: context.palette.inkSecondary),
               ),
             ],
           ],
-        ),
+        ).enter(index: 2),
+        const SizedBox(height: AppSpacing.lg),
+
+        // Price sits between rules — the loudest thing on the page, with the
+        // saving stated rather than left for the reader to compute.
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: context.palette.hairline),
+              bottom: BorderSide(color: context.palette.hairline),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              CountUp(
+                value: displayPrice,
+                format: (v) => naira(v),
+                style: AppTypography.figure(size: 31, color: context.palette.ink),
+              ),
+              if (product.marketPrice != null &&
+                  product.marketPrice! > displayPrice) ...[
+                const SizedBox(width: AppSpacing.md),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    naira(product.marketPrice!),
+                    style: TextStyle(
+                      color: context.palette.inkMuted,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    color: AppColors.danger,
+                    child: Text(
+                      'SAVE ${(((product.marketPrice! - displayPrice) / product.marketPrice!) * 100).round()}%',
+                      style: AppTypography.label(size: 9, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ).enter(index: 3),
         if (variantRequired && matchedVariant == null) ...[
           const SizedBox(height: 2),
           Text(
             'Range: ₦${_minPrice(product.variants).toStringAsFixed(0)} – ₦${_maxPrice(product.variants).toStringAsFixed(0)}',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: context.palette.inkSecondary, fontSize: 12),
           ),
         ],
         if (stockKnown) ...[
@@ -544,26 +595,6 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
         const SizedBox(height: AppSpacing.lg),
         if (product.seller != null) _SellerCard(seller: product.seller!),
         const SizedBox(height: AppSpacing.lg),
-        Row(
-          children: [
-            Expanded(
-              child: SecondaryButton(
-                label: 'Add to Cart',
-                onPressed: () =>
-                    widget.onAddToCart(matchedVariant, variantRequired),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: PrimaryButton(
-                label: 'Buy Now',
-                onPressed: () =>
-                    widget.onBuyNow(matchedVariant, variantRequired),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
         OutlinedButton(
           onPressed: () =>
               context.push(AppRoutes.productReviewsPath(product.id)),
@@ -580,7 +611,20 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
           loading: () => const SizedBox.shrink(),
           error: (error, stackTrace) => const SizedBox.shrink(),
         ),
-      ],
+              ]),
+            ),
+          ),
+        ],
+      ),
+      // The two actions stay reachable at any scroll depth. They are the same
+      // two buttons that used to sit inline halfway down the page, where they
+      // were only findable by scrolling past the description.
+      bottomNavigationBar: _BuyBar(
+        price: displayPrice,
+        inStock: !stockKnown || effectiveStock > 0,
+        onAddToCart: () => widget.onAddToCart(matchedVariant, variantRequired),
+        onBuyNow: () => widget.onBuyNow(matchedVariant, variantRequired),
+      ),
     );
   }
 
@@ -593,119 +637,327 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
       key.isEmpty ? key : '${key[0].toUpperCase()}${key.substring(1)}';
 }
 
-class _Gallery extends StatelessWidget {
-  const _Gallery({
-    required this.images,
+/// The product photograph as the page header.
+///
+/// A [SliverAppBar] rather than a card in the list: scrolling shrinks the
+/// image into a compact bar and fades the product's name into it, so the
+/// title is always to hand without a duplicate heading in the content. That
+/// collapse *is* the parallax — the image moves at a different rate from the
+/// text over it, which is what reads as depth.
+class _ProductHeroBar extends StatelessWidget {
+  const _ProductHeroBar({
+    required this.product,
     required this.activeIndex,
     required this.controller,
-    required this.quantity,
     required this.onPageChanged,
-    required this.onThumbnailTap,
+    required this.onShare,
+    required this.onReport,
   });
 
-  final List<String> images;
+  final Product product;
   final int activeIndex;
   final PageController controller;
-  final int quantity;
   final ValueChanged<int> onPageChanged;
-  final ValueChanged<int> onThumbnailTap;
+  final VoidCallback onShare;
+  final VoidCallback onReport;
 
   @override
   Widget build(BuildContext context) {
-    final displayImages = images.isEmpty ? [''] : images;
+    final palette = context.palette;
+    final images = product.images.isEmpty ? [''] : product.images;
+    final height =
+        (MediaQuery.of(context).size.height * 0.52).clamp(320.0, 460.0);
 
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: 1,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-            child: Stack(
+    return SliverAppBar(
+      expandedHeight: height,
+      collapsedHeight: 64,
+      pinned: true,
+      stretch: true,
+      backgroundColor: palette.page,
+      surfaceTintColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      leading: _HeroAction(
+        icon: LucideIcons.arrowLeft,
+        tooltip: 'Back',
+        onTap: () => Navigator.of(context).maybePop(),
+      ),
+      actions: [
+        _HeroAction(icon: LucideIcons.share2, tooltip: 'Share', onTap: onShare),
+        _HeroAction(
+          icon: LucideIcons.flag,
+          tooltip: 'Report this listing',
+          onTap: onReport,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+      ],
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          // 0 fully expanded, 1 fully collapsed.
+          final t = ((height - constraints.maxHeight + 64) / (height - 64))
+              .clamp(0.0, 1.0);
+          return FlexibleSpaceBar(
+            stretchModes: const [StretchMode.zoomBackground],
+            titlePadding:
+                const EdgeInsets.only(left: 64, right: 108, bottom: 20),
+            title: Opacity(
+              // Only appears once the photograph is mostly gone, so the two
+              // never compete for the same space.
+              opacity: t < 0.75 ? 0 : (t - 0.75) / 0.25,
+              child: Text(
+                product.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.display(size: 15, color: palette.ink),
+              ),
+            ),
+            background: Stack(
+              fit: StackFit.expand,
               children: [
                 PageView.builder(
                   controller: controller,
                   onPageChanged: onPageChanged,
-                  itemCount: displayImages.length,
+                  itemCount: images.length,
                   itemBuilder: (context, index) =>
-                      AppNetworkImage(displayImages[index]),
+                      AppNetworkImage(images[index]),
                 ),
-                if (quantity <= 0)
+                // Fades the foot of the image into the page ground so the
+                // content below reads as continuous with it.
+                IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          palette.page.withValues(alpha: 0.0),
+                          palette.page,
+                        ],
+                        stops: const [0, 0.78, 1],
+                      ),
+                    ),
+                  ),
+                ),
+                if (product.quantity <= 0)
                   const Positioned(
-                    top: AppSpacing.sm,
-                    left: AppSpacing.sm,
+                    top: 72,
+                    left: AppSpacing.lg,
                     child: _GalleryBadge(
                       label: 'Out of stock',
                       color: AppColors.danger,
                     ),
                   )
-                else if (quantity <= 3)
+                else if (product.quantity <= 3)
                   Positioned(
-                    top: AppSpacing.sm,
-                    left: AppSpacing.sm,
+                    top: 72,
+                    left: AppSpacing.lg,
                     child: _GalleryBadge(
-                      label: '$quantity left',
+                      label: '${product.quantity} left',
                       color: AppColors.warning,
                     ),
                   ),
-                if (displayImages.length > 1)
+                if (images.length > 1)
                   Positioned(
-                    bottom: AppSpacing.sm,
+                    bottom: AppSpacing.xl,
                     left: 0,
                     right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (var i = 0; i < displayImages.length; i++)
+                        for (var i = 0; i < images.length; i++)
                           AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            width: i == activeIndex ? 16 : 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: i == activeIndex
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
+                            duration: Motion.fast,
+                            curve: Motion.ease,
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: i == activeIndex ? 18 : 6,
+                            height: 3,
+                            color: i == activeIndex
+                                ? palette.ink
+                                : palette.ink.withValues(alpha: 0.28),
                           ),
                       ],
                     ),
                   ),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// A hero-bar control. Sits on a photograph, so it carries its own scrim.
+class _HeroAction extends StatelessWidget {
+  const _HeroAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.sm,
+      ),
+      child: Tooltip(
+        message: tooltip,
+        child: Pressable(
+          onTap: onTap,
+          scale: 0.9,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.38),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 17),
           ),
         ),
-        if (displayImages.length > 1) ...[
-          const SizedBox(height: AppSpacing.sm),
-          SizedBox(
-            height: 60,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: displayImages.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                final isActive = index == activeIndex;
-                return GestureDetector(
-                  onTap: () => onThumbnailTap(index),
-                  child: Container(
-                    width: 60,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
-                      border: Border.all(
-                        color: isActive ? AppColors.primary : AppColors.border,
-                        width: isActive ? 2 : 1,
+      ),
+    );
+  }
+}
+
+/// Thumbnail strip. Lives in the content rather than over the hero, so the
+/// photograph is never partly covered by its own navigation.
+class _GalleryThumbs extends StatelessWidget {
+  const _GalleryThumbs({
+    required this.images,
+    required this.activeIndex,
+    required this.onThumbnailTap,
+  });
+
+  final List<String> images;
+  final int activeIndex;
+  final ValueChanged<int> onThumbnailTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return SizedBox(
+      height: 62,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: images.length,
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
+        itemBuilder: (context, index) {
+          final isActive = index == activeIndex;
+          return Pressable(
+            onTap: () => onThumbnailTap(index),
+            scale: 0.94,
+            child: AnimatedContainer(
+              duration: Motion.base,
+              curve: Motion.ease,
+              width: 62,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isActive ? palette.ink : palette.hairline,
+                  width: isActive ? 2 : 1,
+                ),
+              ),
+              child: AppNetworkImage(images[index]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Persistent buy bar. The price stays legible at any scroll depth, and the
+/// two actions sit beside it.
+class _BuyBar extends StatelessWidget {
+  const _BuyBar({
+    required this.price,
+    required this.inStock,
+    required this.onAddToCart,
+    required this.onBuyNow,
+  });
+
+  final double price;
+  final bool inStock;
+  final VoidCallback onAddToCart;
+  final VoidCallback onBuyNow;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    return Container(
+      decoration: BoxDecoration(
+        color: palette.card,
+        border: Border(top: BorderSide(color: palette.hairline)),
+      ),
+      child: SafeArea(
+        top: false,
+        // Explicit height. As a `bottomNavigationBar` this is laid out with
+        // loose constraints, and the nested Row/Expanded chain reports an
+        // unbounded intrinsic height — which let the bar swallow the whole
+        // viewport and squeeze the scroll body to nothing. A persistent action
+        // bar wants a fixed height regardless.
+        child: SizedBox(
+          height: 74,
+          child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'TOTAL',
+                    style: AppTypography.label(size: 9, color: palette.inkMuted),
+                  ),
+                  const SizedBox(height: 3),
+                  // Counts up rather than appearing, so changing a variant
+                  // reads as the price moving, not the label being swapped.
+                  CountUp(
+                    value: price,
+                    duration: Motion.base,
+                    format: (v) => naira(v),
+                    style: AppTypography.figure(size: 20, color: palette.ink),
+                  ),
+                ],
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SecondaryButton(
+                        label: 'Add to cart',
+                        onPressed: inStock ? onAddToCart : null,
                       ),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: AppNetworkImage(displayImages[index]),
-                  ),
-                );
-              },
-            ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: PrimaryButton(
+                        label: 'Buy now',
+                        onPressed: inStock ? onBuyNow : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -750,7 +1002,7 @@ class _DeliveryInfoBlock extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.palette.page,
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Column(
@@ -799,7 +1051,7 @@ class _DeliveryInfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 13, color: context.palette.inkSecondary),
           ),
         ),
       ],
@@ -872,7 +1124,7 @@ class _QuantityStepper extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             '$quantity',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
         ),
         _StepperButton(
@@ -899,13 +1151,13 @@ class _StepperButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.palette.hairline),
           borderRadius: BorderRadius.circular(AppRadii.sm),
         ),
         child: Icon(
           icon,
           size: 18,
-          color: onTap == null ? AppColors.textDisabled : AppColors.textPrimary,
+          color: onTap == null ? context.palette.inkMuted : context.palette.ink,
         ),
       ),
     );
@@ -933,7 +1185,7 @@ class _DescriptionText extends StatelessWidget {
           text,
           maxLines: expanded || !isLong ? null : 4,
           overflow: expanded || !isLong ? null : TextOverflow.ellipsis,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.palette.inkSecondary),
         ),
         if (isLong)
           TextButton(
@@ -964,7 +1216,7 @@ class _SellerCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: context.palette.page,
           borderRadius: BorderRadius.circular(AppRadii.lg),
         ),
         child: Row(
@@ -1010,9 +1262,9 @@ class _SellerCard extends StatelessWidget {
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         '${seller.completedOrders} orders',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.textSecondary,
+                          color: context.palette.inkSecondary,
                         ),
                       ),
                     ],
@@ -1021,17 +1273,17 @@ class _SellerCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           LucideIcons.mapPin,
                           size: 11,
-                          color: AppColors.textSecondary,
+                          color: context.palette.inkSecondary,
                         ),
                         const SizedBox(width: 2),
                         Text(
                           seller.hostelName!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textSecondary,
+                            color: context.palette.inkSecondary,
                           ),
                         ),
                       ],
@@ -1040,10 +1292,10 @@ class _SellerCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               LucideIcons.chevronRight,
               size: 18,
-              color: AppColors.textSecondary,
+              color: context.palette.inkSecondary,
             ),
           ],
         ),
@@ -1073,7 +1325,7 @@ class _RelatedSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           SizedBox(
@@ -1092,7 +1344,7 @@ class _RelatedSection extends StatelessWidget {
                   child: ProductCard(
                     imageUrl: images.isNotEmpty ? images.first.toString() : '',
                     name: p['name']?.toString() ?? '',
-                    price: '₦${(p['price'] as num? ?? 0).toStringAsFixed(0)}',
+                    price: naira((p['price'] as num? ?? 0)),
                     rating: (p['avgRating'] as num?)?.toDouble(),
                     location: p['landmark']?.toString(),
                     onTap: () => context.push(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/nav/rider_nav_shell.dart';
 import '../../auth/presentation/edit_profile_sheet.dart';
@@ -97,14 +99,11 @@ class _RiderProfilePlaceholder extends ConsumerWidget {
                 children: [
                   Text(
                     user?.name ?? '',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTypography.display(size: 20, weight: FontWeight.w700),
                   ),
                   Text(
                     user?.email ?? '',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: context.palette.inkSecondary),
                   ),
                 ],
               ),

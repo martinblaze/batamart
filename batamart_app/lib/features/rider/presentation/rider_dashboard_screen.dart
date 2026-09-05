@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -7,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/status_chip.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -16,6 +18,7 @@ import '../../auth/state/auth_controller.dart';
 import '../../orders/data/order_models.dart';
 import '../data/rider_models.dart';
 import '../state/rider_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// Matches the collage's "Good morning" rider dashboard frame: online
 /// toggle, Available Batches (claimable), Active Delivery summary. This
@@ -41,7 +44,7 @@ class RiderDashboardScreen extends ConsumerWidget {
         children: [
           Text(
             'Good morning, ${user?.name.split(' ').first ?? ''} 👋',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: AppTypography.display(size: 18, weight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           SwitchListTile(
@@ -57,19 +60,19 @@ class RiderDashboardScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Text(
+          Text(
             'Available Batches',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           availableAsync.when(
             data: (result) {
               if (result.batches.isEmpty && result.disputePickups.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Text(
                     'No batches available right now.',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: context.palette.inkSecondary),
                   ),
                 );
               }
@@ -109,9 +112,9 @@ class RiderDashboardScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text(
+          Text(
             'Active Delivery',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           myDeliveriesAsync.when(
@@ -190,7 +193,7 @@ class _AvailableBatchCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Row(
@@ -205,10 +208,10 @@ class _AvailableBatchCard extends StatelessWidget {
                 ),
                 Text(
                   '${batch.orderCount} Orders',
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: context.palette.inkSecondary),
                 ),
                 Text(
-                  '₦${batch.totalDeliveryFee.toStringAsFixed(0)}',
+                  naira(batch.totalDeliveryFee),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
@@ -235,7 +238,7 @@ class _ActiveOrderCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Row(
@@ -256,12 +259,12 @@ class _ActiveOrderCard extends StatelessWidget {
                 ),
                 Text(
                   order.deliveryAddress,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.palette.inkSecondary,
                     fontSize: 12,
                   ),
                 ),
-                Text('₦${order.deliveryFee.toStringAsFixed(0)}'),
+                Text(naira(order.deliveryFee)),
               ],
             ),
           ),

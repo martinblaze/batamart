@@ -18,6 +18,7 @@ class ProductSearchQuery {
     this.query,
     this.category,
     this.categoryKey,
+    this.subcategoryKey,
     this.zone,
     this.sortBy = 'relevance',
     this.minPrice,
@@ -31,6 +32,9 @@ class ProductSearchQuery {
   final String? query;
   final String? category;
   final String? categoryKey;
+
+  /// Resolved by the API *within* [categoryKey], so the two travel together.
+  final String? subcategoryKey;
   final String? zone;
   final String sortBy;
   final double? minPrice;
@@ -44,6 +48,7 @@ class ProductSearchQuery {
   /// count badge.
   int get activeFilterCount =>
       (categoryKey != null ? 1 : 0) +
+      (subcategoryKey != null ? 1 : 0) +
       (category != null && category != 'All' && categoryKey == null ? 1 : 0) +
       (zone != null && zone != 'All' ? 1 : 0) +
       (minPrice != null ? 1 : 0) +
@@ -56,6 +61,7 @@ class ProductSearchQuery {
     String? query,
     String? category,
     String? categoryKey,
+    String? subcategoryKey,
     String? zone,
     String? sortBy,
     double? minPrice,
@@ -73,6 +79,8 @@ class ProductSearchQuery {
       query: query ?? this.query,
       category: clearCategory ? null : (category ?? this.category),
       categoryKey: clearCategory ? null : (categoryKey ?? this.categoryKey),
+      subcategoryKey:
+          clearCategory ? null : (subcategoryKey ?? this.subcategoryKey),
       zone: zone ?? this.zone,
       sortBy: sortBy ?? this.sortBy,
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
@@ -99,6 +107,7 @@ final dealsResultsProvider = FutureProvider.autoDispose<ProductSearchResult>((
         query: query.query,
         category: query.category,
         categoryKey: query.categoryKey,
+        subcategoryKey: query.subcategoryKey,
         zone: query.zone,
         sortBy: query.sortBy,
         minPrice: query.minPrice,
@@ -133,6 +142,7 @@ final searchResultsProvider = FutureProvider.autoDispose<ProductSearchResult>((
         query: query.query,
         category: query.category,
         categoryKey: query.categoryKey,
+        subcategoryKey: query.subcategoryKey,
         zone: query.zone,
         sortBy: query.sortBy,
         minPrice: query.minPrice,

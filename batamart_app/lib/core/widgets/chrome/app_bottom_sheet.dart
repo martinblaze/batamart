@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 
 /// Shell for every bottom sheet in the app (withdraw modal, PIN modal,
@@ -43,7 +43,7 @@ class AppBottomSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
+                    color: context.palette.hairline,
                     borderRadius: BorderRadius.circular(AppRadii.pill),
                   ),
                 ),

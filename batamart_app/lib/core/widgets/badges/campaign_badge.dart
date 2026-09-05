@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 
 /// Product.campaignTag / Order.campaignTag badge (free string, e.g.
@@ -20,7 +21,7 @@ class CampaignBadge extends StatelessWidget {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: AppColors.campaignPink,
+        color: AppColors.campaignRose,
         borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       child: Text(
@@ -97,7 +98,7 @@ class RatingStars extends StatelessWidget {
           Text(
             '($reviewCount)',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: context.palette.inkSecondary,
               fontSize: size - 2,
             ),
           ),

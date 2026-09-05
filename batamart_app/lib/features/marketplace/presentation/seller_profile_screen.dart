@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/campaign_badge.dart';
 import '../../../core/widgets/badges/trust_badge.dart';
@@ -91,10 +93,7 @@ class _SellerProfileBody extends ConsumerWidget {
                   children: [
                     Text(
                       seller.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.display(size: 18, weight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     TrustBadge(level: seller.trustLevel),
@@ -102,8 +101,8 @@ class _SellerProfileBody extends ConsumerWidget {
                     RatingStars(rating: seller.avgRating),
                     Text(
                       '${seller.completedOrders} completed orders',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.palette.inkSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -119,9 +118,9 @@ class _SellerProfileBody extends ConsumerWidget {
                 context.push(AppRoutes.sellerCatalogPath(seller.id)),
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text(
+          Text(
             'Reviews',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           reviewsAsync.when(
@@ -176,7 +175,7 @@ class _SellerReviewTile extends StatelessWidget {
                   (i) => Icon(
                     Icons.star_rounded,
                     size: 12,
-                    color: i < rating ? AppColors.star : AppColors.border,
+                    color: i < rating ? AppColors.star : context.palette.hairline,
                   ),
                 ),
               ),

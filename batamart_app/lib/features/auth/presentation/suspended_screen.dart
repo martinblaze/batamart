@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../state/auth_controller.dart';
@@ -45,23 +47,23 @@ class _SuspendedScreenState extends ConsumerState<SuspendedScreen> {
                 color: AppColors.danger,
               ),
               const SizedBox(height: AppSpacing.lg),
-              const Text(
+              Text(
                 'Account Suspended',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                style: AppTypography.display(size: 20, weight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 state.suspensionReason ??
                     'Your account has been suspended by an administrator.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               if (state.suspensionUntil != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Suspended until ${state.suspensionUntil}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.palette.inkSecondary,
                     fontSize: 12,
                   ),
                 ),

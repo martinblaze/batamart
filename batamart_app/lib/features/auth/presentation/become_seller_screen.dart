@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -63,9 +65,9 @@ class _BecomeSellerScreenState extends ConsumerState<BecomeSellerScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Start selling on BataMart',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: AppTypography.display(size: 22, weight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.lg),
         const _BenefitRow(
@@ -81,10 +83,10 @@ class _BecomeSellerScreenState extends ConsumerState<BecomeSellerScreen> {
           text: 'A withdrawal PIN keeps your payouts secure',
         ),
         const SizedBox(height: AppSpacing.lg),
-        const Text(
+        Text(
           'A 5% platform fee applies to each sale. You can switch between buyer and seller view '
           'any time after upgrading.',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.palette.inkSecondary),
         ),
         if (_error != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -106,14 +108,14 @@ class _BecomeSellerScreenState extends ConsumerState<BecomeSellerScreen> {
       children: [
         const Icon(LucideIcons.badgeCheck, color: AppColors.success, size: 56),
         const SizedBox(height: AppSpacing.lg),
-        const Text(
+        Text(
           "You're now a seller!",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          style: AppTypography.display(size: 22, weight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.sm),
-        const Text(
+        Text(
           'Set up your wallet withdrawal PIN and list your first product to start selling.',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.palette.inkSecondary),
         ),
         const Spacer(),
         SecondaryButton(

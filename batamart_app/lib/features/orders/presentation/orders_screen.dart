@@ -10,6 +10,7 @@ import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../data/order_models.dart';
 import '../state/orders_providers.dart';
+import '../../../core/utils/money.dart';
 
 enum _OrdersTab { all, toPay, processing, onTheWay, delivered }
 
@@ -118,7 +119,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                           : '',
                       itemsLabel:
                           '${order.quantity} item${order.quantity == 1 ? '' : 's'}',
-                      total: '₦${order.totalAmount.toStringAsFixed(0)}',
+                      total: naira(order.totalAmount),
                       status: order.status,
                       onTap: () =>
                           context.push(AppRoutes.orderDetailPath(order.id)),

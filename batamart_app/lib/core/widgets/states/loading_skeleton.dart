@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 
 /// Shimmering placeholder block for content that's still loading (product
@@ -48,7 +48,7 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          color: AppColors.border,
+          color: context.palette.hairline,
           borderRadius:
               widget.borderRadius ?? BorderRadius.circular(AppRadii.sm),
         ),
@@ -66,9 +66,9 @@ class ProductCardSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.palette.card,
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(

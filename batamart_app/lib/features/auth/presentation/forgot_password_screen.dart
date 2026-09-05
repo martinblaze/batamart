@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -69,9 +70,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Enter the email on your account and we'll send a 6-digit reset code.",
-                style: TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(

@@ -9,6 +9,7 @@ import '../../../core/widgets/chrome/app_bar.dart';
 import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../state/products_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// A seller's full catalog — `GET /api/products?sellerId=...`
 /// (BACKEND_REFERENCE.md §3.3). No dedicated seller-catalog endpoint
@@ -49,7 +50,7 @@ class SellerCatalogScreen extends ConsumerWidget {
                 return ProductCard(
                   imageUrl: product.thumbnail,
                   name: product.name,
-                  price: '₦${product.price.toStringAsFixed(0)}',
+                  price: naira(product.price),
                   percentOff: product.hasDiscount
                       ? product.discountPercent
                       : null,

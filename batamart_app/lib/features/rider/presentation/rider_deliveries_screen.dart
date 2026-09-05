@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/api/api_exception.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/badges/status_chip.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -129,7 +130,7 @@ class _RiderDeliveriesScreenState extends ConsumerState<RiderDeliveriesScreen> {
                                     size: 16,
                                     color: _isBroadcasting
                                         ? AppColors.success
-                                        : AppColors.textSecondary,
+                                        : context.palette.inkSecondary,
                                   ),
                                   label: Text(
                                     _isBroadcasting
@@ -265,7 +266,7 @@ class _DeliveryOrderCardState extends ConsumerState<_DeliveryOrderCard> {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.palette.hairline),
         borderRadius: BorderRadius.circular(AppRadii.lg),
       ),
       child: Column(
@@ -286,8 +287,8 @@ class _DeliveryOrderCardState extends ConsumerState<_DeliveryOrderCard> {
           ),
           Text(
             order.deliveryAddress,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: context.palette.inkSecondary,
               fontSize: 12,
             ),
           ),

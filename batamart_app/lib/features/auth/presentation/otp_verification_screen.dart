@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
@@ -85,7 +86,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             children: [
               Text(
                 'We sent a 6-digit code to ${widget.email}. It expires in 10 minutes.',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: context.palette.inkSecondary),
               ),
               const SizedBox(height: AppSpacing.xl),
               AppTextField(

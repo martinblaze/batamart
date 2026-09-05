@@ -16,10 +16,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // Poppins isn't bundled as a local asset yet (see README "Phase 2 status"),
-  // so leaving runtime fetching on means a cold start with no network hangs
-  // waiting on fonts.gstatic.com instead of just falling back. Disable it
-  // until real Poppins .ttf files are bundled under assets/fonts/.
+  // Every face the app uses is bundled under assets/fonts/ and declared in
+  // pubspec.yaml, so nothing is fetched at runtime. Left explicitly false so
+  // a stray GoogleFonts call can never reintroduce a cold-start network hang.
   GoogleFonts.config.allowRuntimeFetching = false;
 
   // No Firebase project exists yet (see README "Phase 8 status") — this
@@ -48,7 +47,19 @@ Future<void> main() async {
     ).initialize(),
   );
 
-  runApp(const ProviderScope(child: BatamartApp()));
+  // Painted in the saved theme from the first frame — no light flash.
+  final savedTheme = await loadSavedThemeMode();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        themeModeProvider.overrideWith(
+          (ref) => ThemeModeController(savedTheme),
+        ),
+      ],
+      child: const BatamartApp(),
+    ),
+  );
 }
 
 class BatamartApp extends ConsumerWidget {

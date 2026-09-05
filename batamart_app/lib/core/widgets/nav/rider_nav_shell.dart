@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
+import '../../theme/app_typography.dart';
 
 /// The rider-only bottom nav — structurally separate from
 /// [BuyerSellerBottomNav] per `docs/mockups/README.md`'s "Resolved: rider
@@ -38,25 +40,25 @@ class RiderBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: context.palette.card,
+        border: Border(top: BorderSide(color: context.palette.hairline)),
       ),
       child: SafeArea(
         child: SizedBox(
           height: 64,
           child: Row(
             children: [
-              Expanded(child: _navItem(_items[0])),
-              Expanded(child: _navItem(_items[1])),
+              Expanded(child: _navItem(context, _items[0])),
+              Expanded(child: _navItem(context, _items[1])),
               Expanded(
                 child: _OnlineToggle(
                   isOnline: isOnline,
                   onChanged: onOnlineToggled,
                 ),
               ),
-              Expanded(child: _navItem(_items[2])),
-              Expanded(child: _navItem(_items[3])),
+              Expanded(child: _navItem(context, _items[2])),
+              Expanded(child: _navItem(context, _items[3])),
             ],
           ),
         ),
@@ -64,24 +66,34 @@ class RiderBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _navItem(({RiderNavTab tab, String label, IconData icon}) item) {
+  Widget _navItem(BuildContext context, ({RiderNavTab tab, String label, IconData icon}) item) {
+    final p = context.palette;
     final isSelected = currentTab == item.tab;
-    final color = isSelected ? AppColors.primary : AppColors.textSecondary;
+    // Matches the buyer/seller shell exactly — same visual treatment, separate
+    // component, because riders are walled off from those flows server-side.
+    final color = isSelected ? p.ink : p.inkMuted;
 
     return InkWell(
       onTap: () => onTabSelected(item.tab),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
         children: [
-          Icon(item.icon, color: color, size: 22),
-          const SizedBox(height: 2),
-          Text(
-            item.label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          if (isSelected)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(width: 34, height: 2, color: p.ink),
+              ),
             ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(item.icon, color: color, size: 21),
+              const SizedBox(height: 5),
+              Text(item.label.toUpperCase(),
+                  style: AppTypography.label(size: 9, color: color)),
+            ],
           ),
         ],
       ),
@@ -97,7 +109,7 @@ class _OnlineToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isOnline ? AppColors.success : AppColors.textSecondary;
+    final color = isOnline ? AppColors.success : context.palette.inkSecondary;
 
     return InkWell(
       onTap: () => onChanged(!isOnline),

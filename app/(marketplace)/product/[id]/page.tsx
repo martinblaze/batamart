@@ -15,6 +15,7 @@ import {
   CheckCircle2, Flag, X,
 } from 'lucide-react'
 import { useCartStore } from '@/lib/cart-store'
+import { useScrolledPast } from '@/components/marketplace/DetailChrome'
 import { decodeProductData, getCategoryDisplayInfo } from '@/lib/variants'
 import { useToast } from '@/components/ui/Toast'
 import RelatedProductCard from '@/components/marketplace/RelatedProductCard'
@@ -357,6 +358,10 @@ export default function ProductDetailPage() {
   const [error, setError] = useState('')
   const [activeImg, setActiveImg] = useState(0)
   const [imgSwitching, setImgSwitching] = useState(false)
+
+  // Roughly the height of the gallery. Past it the floating controls become a
+  // titled bar, which is the only point at which a solid header earns its keep.
+  const pastHero = useScrolledPast(260)
   const [qty, setQty] = useState(1)
   const [noteToSeller, setNoteToSeller] = useState('')
   const [addingToCart, setAddingToCart] = useState(false)
@@ -991,21 +996,34 @@ export default function ProductDetailPage() {
           Render client-side only and keep existing behavior. */}
 
       {/* ── Top nav ───────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-md border-b border-border shadow-soft">
+      <div
+        className={`sticky top-0 z-40 transition-[background-color,border-color] duration-300 ${
+          pastHero ? 'ui-chrome-solid border-b border-border' : 'border-b border-transparent bg-transparent'
+        }`}
+      >
         <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-3">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-1 text-ink-secondary hover:text-primary transition-colors flex-shrink-0"
+            aria-label="Go back"
+            className={`flex items-center gap-1 flex-shrink-0 transition-colors ${
+              pastHero
+                ? 'text-ink-secondary hover:text-primary'
+                : 'h-9 w-9 justify-center rounded-full bg-black/45 text-white backdrop-blur-sm sm:bg-transparent sm:text-ink-secondary sm:backdrop-blur-none'
+            }`}
           >
             <ChevronLeft className="w-5 h-5" />
-            <span className="text-sm font-medium hidden xs:inline">Back</span>
+            <span className={`text-sm font-medium hidden ${pastHero ? 'xs:inline' : ''}`}>Back</span>
           </button>
 
-          <p className="text-[13px] font-semibold text-ink-secondary truncate flex-1 text-center">
+          <p
+            className={`text-[13px] font-semibold text-ink-secondary truncate flex-1 text-center transition-opacity duration-300 ${
+              pastHero ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
             {product.name}
           </p>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => {
                 if (navigator.share) {
@@ -1014,13 +1032,23 @@ export default function ProductDetailPage() {
                   navigator.clipboard.writeText(window.location.href).catch(() => {})
                 }
               }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-ink-secondary"
+              aria-label="Share this listing"
+              className={`flex items-center justify-center transition-colors ${
+                pastHero
+                  ? 'w-8 h-8 rounded-lg text-ink-secondary hover:bg-surface'
+                  : 'h-9 w-9 rounded-full bg-black/45 text-white backdrop-blur-sm sm:bg-transparent sm:text-ink-secondary sm:backdrop-blur-none'
+              }`}
             >
               <Share2 className="w-4 h-4" />
             </button>
             <Link
               href="/cart"
-              className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-ink-secondary"
+              aria-label="Cart"
+              className={`relative flex items-center justify-center transition-colors ${
+                pastHero
+                  ? 'w-8 h-8 rounded-lg text-ink-secondary hover:bg-surface'
+                  : 'h-9 w-9 rounded-full bg-black/45 text-white backdrop-blur-sm sm:bg-transparent sm:text-ink-secondary sm:backdrop-blur-none'
+              }`}
             >
               <ShoppingCart className="w-4 h-4" />
               {items.length > 0 && (
@@ -1062,13 +1090,13 @@ export default function ProductDetailPage() {
 
           {/* LEFT — Images (Sticky) */}
           <div className="space-y-2 sm:sticky sm:top-16 sm:max-h-[calc(100vh-80px)] sm:overflow-y-auto no-scrollbar">
-            <div className="relative overflow-hidden border border-border bg-card">
-              <div className="relative aspect-square overflow-hidden sm:aspect-[4/5]">
+            <div className="relative -mx-3 overflow-hidden bg-card sm:mx-0 sm:border sm:border-border">
+              <div className="relative aspect-[4/5] overflow-hidden">
                 {product.images?.[activeImg] ? (
                   <img
                     src={product.images[activeImg]}
                     alt={product.name}
-                    className={`main-img w-full h-full object-contain p-2 bg-surface ${imgSwitching ? 'switching' : ''}`}
+                    className={`main-img h-full w-full bg-surface object-cover ${imgSwitching ? 'switching' : ''}`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-surface">
@@ -1076,25 +1104,25 @@ export default function ProductDetailPage() {
                   </div>
                 )}
 
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
                   {isNew && (
-                    <span className="bg-success/100 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
+                    <span className="bg-success px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white">New</span>
                   )}
                   {product.quantity <= 3 && product.quantity > 0 && (
-                    <span className="bg-warning/100 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    <span className="bg-warning px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white">
                       {product.quantity} left
                     </span>
                   )}
                   {product.quantity === 0 && (
-                    <span className="bg-danger/100 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    <span className="bg-danger px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white">
                       Out of stock
                     </span>
                   )}
                 </div>
 
                 {(product.viewCount || 0) > 5 && (
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
+                  <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/55 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white backdrop-blur-sm">
+                    <Eye className="h-3 w-3" strokeWidth={1.75} />
                     {product.viewCount} views
                   </div>
                 )}
@@ -1103,28 +1131,31 @@ export default function ProductDetailPage() {
                   <>
                     <button
                       onClick={() => switchImg((activeImg - 1 + product.images.length) % product.images.length)}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-card/90 rounded-full flex items-center justify-center shadow-soft hover:bg-card transition-all"
+                      aria-label="Previous image"
+                      className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65"
                     >
-                      <ChevronLeft className="w-4 h-4 text-ink-secondary" />
+                      <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => switchImg((activeImg + 1) % product.images.length)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-card/90 rounded-full flex items-center justify-center shadow-soft hover:bg-card transition-all"
+                      aria-label="Next image"
+                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm transition-colors hover:bg-black/65"
                     >
-                      <ChevronRight className="w-4 h-4 text-ink-secondary" />
+                      <ChevronRight className="h-4 w-4" />
                     </button>
                   </>
                 )}
               </div>
 
               {product.images.length > 1 && (
-                <div className="flex items-center justify-center gap-1.5 py-2">
+                <div className="pointer-events-none absolute inset-x-0 bottom-3 flex items-center justify-center gap-1.5">
                   {product.images.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => switchImg(i)}
-                      className={`rounded-full transition-all duration-200 ${
-                        i === activeImg ? 'w-4 h-1.5 bg-primary' : 'w-1.5 h-1.5 bg-border'
+                      aria-label={`Show image ${i + 1}`}
+                      className={`pointer-events-auto h-1.5 transition-all duration-300 ${
+                        i === activeImg ? 'w-6 bg-white' : 'w-1.5 bg-white/50'
                       }`}
                     />
                   ))}
@@ -1138,7 +1169,7 @@ export default function ProductDetailPage() {
                   <button
                     key={i}
                     onClick={() => switchImg(i)}
-                    className={`img-thumb flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-surface ${i === activeImg ? 'active' : 'ring-1 ring-border'}`}
+                    className={`img-thumb h-16 w-14 flex-shrink-0 overflow-hidden bg-surface sm:h-[72px] sm:w-16 ${i === activeImg ? 'active' : 'border border-border'}`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>

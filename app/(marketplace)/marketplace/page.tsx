@@ -19,8 +19,7 @@ import {
   TrendingDown, BarChart3, Globe, Leaf, Sun, Moon,
   Laptop, Car, Ticket, Baby, Palette, LayoutGrid, UtensilsCrossed,
   Building2, Rocket, Tablet, Footprints, BatteryCharging, GraduationCap,
-  RotateCcw, ClipboardList, Calculator, Ruler, FlaskConical, Usb, Plug,
-  PenTool, Lock, Tv, type LucideIcon,
+  RotateCcw, Lock, Tv, type LucideIcon,
   CrownIcon, MapPin,
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
@@ -28,6 +27,16 @@ import GirlfriendsDayBanner from '@/components/marketplace/GirlfriendsDayBanner'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
+import Image from 'next/image'
+import {
+  BudgetBands,
+  CategorySpotlight,
+  CategoryTiles,
+  FeedHeading,
+  PromiseCarousel,
+  SellCta,
+} from '@/components/marketplace/VisualSections'
+import { RevealItem } from '@/components/motion/AppMotion'
 
 // ─────────────────────────────────────────────
 // Pull-to-refresh constants
@@ -725,13 +734,6 @@ const PRICE_PANELS = [
   },
 ]
 
-// ── Campus stats (shown in the stats banner) ──────────────
-const CAMPUS_STATS = [
-  { label: 'Products listed',  value: '2,400+', icon: Package },
-  { label: 'Campus sellers',   value: '380+',   icon: Building2 },
-  { label: 'Orders delivered', value: '5,100+', icon: Rocket },
-  { label: 'Happy buyers',     value: '1,200+', icon: Star },
-]
 
 // ── Brand/search chips for the brand spotlight row ─────────────────────────
 const BRAND_CHIPS = [
@@ -763,15 +765,19 @@ const TRUST_POINTS = [
 ]
 
 // ── Study essentials quick links ────────────────────────────────────────────
+// Each carries its own photograph. As eight line icons in a hairline grid
+// these read as a settings screen: identical cells you had to finish reading
+// before you knew what any of them was. A photo of a lab bench names "lab
+// coats" before the caption does.
 const STUDY_LINKS = [
-  { label: 'Past questions', icon: ClipboardList, query: 'past questions' },
-  { label: 'Textbooks',      icon: BookOpen, query: 'textbook' },
-  { label: 'Calculators',    icon: Calculator, query: 'calculator' },
-  { label: 'Drawing tools',  icon: Ruler, query: 'drawing' },
-  { label: 'Lab coats',      icon: FlaskConical, query: 'lab coat' },
-  { label: 'Flash drives',   icon: Usb, query: 'flash drive' },
-  { label: 'Extension boxes',icon: Plug, query: 'extension' },
-  { label: 'Stationery',     icon: PenTool, query: 'stationery' },
+  { label: 'Past questions',  query: 'past questions', image: '/images/marketing/study-notes.webp' },
+  { label: 'Textbooks',       query: 'textbook',       image: '/images/marketing/study-textbooks.webp' },
+  { label: 'Calculators',     query: 'calculator',     image: '/images/marketing/study-calculator.webp' },
+  { label: 'Drawing tools',   query: 'drawing',        image: '/images/marketing/study-drafting.webp' },
+  { label: 'Lab coats',       query: 'lab coat',       image: '/images/marketing/study-lab.webp' },
+  { label: 'Flash drives',    query: 'flash drive',    image: '/images/marketing/study-drive.webp' },
+  { label: 'Extension boxes', query: 'extension',      image: '/images/marketing/study-power.webp' },
+  { label: 'Stationery',      query: 'stationery',     image: '/images/marketing/study-stationery.webp' },
 ]
 
 // ── Category mega grid — flat, single accent (design bible: no gradients, no per-item color variety) ──
@@ -1238,23 +1244,6 @@ function JustDroppedSection({ allProducts, onProductClick }: {
 // Figures lead, labels follow. The icons are gone: four blue glyphs repeated
 // across a row add no information and pull the eye off the numbers, which are
 // the only reason this strip exists.
-function StatsBanner() {
-  return (
-    <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-4">
-      {CAMPUS_STATS.map((stat) => (
-        <div key={stat.label} className="bg-card px-5 py-6">
-          <p className="ui-figure text-[clamp(1.5rem,3vw,2.1rem)] leading-none text-ink">
-            {stat.value}
-          </p>
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">
-            {stat.label}
-          </p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ── Brand / Search Spotlight ──────────────────────────────────────────────────
 function BrandSpotlight({ onSearch, onCategorySelect }: {
   onSearch: (q: string) => void
@@ -1283,32 +1272,34 @@ function BrandSpotlight({ onSearch, onCategorySelect }: {
 function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
   return (
     <section>
-      <div className="mb-5">
-        <p className="ui-eyebrow mb-2.5">
-          <BookOpen className="w-3.5 h-3.5" strokeWidth={2} />
-          Study essentials
-        </p>
-        <h2 className="text-[clamp(1.15rem,2.2vw,1.6rem)] text-ink">
-          Everything for lectures &amp; exams
-        </h2>
-      </div>
-      {/* `gap-px` over a border-coloured ground draws hairline dividers
-          between cells, instead of eight separately outlined boxes. */}
-      <div className="grid grid-cols-4 gap-px border border-border bg-border sm:grid-cols-8">
-        {STUDY_LINKS.map((link) => (
-          <button
-            key={link.label}
-            onClick={() => onSearch(link.query)}
-            className="group flex flex-col items-center gap-2.5 bg-card px-2 py-5 transition-colors duration-300 hover:bg-surface"
-          >
-            <link.icon
-              className="h-5 w-5 text-ink-muted transition-colors duration-300 group-hover:text-primary"
-              strokeWidth={1.5}
-            />
-            <p className="text-center text-[11px] font-medium leading-tight text-ink-secondary transition-colors duration-300 group-hover:text-ink">
-              {link.label}
-            </p>
-          </button>
+      <FeedHeading
+        eyebrow="Study essentials"
+        title="Everything for"
+        accent="lectures & exams."
+      />
+      <div className="ui-rail -mx-1 px-1 pb-1">
+        {STUDY_LINKS.map((link, i) => (
+          <RevealItem key={link.label} index={i}>
+            <button
+              onClick={() => onSearch(link.query)}
+              className="group relative block h-[132px] w-[118px] overflow-hidden rounded-lg text-left sm:w-[140px]"
+            >
+              <Image
+                src={link.image}
+                alt=""
+                fill
+                sizes="140px"
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.07]"
+              />
+              <span
+                aria-hidden
+                className="absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.88),rgba(0,0,0,0.15)_58%,transparent)]"
+              />
+              <span className="absolute inset-x-2.5 bottom-2.5 text-[12.5px] font-semibold leading-tight text-white">
+                {link.label}
+              </span>
+            </button>
+          </RevealItem>
         ))}
       </div>
     </section>
@@ -1317,38 +1308,14 @@ function StudyEssentials({ onSearch }: { onSearch: (q: string) => void }) {
 
 // ── Mega Category Grid ────────────────────────────────────────────────────────
 function MegaCategoryGrid({ onCategorySelect }: { onCategorySelect: (cat: string) => void }) {
-  return (
-    <div>
-      <div className="mb-5">
-        <p className="ui-eyebrow mb-2.5">Browse everything</p>
-        <h2 className="text-[clamp(1.15rem,2.2vw,1.6rem)] text-ink">All categories</h2>
-      </div>
-      <div className="grid grid-cols-2 gap-px border border-border bg-border sm:grid-cols-5">
-        {MEGA_CATEGORIES.map((cat) => (
-          <button
-            key={cat.name}
-            onClick={() => onCategorySelect(cat.name)}
-            className="group relative cursor-pointer bg-card p-5 text-left transition-colors duration-300 hover:bg-surface"
-          >
-            <cat.icon
-              className="mb-8 h-5 w-5 text-ink-muted transition-colors duration-300 group-hover:text-primary"
-              strokeWidth={1.5}
-            />
-            <p className="text-sm font-medium leading-tight text-ink">{cat.name.split(' /')[0]}</p>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
-              {cat.count} items
-            </p>
-            {/* Hairline that draws itself along the bottom edge on hover. */}
-            <span
-              aria-hidden
-              className="absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-primary transition-transform duration-500 ease-out group-hover:scale-x-100"
-            />
-          </button>
-        ))}
-      </div>
-    </div>
-  )
+  // Photographic tiles. Twelve identical tinted squares each holding a line
+  // icon told the reader nothing until they read every label — a photograph
+  // names the aisle before the word does, and it is the difference between a
+  // shop and a settings screen.
+  void onCategorySelect
+  return <CategoryTiles categories={MEGA_CATEGORIES.map((c) => c.name.split(' /')[0])} />
 }
+
 
 // ── Why BataMart Trust Banner ─────────────────────────────────────────────────
 function TrustBanner() {
@@ -1608,10 +1575,14 @@ export default function MarketplacePage() {
   const isApp = searchParams.get('app') === 'true' ||
     (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches)
 
-  const [splashDone, setSplashDone] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true
-    return !isSplashPending()
-  })
+  // Starts true so the first client render matches the server's.
+  //
+  // This used to call isSplashPending() in the initializer, which reads
+  // window.matchMedia — false on the server, true inside an installed PWA. The
+  // mismatch made React throw out the hydrated tree in standalone mode only.
+  // Nothing flashes by deferring: html.splash-pending hides the page
+  // synchronously, before hydration, and the effect below re-gates on mount.
+  const [splashDone, setSplashDone] = useState<boolean>(true)
 
   const [allProducts,       setAllProducts]       = useState<any[]>([])
   const [loading,           setLoading]           = useState(true)
@@ -1648,12 +1619,14 @@ export default function MarketplacePage() {
 
   // ── Splash ──
   useEffect(() => {
-    if (splashDone) return
+    if (!isSplashPending()) return
+    setSplashDone(false)
     const handler = () => setSplashDone(true)
     window.addEventListener('batamart:splash-done', handler)
+    // SplashScreen dispatches at 3s; this only covers it never getting there.
     const fallback = setTimeout(() => setSplashDone(true), 4000)
     return () => { window.removeEventListener('batamart:splash-done', handler); clearTimeout(fallback) }
-  }, [splashDone])
+  }, [])
 
   // ── Inject CSS ──
   useEffect(() => {
@@ -2388,8 +2361,13 @@ export default function MarketplacePage() {
               <LiveActivityMarquee products={allProducts} />
             )}
 
-            {/* ── Campus Stats Banner ── */}
-            <StatsBanner />
+            {/* ── Campus promises ── */}
+            {/* Photography leads, not figures. Two rows of stat boxes used to
+                open the feed — "2,400+ products listed" is neither verifiable
+                nor actionable on arrival. These are the platform's actual
+                guarantees, over photographs, and each one is something the
+                reader can go and use. */}
+            <PromiseCarousel />
 
             {/* ── Seasonal Campaign Banner ── */}
             <GirlfriendsDayBanner />
@@ -2586,8 +2564,25 @@ export default function MarketplacePage() {
               <BestSellersRow products={productsByCategory['Sports & Fitness']} onProductClick={handleProductClick} onSeeAll={() => handleCategorySelect('Sports & Fitness')} title="Best Sellers in Sports & Fitness" subtitle="Stay active with top campus picks" />
             )}
 
-            {/* ── Mega Category Grid ── */}
+            {/* ── Category tiles ── */}
             <MegaCategoryGrid onCategorySelect={handleCategorySelect} />
+
+            {/* ── Shop to a budget ── */}
+            <BudgetBands />
+
+            {/* ── Category spotlights. Full-bleed photography with the
+                 subcategories as chips over the image — the web counterpart of
+                 the mobile client's spotlight panels. ── */}
+            <CategorySpotlight
+              label="Electronics"
+              image="/images/marketing/spot-electronics.webp"
+              subcategories={['Phones & Tablets', 'Laptops', 'Audio & Speakers', 'Gaming', 'Cameras', 'Accessories']}
+            />
+            <CategorySpotlight
+              label="Fashion"
+              image="/images/marketing/spot-fashion.webp"
+              subcategories={["Men's Clothing", "Women's Clothing", 'Shoes', 'Bags & Backpacks', 'Watches', 'Accessories']}
+            />
 
             
 
@@ -2642,6 +2637,10 @@ export default function MarketplacePage() {
                 </div>
               </div>
             )}
+
+            {/* Closing prompt. Someone who has scrolled this far is engaged;
+                this is the right moment to ask them to list something. */}
+            <SellCta />
           </div>
         )}
       </div>

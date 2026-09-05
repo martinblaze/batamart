@@ -17,13 +17,30 @@ import '../state/auth_controller.dart';
 void showEditProfileSheet(BuildContext context, WidgetRef ref) {
   AppBottomSheet.show(
     context: context,
-    title: 'Edit Profile',
+    title: 'Edit profile',
     child: const _EditProfileForm(),
   );
 }
 
+/// Delivery address only.
+///
+/// Settings' "Delivery address" used to push /profile-setup, which is the
+/// first-run onboarding screen — it redirected anyone who already had a
+/// profile straight back to Home, so the row did nothing. A sheet edits the
+/// address in place, which is what the row promises.
+void showAddressSheet(BuildContext context, WidgetRef ref) {
+  AppBottomSheet.show(
+    context: context,
+    title: 'Delivery address',
+    child: const _EditProfileForm(addressOnly: true),
+  );
+}
+
 class _EditProfileForm extends ConsumerStatefulWidget {
-  const _EditProfileForm();
+  const _EditProfileForm({this.addressOnly = false});
+
+  /// Hides the name field, so the sheet is only about where things go.
+  final bool addressOnly;
 
   @override
   ConsumerState<_EditProfileForm> createState() => _EditProfileFormState();
@@ -37,6 +54,7 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
     text: ref.read(authControllerProvider).user?.roomNumber ?? '',
   );
   String? _hostelName;
+  final _hostelController = TextEditingController();
   String? _landmark;
   bool _isSubmitting = false;
   String? _error;
@@ -46,12 +64,14 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
     super.initState();
     final user = ref.read(authControllerProvider).user;
     _hostelName = user?.hostelName;
+    _hostelController.text = user?.hostelName ?? '';
     _landmark = user?.landmark;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _hostelController.dispose();
     _roomController.dispose();
     super.dispose();
   }
@@ -92,36 +112,37 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
-    final hostels = extractPicklist(user?.university?.hostels);
     final landmarks = extractPicklist(user?.university?.deliveryAreas);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AppTextField(controller: _nameController, label: 'Full Name'),
-        const SizedBox(height: AppSpacing.md),
-        hostels.isNotEmpty
-            ? DropdownButtonFormField<String>(
-                initialValue: _hostelName,
-                decoration: const InputDecoration(labelText: 'Hostel'),
-                items: hostels
-                    .map((h) => DropdownMenuItem(value: h, child: Text(h)))
-                    .toList(),
-                onChanged: (v) => setState(() => _hostelName = v),
-              )
-            : AppTextField(
-                label: 'Hostel',
-                onChanged: (v) => _hostelName = v,
-              ),
+        if (!widget.addressOnly) ...[
+          AppTextField(controller: _nameController, label: 'Full name'),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        // Typed, not picked. The university's hostel list is a fixed
+        // picklist that cannot know about private lodges and off-campus
+        // addresses, so anyone living outside a named hall had nothing to
+        // select. Free text accepts every real answer.
+        AppTextField(
+          controller: _hostelController,
+          label: 'Hostel or lodge',
+          hint: 'e.g. Python Hall, or Divine Favour Lodge',
+          onChanged: (v) => _hostelName = v,
+        ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(controller: _roomController, label: 'Room Number'),
         const SizedBox(height: AppSpacing.md),
+        // Landmark stays a picklist where the university publishes one —
+        // delivery pricing is zone-based server-side, so a typed value that
+        // matches no zone would quietly break the fee quote.
         landmarks.isNotEmpty
             ? DropdownButtonFormField<String>(
                 initialValue: _landmark,
                 decoration: const InputDecoration(
-                  labelText: 'Delivery Zone / Landmark',
+                  labelText: 'Delivery zone / landmark',
                 ),
                 items: landmarks
                     .map((l) => DropdownMenuItem(value: l, child: Text(l)))
@@ -129,7 +150,7 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
                 onChanged: (v) => setState(() => _landmark = v),
               )
             : AppTextField(
-                label: 'Delivery Zone / Landmark',
+                label: 'Delivery zone / landmark',
                 onChanged: (v) => _landmark = v,
               ),
         if (_error != null) ...[

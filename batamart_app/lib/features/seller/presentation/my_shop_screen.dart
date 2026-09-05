@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,11 +7,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../state/seller_providers.dart';
+import '../../../core/utils/money.dart';
 
 /// `GET /api/wallet` just for the Earnings tile — the full Wallet screen
 /// (balance, transactions, withdraw) is Phase 8 scope; this is a minimal
@@ -62,9 +65,9 @@ class MyShopScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             children: [
-              const Text(
+              Text(
                 'Overview',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                style: AppTypography.display(size: 16, weight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.sm),
               Row(
@@ -87,15 +90,15 @@ class MyShopScreen extends ConsumerWidget {
                     child: _StatTile(
                       label: 'Earnings',
                       value:
-                          '₦${(earningsAsync.asData?.value ?? 0).toStringAsFixed(0)}',
+                          naira((earningsAsync.asData?.value ?? 0)),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
-              const Text(
+              Text(
                 'Manage Products',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                style: AppTypography.display(size: 16, weight: FontWeight.w700),
               ),
               const SizedBox(height: AppSpacing.sm),
               ListTile(
@@ -107,7 +110,7 @@ class MyShopScreen extends ConsumerWidget {
                 title: const Text('All Products'),
                 trailing: Text(
                   '${products.total} >',
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: context.palette.inkSecondary),
                 ),
                 onTap: () => context.push(AppRoutes.myShopProducts),
               ),
@@ -127,7 +130,7 @@ class MyShopScreen extends ConsumerWidget {
                 subtitle: const Text('Low stock alerts'),
                 trailing: Text(
                   '${products.products.where((p) => p.quantity > 0 && p.quantity <= 5).length} >',
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: context.palette.inkSecondary),
                 ),
                 onTap: () => context.push(AppRoutes.myShopProducts),
               ),
@@ -155,20 +158,20 @@ class _StatTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: context.palette.page,
         borderRadius: BorderRadius.circular(AppRadii.md),
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            style: AppTypography.display(size: 16, weight: FontWeight.w700),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: context.palette.inkSecondary,
               fontSize: 11,
             ),
           ),
