@@ -4,6 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { KenBurns, Reveal, RevealItem } from '@/components/motion/AppMotion'
+import { CATEGORY_TREE, resolveCategoryKey } from '@/lib/variants'
+import { useAppMode, withAppMode } from '@/hooks/useAppMode'
 
 /**
  * Image-led sections for the marketplace feed.
@@ -36,6 +38,31 @@ const CATEGORY_IMAGES: Record<string, string> = {
 
 export function categoryImage(label: string): string | undefined {
   return CATEGORY_IMAGES[label]
+}
+
+/**
+ * Every browse link on the feed goes to the same place, filtered.
+ *
+ * These used to point at `/search?category=<label>`, which searched by
+ * display name and dropped you on a search results page with an empty query
+ * box. The Feed is the catalogue, and it takes real category keys — so a
+ * tile, a spotlight, a subcategory chip and a price band all land on the
+ * same screen with the right filter already applied.
+ */
+export function feedHref(opts: {
+  label?: string
+  subcategoryKey?: string
+  maxPrice?: number
+  sort?: string
+}): string {
+  const query = new URLSearchParams()
+  const key = opts.label ? resolveCategoryKey(opts.label) : null
+  if (key) query.set('categoryKey', key)
+  if (opts.subcategoryKey) query.set('subcategoryKey', opts.subcategoryKey)
+  if (opts.maxPrice !== undefined) query.set('maxPrice', String(opts.maxPrice))
+  if (opts.sort) query.set('sort', opts.sort)
+  const q = query.toString()
+  return `/feed${q ? `?${q}` : ''}`
 }
 
 /** Mono eyebrow, display title, optional action. One header for the feed. */
@@ -77,6 +104,7 @@ export function FeedHeading({
 
 /** Photographic category tiles, scrolling sideways on a phone. */
 export function CategoryTiles({ categories }: { categories: string[] }) {
+  const isApp = useAppMode()
   return (
     <section>
       <FeedHeading eyebrow="Shop by category" title="Find it" accent="faster." />
@@ -86,7 +114,7 @@ export function CategoryTiles({ categories }: { categories: string[] }) {
           return (
             <RevealItem key={label} index={i}>
               <Link
-                href={`/search?category=${encodeURIComponent(label)}`}
+                href={withAppMode(feedHref({ label }), isApp)}
                 className="group relative block h-[104px] w-[136px] overflow-hidden rounded-lg"
               >
                 {image ? (
@@ -123,12 +151,21 @@ export function CategoryTiles({ categories }: { categories: string[] }) {
 export function CategorySpotlight({
   label,
   image,
-  subcategories,
 }: {
   label: string
   image: string
-  subcategories: string[]
 }) {
+  // Read from the category tree rather than passed in as prose. Hardcoded
+  // subcategory labels could not be turned into filter keys, so the chips
+  // linked to a text search that often matched nothing.
+  const isApp = useAppMode()
+  const categoryKey = resolveCategoryKey(label)
+  const subcategories = categoryKey
+    ? Object.entries(CATEGORY_TREE[categoryKey]?.subcategories || {}).map(
+        ([key, sub]) => ({ key, label: (sub as { label: string }).label }),
+      )
+    : []
+
   return (
     <Reveal>
       <section className="relative h-[240px] overflow-hidden rounded-lg sm:h-[280px]">
@@ -142,7 +179,7 @@ export function CategorySpotlight({
         <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
           <p className="ui-mono ui-mono-sm mb-1.5 text-white/65">Best sellers in</p>
           <Link
-            href={`/search?category=${encodeURIComponent(label)}`}
+            href={withAppMode(feedHref({ label }), isApp)}
             className="group inline-flex items-center gap-2"
           >
             <span className="text-[clamp(1.3rem,3.2vw,1.75rem)] font-semibold text-white">
@@ -156,11 +193,11 @@ export function CategorySpotlight({
           <div className="mt-3.5 flex flex-wrap gap-2">
             {subcategories.slice(0, 6).map((sub) => (
               <Link
-                key={sub}
-                href={`/search?category=${encodeURIComponent(label)}&q=${encodeURIComponent(sub)}`}
+                key={sub.key}
+                href={withAppMode(feedHref({ label, subcategoryKey: sub.key }), isApp)}
                 className="border border-white/30 bg-white/15 px-3 py-1.5 text-[11.5px] text-white backdrop-blur-sm transition-colors duration-300 hover:bg-white/25"
               >
-                {sub}
+                {sub.label}
               </Link>
             ))}
           </div>
@@ -172,11 +209,15 @@ export function CategorySpotlight({
 
 /** Price bands over photography. Each lands on a real filtered search. */
 export function BudgetBands() {
+  const isApp = useAppMode()
+  // `category` is what the band actually filters by; `label` is the word on
+  // the card. They were the same string before, which meant "Tech" and "Room"
+  // resolved to no category at all and the band filtered on price alone.
   const bands = [
-    { amount: 10000, label: 'Fashion', image: '/images/marketing/cat-fashion.webp' },
-    { amount: 20000, label: 'Tech', image: '/images/marketing/cat-electronics.webp' },
-    { amount: 5000, label: 'Food', image: '/images/marketing/cat-groceries.webp' },
-    { amount: 30000, label: 'Room', image: '/images/marketing/cat-home.webp' },
+    { amount: 10000, label: 'Fashion', category: 'Fashion', image: '/images/marketing/cat-fashion.webp' },
+    { amount: 20000, label: 'Tech', category: 'Electronics', image: '/images/marketing/cat-electronics.webp' },
+    { amount: 5000, label: 'Food', category: 'Food & Groceries', image: '/images/marketing/cat-groceries.webp' },
+    { amount: 30000, label: 'Room', category: 'Home & Kitchen', image: '/images/marketing/cat-home.webp' },
   ]
 
   return (
@@ -186,7 +227,7 @@ export function BudgetBands() {
         {bands.map((band, i) => (
           <RevealItem key={band.label} index={i}>
             <Link
-              href={`/search?maxPrice=${band.amount}&sort=price_asc`}
+              href={withAppMode(feedHref({ label: band.category, maxPrice: band.amount, sort: 'price_asc' }), isApp)}
               className="group relative block h-[128px] w-[152px] overflow-hidden rounded-lg"
             >
               <Image
@@ -216,10 +257,11 @@ export function BudgetBands() {
 
 /** Closing prompt at the foot of the feed. */
 export function SellCta() {
+  const isApp = useAppMode()
   return (
     <Reveal>
       <Link
-        href="/sell"
+        href={withAppMode('/sell', isApp)}
         className="group relative block h-[220px] overflow-hidden rounded-lg sm:h-[260px]"
       >
         <KenBurns className="absolute inset-0" maxScale={1.12} seconds={22}>

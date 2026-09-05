@@ -1991,16 +1991,29 @@ export default function MarketplacePage() {
     window.open(`https://wa.me/?text=${text}`, '_blank')
   }
 
+  /**
+   * Opens the Feed, filtered.
+   *
+   * This used to filter in place: the whole marketplace was replaced by a
+   * grid, so the feed you were reading disappeared and the only way back was a
+   * breadcrumb. Browsing is a different activity from reading the feed and now
+   * has its own screen, exactly as it does on the mobile client. Everything
+   * that names a category — tiles, spotlights, "see all", price bands — lands
+   * on the same filtered destination.
+   */
   const handleCategorySelect = (cat: string, maxPrice?: number) => {
     const normalizedCategory = cat.trim()
     const categoryKey = normalizedCategory === 'All' ? null : resolveCategoryKey(normalizedCategory)
-    setSelectedCategory(normalizedCategory)
-    setSelectedCategoryKey(categoryKey || null)
+    const query = new URLSearchParams()
+    if (categoryKey) query.set('categoryKey', categoryKey)
     if (maxPrice !== undefined) {
-      setMaxPriceFilter(maxPrice)
-    } else {
-      setMaxPriceFilter(null)
+      query.set('maxPrice', String(maxPrice))
+      query.set('sort', 'price_asc')
     }
+    if (selectedZone) query.set('zone', selectedZone)
+    if (isApp) query.set('app', 'true')
+    const q = query.toString()
+    router.push(`/feed${q ? `?${q}` : ''}`)
   }
 
   const handleProductClick = (id: string) => {
@@ -2193,25 +2206,24 @@ export default function MarketplacePage() {
         }}
       >
         <div className={`marketplace-header-inner ${isApp ? 'max-w-5xl' : 'max-w-7xl'} mx-auto px-3 sm:px-6`}>
-          {/* Category nav */}
+          {/* Category browsing moved to /feed — a horizontal strip fits three
+              of twelve categories on a phone and leaves subcategories nowhere
+              to live. What stays here is what filters the feed you are reading:
+              delivery zone and how it is laid out. */}
           <div className="marketplace-categories flex items-center justify-between gap-2 py-2.5">
-            <div className="flex gap-1 overflow-x-auto no-scrollbar flex-1">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat.name}
-                  onClick={() => handleCategorySelect(cat.name)}
-                  className={`cat-btn relative flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[11px] font-medium transition-colors duration-300 sm:text-xs ${
-                    selectedCategory === cat.name
-                      ? 'cat-active text-ink after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-primary'
-                      : 'text-ink-secondary hover:text-ink'
-                  }`}
-                >
-                  <cat.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  <span className="hidden sm:inline">{cat.name}</span>
-                  <span className="sm:hidden">{cat.name.split(' ')[0]}</span>
-                </button>
-              ))}
-            </div>
+            <Link
+              href={isApp ? '/feed?app=true' : '/feed'}
+              className="group flex min-w-0 flex-1 items-center gap-2 text-ink-secondary transition-colors duration-300 hover:text-ink"
+            >
+              <LayoutGrid className="h-3.5 w-3.5 flex-shrink-0" strokeWidth={1.75} />
+              <span className="truncate font-mono text-[10px] uppercase tracking-[0.14em]">
+                Browse all categories
+              </span>
+              <ChevronRight
+                className="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-300 ease-out group-hover:translate-x-0.5"
+                strokeWidth={1.75}
+              />
+            </Link>
             {availableZones.length > 0 && (
               <div className="relative flex-shrink-0">
                 <MapPin className="w-3.5 h-3.5 text-ink-muted absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.75} />
@@ -2255,61 +2267,6 @@ export default function MarketplacePage() {
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} delay={i * 60} />)}
-          </div>
-
-        ) : selectedCategory !== 'All' ? (
-          /* ── CATEGORY FILTER VIEW ── */
-          <div>
-            <div className="flex items-center gap-2 mb-4 bg-card rounded-xl border border-border shadow-soft px-4 py-3">
-              <button
-                onClick={() => handleCategorySelect('All')}
-                className="text-xs font-semibold text-ink-muted hover:text-primary transition-colors flex items-center gap-1"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" /> All
-              </button>
-              <span className="text-ink-muted">/</span>
-              <span className="text-sm font-semibold text-ink-secondary">{selectedCategory}</span>
-              {maxPriceFilter !== null && (
-                <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-semibold">
-                  <Tag className="w-3 h-3" /> Under {fmt(maxPriceFilter)}
-                  <button onClick={() => setMaxPriceFilter(null)} className="ml-1 hover:text-danger"><X className="w-3 h-3" /></button>
-                </span>
-              )}
-              {selectedZone && (
-                <span className="flex items-center gap-1 ml-1 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[11px] font-semibold">
-                  <MapPin className="w-3 h-3" /> {selectedZone}
-                  <button onClick={() => setSelectedZone('')} className="ml-1 hover:text-danger"><X className="w-3 h-3" /></button>
-                </span>
-              )}
-              <div className="ml-auto flex items-center gap-2">
-                <select
-                  value={sortMode}
-                  onChange={(e) => setSortMode(e.target.value as 'relevance' | 'price_asc' | 'price_desc' | 'newest')}
-                  className="text-xs font-semibold border border-border rounded-lg px-2 py-1 bg-card text-ink-secondary outline-none"
-                >
-                  <option value="relevance">Relevance</option>
-                  <option value="newest">Newest</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                </select>
-                <span className="text-[11px] text-ink-muted font-medium">{sortedFilteredByCategory.length} items</span>
-              </div>
-            </div>
-            {sortedFilteredByCategory.length === 0 ? (
-              <div className="text-center py-16 bg-card rounded-2xl border border-border">
-                <ShoppingBag className="w-12 h-12 text-border mx-auto mb-3" />
-                <p className="text-ink-muted font-semibold mb-4">Nothing here yet</p>
-                <Link href="/sell" className="btn-press inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm shadow-soft">
-                  <CrownIcon className="w-4 h-4" /> List a Product
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {sortedFilteredByCategory.map((p, i) => (
-                  <ProductCard key={p.id} product={p} onClick={() => handleProductClick(p.id)} delay={i * 40} />
-                ))}
-              </div>
-            )}
           </div>
 
         ) : viewMode === 'grid' ? (
@@ -2573,16 +2530,8 @@ export default function MarketplacePage() {
             {/* ── Category spotlights. Full-bleed photography with the
                  subcategories as chips over the image — the web counterpart of
                  the mobile client's spotlight panels. ── */}
-            <CategorySpotlight
-              label="Electronics"
-              image="/images/marketing/spot-electronics.webp"
-              subcategories={['Phones & Tablets', 'Laptops', 'Audio & Speakers', 'Gaming', 'Cameras', 'Accessories']}
-            />
-            <CategorySpotlight
-              label="Fashion"
-              image="/images/marketing/spot-fashion.webp"
-              subcategories={["Men's Clothing", "Women's Clothing", 'Shoes', 'Bags & Backpacks', 'Watches', 'Accessories']}
-            />
+            <CategorySpotlight label="Electronics" image="/images/marketing/spot-electronics.webp" />
+            <CategorySpotlight label="Fashion" image="/images/marketing/spot-fashion.webp" />
 
             
 

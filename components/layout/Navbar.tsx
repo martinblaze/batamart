@@ -550,6 +550,10 @@ function AppBottomNav({
     ? isSeller && isSellerMode ? '/sell?app=true' : '/become-seller?app=true'
     : '/login?app=true'
 
+  // Feed takes the slot Orders had, Orders takes the slot Wallet had, and
+  // Wallet leaves the bar entirely — it lives in the account sheet, where the
+  // rest of the money screens already are. Browsing is what people do most and
+  // it had no tab at all; a wallet is checked occasionally.
   const leftTabs = [
     {
       href: '/marketplace?app=true',
@@ -558,19 +562,19 @@ function AppBottomNav({
       icon: <Store className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
     {
-      href: isLoggedIn ? '/orders?app=true' : '/login?app=true',
-      label: 'Orders',
-      match: '/orders',
-      icon: <Package className="w-[22px] h-[22px]" strokeWidth={1.75} />,
+      href: isLoggedIn ? '/feed?app=true' : '/login?app=true',
+      label: 'Feed',
+      match: '/feed',
+      icon: <LayoutGrid className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
   const rightTabs = [
     {
-      href: isLoggedIn ? '/wallet?app=true' : '/login?app=true',
-      label: 'Wallet',
-      match: '/wallet',
-      icon: <Wallet className="w-[22px] h-[22px]" strokeWidth={1.75} />,
+      href: isLoggedIn ? '/orders?app=true' : '/login?app=true',
+      label: 'Orders',
+      match: '/orders',
+      icon: <Package className="w-[22px] h-[22px]" strokeWidth={1.75} />,
     },
   ]
 
