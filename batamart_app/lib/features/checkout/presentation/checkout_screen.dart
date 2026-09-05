@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/haptics/haptics.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_palette.dart';
@@ -47,12 +48,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
   Future<void> _pay() async {
     if (!_deliverySuitabilityConfirmed) {
+      Haptics.error();
       setState(
         () => _error =
             'Please confirm your delivery address is motorcycle-accessible.',
       );
       return;
     }
+    // Fires on the tap rather than after the payment round trip: this is the
+    // moment the user commits, and the webview takes over from here.
+    Haptics.commit();
     setState(() {
       _isSubmitting = true;
       _error = null;

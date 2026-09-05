@@ -50,6 +50,10 @@ Future<void> main() async {
   // Painted in the saved theme from the first frame — no light flash.
   final savedTheme = await loadSavedThemeMode();
 
+  // Seeded before the first frame so the very first tap already honours
+  // the user's setting rather than buzzing at the default strength once.
+  await loadSavedHapticSettings();
+
   runApp(
     ProviderScope(
       overrides: [

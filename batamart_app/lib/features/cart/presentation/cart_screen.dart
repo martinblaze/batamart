@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -259,10 +260,21 @@ class _CartItemRow extends ConsumerWidget {
           _QuantityStepper(
             quantity: item.quantity,
             onDecrement: item.quantity > 1
-                ? () => controller.updateQuantity(index, item.quantity - 1)
-                : () => controller.removeAt(index),
+                ? () {
+                    Haptics.change();
+                    controller.updateQuantity(index, item.quantity - 1);
+                  }
+                : () {
+                    // Dropping below 1 removes the line entirely — a bigger
+                    // change than a decrement, so it is not silent.
+                    Haptics.change();
+                    controller.removeAt(index);
+                  },
             onIncrement: item.quantity < item.maxQuantity
-                ? () => controller.updateQuantity(index, item.quantity + 1)
+                ? () {
+                    Haptics.change();
+                    controller.updateQuantity(index, item.quantity + 1);
+                  }
                 : null,
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../core/haptics/haptics.dart';
 import '../../../core/settings/app_settings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_palette.dart';
@@ -19,6 +20,8 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
+    final hapticsEnabled = ref.watch(hapticsEnabledProvider);
+    final hapticStrength = ref.watch(hapticStrengthProvider);
 
     return Scaffold(
       appBar: const BataAppBar(title: 'Settings', showBack: true),
@@ -32,8 +35,10 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: 'Use a dark color scheme across the app.',
             trailing: Switch(
               value: isDark,
-              onChanged: (value) =>
-                  ref.read(themeModeProvider.notifier).setDarkMode(value),
+              onChanged: (value) {
+                Haptics.tap();
+                ref.read(themeModeProvider.notifier).setDarkMode(value);
+              },
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -45,9 +50,12 @@ class SettingsScreen extends ConsumerWidget {
                 'Get notified about orders, wallet activity, and messages.',
             trailing: Switch(
               value: notificationsEnabled,
-              onChanged: (value) => ref
-                  .read(notificationsEnabledProvider.notifier)
-                  .setEnabled(value),
+              onChanged: (value) {
+                Haptics.tap();
+                ref
+                    .read(notificationsEnabledProvider.notifier)
+                    .setEnabled(value);
+              },
             ),
           ),
           if (notificationsEnabled) ...[
@@ -67,6 +75,118 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: AppSpacing.lg),
+          const _SectionLabel('Feedback'),
+          _SettingsTile(
+            icon: LucideIcons.vibrate,
+            title: 'Haptic Feedback',
+            subtitle:
+                'Feel a short vibration when you tap, add to cart, or pay.',
+            trailing: Switch(
+              value: hapticsEnabled,
+              onChanged: (value) {
+                // Fire before persisting when switching ON, so the very tap
+                // that enables it is the first thing the user feels.
+                if (value) Haptics.configure(enabled: true, strength: hapticStrength);
+                Haptics.tap();
+                ref.read(hapticsEnabledProvider.notifier).setEnabled(value);
+              },
+            ),
+          ),
+          if (hapticsEnabled) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _HapticStrengthCard(
+              strength: hapticStrength,
+              onChanged: (value) {
+                // Preview at the newly picked strength as the slider moves, so
+                // the difference between steps is felt rather than guessed.
+                ref.read(hapticStrengthProvider.notifier).setStrength(value);
+                Haptics.change();
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The 5/25/50/75/100 strength picker. The steps are not evenly spaced as
+/// numbers, so the slider runs over their *indices* and maps back — otherwise
+/// dragging would linger between stops on a scale the user never chose.
+class _HapticStrengthCard extends StatelessWidget {
+  const _HapticStrengthCard({required this.strength, required this.onChanged});
+
+  final int strength;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = Haptics.strengthSteps;
+    final index = steps.indexOf(strength).clamp(0, steps.length - 1);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: context.palette.card,
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: context.palette.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Strength',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Text(
+                '$strength%',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: index.toDouble(),
+            min: 0,
+            max: (steps.length - 1).toDouble(),
+            divisions: steps.length - 1,
+            label: '${steps[index]}%',
+            onChanged: (value) {
+              final next = steps[value.round()];
+              if (next != strength) onChanged(next);
+            },
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final step in steps)
+                Text(
+                  '$step',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight:
+                        step == strength ? FontWeight.w700 : FontWeight.w400,
+                    color: step == strength
+                        ? AppColors.primary
+                        : context.palette.inkMuted,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Phones expose a fixed set of vibration patterns rather than a '
+            'dial, so each step picks a firmer pattern instead of turning one '
+            'up. Move the slider to feel the difference.',
+            style: TextStyle(fontSize: 11, color: context.palette.inkSecondary),
+          ),
         ],
       ),
     );

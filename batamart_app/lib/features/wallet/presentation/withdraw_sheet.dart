@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
@@ -75,6 +76,7 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
               onPressed: () async {
                 final amount = int.tryParse(amountController.text.trim());
                 if (amount == null || amount < 1000 || amount > 500000) {
+                  Haptics.error();
                   setState(
                     () =>
                         error = 'Enter an amount between ₦1,000 and ₦500,000.',
@@ -83,12 +85,14 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
                 }
                 if (selectedBank == null ||
                     accountNumberController.text.trim().isEmpty) {
+                  Haptics.error();
                   setState(
                     () => error = 'Select a bank and enter the account number.',
                   );
                   return;
                 }
                 if (pinController.text.trim().length != 6) {
+                  Haptics.error();
                   setState(() => error = 'Enter your 6-digit PIN.');
                   return;
                 }
@@ -104,6 +108,9 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
                   }
                 }
 
+                // Only once every check has passed and biometrics (if any)
+                // are confirmed — this is the point of no return for real money.
+                Haptics.commit();
                 setState(() {
                   isSubmitting = true;
                   error = null;

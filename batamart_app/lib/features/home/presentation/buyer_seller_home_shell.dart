@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,11 +61,14 @@ class _BuyerSellerHomeShellState extends ConsumerState<BuyerSellerHomeShell> {
                 final user = ref.watch(authControllerProvider).user;
                 return FloatingActionButton(
                   tooltip: 'Sell a product',
-                  onPressed: () => context.push(
-                    (user?.isSeller ?? false)
-                        ? AppRoutes.sellProduct
-                        : AppRoutes.becomeSeller,
-                  ),
+                  onPressed: () {
+                    Haptics.tap();
+                    context.push(
+                      (user?.isSeller ?? false)
+                          ? AppRoutes.sellProduct
+                          : AppRoutes.becomeSeller,
+                    );
+                  },
                   child: const Icon(LucideIcons.plus),
                 );
               },
@@ -83,7 +87,12 @@ class _BuyerSellerHomeShellState extends ConsumerState<BuyerSellerHomeShell> {
           return BuyerSellerBottomNav(
             currentTab: _tab,
             cartItemCount: cartCount,
-            onTabSelected: (tab) => setState(() => _tab = tab),
+            onTabSelected: (tab) {
+              // Only on an actual change: re-tapping the current tab is a
+              // no-op, and buzzing for it would feel like a misfire.
+              if (tab != _tab) Haptics.tap();
+              setState(() => _tab = tab);
+            },
           );
         },
       ),
@@ -378,7 +387,10 @@ class _SearchAction extends StatelessWidget {
     return IconButton(
       tooltip: 'Search',
       icon: const Icon(LucideIcons.search, size: 20),
-      onPressed: () => context.push(AppRoutes.search),
+      onPressed: () {
+        Haptics.screen();
+        context.push(AppRoutes.search);
+      },
     );
   }
 }

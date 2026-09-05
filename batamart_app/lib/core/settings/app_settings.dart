@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../haptics/haptics.dart';
+
 const _settingsBoxName = 'settings_box';
 const _darkModeKey = 'dark_mode_enabled';
 const _notificationsKey = 'notifications_enabled';
+const _hapticsEnabledKey = 'haptics_enabled';
+const _hapticStrengthKey = 'haptic_strength';
 
 Future<Box> _openSettingsBox() => Hive.openBox(_settingsBoxName);
 
@@ -88,5 +92,78 @@ class NotificationsPrefController extends StateNotifier<bool> {
     state = enabled;
     final box = await _openSettingsBox();
     await box.put(_notificationsKey, enabled);
+  }
+}
+
+/// Seeds [Haptics] from storage before `runApp`, so the very first tap already
+/// respects the user's preference. Mirrors [loadSavedThemeMode]: a storage
+/// failure falls back to the defaults rather than blocking boot.
+Future<void> loadSavedHapticSettings() async {
+  try {
+    final box = await _openSettingsBox();
+    Haptics.configure(
+      enabled: box.get(_hapticsEnabledKey) as bool? ?? true,
+      strength: box.get(_hapticStrengthKey) as int? ?? Haptics.defaultStrength,
+    );
+  } catch (_) {
+    Haptics.configure(enabled: true, strength: Haptics.defaultStrength);
+  }
+}
+
+final hapticsEnabledProvider =
+    StateNotifierProvider<HapticsEnabledController, bool>(
+      (ref) => HapticsEnabledController(),
+    );
+
+/// On/off for all haptic feedback. Writes through to the [Haptics] singleton
+/// on every change — the providers own persistence, the singleton owns the
+/// firing, and non-widget call sites read the singleton directly.
+class HapticsEnabledController extends StateNotifier<bool> {
+  HapticsEnabledController() : super(Haptics.enabled) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final box = await _openSettingsBox();
+    state = box.get(_hapticsEnabledKey) as bool? ?? true;
+    Haptics.configure(enabled: state, strength: Haptics.strength);
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    state = enabled;
+    Haptics.configure(enabled: enabled, strength: Haptics.strength);
+    final box = await _openSettingsBox();
+    await box.put(_hapticsEnabledKey, enabled);
+  }
+}
+
+final hapticStrengthProvider =
+    StateNotifierProvider<HapticStrengthController, int>(
+      (ref) => HapticStrengthController(),
+    );
+
+/// One of [Haptics.strengthSteps] (5/25/50/75/100). See the class docs on
+/// [Haptics] for why this selects a feedback pattern rather than scaling an
+/// amplitude — no mobile platform exposes a continuous intensity.
+class HapticStrengthController extends StateNotifier<int> {
+  HapticStrengthController() : super(Haptics.strength) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final box = await _openSettingsBox();
+    final saved = box.get(_hapticStrengthKey) as int? ?? Haptics.defaultStrength;
+    state = Haptics.strengthSteps.contains(saved)
+        ? saved
+        : Haptics.defaultStrength;
+    Haptics.configure(enabled: Haptics.enabled, strength: state);
+  }
+
+  Future<void> setStrength(int strength) async {
+    if (!Haptics.strengthSteps.contains(strength)) return;
+    state = strength;
+    Haptics.configure(enabled: Haptics.enabled, strength: strength);
+    final box = await _openSettingsBox();
+    await box.put(_hapticStrengthKey, strength);
   }
 }

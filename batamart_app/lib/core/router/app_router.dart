@@ -48,6 +48,7 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
 import '../api/api_client.dart';
+import '../haptics/haptics.dart';
 
 /// Route paths as constants so screens navigate without stringly-typed
 /// duplication. Parameterized routes also get a `xPath(id)` builder for
@@ -163,6 +164,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
+    observers: [_HapticRouteObserver()],
     refreshListenable: refreshNotifier,
     redirect: (context, state) =>
         _redirect(ref, state.fullPath ?? state.matchedLocation),
@@ -425,5 +427,23 @@ class _AuthRefreshNotifier extends ChangeNotifier {
       authControllerProvider,
       (previous, next) => notifyListeners(),
     );
+  }
+}
+
+/// Fires a subtle haptic whenever a new screen is pushed.
+///
+/// One observer rather than an `initState` call in every screen: it covers
+/// every route — present and future — from a single place, and cannot drift
+/// out of sync as screens are added. Only `didPush` is handled: buzzing on
+/// `didPop` as well would fire twice for a single back-and-forth and quickly
+/// become noise.
+class _HapticRouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    // Dialogs, bottom sheets and other overlays push routes too, but they are
+    // opened by a deliberate tap that has already fired its own feedback.
+    // Restricting to PageRoute keeps this to real screen changes.
+    if (route is PageRoute) Haptics.screen();
   }
 }

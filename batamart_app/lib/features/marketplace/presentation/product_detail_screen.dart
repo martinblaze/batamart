@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -109,12 +110,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         }
         try {
           await _doAddToCart(variant);
+          Haptics.change();
           if (mounted) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('Added to cart.')));
           }
         } catch (e) {
+          Haptics.error();
           if (mounted) {
             ScaffoldMessenger.of(
               context,
@@ -126,15 +129,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   void _buyNow(ProductVariant? variant, bool variantRequired) =>
       _requireLoginThen(() async {
         if (variantRequired && variant == null) {
+          Haptics.error();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Select all options first.')),
           );
           return;
         }
         try {
+          Haptics.commit();
           await _doAddToCart(variant);
           if (mounted) context.push(AppRoutes.checkout);
         } catch (e) {
+          Haptics.error();
           if (mounted) {
             ScaffoldMessenger.of(
               context,
@@ -223,15 +229,21 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         selectedAttributes: _selectedAttributes,
         quantity: _quantity,
         noteController: _noteController,
-        onAttributeSelected: (key, value) => setState(() {
-          if (value == null) {
-            _selectedAttributes.remove(key);
-          } else {
-            _selectedAttributes[key] = value;
-          }
-          _quantity = 1;
-        }),
-        onQuantityChanged: (q) => setState(() => _quantity = q),
+        onAttributeSelected: (key, value) {
+          Haptics.selection();
+          setState(() {
+            if (value == null) {
+              _selectedAttributes.remove(key);
+            } else {
+              _selectedAttributes[key] = value;
+            }
+            _quantity = 1;
+          });
+        },
+        onQuantityChanged: (q) {
+          Haptics.selection();
+          setState(() => _quantity = q);
+        },
         onAddToCart: _addToCart,
         onBuyNow: _buyNow,
         onShare: _share,

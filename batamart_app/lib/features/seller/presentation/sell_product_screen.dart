@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/editorial.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,6 +62,12 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
   final _widthController = TextEditingController();
   final _heightController = TextEditingController();
 
+  /// Kept in step with `MAX_LISTING_IMAGES` in `lib/listing-limits.ts`, which
+  /// the web sell form and `POST /api/products` both use. Dart cannot import
+  /// it, so changing one means changing the other. The API enforces this too,
+  /// so exceeding it fails the listing rather than silently truncating.
+  static const int _maxImages = 3;
+
   final List<String> _images = [];
   bool _isUploadingImage = false;
   bool _variantsEnabled = false;
@@ -103,8 +110,12 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
       final file = await repository.pickImage();
       if (file == null) return;
       final url = await repository.uploadImage(file);
+      // The upload is the one step here with real latency, so confirming it
+      // finished is the most useful haptic on this screen.
+      Haptics.change();
       setState(() => _images.add(url));
     } catch (e) {
+      Haptics.error();
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -123,13 +134,16 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
 
   void _next() {
     if (_step == 0 && !_canProceedFromStep1) {
+      Haptics.error();
       setState(() => _error = 'Name and category are required.');
       return;
     }
     if (_step == 1 && !_canProceedFromStep2) {
+      Haptics.error();
       setState(() => _error = 'Enter a valid price and quantity.');
       return;
     }
+    Haptics.tap();
     setState(() {
       _error = null;
       _step = (_step + 1).clamp(0, 3);
@@ -137,6 +151,7 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
   }
 
   void _back() {
+    Haptics.tap();
     if (_step == 0) {
       context.pop();
       return;
@@ -313,7 +328,7 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
                 borderRadius: BorderRadius.circular(AppRadii.sm),
                 child: AppNetworkImage(url, width: 72, height: 72),
               ),
-            if (_images.length < 5)
+            if (_images.length < _maxImages)
               InkWell(
                 onTap: _isUploadingImage ? null : _pickAndUploadImage,
                 borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -429,12 +444,18 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
           contentPadding: EdgeInsets.zero,
           title: const Text('This product has variants (e.g. size, color)'),
           value: _variantsEnabled,
-          onChanged: (v) => setState(() => _variantsEnabled = v),
+          onChanged: (v) {
+            Haptics.selection();
+            setState(() => _variantsEnabled = v);
+          },
         ),
         if (_variantsEnabled) ...[
           for (var i = 0; i < _variants.length; i++) _buildVariantRow(i),
           TextButton.icon(
-            onPressed: () => setState(() => _variants.add(_VariantDraft())),
+            onPressed: () {
+              Haptics.selection();
+              setState(() => _variants.add(_VariantDraft()));
+            },
             icon: const Icon(LucideIcons.plus, size: 16),
             label: const Text('Add Variant'),
           ),
@@ -479,7 +500,10 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
               size: 18,
               color: AppColors.danger,
             ),
-            onPressed: () => setState(() => _variants.removeAt(index)),
+            onPressed: () {
+              Haptics.selection();
+              setState(() => _variants.removeAt(index));
+            },
           ),
         ],
       ),
@@ -705,7 +729,10 @@ class _CategoryGrid extends StatelessWidget {
         final category = categories[index];
         return InkWell(
           borderRadius: BorderRadius.circular(AppRadii.md),
-          onTap: () => onSelected(category),
+          onTap: () {
+            Haptics.selection();
+            onSelected(category);
+          },
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
@@ -809,7 +836,10 @@ class _ConfirmListingContentState extends State<_ConfirmListingContent> {
           contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           value: _policyAcknowledged,
-          onChanged: (v) => setState(() => _policyAcknowledged = v ?? false),
+          onChanged: (v) {
+            Haptics.selection();
+            setState(() => _policyAcknowledged = v ?? false);
+          },
           title: const Text(
             'I confirm this listing is accurate, mine to sell, and does not '
             'violate BataMart\'s prohibited-content policy.',
