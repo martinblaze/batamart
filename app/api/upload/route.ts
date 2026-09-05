@@ -3,12 +3,13 @@ export const dynamic = 'force-dynamic'
 import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { MAX_UPLOAD_SIZE_MB } from '@/lib/listing-limits'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 import { moderateImage } from '@/lib/moderation/moderateImage'
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-const MAX_SIZE_MB = 5
+const MAX_SIZE_MB = MAX_UPLOAD_SIZE_MB
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
 
 function hasExpectedMagicBytes(mimeType: string, data: Buffer): boolean {

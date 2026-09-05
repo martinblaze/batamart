@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { MAX_LISTING_IMAGES } from '@/lib/listing-limits'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { getCategoryDisplayInfo } from '@/lib/variants'
 import { getCampaignExpiry, isValidCampaignKey } from '@/lib/campaigns'
@@ -149,7 +150,19 @@ export async function PUT(
     if (body.subcategoryKey !== undefined) updateData.subcategoryKey = body.subcategoryKey
     if (body.basePrice !== undefined) updateData.basePrice = parseFloat(body.basePrice)
     if (body.variantsEnabled !== undefined) updateData.variantsEnabled = Boolean(body.variantsEnabled)
-    if (body.images !== undefined) updateData.images = body.images
+    if (body.images !== undefined) {
+      // Same cap as the create route, or edit would be a way around it.
+      if (!Array.isArray(body.images)) {
+        return NextResponse.json({ error: 'Invalid images' }, { status: 400 })
+      }
+      if (body.images.length > MAX_LISTING_IMAGES) {
+        return NextResponse.json(
+          { error: `You can add up to ${MAX_LISTING_IMAGES} images per listing` },
+          { status: 400 }
+        )
+      }
+      updateData.images = body.images
+    }
     if (body.hostelName !== undefined) updateData.hostelName = body.hostelName
     if (body.roomNumber !== undefined) updateData.roomNumber = body.roomNumber
     if (body.landmark !== undefined) updateData.landmark = body.landmark

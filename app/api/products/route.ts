@@ -4,6 +4,7 @@ export const revalidate = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { MAX_LISTING_IMAGES } from '@/lib/listing-limits'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { buildAttributeFiltersFromQuery, normalizeAttributeValue } from '@/lib/category-attributes'
 import { CATEGORY_TREE, getCategoryDisplayInfo, getCategoryQueryValues } from '@/lib/variants'
@@ -697,6 +698,19 @@ export async function POST(request: NextRequest) {
 
     if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_LISTING_STOCK) {
       return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 })
+    }
+
+    // Previously unenforced: the cap existed only in the two clients, which had
+    // drifted apart (web 3, Flutter 5), and a direct API call could attach any
+    // number of images.
+    if (images !== undefined && !Array.isArray(images)) {
+      return NextResponse.json({ error: 'Invalid images' }, { status: 400 })
+    }
+    if (Array.isArray(images) && images.length > MAX_LISTING_IMAGES) {
+      return NextResponse.json(
+        { error: `You can add up to ${MAX_LISTING_IMAGES} images per listing` },
+        { status: 400 }
+      )
     }
 
     const normalizedVariants = Array.isArray(variants)

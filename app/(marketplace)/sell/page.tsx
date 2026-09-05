@@ -13,6 +13,7 @@ import {
   CATEGORY_TREE, getCategoryDisplayInfo, getCategoryList, getSubcategoryList,
 } from '@/lib/variants'
 import { getCategoryIcon } from '@/lib/category-icons'
+import { MAX_LISTING_IMAGES, MAX_UPLOAD_SIZE_MB } from '@/lib/listing-limits'
 import { CAMPAIGNS, isCampaignWindowOpen } from '@/lib/campaigns'
 
 const GIRLFRIENDS_DAY = CAMPAIGNS.GIRLFRIENDS_DAY
@@ -776,7 +777,7 @@ export default function SellPage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
-    const filesToProcess = Array.from(files).slice(0, 3 - images.length)
+    const filesToProcess = Array.from(files).slice(0, MAX_LISTING_IMAGES - images.length)
     for (const file of filesToProcess) {
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         setError(`"${file.name}" is not allowed. Only JPG, PNG, WEBP.`)
@@ -1519,7 +1520,7 @@ export default function SellPage() {
           <StepHeader
             num="6"
             title="Product Photos"
-            subtitle="Up to 3 images · JPG, PNG, WEBP · Max 8MB each"
+            subtitle={`Up to ${MAX_LISTING_IMAGES} images · JPG, PNG, WEBP · Max ${MAX_UPLOAD_SIZE_MB}MB each`}
           />
           <div className="grid grid-cols-3 gap-3">
             {images.map((img, i) => (
@@ -1549,7 +1550,7 @@ export default function SellPage() {
                 )}
               </div>
             ))}
-            {images.length < 3 && (
+            {images.length < MAX_LISTING_IMAGES && (
               <label className="img-slot aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-2 cursor-pointer bg-surface">
                 <input
                   type="file"
@@ -1564,7 +1565,7 @@ export default function SellPage() {
                 <span className="text-[11px] font-semibold text-ink-muted">Add Photo</span>
               </label>
             )}
-            {Array.from({ length: Math.max(0, 2 - images.length) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, MAX_LISTING_IMAGES - 1 - images.length) }).map((_, i) => (
               <div key={i} className="aspect-square rounded-xl border-2 border-dashed border-border bg-surface/50 flex items-center justify-center">
                 <ImageIcon className="w-6 h-6 text-border" />
               </div>
