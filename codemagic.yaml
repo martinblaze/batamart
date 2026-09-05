@@ -1,0 +1,108 @@
+# Codemagic CI config for the Flutter app that lives in batamart_app/.
+#
+# This repo is a monorepo: the Next.js site is at the root, the Flutter app is
+# in batamart_app/. Codemagic looks for this file at the repo root only, hence
+# the `working_directory` below rather than putting it beside pubspec.yaml.
+#
+# iOS builds must run on macOS, which is why they happen here instead of on the
+# developer's Windows machine.
+
+workflows:
+  ios-unsigned:
+    name: iOS (unsigned, for free sideloading)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    # Everything below runs inside the Flutter app, not the Next.js root.
+    working_directory: batamart_app
+
+    # The free plan allows 500 macOS minutes a month. Without this, every push
+    # that only touched the website would still spend ~10-15 of them on an
+    # iPhone build. Only a change under batamart_app/ is worth a build.
+    when:
+      changeset:
+        includes:
+          - 'batamart_app/'
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    environment:
+      # Pinned to the version the app was developed and analyzed against. If
+      # Codemagic reports this version is unavailable, change it to `stable`.
+      flutter: 3.44.8
+      xcode: latest
+      cocoapods: default
+
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+
+    scripts:
+      - name: Verify the iOS Firebase config is present
+        script: |
+          # ios/Runner/GoogleService-Info.plist is registered in the Xcode
+          # project's Copy Bundle Resources phase, so Xcode fails with a bare
+          # "Build input file cannot be found" if it is missing. Fail here
+          # instead, where the reason is obvious.
+          if [ ! -f ios/Runner/GoogleService-Info.plist ]; then
+            echo "ERROR: ios/Runner/GoogleService-Info.plist is missing."
+            echo "Download it from the Firebase console (project batamart-fddeb,"
+            echo "iOS app com.batamart.batamart) and commit it."
+            exit 1
+          fi
+          # Catches a half-finished Google sign-in setup before a 15 minute build.
+          if grep -q "REPLACE_WITH" ios/Runner/Info.plist; then
+            echo "ERROR: ios/Runner/Info.plist still contains a placeholder."
+            exit 1
+          fi
+
+      - name: Fetch Dart dependencies
+        script: flutter pub get
+
+      - name: Static analysis
+        script: flutter analyze
+        # NOTE: `flutter test` is deliberately not run here. test/widget_test.dart
+        # fails on a pre-existing Hive initialisation issue unrelated to iOS
+        # (see lib/core/settings/app_settings.dart). Add a test step once that
+        # is fixed, so a real regression can't slip through.
+
+      - name: Install CocoaPods dependencies
+        script: |
+          # Generated.xcconfig must exist before pod install; `flutter pub get`
+          # alone does not create it on a clean clone.
+          flutter precache --ios
+          cd ios && pod install
+
+      - name: Build unsigned .app
+        script: flutter build ios --release --no-codesign
+
+      - name: Package as .ipa
+        script: |
+          # `flutter build ipa` needs a signing identity and export options,
+          # which a free Apple ID cannot provide. An .ipa is just a zip with the
+          # .app inside a Payload/ directory, so build it directly. The result
+          # carries no signature and no entitlements; Sideloadly (or AltStore)
+          # applies its own when it installs to the device.
+          mkdir -p build/ios/ipa/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa && zip -qry batamart-unsigned.ipa Payload && rm -rf Payload
+
+    # Artifact paths are relative to the cloned repo root, not working_directory.
+    artifacts:
+      - batamart_app/build/ios/ipa/*.ipa
+      - batamart_app/build/ios/iphoneos/*.app
+
+    # publishing:
+    #   email:
+    #     recipients:
+    #       - your@email.com   # add your address to get the .ipa emailed to you
+    #     notify:
+    #       success: true
+    #       failure: true

@@ -43,4 +43,26 @@ class Env {
     defaultValue:
         '451382163885-bh40g7p9bkull6i0btu8lpkuimi41t0a.apps.googleusercontent.com',
   );
+
+  /// iOS-application-type OAuth client ID, required only on iOS/macOS.
+  ///
+  /// Android needs no equivalent: Credential Manager looks its client up by
+  /// package name + signing certificate. Apple platforms have no such
+  /// mechanism, so `GIDConfiguration` must be handed an explicit client ID or
+  /// google_sign_in throws at `authenticate()`.
+  ///
+  /// This must be created in the SAME Google Cloud project as
+  /// [googleServerClientId] (project 451382163885) — not in the Firebase
+  /// project `batamart-fddeb` (996103819519), which only backs FCM here.
+  /// Google refuses to mint an ID token whose audience is a server client
+  /// from a different project than the iOS client that requested it.
+  ///
+  /// Create at: Google Cloud Console -> APIs & Services -> Credentials ->
+  /// Create credentials -> OAuth client ID -> iOS, bundle ID
+  /// `com.batamart.batamart`. Then set the value below AND the matching
+  /// reversed form as a URL scheme in `ios/Runner/Info.plist`.
+  static const String googleIosClientId = String.fromEnvironment(
+    'GOOGLE_IOS_CLIENT_ID',
+    defaultValue: '451382163885-uhvakegp80ipp214qf3oq6ln7c0afvsf.apps.googleusercontent.com',
+  );
 }

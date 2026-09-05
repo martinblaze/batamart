@@ -81,15 +81,29 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
 
+# iOS takes a different source image than Android on purpose. The Android
+# sources are 612x408 with a transparent background, which is fine for an
+# adaptive icon but invalid on iOS twice over: App Store Connect rejects any
+# icon carrying an alpha channel (ERROR ITMS-90717), and the App Store icon
+# slot needs a square 1024x1024. batamart_icon_ios.png is that master -- the
+# same bag cropped to its bounding box, scaled to 72% of the canvas so it
+# survives the rounded-rect mask, and flattened onto opaque white.
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: "assets/branding/batamart_icon.png"
+  image_path_ios: "assets/branding/batamart_icon_ios.png"
+  remove_alpha_ios: true
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/branding/batamart_icon.png"
   min_sdk_android: 21
 
 flutter_native_splash:
+  # Web is opted out: this project ships no web splash, and running
+  # `flutter_native_splash:create` with web enabled rewrites web/index.html
+  # (collapsing the doctype and injecting a splash <style> block) as a side
+  # effect of regenerating the Android/iOS splash.
+  web: false
   color: "#FFFFFF"
   image: "assets/branding/batamart_wordmark.png"
   android_12:

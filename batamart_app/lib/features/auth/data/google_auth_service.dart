@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/config/env.dart';
@@ -18,9 +19,26 @@ class GoogleAuthService {
 
   bool _initialized = false;
 
+  /// Apple platforms need an explicit iOS-type client ID; Android resolves
+  /// its own client from package name + SHA-1 via Credential Manager and must
+  /// NOT be given one. `kIsWeb` is checked first because
+  /// `defaultTargetPlatform` reports iOS for Safari on an iPhone.
+  static bool get _needsExplicitClientId =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
+    if (_needsExplicitClientId && Env.googleIosClientId.isEmpty) {
+      throw StateError(
+        'GOOGLE_IOS_CLIENT_ID is not set. Google sign-in cannot work on '
+        'iOS without an iOS-type OAuth client ID from Google Cloud project '
+        '451382163885 (see Env.googleIosClientId).',
+      );
+    }
     await GoogleSignIn.instance.initialize(
+      clientId: _needsExplicitClientId ? Env.googleIosClientId : null,
       serverClientId: Env.googleServerClientId,
     );
     _initialized = true;
