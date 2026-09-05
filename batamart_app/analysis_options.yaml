@@ -9,6 +9,16 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # build/ holds generated output, never source. On iOS the toolchain
+    # populates build/ios/SourcePackages/ with the plugin packages, and the
+    # analyzer walks into their own test/ directories -- which import
+    # dev-dependencies this app does not have (mockito), producing ~95 errors
+    # about firebase_messaging's tests rather than anything in this project.
+    # Invisible on Windows, because build/ios/ cannot be produced there.
+    - build/**
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
