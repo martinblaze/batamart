@@ -503,7 +503,7 @@ function SearchPage() {
                 <SearchAutocomplete
                   value={queryDraft}
                   onChange={setQueryDraft}
-                  onSubmit={() => { setQuery(queryDraft); setPage(1) }}
+                  onSubmit={(chosen) => { setQuery(chosen ?? queryDraft); setPage(1) }}
                   onSelect={(text) => { setQueryDraft(text); setQuery(text); setPage(1) }}
                   autoFocus={params.get('focus') === '1'}
                 />

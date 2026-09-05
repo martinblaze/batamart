@@ -6,9 +6,11 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useCartStore } from '@/lib/cart-store'
 import NotificationBell from '@/components/layout/NotificationBell'
 import {
-  ChevronDown, User, LogOut, Store, ShoppingBag, Wallet,
-  Package, AlertTriangle, PlusCircle, Globe, Plus, Bike,
+  ChevronDown, ChevronRight, User, Users, LogOut, Store, ShoppingBag, Wallet,
+  Package, AlertTriangle, PlusCircle, Globe, Plus, Bike, Gift, Pencil,
+  ClipboardList, TrendingUp,
   LayoutGrid, Bell as BellIcon, Menu, X, Search, MapPin,
+  type LucideIcon,
 } from 'lucide-react'
 
 import { isSplashPending } from '@/components/SplashScreen'
@@ -348,6 +350,159 @@ function RiderBottomNav({ onLogout }: { onLogout: () => void }) {
   )
 }
 
+/**
+ * The installed app's account menu.
+ *
+ * Ported from the Flutter client's Profile tab, which is the version that
+ * works: full-bleed rows separated by hairlines, grouped under mono headings,
+ * each group a block with a rule above and below it. The web sheet used to be
+ * three links floating in padding — no grouping, so the reader had to read all
+ * of it to find any of it, and most of the app's destinations were reachable
+ * only from the desktop dropdown.
+ *
+ * Every row points at a route that already exists on web. The Flutter tab also
+ * carries "App settings"; there is no `/settings` page here, so that row is
+ * absent rather than invented.
+ */
+function ProfileSheetBody({
+  userName,
+  userRole,
+  isSellerMode,
+  onNavigate,
+  onToggleMode,
+  onLogout,
+}: {
+  userName: string
+  userRole: string
+  isSellerMode: boolean
+  onNavigate: () => void
+  onToggleMode: () => void
+  onLogout: () => void
+}) {
+  const isSeller = userRole === 'SELLER' || userRole === 'ADMIN'
+  const isRiderRole = userRole === 'RIDER'
+
+  const groups: { heading: string; rows: { icon: LucideIcon; label: string; href: string }[] }[] = [
+    {
+      heading: 'My account',
+      rows: [
+        { icon: User, label: 'My account', href: '/myprofile?app=true' },
+        { icon: Wallet, label: 'Wallet', href: '/wallet?app=true' },
+        { icon: BellIcon, label: 'Notifications', href: '/notifications?app=true' },
+        { icon: Gift, label: 'Referrals', href: '/referrals?app=true' },
+        ...(isRiderRole ? [] : [{ icon: AlertTriangle, label: 'Disputes', href: '/dispute/select-order?app=true' }]),
+      ],
+    },
+    ...(isSeller
+      ? [{
+          heading: 'Selling',
+          rows: [
+            { icon: Store, label: 'My shop', href: '/my-shop?app=true' },
+            { icon: ClipboardList, label: 'Sales', href: '/orders/sales?app=true' },
+            { icon: Plus, label: 'List a product', href: '/sell?app=true' },
+          ],
+        }]
+      : []),
+    {
+      heading: 'Discover',
+      rows: [
+        { icon: TrendingUp, label: 'Most bought', href: '/most-bought?app=true' },
+        { icon: Users, label: 'Sellers', href: '/sellers?app=true' },
+      ],
+    },
+    {
+      heading: 'Settings',
+      rows: [
+        { icon: MapPin, label: 'Delivery address', href: '/profile/setup?app=true' },
+        ...(isSeller ? [] : [{ icon: Store, label: 'Become a seller', href: '/become-seller?app=true' }]),
+      ],
+    },
+  ]
+
+  return (
+    <>
+      {/* Identity. No avatar: there is no photo upload in this product, so a
+          circle holding one letter was spending the most prominent spot on the
+          screen to say nothing. */}
+      <div className="border-b border-border px-5 pb-5 pt-1">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[20px] font-bold leading-tight text-ink">
+              Welcome, {userName || 'there'}
+            </p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-primary">
+              {userRole ? userRole.toLowerCase() : 'buyer'}
+            </p>
+          </div>
+          <Link
+            href="/myprofile?app=true"
+            onClick={onNavigate}
+            aria-label="Edit profile"
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center text-ink-muted transition-colors hover:text-ink"
+          >
+            <Pencil className="h-4 w-4" strokeWidth={1.75} />
+          </Link>
+        </div>
+      </div>
+
+      {isSeller && (
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink">Seller mode</p>
+            <p className="text-xs text-ink-muted">{isSellerMode ? 'Selling' : 'Buying'}</p>
+          </div>
+          <button
+            onClick={onToggleMode}
+            role="switch"
+            aria-checked={isSellerMode}
+            aria-label="Seller mode"
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+              isSellerMode ? 'bg-primary' : 'bg-border'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform duration-300 ${
+                isSellerMode ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      )}
+
+      {groups.map((group) => (
+        <div key={group.heading}>
+          <p className="px-5 pb-2 pt-6 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-secondary">
+            {group.heading}
+          </p>
+          <div className="border-y border-border">
+            {group.rows.map((row, i) => (
+              <Link
+                key={row.label}
+                href={row.href}
+                onClick={onNavigate}
+                className={`flex items-center gap-3.5 px-5 py-3.5 transition-colors duration-200 hover:bg-surface ${
+                  i === 0 ? '' : 'border-t border-border'
+                }`}
+              >
+                <row.icon className="h-[18px] w-[18px] flex-shrink-0 text-ink" strokeWidth={1.75} />
+                <span className="min-w-0 flex-1 truncate text-sm text-ink">{row.label}</span>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <button
+        onClick={onLogout}
+        className="mt-6 w-full border-y border-border py-4 text-center font-mono text-[11px] uppercase tracking-[0.16em] text-danger transition-colors duration-200 hover:bg-danger/5"
+      >
+        Log out
+      </button>
+    </>
+  )
+}
+
 function AppBottomNav({
   isLoggedIn,
   userRole,
@@ -367,6 +522,14 @@ function AppBottomNav({
   const pathname = usePathname()
   const [profileOpen, setProfileOpen] = useState(false)
   const { isKeyboardOpen } = useKeyboardVisibility()
+
+  // Tells the passive notification nudge to hold off — it renders above
+  // everything and would otherwise cover this sheet three seconds in.
+  useEffect(() => {
+    if (profileOpen) document.body.dataset.sheetOpen = '1'
+    else delete document.body.dataset.sheetOpen
+    return () => { delete document.body.dataset.sheetOpen }
+  }, [profileOpen])
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + '/')
@@ -517,7 +680,7 @@ function AppBottomNav({
             onClick={() => setProfileOpen(false)}
           />
           <div
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-card rounded-t-2xl shadow-soft"
+            className="fixed bottom-0 left-0 right-0 z-[70] max-h-[86vh] overflow-y-auto overscroll-contain bg-card rounded-t-2xl shadow-soft"
             style={{ paddingBottom: 'calc(24px + max(env(safe-area-inset-bottom), 16px))' }}
           >
             <div className="flex justify-center pt-3 pb-2">
@@ -525,72 +688,14 @@ function AppBottomNav({
             </div>
 
             {isLoggedIn ? (
-              <>
-                <div className="px-6 py-4 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-lg font-semibold">
-                      {userName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-ink">{userName}</p>
-                      <p className="text-xs text-ink-muted capitalize">{userRole.toLowerCase()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-4 py-2">
-                  {[
-                    { href: '/myprofile?app=true', icon: User, label: 'My Account' },
-                    { href: '/my-shop?app=true', icon: Store, label: (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode ? 'My Shop' : 'My Items' },
-                    { href: '/dispute/select-order?app=true', icon: AlertTriangle, label: 'Disputes', hide: userRole === 'RIDER' },
-                  ]
-                    .filter(item => !item.hide)
-                    .map(({ href, icon: Icon, label }) => (
-                      <Link
-                        key={label}
-                        href={href}
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-3 px-2 py-3.5 text-ink hover:text-primary border-b border-border last:border-0"
-                      >
-                        <Icon className="w-5 h-5 text-ink-muted" strokeWidth={1.75} />
-                        <span className="font-medium text-sm">{label}</span>
-                      </Link>
-                    ))}
-                </div>
-
-                <div className="px-6 pt-2 space-y-3">
-                  {(userRole === 'SELLER' || userRole === 'ADMIN') && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-surface rounded-lg border border-border">
-                      <div>
-                        <p className="text-sm font-medium text-ink">Mode</p>
-                        <p className="text-xs text-ink-muted">{isSellerMode ? 'You are selling' : 'You are buying'}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-ink-secondary">Buying</span>
-                        <button
-                          onClick={() => { onToggleMode() }}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${
-                              isSellerMode ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                        <span className="text-xs text-ink-secondary">Selling</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => { setProfileOpen(false); onLogout() }}
-                    className="flex items-center justify-center w-full gap-2 bg-danger/10 text-danger font-medium py-3 rounded-lg"
-                  >
-                    <LogOut className="w-5 h-5" strokeWidth={1.75} />
-                    Logout
-                  </button>
-                </div>
-              </>
+              <ProfileSheetBody
+                userName={userName}
+                userRole={userRole}
+                isSellerMode={isSellerMode}
+                onNavigate={() => setProfileOpen(false)}
+                onToggleMode={onToggleMode}
+                onLogout={() => { setProfileOpen(false); onLogout() }}
+              />
             ) : (
               <div className="px-6 py-6 flex flex-col gap-3">
                 <p className="text-center text-ink-secondary text-sm mb-2">Sign in to access your account</p>
@@ -862,7 +967,7 @@ export function Navbar() {
               <SearchAutocomplete
                 value={navSearch}
                 onChange={setNavSearch}
-                onSubmit={() => runNavSearch(navSearch)}
+                onSubmit={(chosen) => runNavSearch(chosen ?? navSearch)}
                 placeholder="Search for products, brands and categories"
                 dimBackdrop
               />

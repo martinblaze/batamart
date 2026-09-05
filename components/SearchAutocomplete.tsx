@@ -35,7 +35,14 @@ export default function SearchAutocomplete({
 }: {
   value: string
   onChange: (value: string) => void
-  onSubmit: () => void
+  /**
+   * Receives the chosen text when a suggestion is picked, and nothing when
+   * the user submits what they typed. Callers must prefer the argument over
+   * their own state: `onChange` has fired by then but the parent has not
+   * re-rendered, so a handler closing over its own value reads the previous
+   * one — which is how the navbar ended up searching for an empty string.
+   */
+  onSubmit: (chosen?: string) => void
   onSelect?: (value: string) => void
   placeholder?: string
   autoFocus?: boolean
@@ -52,6 +59,7 @@ export default function SearchAutocomplete({
   const [activeIndex, setActiveIndex] = useState(-1)
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
 
   const trimmed = value.trim()
 
@@ -106,7 +114,14 @@ export default function SearchAutocomplete({
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
       const target = event.target as Node
-      if (inputRef.current && !inputRef.current.parentElement?.contains(target)) setOpen(false)
+      // Must test the whole component, not the input's parent.
+      //
+      // The dropdown is a *sibling* of the field wrapper, so scoping this to
+      // `inputRef.current.parentElement` judged every click on a suggestion to
+      // be outside: mousedown closed the list, the button unmounted, and the
+      // click that followed had nothing left to land on. Suggestions were only
+      // reachable by arrow keys, which produce no mousedown at all.
+      if (rootRef.current && !rootRef.current.contains(target)) setOpen(false)
     }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
@@ -124,11 +139,11 @@ export default function SearchAutocomplete({
     saveRecent(text)
     setOpen(false)
     setActiveIndex(-1)
-    window.setTimeout(onSubmit, 0)
+    window.setTimeout(() => onSubmit(text), 0)
   }
 
   return (
-    <div className="relative w-full">
+    <div ref={rootRef} className="relative w-full">
       {dimBackdrop && open && mounted && createPortal(
         <div
           className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-[2px] transition-opacity duration-150"
@@ -171,7 +186,10 @@ export default function SearchAutocomplete({
             }
           }}
           placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
+          // The wrapper already shows focus (border + ring). Without this the
+          // global :focus-visible outline in app-ui.css draws a second,
+          // tighter blue rectangle around the text inside the first one.
+          className="w-full bg-transparent text-sm text-ink outline-none focus-visible:outline-none placeholder:text-ink-muted"
         />
         {trimmed ? (
           <button type="button" onClick={() => { onChange(''); setLive([]) }} className="rounded-full p-1 text-ink-muted hover:bg-surface">

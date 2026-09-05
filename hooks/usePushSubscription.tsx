@@ -263,9 +263,39 @@ export function NotificationPrompt() {
   const [visible, setVisible] = useState(false)
   const [animOut, setAnimOut] = useState(false)
 
+  // Whether some other sheet currently owns the bottom of the screen.
+  //
+  // Watched rather than read once: the nudge can become visible before a sheet
+  // opens, so deferring only the timer is not enough — it has to step aside
+  // for a sheet that opens after it has already appeared.
+  const [sheetOpen, setSheetOpen] = useState(false)
+  useEffect(() => {
+    const read = () => setSheetOpen(document.body.dataset.sheetOpen === '1')
+    read()
+    const observer = new MutationObserver(read)
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-sheet-open'] })
+    return () => observer.disconnect()
+  }, [])
+
   useEffect(() => {
     if (!shouldShowPassive) return
-    const t = setTimeout(() => setVisible(true), 3000)
+
+    // Wait for the screen to be free before nudging.
+    //
+    // This used to be a blind 3s timer, and the sheet renders at z-[9999] — so
+    // it landed on top of whatever the reader had open, including the account
+    // menu, and cut it off mid-list. A prompt that interrupts is a prompt that
+    // gets dismissed. Anything that opens a sheet sets body[data-sheet-open];
+    // we re-arm rather than give up, so the nudge still arrives once they are
+    // done.
+    let t: ReturnType<typeof setTimeout>
+    const arm = (delay: number) => {
+      t = setTimeout(() => {
+        if (document.body.dataset.sheetOpen === '1') arm(1500)
+        else setVisible(true)
+      }, delay)
+    }
+    arm(3000)
     return () => clearTimeout(t)
   }, [shouldShowPassive])
 
@@ -286,7 +316,9 @@ export function NotificationPrompt() {
     }
   }
 
-  if (!visible) return null
+  // Stays mounted-but-hidden while another sheet is open, so it reappears
+  // once that sheet closes instead of being lost for the session.
+  if (!visible || sheetOpen) return null
 
   return (
     <>
