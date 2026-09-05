@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ANDROID_APK_URL, isAndroidDevice } from '@/lib/app-download'
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [show, setShow] = useState(false)
   const [installing, setInstalling] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [isAndroid, setIsAndroid] = useState(false)
+  const [downloadStarted, setDownloadStarted] = useState(false)
 
   useEffect(() => {
     // Don't show if already installed
@@ -15,17 +18,45 @@ export default function InstallPrompt() {
     const snoozedUntil = parseInt(localStorage.getItem('installPromptSnoozedUntil') || '0')
     if (Date.now() < snoozedUntil) return
 
+    const android = isAndroidDevice()
+    setIsAndroid(android)
+
     const handler = (e: any) => {
+      // Suppressed on every platform, Android included, so Chrome's own
+      // mini-infobar never competes with this banner. On Android the event is
+      // then discarded — we install the real app instead of the PWA.
       e.preventDefault()
+      if (android) return
       setDeferredPrompt(e)
       setTimeout(() => setShow(true), 3000)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
+
+    // Android does not wait for `beforeinstallprompt`: the APK download does
+    // not depend on it, and the event never fires at all in browsers that
+    // don't support PWA install (Firefox, Samsung Internet in some versions).
+    if (android) {
+      const timer = setTimeout(() => setShow(true), 3000)
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener('beforeinstallprompt', handler)
+      }
+    }
+
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
 
   const install = async () => {
+    if (isAndroid) {
+      // Navigating rather than using <a download>: the asset is cross-origin,
+      // where the download attribute is ignored. GitHub serves the release
+      // asset as an attachment, so this downloads instead of navigating away.
+      setDownloadStarted(true)
+      window.location.href = ANDROID_APK_URL
+      return
+    }
+
     if (!deferredPrompt) return
     setInstalling(true)
     deferredPrompt.prompt()
@@ -74,10 +105,12 @@ export default function InstallPrompt() {
           {/* Text */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-ink text-sm leading-tight">
-              Install BataMart
+              {isAndroid ? 'Get the BataMart app' : 'Install BataMart'}
             </p>
             <p className="text-xs text-ink-secondary mt-0.5">
-              Add to home screen for the best experience
+              {isAndroid
+                ? 'The full Android app — faster than the website'
+                : 'Add to home screen for the best experience'}
             </p>
 
             {/* Stars */}
@@ -99,7 +132,7 @@ export default function InstallPrompt() {
               className="bg-ink hover:bg-primary text-background text-xs font-semibold px-4 py-2 rounded-xl transition-opacity min-w-[72px]"
               style={{ opacity: installing ? 0.7 : 1 }}
             >
-              {installing ? 'Opening…' : 'Install'}
+              {installing ? 'Opening…' : isAndroid ? 'Download' : 'Install'}
             </button>
             <button
               onClick={dismiss}
@@ -109,6 +142,20 @@ export default function InstallPrompt() {
             </button>
           </div>
         </div>
+
+        {/* Sideloading an APK is not a one-tap flow: Chrome warns about the file
+            type, and installing from a browser needs a permission the user has
+            probably never granted. Without this they hit the warning and stop. */}
+        {isAndroid && downloadStarted && (
+          <div className="border-t border-border bg-primary/5 px-4 py-3">
+            <p className="text-[11px] text-ink-secondary leading-relaxed">
+              <span className="font-semibold text-ink">Downloading…</span> Tap{' '}
+              <span className="font-semibold">Download anyway</span> if Chrome warns you,
+              then open the file. You may be asked to allow installs from your browser —
+              that&apos;s normal for apps outside the Play Store.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

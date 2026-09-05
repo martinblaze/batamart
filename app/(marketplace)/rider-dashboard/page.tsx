@@ -19,6 +19,7 @@ import {
   CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload, Heart,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
+import { ANDROID_APK_URL, isAndroidDevice } from '@/lib/app-download'
 import { CAMPAIGNS, isCampaignDeliverable, isValidCampaignKey } from '@/lib/campaigns'
 
 function CampaignItemBadge({ campaignTag }: { campaignTag?: string | null }) {
@@ -100,6 +101,7 @@ export default function RiderDashboardPage() {
   const [oversizedProofByOrder, setOversizedProofByOrder] = useState<Record<string, string>>({})
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<any>(null)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [isAndroid, setIsAndroid] = useState(false)
 
   const watchIdRef = useRef<number | null>(null)
   const lastSentAtRef = useRef(0)
@@ -133,6 +135,9 @@ export default function RiderDashboardPage() {
     sessionStorage.setItem('batamart_rider_mode', 'true')
     setIsInstalled(window.matchMedia('(display-mode: standalone)').matches)
 
+    const android = isAndroidDevice()
+    setIsAndroid(android)
+
     const existingManifest = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null
     const previousHref = existingManifest?.getAttribute('href')
     const manifestLink = existingManifest ?? document.createElement('link')
@@ -145,7 +150,11 @@ export default function RiderDashboardPage() {
     manifestLink.href = '/rider-manifest.json'
 
     const onBeforeInstallPrompt = (event: Event) => {
+      // preventDefault on every platform so Chrome's own PWA banner never
+      // competes; on Android the event is then dropped, because riders get the
+      // real app rather than the rider PWA.
       event.preventDefault()
+      if (android) return
       setDeferredInstallPrompt(event)
     }
 
@@ -171,6 +180,17 @@ export default function RiderDashboardPage() {
   }
 
   const installRiderApp = async () => {
+    if (isAndroid) {
+      // The rider features live in the same APK as the rest of the app, so
+      // this is the same download the marketplace install prompt offers.
+      showToast(
+        "Downloading… tap 'Download anyway' if Chrome warns you, then open the file to install.",
+        'info'
+      )
+      window.location.href = ANDROID_APK_URL
+      return
+    }
+
     if (!deferredInstallPrompt) return
     deferredInstallPrompt.prompt()
     try {
@@ -641,18 +661,32 @@ export default function RiderDashboardPage() {
             >
               Install page
             </button>
-            {!isInstalled && deferredInstallPrompt && (
+            {/* On Android the button is always offered: `isInstalled` only
+                reports whether the PWA is running standalone, which says
+                nothing about whether the native app is present. */}
+            {isAndroid ? (
               <button
                 onClick={installRiderApp}
                 className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
               >
-                Install rider app
+                Download the app
               </button>
-            )}
-            {isInstalled && (
-              <div className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 border border-success/30 bg-success/5 px-4 text-success">
-                Installed
-              </div>
+            ) : (
+              <>
+                {!isInstalled && deferredInstallPrompt && (
+                  <button
+                    onClick={installRiderApp}
+                    className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 bg-ink px-4 text-background transition-colors hover:bg-ink/90"
+                  >
+                    Install rider app
+                  </button>
+                )}
+                {isInstalled && (
+                  <div className="ui-mono ui-mono-sm inline-flex h-9 items-center gap-2 border border-success/30 bg-success/5 px-4 text-success">
+                    Installed
+                  </div>
+                )}
+              </>
             )}
           </div>
 
