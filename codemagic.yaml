@@ -94,10 +94,22 @@ workflows:
           cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
           cd build/ios/ipa && zip -qry batamart-unsigned.ipa Payload && rm -rf Payload
 
+      - name: Show the packaged output
+        script: |
+          # Printed so a missing or zero-size .ipa is visible in the log rather
+          # than only as an empty Artifacts panel.
+          echo "--- pwd: $(pwd)"
+          ls -lh build/ios/ipa/
+          du -h build/ios/ipa/batamart-unsigned.ipa
+
     # Artifact paths are relative to the cloned repo root, not working_directory.
+    # Globs are matched relative to `working_directory` (batamart_app), not the
+    # repo root. Both spellings are kept because a pattern that matches nothing
+    # is ignored rather than failing the build, and the repo-root form is what
+    # Codemagic's own examples show for projects without a working_directory.
     artifacts:
+      - build/ios/ipa/*.ipa
       - batamart_app/build/ios/ipa/*.ipa
-      - batamart_app/build/ios/iphoneos/*.app
 
     # publishing:
     #   email:
