@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'core/push/push_notification_service.dart';
 import 'core/router/app_router.dart';
 import 'core/settings/app_settings.dart';
+import 'core/widgets/chrome/connection_banner.dart';
 import 'core/theme/app_theme.dart';
 import 'features/notifications/data/notification_models.dart';
 import 'features/notifications/presentation/notification_router.dart';
@@ -78,6 +79,10 @@ class BatamartApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: ref.watch(themeModeProvider),
       routerConfig: ref.watch(routerProvider),
+      // Wrapped here rather than per screen so a dropped connection is visible
+      // from anywhere in the app, including inside pushed routes and sheets.
+      builder: (context, child) =>
+          ConnectionBanner(child: child ?? const SizedBox.shrink()),
     );
   }
 }

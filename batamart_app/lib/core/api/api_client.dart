@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/env.dart';
 import '../storage/token_storage.dart';
@@ -31,6 +34,14 @@ class ApiClient {
       ),
     );
 
+    isOnline.addListener(() {
+      if (isOnline.value) {
+        _stopReachabilityProbe();
+      } else {
+        _startReachabilityProbe();
+      }
+    });
+
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -45,6 +56,53 @@ class ApiClient {
   }
 
   static final ApiClient instance = ApiClient._internal();
+
+  Timer? _reachabilityTimer;
+
+  /// While offline, quietly probe the server until it answers.
+  ///
+  /// Without this the offline banner could never clear on its own: it is
+  /// driven by request outcomes, and an app sitting on an error screen makes
+  /// no requests — so a user who regained signal would keep staring at "No
+  /// internet connection" until they happened to navigate somewhere. The
+  /// banner's spinner promises the app is still trying; this is what makes
+  /// that true.
+  ///
+  /// `/api/universities` is used because it needs no auth and returns a small
+  /// fixed payload. Timeouts are short so a probe cannot pile up behind the
+  /// interval.
+  void _startReachabilityProbe() {
+    if (_reachabilityTimer != null) return;
+    _reachabilityTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      try {
+        await _dio.get(
+          '/api/universities',
+          options: Options(
+            receiveTimeout: const Duration(seconds: 4),
+            sendTimeout: const Duration(seconds: 4),
+          ),
+        );
+        isOnline.value = true;
+      } catch (_) {
+        // Still unreachable — the timer keeps running.
+      }
+    });
+  }
+
+  void _stopReachabilityProbe() {
+    _reachabilityTimer?.cancel();
+    _reachabilityTimer = null;
+  }
+
+  /// Whether the last request actually reached the server.
+  ///
+  /// Driven by real request outcomes rather than the OS's idea of
+  /// connectivity: a phone can be firmly attached to campus Wi-Fi that has no
+  /// route to the internet, which `connectivity_plus` reports as connected.
+  /// Every successful response sets this true, every transport failure sets it
+  /// false, so it reflects whether BataMart is reachable — the only thing the
+  /// user cares about. `ConnectionBanner` listens to it.
+  static final ValueNotifier<bool> isOnline = ValueNotifier<bool>(true);
 
   late final Dio _dio;
 
@@ -103,6 +161,7 @@ class ApiClient {
   ) async {
     try {
       final response = await call();
+      isOnline.value = true;
       final data = response.data;
       if (data is Map<String, dynamic>) return data;
       return {'data': data};
@@ -111,7 +170,21 @@ class ApiClient {
       final errorField = (body is Map && body['error'] is String)
           ? body['error'] as String
           : null;
-      final message = errorField ?? e.message ?? 'Network error';
+
+      // A response of any status means the server was reached: a 500 is a
+      // server problem, not a connectivity one, and must not raise the
+      // offline banner.
+      final offline = e.response == null && _isTransportFailure(e);
+      if (offline) {
+        isOnline.value = false;
+      } else if (e.response != null) {
+        isOnline.value = true;
+      }
+
+      final message = errorField ??
+          (offline
+              ? 'No internet connection. Check your network and try again.'
+              : e.message ?? 'Something went wrong. Please try again.');
 
       if (e.response?.statusCode == 401 &&
           (errorField == null || _sessionDeadMessages.contains(errorField))) {
@@ -122,7 +195,25 @@ class ApiClient {
         statusCode: e.response?.statusCode,
         message: message,
         body: body is Map<String, dynamic> ? body : null,
+        isNetworkError: offline,
       );
+    }
+  }
+
+  /// Dio reports "never got a response" through several types; `unknown`
+  /// covers the SocketException case, which is what an aeroplane-mode device
+  /// actually produces.
+  static bool _isTransportFailure(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionError:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return true;
+      case DioExceptionType.unknown:
+        return e.error is Exception;
+      default:
+        return false;
     }
   }
 }
