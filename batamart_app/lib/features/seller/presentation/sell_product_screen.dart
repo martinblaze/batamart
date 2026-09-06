@@ -16,11 +16,14 @@ import '../../../core/widgets/chrome/app_bottom_sheet.dart';
 import '../../../core/widgets/images/app_network_image.dart';
 import '../../../core/widgets/inputs/app_text_field.dart';
 import '../../auth/state/auth_controller.dart';
+import '../data/category_attribute.dart';
 import '../state/seller_providers.dart';
 import '../../../core/utils/money.dart';
 
-class _VariantDraft {
-  String label = '';
+/// Per-combination price/stock overrides in the Variant Inventory grid.
+/// Blank means "inherit the product's own price/quantity", matching the web
+/// form, so a seller who only wants sizes never has to retype the price.
+class _VariantPriceRow {
   String price = '';
   String stock = '';
 }
@@ -70,8 +73,24 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
 
   final List<String> _images = [];
   bool _isUploadingImage = false;
-  bool _variantsEnabled = false;
-  final List<_VariantDraft> _variants = [];
+  /// Category Details for the current category/subcategory, fetched from
+  /// `GET /api/category-attributes`. Empty is a normal state — plenty of
+  /// categories have no structured fields configured.
+  List<CategoryAttributeDef> _categoryAttributes = const [];
+  bool _loadingAttributes = false;
+
+  /// attribute key -> selected value(s). Choice attributes hold a
+  /// `List<String>`; text/number/boolean hold a single `String`.
+  final Map<String, dynamic> _attributeValues = {};
+
+  /// combination key -> price/stock overrides for that variant.
+  final Map<String, _VariantPriceRow> _variantPricing = {};
+
+  /// Set once the seller types in the Description field. From then on the
+  /// auto-generated text stops overwriting it — matching the web form, where
+  /// `descriptionEdited` gates the same effect. Without it, picking another
+  /// Category Detail would silently wipe whatever they had written.
+  bool _descriptionEdited = false;
   String? _campaignTag;
   bool _deliveryAgreementConfirmed = false;
   bool _isSubmitting = false;
@@ -84,11 +103,79 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     _hostelController.text = user?.hostelName ?? '';
     _roomController.text = user?.roomNumber ?? '';
     _landmarkController.text = user?.landmark ?? '';
+
+    // The product name feeds the auto description, so it has to be watched
+    // rather than only read at submit.
+    _nameController.addListener(_refreshAutoDescription);
+    _descriptionController.addListener(_markDescriptionEdited);
+  }
+
+  void _markDescriptionEdited() {
+    if (_descriptionEdited) return;
+    // Ignore the programmatic writes made by [_refreshAutoDescription] itself,
+    // which would otherwise mark the field edited the first time it fills in.
+    if (_descriptionController.text == _buildAutoDescription()) return;
+    _descriptionEdited = true;
+  }
+
+  /// Rewrites the Description from the name, category and Category Details,
+  /// unless the seller has already written their own.
+  void _refreshAutoDescription() {
+    if (_descriptionEdited) return;
+    final auto = _buildAutoDescription();
+    if (_descriptionController.text == auto) return;
+    _descriptionController.value = TextEditingValue(
+      text: auto,
+      selection: TextSelection.collapsed(offset: auto.length),
+    );
+  }
+
+  /// "Name. in Category · Subcategory. Label: value; Label: value", capped at
+  /// [_descriptionWordLimit] words — the same shape as the web form's
+  /// `buildAutoDescription`, so a listing reads the same whichever client
+  /// created it.
+  String _buildAutoDescription() {
+    final parts = <String>[];
+    final title = _normalizeSpaces(_nameController.text);
+    if (title.isNotEmpty) parts.add(title);
+
+    final context = [
+      _selectedCategory?.label ?? '',
+      _selectedSubcategory?.label ?? '',
+    ].where((e) => e.isNotEmpty).join(' · ');
+    if (context.isNotEmpty) parts.add('in $context');
+
+    final summary = _categoryAttributes
+        .map((attribute) {
+          final values = _valuesFor(attribute.key);
+          if (values.isEmpty) return '';
+          final formatted = attribute.type == 'boolean'
+              ? (values.first == 'true' ? 'Yes' : 'No')
+              : values.join(', ');
+          return '${attribute.label}: $formatted';
+        })
+        .where((e) => e.isNotEmpty)
+        .take(5)
+        .join('; ');
+    if (summary.isNotEmpty) parts.add(summary);
+
+    return _limitWords(_normalizeSpaces(parts.join('. ')));
+  }
+
+  static String _normalizeSpaces(String text) =>
+      text.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  static String _limitWords(String text) {
+    final words = text.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+    if (words.length <= _descriptionWordLimit) return words.join(' ');
+    return words.take(_descriptionWordLimit).join(' ');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _nameController.removeListener(_refreshAutoDescription);
+    _descriptionController.removeListener(_markDescriptionEdited);
     _descriptionController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
@@ -101,6 +188,115 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     _widthController.dispose();
     _heightController.dispose();
     super.dispose();
+  }
+
+  /// Loads the structured fields for the chosen category/subcategory.
+  ///
+  /// Deliberately non-fatal: Category Details improve search and drive
+  /// variants, but a seller must still be able to list when the request fails,
+  /// so an error clears the section rather than blocking the flow.
+  Future<void> _loadCategoryAttributes() async {
+    final categoryKey = _selectedCategory?.key;
+    if (categoryKey == null) {
+      setState(() {
+        _categoryAttributes = const [];
+        _attributeValues.clear();
+        _variantPricing.clear();
+      });
+      return;
+    }
+    setState(() => _loadingAttributes = true);
+    try {
+      final attributes = await ref
+          .read(sellerProductsRepositoryProvider)
+          .fetchCategoryAttributes(
+            categoryKey: categoryKey,
+            subcategoryKey: _selectedSubcategory?.key,
+          );
+      if (!mounted) return;
+      setState(() {
+        _categoryAttributes = attributes;
+        _refreshAutoDescription();
+        // Values for fields that no longer apply would otherwise be submitted
+        // for a category that never asked for them.
+        final keys = attributes.map((a) => a.key).toSet();
+        _attributeValues.removeWhere((key, _) => !keys.contains(key));
+        _variantPricing.clear();
+      });
+    } catch (_) {
+      if (mounted) setState(() => _categoryAttributes = const []);
+    } finally {
+      if (mounted) setState(() => _loadingAttributes = false);
+    }
+  }
+
+  /// Every value picked for [key], as a flat list. Single-valued types return
+  /// a one-item list so callers never have to branch on the storage shape.
+  List<String> _valuesFor(String key) {
+    final value = _attributeValues[key];
+    if (value == null) return const [];
+    if (value is List) {
+      return value
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    final single = value.toString().trim();
+    return single.isEmpty ? const [] : [single];
+  }
+
+  /// A Category Detail becomes a variant axis the moment the seller picks two
+  /// or more values for it — the same rule the web form uses. There is no
+  /// separate "this product has variants" toggle to find or forget.
+  List<CategoryAttributeDef> get _variantFields => _categoryAttributes
+      .where((a) => a.isChoice && _valuesFor(a.key).length >= 2)
+      .toList();
+
+  /// The cartesian product of every variant axis: {Size: M, Color: Red}, and
+  /// so on for each combination the seller's choices imply.
+  List<Map<String, String>> get _variantCombinations {
+    var rows = <Map<String, String>>[];
+    for (final field in _variantFields) {
+      final values = _valuesFor(field.key);
+      if (rows.isEmpty) {
+        rows = values.map((v) => {field.key: v}).toList();
+        continue;
+      }
+      final next = <Map<String, String>>[];
+      for (final row in rows) {
+        for (final value in values) {
+          next.add({...row, field.key: value});
+        }
+      }
+      rows = next;
+    }
+    return rows;
+  }
+
+  /// Stable identity for a combination, matching the web's `comboKey` so the
+  /// two clients key their pricing grids the same way.
+  String _comboKey(Map<String, String> combo) =>
+      _variantFields.map((f) => '${f.key}:${combo[f.key]}').join('|');
+
+  _VariantPriceRow _rowFor(Map<String, String> combo) => _variantPricing
+      .putIfAbsent(_comboKey(combo), () => _VariantPriceRow());
+
+  /// Toggles one option on a choice attribute. Selecting a second value is
+  /// what silently turns the attribute into a variant axis, so the pricing
+  /// grid has to be rebuilt whenever this changes.
+  void _toggleAttributeOption(String key, String option) {
+    Haptics.selection();
+    setState(() {
+      final current = List<String>.from(_valuesFor(key));
+      if (current.contains(option)) {
+        current.remove(option);
+      } else {
+        current.add(option);
+      }
+      _attributeValues[key] = current;
+      _variantPricing.clear();
+      _refreshAutoDescription();
+    });
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -126,21 +322,94 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
     }
   }
 
-  bool get _canProceedFromStep1 =>
-      _nameController.text.trim().isNotEmpty && _selectedCategory != null;
-  bool get _canProceedFromStep2 =>
-      (double.tryParse(_priceController.text.trim()) ?? 0) > 0 &&
-      (int.tryParse(_quantityController.text.trim()) ?? 0) > 0;
+  /// Parsed delivery estimate in days, or null when the field is not a valid
+  /// number. The field is validated to 1-30 before submit.
+  int? get _deliveryDays => int.tryParse(_deliveryEstimateController.text.trim());
+
+  /// Matches DESCRIPTION_WORD_LIMIT in the web sell form.
+  static const int _descriptionWordLimit = 50;
+
+  /// Mirrors `MAX_LISTING_STOCK` in `app/api/products/route.ts`, which rejects
+  /// a listing whose total stock exceeds it.
+  static const int _maxStock = 100;
+
+  /// The first thing wrong with [step], or null when it is complete.
+  ///
+  /// Returning a message rather than a bool is what lets "Next" say which
+  /// field is missing. Previously two coarse getters allowed a seller through
+  /// step 1 with no image, no subcategory and an upload still in flight — and
+  /// the failure only surfaced at submit, several steps later.
+  String? _validateStep(int step) {
+    switch (step) {
+      case 0:
+        if (_nameController.text.trim().isEmpty) {
+          return 'Product name is required.';
+        }
+        if (_isUploadingImage) {
+          return 'Wait for the image to finish uploading.';
+        }
+        if (_images.isEmpty) {
+          return 'Add at least 1 product image.';
+        }
+        if (_selectedCategory == null) {
+          return 'Select a category.';
+        }
+        final subcategories =
+            productSubcategories[_selectedCategory?.key] ?? const [];
+        if (subcategories.isNotEmpty && _selectedSubcategory == null) {
+          return 'Select a subcategory.';
+        }
+        for (final attribute in _categoryAttributes) {
+          if (attribute.required && _valuesFor(attribute.key).isEmpty) {
+            return '${attribute.label} is required.';
+          }
+        }
+        return null;
+
+      case 1:
+        final price = double.tryParse(_priceController.text.trim()) ?? 0;
+        if (price <= 0) return 'Enter a valid price.';
+        final quantity = int.tryParse(_quantityController.text.trim()) ?? 0;
+        if (quantity < 1 || quantity > _maxStock) {
+          return 'Quantity must be between 1 and $_maxStock.';
+        }
+        final combinations = _variantCombinations;
+        if (combinations.isNotEmpty) {
+          var total = 0;
+          for (final combination in combinations) {
+            final row = _variantPricing[_comboKey(combination)];
+            final rowPrice =
+                double.tryParse(row?.price.trim() ?? '') ?? price;
+            final rowStock = int.tryParse(row?.stock.trim() ?? '') ?? quantity;
+            if (rowPrice <= 0) return 'Each variant needs a valid price.';
+            if (rowStock < 0 || rowStock > _maxStock) {
+              return 'Each variant stock must be between 0 and $_maxStock.';
+            }
+            total += rowStock;
+          }
+          if (total > _maxStock) {
+            return 'Total variant stock cannot exceed $_maxStock.';
+          }
+        }
+        return null;
+
+      case 2:
+        final days = int.tryParse(_deliveryEstimateController.text.trim());
+        if (days == null || days < 1 || days > 30) {
+          return 'Enter an estimated delivery time between 1 and 30 days.';
+        }
+        return null;
+
+      default:
+        return null;
+    }
+  }
 
   void _next() {
-    if (_step == 0 && !_canProceedFromStep1) {
+    final problem = _validateStep(_step);
+    if (problem != null) {
       Haptics.error();
-      setState(() => _error = 'Name and category are required.');
-      return;
-    }
-    if (_step == 1 && !_canProceedFromStep2) {
-      Haptics.error();
-      setState(() => _error = 'Enter a valid price and quantity.');
+      setState(() => _error = problem);
       return;
     }
     Haptics.tap();
@@ -164,7 +433,21 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
   /// delivery-agreement checkbox from step 3) rather than submitting
   /// directly.
   void _openConfirmModal() {
+    // Re-check every earlier step, not just this one: values can be edited
+    // after passing their step, and the API rejects the same conditions.
+    for (var step = 0; step <= 2; step++) {
+      final problem = _validateStep(step);
+      if (problem != null) {
+        Haptics.error();
+        setState(() {
+          _step = step;
+          _error = problem;
+        });
+        return;
+      }
+    }
     if (!_deliveryAgreementConfirmed) {
+      Haptics.error();
       setState(
         () => _error = 'Please confirm motorcycle delivery suitability.',
       );
@@ -190,18 +473,51 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
       _error = null;
     });
     try {
-      final variants = _variantsEnabled
-          ? _variants
-                .where((v) => v.label.isNotEmpty && v.price.isNotEmpty)
-                .map(
-                  (v) => {
-                    'combination': {'option': v.label},
-                    'price': double.tryParse(v.price) ?? 0,
-                    'stock': int.tryParse(v.stock) ?? 0,
-                  },
-                )
-                .toList()
-          : null;
+      final basePrice = double.tryParse(_priceController.text.trim()) ?? 0;
+      final baseStock = int.tryParse(_quantityController.text.trim()) ?? 0;
+
+      // One entry per combination the Category Details imply. A blank cell in
+      // the grid falls back to the product-level price/stock, which is what
+      // makes "three sizes, same price" a zero-typing case.
+      final combinations = _variantCombinations;
+      final variants = combinations.isEmpty
+          ? null
+          : combinations.map((combination) {
+              final row = _variantPricing[_comboKey(combination)];
+              return {
+                'combination': combination,
+                'price':
+                    double.tryParse(row?.price.trim() ?? '') ?? basePrice,
+                'stock': int.tryParse(row?.stock.trim() ?? '') ?? baseStock,
+              };
+            }).toList();
+
+      final attributes = <Map<String, dynamic>>[];
+      for (final attribute in _categoryAttributes) {
+        final values = _valuesFor(attribute.key);
+        if (values.isEmpty) continue;
+        // Choice attributes stay arrays even when a single value is picked:
+        // the API stores them as JSON and the search filters match with
+        // `array_contains`, so collapsing to a scalar would make the listing
+        // invisible to its own category filters.
+        final Object value;
+        if (attribute.isChoice) {
+          value = values;
+        } else if (attribute.type == 'boolean') {
+          value = values.first == 'true';
+        } else if (attribute.type == 'number') {
+          value = num.tryParse(values.first) ?? values.first;
+        } else {
+          value = values.first;
+        }
+        attributes.add({
+          'key': attribute.key,
+          'label': attribute.label,
+          'value': value,
+          'searchable': attribute.searchable,
+          'filterable': attribute.filterable,
+        });
+      }
 
       final width = double.tryParse(_widthController.text.trim());
       final height = double.tryParse(_heightController.text.trim());
@@ -228,11 +544,17 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
             landmark: _landmarkController.text.trim().isEmpty
                 ? null
                 : _landmarkController.text.trim(),
-            deliveryEstimate: _deliveryEstimateController.text.trim().isEmpty
+            // The field now takes a plain number of days, but the API stores
+            // deliveryEstimate as free text and parses it back out for the
+            // "fast delivery" filter (isFastDelivery in
+            // app/api/products/route.ts). Sending a bare "3" would never match
+            // that parser, so it is formatted exactly as the web form sends it.
+            deliveryEstimate: _deliveryDays == null
                 ? null
-                : _deliveryEstimateController.text.trim(),
+                : '$_deliveryDays day${_deliveryDays == 1 ? '' : 's'}',
             campaignTag: _campaignTag,
             variants: variants,
+            attributes: attributes,
             estimatedWeightKg: double.tryParse(_weightController.text.trim()),
             dimensionsCm: (length != null && width != null && height != null)
                 ? {'length': length, 'width': width, 'height': height}
@@ -380,12 +702,130 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           _CategoryPickerField(
-            label: _selectedSubcategory?.label ?? 'Select a subcategory (optional)',
+            label: _selectedSubcategory?.label ?? 'Select a subcategory',
             icon: _selectedSubcategory?.icon,
             onTap: _pickSubcategory,
           ),
         ],
+        _buildCategoryDetails(),
       ],
+    );
+  }
+
+  /// The web form's "Category Details": structured, per-category fields that
+  /// feed search filters and, once two or more values are picked for one,
+  /// become the product's variants.
+  Widget _buildCategoryDetails() {
+    if (_selectedCategory == null) return const SizedBox.shrink();
+    if (_loadingAttributes) {
+      return const Padding(
+        padding: EdgeInsets.only(top: AppSpacing.lg),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_categoryAttributes.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppSpacing.xl),
+        Text(
+          'Category Details',
+          style: AppTypography.display(size: 15, weight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Pick more than one value for a field and it becomes a variant you '
+          'can price separately.',
+          style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (final attribute in _categoryAttributes)
+          _buildAttributeField(attribute),
+      ],
+    );
+  }
+
+  Widget _buildAttributeField(CategoryAttributeDef attribute) {
+    final selected = _valuesFor(attribute.key);
+    final custom =
+        selected.where((v) => !attribute.options.contains(v)).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            attribute.required ? '${attribute.label} *' : attribute.label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (attribute.isChoice) ...[
+            if (attribute.options.isNotEmpty)
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final option in attribute.options)
+                    _AttributeChip(
+                      label: option,
+                      selected: selected.contains(option),
+                      onTap: () =>
+                          _toggleAttributeOption(attribute.key, option),
+                    ),
+                ],
+              ),
+            // Values the seller typed themselves sit alongside the suggestions
+            // so they can be removed the same way.
+            if (custom.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final value in custom)
+                    _AttributeChip(
+                      label: value,
+                      selected: true,
+                      onTap: () =>
+                          _toggleAttributeOption(attribute.key, value),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            _CustomAttributeValueField(
+              hint: 'Add custom ${attribute.label.toLowerCase()}...',
+              onSubmitted: (value) {
+                final trimmed = value.trim();
+                if (trimmed.isEmpty || selected.contains(trimmed)) return;
+                _toggleAttributeOption(attribute.key, trimmed);
+              },
+            ),
+          ] else if (attribute.type == 'boolean')
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(attribute.label),
+              value:
+                  (_attributeValues[attribute.key]?.toString() ?? '') == 'true',
+              onChanged: (value) {
+                Haptics.selection();
+                setState(
+                  () => _attributeValues[attribute.key] = value.toString(),
+                );
+              },
+            )
+          else
+            AppTextField(
+              label: attribute.label,
+              keyboardType: attribute.type == 'number'
+                  ? TextInputType.number
+                  : TextInputType.text,
+              onChanged: (value) => _attributeValues[attribute.key] = value,
+            ),
+        ],
+      ),
     );
   }
 
@@ -401,6 +841,7 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
             _selectedSubcategory = null;
           });
           Navigator.of(context).pop();
+          _loadCategoryAttributes();
         },
       ),
     );
@@ -417,6 +858,9 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
         onSelected: (category) {
           setState(() => _selectedSubcategory = category);
           Navigator.of(context).pop();
+          // Subcategory attributes override category-level ones for the same
+          // key, so the list must be refetched, not merged client-side.
+          _loadCategoryAttributes();
         },
       ),
     );
@@ -440,70 +884,84 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
           keyboardType: TextInputType.number,
         ),
         const SizedBox(height: AppSpacing.lg),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('This product has variants (e.g. size, color)'),
-          value: _variantsEnabled,
-          onChanged: (v) {
-            Haptics.selection();
-            setState(() => _variantsEnabled = v);
-          },
-        ),
-        if (_variantsEnabled) ...[
-          for (var i = 0; i < _variants.length; i++) _buildVariantRow(i),
-          TextButton.icon(
-            onPressed: () {
-              Haptics.selection();
-              setState(() => _variants.add(_VariantDraft()));
-            },
-            icon: const Icon(LucideIcons.plus, size: 16),
-            label: const Text('Add Variant'),
-          ),
-        ],
+        _buildVariantInventory(),
       ],
     );
   }
 
-  Widget _buildVariantRow(int index) {
-    final variant = _variants[index];
+  /// Appears on its own once the seller's Category Details imply more than one
+  /// combination — no toggle, matching the web form. A blank price or stock
+  /// inherits the product-level value, so a seller adding three sizes at one
+  /// price fills in nothing here.
+  Widget _buildVariantInventory() {
+    final combinations = _variantCombinations;
+    if (combinations.isEmpty) return const SizedBox.shrink();
+
+    final fields = _variantFields;
+    final axes = fields.map((f) => f.label).join(' x ');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppSpacing.xl),
+        Text(
+          'Variant Inventory',
+          style: AppTypography.display(size: 15, weight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${combinations.length} combination${combinations.length == 1 ? '' : 's'} '
+          'from $axes. Leave a row blank to use the price and quantity above.',
+          style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (final combination in combinations)
+          _buildVariantInventoryRow(combination, fields),
+      ],
+    );
+  }
+
+  Widget _buildVariantInventoryRow(
+    Map<String, String> combination,
+    List<CategoryAttributeDef> fields,
+  ) {
+    final key = _comboKey(combination);
+    final row = _rowFor(combination);
+    final label =
+        fields.map((f) => '${f.label}: ${combination[f.key]}').join('  ·  ');
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
+      // Keyed on the combination so Flutter cannot reuse a previous row's text
+      // fields for a different variant when the seller changes their Category
+      // Details -- the price typed for "Size: M" must not reappear under
+      // "Size: L".
+      key: ValueKey(key),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: AppTextField(
-              label: 'Option (e.g. 42)',
-              onChanged: (v) => variant.label = v,
-            ),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: AppTextField(
-              label: 'Price',
-              keyboardType: TextInputType.number,
-              onChanged: (v) => variant.price = v,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: AppTextField(
-              label: 'Stock',
-              keyboardType: TextInputType.number,
-              onChanged: (v) => variant.stock = v,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Remove variant',
-            icon: const Icon(
-              LucideIcons.trash2,
-              size: 18,
-              color: AppColors.danger,
-            ),
-            onPressed: () {
-              Haptics.selection();
-              setState(() => _variants.removeAt(index));
-            },
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: 'Price',
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) => row.price = value,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: AppTextField(
+                  label: 'Stock',
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) => row.stock = value,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -527,7 +985,7 @@ class _SellProductScreenState extends ConsumerState<SellProductScreen> {
         const SizedBox(height: AppSpacing.md),
         AppTextField(
           controller: _deliveryEstimateController,
-          label: 'Delivery Estimate (optional)',
+          label: 'Delivery Estimate (days) *',
           hint: 'e.g. 1-2 days',
         ),
         const SizedBox(height: AppSpacing.md),
@@ -885,6 +1343,128 @@ class _StepIndicator extends StatelessWidget {
               ),
             ),
         ],
+      ],
+    );
+  }
+}
+
+/// A selectable value in a Category Details field. Multi-select by design:
+/// picking a second value is exactly what turns the attribute into a variant
+/// axis, so single-selection would make variants unreachable.
+class _AttributeChip extends StatelessWidget {
+  const _AttributeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : context.palette.card,
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(
+            color: selected ? AppColors.primary : context.palette.hairline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected ? LucideIcons.circleCheck : LucideIcons.plus,
+              size: 13,
+              color: selected ? Colors.white : context.palette.inkSecondary,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : context.palette.inkSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Free-text entry for a Category Details value the suggestion list doesn't
+/// cover. Stateful only to own its controller, so the field can clear itself
+/// once the value has been added as a chip.
+class _CustomAttributeValueField extends StatefulWidget {
+  const _CustomAttributeValueField({
+    required this.hint,
+    required this.onSubmitted,
+  });
+
+  final String hint;
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_CustomAttributeValueField> createState() =>
+      _CustomAttributeValueFieldState();
+}
+
+class _CustomAttributeValueFieldState
+    extends State<_CustomAttributeValueField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _controller.text;
+    if (value.trim().isEmpty) return;
+    widget.onSubmitted(value);
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submit(),
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: widget.hint,
+              hintStyle: TextStyle(
+                fontSize: 12,
+                color: context.palette.inkMuted,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadii.md),
+              ),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Add value',
+          icon: const Icon(LucideIcons.plus, size: 18),
+          onPressed: _submit,
+        ),
       ],
     );
   }

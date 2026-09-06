@@ -1,6 +1,8 @@
 import '../../../core/api/api_client.dart';
 import '../../marketplace/data/product_models.dart';
 
+import 'category_attribute.dart';
+
 class MyProductsResult {
   const MyProductsResult({
     required this.products,
@@ -55,6 +57,7 @@ class SellerProductsRepository {
     String? deliveryEstimate,
     String? campaignTag,
     List<Map<String, dynamic>>? variants,
+    List<Map<String, dynamic>>? attributes,
     double? estimatedWeightKg,
     Map<String, double>? dimensionsCm,
   }) async {
@@ -79,6 +82,11 @@ class SellerProductsRepository {
         'deliveryEstimate': ?deliveryEstimate,
         'campaignTag': ?campaignTag,
         if (variants != null && variants.isNotEmpty) 'variants': variants,
+        // Structured Category Details. `POST /api/products` normalizes each
+        // entry to {key,label,value,searchable,filterable} and stores them as
+        // ProductAttributeValue rows, which is what makes a listing turn up
+        // under the search filters for its category.
+        if (attributes != null && attributes.isNotEmpty) 'attributes': attributes,
         'estimatedWeightKg': ?estimatedWeightKg,
         'dimensionsCm': ?dimensionsCm,
       },
@@ -103,5 +111,29 @@ class SellerProductsRepository {
 
   Future<void> deleteProduct(String productId) {
     return _api.delete('/api/products/$productId');
+  }
+
+  /// `GET /api/category-attributes` — the structured fields for a category,
+  /// with their options already hydrated server-side.
+  ///
+  /// Returns an empty list rather than throwing when the category has no
+  /// attributes configured: a category with no details is a normal state, and
+  /// the sell flow must stay usable for it.
+  Future<List<CategoryAttributeDef>> fetchCategoryAttributes({
+    required String categoryKey,
+    String? subcategoryKey,
+  }) async {
+    final response = await _api.get(
+      '/api/category-attributes',
+      queryParameters: {
+        'categoryKey': categoryKey,
+        'subcategoryKey': ?subcategoryKey,
+      },
+    );
+    return (response['attributes'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => CategoryAttributeDef.fromJson(e.cast<String, dynamic>()))
+        .where((a) => a.key.isNotEmpty)
+        .toList();
   }
 }
