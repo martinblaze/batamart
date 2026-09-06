@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../../core/config/env.dart';
 import '../../../core/haptics/haptics.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -21,6 +23,7 @@ import '../../../core/widgets/images/app_network_image.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../cart/state/cart_controller.dart';
+import '../data/product_description.dart';
 import '../data/product_models.dart';
 import '../state/products_providers.dart';
 import '../../../core/utils/money.dart';
@@ -149,13 +152,44 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         }
       });
 
-  void _share() {
-    Clipboard.setData(
-      ClipboardData(text: 'https://batamart.app/product/${widget.productId}'),
-    );
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Product link copied.')));
+  /// Opens the OS share sheet — Copy Link, Messages, WhatsApp, and whatever
+  /// else the device offers — rather than silently copying to the clipboard.
+  ///
+  /// The URL is built from [Env.appOrigin]. It was previously hardcoded to
+  /// `batamart.app`, a domain this project does not own, so every link shared
+  /// from the app led nowhere.
+  Future<void> _share(Product product) async {
+    Haptics.tap();
+    final link = '${Env.appOrigin}/product/${widget.productId}';
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: '${product.name} on BataMart\n$link',
+          subject: product.name,
+          // Anchors the iPad popover; without it share throws there rather
+          // than presenting.
+          sharePositionOrigin: _shareOrigin(),
+        ),
+      );
+    } catch (_) {
+      // Some devices have no share targets at all — fall back to the old
+      // behaviour rather than failing silently.
+      if (!mounted) return;
+      await Clipboard.setData(ClipboardData(text: link));
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Product link copied.')));
+    }
+  }
+
+  /// iPad presents the share sheet as a popover and needs a source rect. The
+  /// widget's own bounds are used when they can be resolved, with a small
+  /// top-right box as a fallback.
+  Rect? _shareOrigin() {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero) & box.size;
   }
 
   void _report() => _requireLoginThen(() {
@@ -246,7 +280,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         },
         onAddToCart: _addToCart,
         onBuyNow: _buyNow,
-        onShare: _share,
+        onShare: () => _share(product),
         onReport: _report,
       ),
       // The loading and error states keep a conventional bar — there is no
@@ -587,13 +621,58 @@ class _ProductDetailBodyState extends ConsumerState<_ProductDetailBody> {
         const SizedBox(height: AppSpacing.lg),
         const Text('Description', style: TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
-        _DescriptionText(
-          text: product.description?.isNotEmpty == true
-              ? product.description!
-              : 'No description provided.',
-          expanded: _descriptionExpanded,
-          onToggle: () =>
-              setState(() => _descriptionExpanded = !_descriptionExpanded),
+        // Older listings store `{variants, tags}` as base64 in this field
+        // instead of prose. Rendering it raw showed buyers a wall of
+        // "VARIANTS_V2::eyJ2YXJp..." where the description should be.
+        Builder(
+          builder: (context) {
+            final parsed = ProductDescription.parse(product.description);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _DescriptionText(
+                  text: parsed.text.isNotEmpty
+                      ? parsed.text
+                      : 'No description provided.',
+                  expanded: _descriptionExpanded,
+                  onToggle: () => setState(
+                    () => _descriptionExpanded = !_descriptionExpanded,
+                  ),
+                ),
+                // The tags recovered from the encoding are the only content
+                // those listings actually carry, so they stand in for prose
+                // the same way they do on the web product page.
+                if (parsed.tags.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      for (final tag in parsed.tags)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.palette.page,
+                            borderRadius: BorderRadius.circular(AppRadii.sm),
+                            border: Border.all(color: context.palette.hairline),
+                          ),
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: context.palette.inkSecondary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.lg),
         _DeliveryInfoBlock(deliveryEstimate: product.deliveryEstimate),
