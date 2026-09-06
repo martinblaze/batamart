@@ -28,9 +28,19 @@ class SellerCatalogScreen extends ConsumerWidget {
       body: resultAsync.when(
         data: (result) {
           if (result.products.isEmpty) {
-            return const EmptyState(
+            // TEMPORARY DIAGNOSTIC — remove once the empty-catalog bug is
+            // understood. The backend query was verified correct against the
+            // live database (33 sellers, right counts), and every client path
+            // resolves a real seller id, so the remaining unknown is what this
+            // device actually sends and receives. Logs are not reachable on a
+            // sideloaded release build, so it is surfaced on screen.
+            return EmptyState(
               title: 'No products yet',
-              message: 'This seller has no active listings right now.',
+              message:
+                  'This seller has no active listings right now.'
+                  '\n\ndebug — sellerId: "$sellerId"'
+                  '\ntotal: ${result.total} · page: ${result.page}'
+                  ' · pages: ${result.pages}',
             );
           }
           return RefreshIndicator(
