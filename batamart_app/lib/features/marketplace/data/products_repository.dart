@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import '../../../core/api/api_client.dart';
+import 'product_filter_models.dart';
 import 'product_models.dart';
 
 class ProductFeed {
@@ -73,6 +76,7 @@ class ProductsRepository {
     double? minRating,
     bool inStock = false,
     bool fastDeliveryOnly = false,
+    Map<String, List<String>>? attributes,
     int page = 1,
     int limit = 40,
   }) async {
@@ -107,6 +111,11 @@ class ProductsRepository {
         // a "fast" heuristic (BACKEND_REFERENCE.md §3.3's product-filters
         // notes / `app/api/products/route.ts`'s `isFastDelivery()`).
         if (fastDeliveryOnly) 'delivery': 'fast',
+        // Structured attribute/variant filters, as a JSON object keyed by
+        // attribute key. `buildAttributeFiltersFromQuery` in
+        // app/api/products/route.ts parses this exact shape.
+        if (attributes != null && attributes.isNotEmpty)
+          'attributes': jsonEncode(attributes),
         'page': page,
         'limit': limit,
       },
@@ -205,5 +214,34 @@ class ProductsRepository {
       '/api/reviews/product',
       queryParameters: {'productId': productId, 'page': page},
     );
+  }
+
+  /// `GET /api/product-filters` — the filter groups available for the current
+  /// category/search, with per-value counts.
+  ///
+  /// Returns [ProductFilters.empty] on failure rather than throwing: filters
+  /// are an aid to searching, and losing them must not take the results grid
+  /// down with them.
+  Future<ProductFilters> fetchProductFilters({
+    String? categoryKey,
+    String? subcategoryKey,
+    String? query,
+    Map<String, List<String>>? attributes,
+  }) async {
+    try {
+      final response = await _api.get(
+        '/api/product-filters',
+        queryParameters: {
+          'categoryKey': ?categoryKey,
+          'subcategoryKey': ?subcategoryKey,
+          if (query != null && query.isNotEmpty) 'q': query,
+          if (attributes != null && attributes.isNotEmpty)
+            'attributes': jsonEncode(attributes),
+        },
+      );
+      return ProductFilters.fromJson(response);
+    } catch (_) {
+      return ProductFilters.empty;
+    }
   }
 }

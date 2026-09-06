@@ -17,6 +17,7 @@ import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../../core/widgets/states/loading_skeleton.dart';
 import '../../auth/state/auth_controller.dart';
+import '../../../core/haptics/haptics.dart';
 import '../state/products_providers.dart';
 import '../state/recent_searches.dart';
 import '../../../core/motion/motion.dart';
@@ -232,6 +233,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             : null,
                         reviewCount: product.totalReviews,
                         location: product.landmark,
+                        deliveryEstimate: product.deliveryEstimate,
+                        quantity: product.quantity,
+                        soldOut: product.isOutOfStock,
                         onTap: () => context.push(
                           AppRoutes.productDetailPath(product.id),
                         ),
@@ -352,6 +356,25 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   late bool _inStock = widget.initial.inStock;
   late bool _fastDelivery = widget.initial.fastDeliveryOnly;
 
+  /// Deep-copied so toggling a chip does not mutate the live query before the
+  /// seller presses Apply — the inner lists are shared otherwise.
+  late final Map<String, List<String>> _attributes = {
+    for (final entry in widget.initial.attributes.entries)
+      entry.key: List<String>.from(entry.value),
+  };
+
+  void _toggleAttributeValue(String key, String value) {
+    setState(() {
+      final values = _attributes.putIfAbsent(key, () => <String>[]);
+      if (values.contains(value)) {
+        values.remove(value);
+      } else {
+        values.add(value);
+      }
+      if (values.isEmpty) _attributes.remove(key);
+    });
+  }
+
   @override
   void dispose() {
     _minController.dispose();
@@ -391,6 +414,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       _minRating = null;
                       _inStock = false;
                       _fastDelivery = false;
+                      _attributes.clear();
                     }),
                     child: const Text('Clear all'),
                   ),
@@ -478,6 +502,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 value: _fastDelivery,
                 onChanged: (value) => setState(() => _fastDelivery = value),
               ),
+              _buildAttributeFilters(),
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
                 label: 'Apply Filters',
@@ -493,6 +518,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                       clearMinRating: _minRating == null,
                       inStock: _inStock,
                       fastDeliveryOnly: _fastDelivery,
+                      attributes: Map<String, List<String>>.from(_attributes),
                     ),
                   );
                   Navigator.of(context).pop();
@@ -502,6 +528,66 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Attribute and variant filter groups, straight from
+/// `GET /api/product-filters`.
+///
+/// The list is dynamic rather than hardcoded because it depends on what is
+/// actually listed: a "Storage" group exists only while some in-scope product
+/// carries that key, whether as a Category Detail or inside a variant
+/// combination. That is the same rail the web search shows.
+extension _AttributeFilters on _FilterSheetState {
+  Widget _buildAttributeFilters() {
+    final filtersAsync = ref.watch(searchFiltersProvider);
+
+    return filtersAsync.when(
+      // Filters are supplementary: while they load, or if they fail, the rest
+      // of the sheet stays usable rather than showing an error in its place.
+      loading: () => const Padding(
+        padding: EdgeInsets.only(top: AppSpacing.lg),
+        child: Center(child: SizedBox(
+          height: 18,
+          width: 18,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        )),
+      ),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (filters) {
+        if (filters.filters.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final group in filters.filters) ...[
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                group.label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final option in group.options)
+                    FilterChip(
+                      label: Text('${option.value}  ${option.count}'),
+                      selected:
+                          _attributes[group.key]?.contains(option.value) ??
+                              false,
+                      onSelected: (_) {
+                        Haptics.selection();
+                        _toggleAttributeValue(group.key, option.value);
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

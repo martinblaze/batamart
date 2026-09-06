@@ -31,6 +31,8 @@ class ProductCard extends StatelessWidget {
     this.category,
     this.soldOut = false,
     this.campaignTag,
+    this.deliveryEstimate,
+    this.quantity,
     this.isFavorite = false,
     this.onTap,
     this.onFavoriteTap,
@@ -52,6 +54,13 @@ class ProductCard extends StatelessWidget {
 
   final bool soldOut;
   final String? campaignTag;
+
+  /// `Product.deliveryEstimate` — free text as stored ("3 days"), shown as-is.
+  final String? deliveryEstimate;
+
+  /// `Product.quantity`. Shown as remaining stock so a buyer can see scarcity
+  /// on the card rather than only after opening the product.
+  final int? quantity;
   final bool isFavorite;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
@@ -201,10 +210,58 @@ class ProductCard extends StatelessWidget {
               ],
             ),
           ],
+
+          // Delivery time and remaining stock: the two things a buyer weighs
+          // against price on a listing grid, and previously only visible after
+          // opening the product.
+          if (_hasFulfilmentMeta) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                if (deliveryEstimate != null &&
+                    deliveryEstimate!.trim().isNotEmpty) ...[
+                  Icon(LucideIcons.truck, size: 10, color: p.inkMuted),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: Text(
+                      deliveryEstimate!.trim(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.label(size: 9, color: p.inkMuted),
+                    ),
+                  ),
+                ],
+                if (_showsDelivery && _showsQuantity)
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                    child: Container(width: 1, height: 9, color: p.hairline),
+                  ),
+                if (_showsQuantity)
+                  Text(
+                    // Low stock is worth a nudge; anything higher is just noise.
+                    quantity! <= 5 ? 'ONLY $quantity LEFT' : '$quantity LEFT',
+                    style: AppTypography.label(
+                      size: 9,
+                      color: quantity! <= 5 ? AppColors.danger : p.inkMuted,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
+
+  bool get _showsDelivery =>
+      deliveryEstimate != null && deliveryEstimate!.trim().isNotEmpty;
+
+  /// Sold-out is already flagged over the photograph, so repeating "0 left"
+  /// here would be redundant.
+  bool get _showsQuantity => quantity != null && quantity! > 0 && !soldOut;
+
+  bool get _hasFulfilmentMeta => _showsDelivery || _showsQuantity;
 }
 
 /// A solid flag on the photograph. Solid rather than tinted because it has to

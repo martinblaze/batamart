@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../data/product_filter_models.dart';
 
 import '../data/product_models.dart';
 import '../data/products_repository.dart';
@@ -26,6 +27,7 @@ class ProductSearchQuery {
     this.minRating,
     this.inStock = false,
     this.fastDeliveryOnly = false,
+    this.attributes = const {},
     this.page = 1,
   });
 
@@ -42,6 +44,11 @@ class ProductSearchQuery {
   final double? minRating;
   final bool inStock;
   final bool fastDeliveryOnly;
+
+  /// Attribute/variant filters, keyed by attribute key. Sourced from
+  /// `GET /api/product-filters` and sent back to `/api/products` as JSON.
+  final Map<String, List<String>> attributes;
+
   final int page;
 
   /// How many non-default filters are active — drives the filter button's
@@ -55,7 +62,10 @@ class ProductSearchQuery {
       (maxPrice != null ? 1 : 0) +
       (minRating != null ? 1 : 0) +
       (inStock ? 1 : 0) +
-      (fastDeliveryOnly ? 1 : 0);
+      (fastDeliveryOnly ? 1 : 0) +
+      // Each *group* with a selection counts once, not each value, so picking
+      // three sizes reads as one active filter rather than three.
+      attributes.values.where((values) => values.isNotEmpty).length;
 
   ProductSearchQuery copyWith({
     String? query,
@@ -69,6 +79,7 @@ class ProductSearchQuery {
     double? minRating,
     bool? inStock,
     bool? fastDeliveryOnly,
+    Map<String, List<String>>? attributes,
     int? page,
     bool clearCategory = false,
     bool clearMinPrice = false,
@@ -88,6 +99,9 @@ class ProductSearchQuery {
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
       inStock: inStock ?? this.inStock,
       fastDeliveryOnly: fastDeliveryOnly ?? this.fastDeliveryOnly,
+      // Category changes clear these too: an attribute filter from the old
+      // category matches nothing in the new one and silently empties the grid.
+      attributes: clearCategory ? const {} : (attributes ?? this.attributes),
       page: page ?? this.page,
     );
   }
@@ -109,6 +123,7 @@ final dealsResultsProvider = FutureProvider.autoDispose<ProductSearchResult>((
         categoryKey: query.categoryKey,
         subcategoryKey: query.subcategoryKey,
         zone: query.zone,
+        attributes: query.attributes,
         sortBy: query.sortBy,
         minPrice: query.minPrice,
         maxPrice: query.maxPrice,
@@ -144,6 +159,7 @@ final searchResultsProvider = FutureProvider.autoDispose<ProductSearchResult>((
         categoryKey: query.categoryKey,
         subcategoryKey: query.subcategoryKey,
         zone: query.zone,
+        attributes: query.attributes,
         sortBy: query.sortBy,
         minPrice: query.minPrice,
         maxPrice: query.maxPrice,
@@ -213,3 +229,24 @@ final sellerDirectoryProvider = FutureProvider.autoDispose<List<ProductSeller>>(
     return bySellerId.values.toList();
   },
 );
+
+/// Filter groups for whatever the Search screen is currently showing.
+///
+/// Watches [searchQueryProvider] so the option counts track the active
+/// category and search text — the same behaviour as the web filter rail, where
+/// narrowing the category narrows the filters on offer. The selected
+/// attributes are deliberately NOT part of the request: including them would
+/// make each group re-count against its own selection and options would
+/// disappear as soon as they were picked.
+final searchFiltersProvider = FutureProvider.autoDispose<ProductFilters>((
+  ref,
+) {
+  final query = ref.watch(searchQueryProvider);
+  return ref
+      .watch(productsRepositoryProvider)
+      .fetchProductFilters(
+        categoryKey: query.categoryKey,
+        subcategoryKey: query.subcategoryKey,
+        query: query.query,
+      );
+});
