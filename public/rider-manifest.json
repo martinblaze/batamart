@@ -6,6 +6,8 @@
   "start_url": "/rider-dashboard?app=true&rider=true",
   "scope": "/",
   "display": "standalone",
+  "prefer_related_applications": true,
+  "related_applications": [],
   "background_color": "#121212",
   "theme_color": "#121212",
   "orientation": "portrait",

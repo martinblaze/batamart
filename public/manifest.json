@@ -4,6 +4,8 @@
   "description": "Student-to-student marketplace at UNIZIK",
   "start_url": "/marketplace?app=true",
   "display": "standalone",
+  "prefer_related_applications": true,
+  "related_applications": [],
   "background_color": "#ffffff",
   "theme_color": "#1a3f8f",
   "orientation": "portrait",
