@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { MagneticButton } from './MagneticButton'
 import { Reveal } from './motion'
+import { AndroidAppCtaFooter } from './AndroidAppCta'
 
 const COLUMNS = [
   {
@@ -73,6 +74,9 @@ export function MarketingFooter() {
                 <Link href="/marketplace" className="mk-mono opacity-60 hover:opacity-100 transition-opacity">
                   Browse first
                 </Link>
+              </div>
+              <div className="max-w-[26rem]">
+                <AndroidAppCtaFooter />
               </div>
             </Reveal>
           </div>

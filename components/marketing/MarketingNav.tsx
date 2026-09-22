@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { MagneticButton, Magnetic } from './MagneticButton'
+import { AndroidAppCtaNav } from './AndroidAppCta'
 
 const LINKS = [
   { label: 'Marketplace', href: '/marketplace' },
@@ -126,7 +127,11 @@ export function MarketingNav({ onDark = true }: { onDark?: boolean }) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Android only, landing page only. Fills the slot the desktop CTA
+                leaves empty on a phone. */}
+            <AndroidAppCtaNav />
+
             <div className="hidden lg:block">
               <MagneticButton
                 href={authed ? '/marketplace' : '/signup'}
