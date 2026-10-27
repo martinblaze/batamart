@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
-import { createNotification } from '@/lib/notification'
+import { notifyHandedOver } from '@/lib/notify/events'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,13 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return tx.order.findUnique({ where: { id: order.id }, select: { id: true, status: true, pickedUpAt: true } })
     })
 
-    createNotification({
-      userId: order.buyerId,
-      type: 'ORDER_PICKED_UP',
-      title: 'Picked up from the vendor',
-      message: `Your order #${order.orderNumber} has been collected and is heading to our sorting hub.`,
-      orderId: order.id,
-    }).catch(() => {})
+    await notifyHandedOver({ id: order.id, orderNumber: order.orderNumber, buyerId: order.buyerId })
 
     return NextResponse.json({ success: true, order: updated })
   } catch (error) {

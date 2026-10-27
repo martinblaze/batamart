@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { notifyVendorConfirmed } from '@/lib/notify/events';
 import jwt from 'jsonwebtoken';
 import { OrderStatus } from '@prisma/client';
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request';
@@ -246,6 +247,10 @@ export async function PATCH(
         dispute: { select: { id: true, status: true, createdAt: true, resolution: true, refundAmount: true } },
       },
     });
+
+    if (currentStatus === 'PENDING' && nextStatus === 'PROCESSING') {
+      await notifyVendorConfirmed({ id: existingOrder.id, orderNumber: existingOrder.orderNumber, buyerId: existingOrder.buyerId })
+    }
 
     // No rider notification needed here — riders were already notified when
     // the order was placed (see app/api/payments/verify/route.ts) and can

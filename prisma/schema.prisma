@@ -144,6 +144,9 @@ model User {
   fieldMarketer            FieldMarketer?
   fieldMarketerSignup      FieldMarketerSignup?
 
+  deviceTokens             DeviceToken[]
+  notificationPreference   NotificationPreference?
+
   @@index([role])
   @@index([trustLevel])
   @@index([isSuspended])
@@ -1069,6 +1072,14 @@ enum NotificationType {
   PRODUCT_UNDER_REVIEW
   SELLER_STRIKE_ISSUED
   CAMPAIGN_ANNOUNCEMENT
+  DEAL_ALERT
+  REMINDER
+  WALLET_ACTIVITY
+  SECURITY_ALERT
+  WELCOME
+  PROMO
+  ORDER_UPDATE
+  DIGEST
 
   @@schema("public")
 }
@@ -1165,6 +1176,51 @@ model FieldMarketerSignup {
   referredUser   User          @relation(fields: [referredUserId], references: [id], onDelete: Cascade)
 
   @@index([marketerId])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+
+// A native-app push address (FCM token). One user can have several devices.
+model DeviceToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  platform  String   @default("android")
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@schema("public")
+}
+
+// Per-category opt-outs. Order, money and security messages are always sent;
+// these only gate reminders, deals and marketing.
+model NotificationPreference {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  pushEnabled  Boolean  @default(true)
+  emailEnabled Boolean  @default(true)
+  reminders    Boolean  @default(true)
+  deals        Boolean  @default(true)
+  marketing    Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+// Idempotency + rotation ledger: (userId, key) is unique, so the same
+// reminder is never sent twice. userId may be the literal "system" for
+// bookkeeping rows that aren't tied to a person.
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
   @@index([createdAt])
   @@schema("public")
 }

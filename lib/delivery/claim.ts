@@ -6,6 +6,7 @@
 // marks the order delivered (app/api/orders/confirm-delivery/route.ts).
 
 import { prisma } from '@/lib/prisma'
+import { notifyRiderComing } from '@/lib/notify/events'
 import { CAMPAIGNS, isCampaignDeliverable, isValidCampaignKey } from '@/lib/campaigns'
 import { formatDeliveryDate, getEffectiveDeliveryDate, parseReadyDays } from '@/lib/delivery/schedule'
 
@@ -142,6 +143,9 @@ export async function claimPickupOrders(
   }
 
   const claimed = eligible.filter(o => claimedIds.includes(o.id))
+  await Promise.allSettled(
+    claimed.map(o => notifyRiderComing({ id: o.id, orderNumber: o.orderNumber, sellerId: o.sellerId }, rider.name || 'A rider')),
+  )
   import('@/lib/notification')
     .then(({ notifyRiderAssigned }) =>
       Promise.allSettled(

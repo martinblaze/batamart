@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyPasswordChanged } from '@/lib/notify/events'
 import { verifyOTP, hashPassword } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: { password: hashedPassword },
     })
+    await notifyPasswordChanged(user.id)
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/api/api_exception.dart';
+import '../../../core/push/push_notification_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../data/auth_models.dart';
 import '../data/auth_repository.dart';
@@ -23,6 +26,13 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
 class AuthController extends StateNotifier<AuthState> {
   AuthController(this._repository)
     : super(const AuthState(status: AuthStatus.unknown)) {
+    // Whenever someone becomes signed in (login, signup or a restored
+    // session), give the server this device's push address.
+    addListener((s) {
+      if (s.status == AuthStatus.authenticated) {
+        unawaited(PushNotificationService.current?.registerWithBackend());
+      }
+    });
     _bootstrap();
   }
 
@@ -259,6 +269,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> retryAfterSuspension() => _bootstrap();
 
   Future<void> logout() async {
+    await PushNotificationService.current?.unregisterFromBackend();
     await TokenStorage.instance.clearToken();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }

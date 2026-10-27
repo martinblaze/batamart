@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
-import { createNotification } from '@/lib/notification'
+import { notifyOutForDelivery } from '@/lib/notify/events'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,17 +48,9 @@ export async function POST(request: NextRequest) {
       })),
     })
 
-    Promise.allSettled(
-      taken.map(o =>
-        createNotification({
-          userId: o.buyerId,
-          type: 'ORDER_ON_THE_WAY',
-          title: 'Out for delivery',
-          message: `${user.name || 'Your rider'} is on the way with your order #${o.orderNumber}. When you receive it, mark it as delivered.`,
-          orderId: o.id,
-        }),
-      ),
-    ).catch(() => {})
+    await Promise.allSettled(
+      taken.map(o => notifyOutForDelivery({ id: o.id, orderNumber: o.orderNumber, buyerId: o.buyerId }, user.name || 'Your rider')),
+    )
 
     return NextResponse.json({ success: true, taken: taken.length })
   } catch (error) {

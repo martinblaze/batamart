@@ -11,6 +11,7 @@ import { getDeliveryFee } from '@/lib/delivery/pricing'
 import { resolveCheckoutItems } from '@/lib/checkout/resolve-items'
 import { verifySpendPin } from '@/lib/wallet/pin'
 import { createOrders } from '../initialize/route'
+import { notifyWalletPayment } from '@/lib/notify/events'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
 
     // Take the money first, atomically: the guard fails if a concurrent
     // spend or withdrawal already used the balance.
+    let walletBalanceAfter = 0
     const debited = await prisma.$transaction(async tx => {
       const res = await tx.user.updateMany({
         where: { id: user.id, availableBalance: { gte: total } },
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
       })
       if (res.count !== 1) return false
       const after = await tx.user.findUnique({ where: { id: user.id }, select: { availableBalance: true } })
-      const balanceAfter = Number(after?.availableBalance ?? 0)
+      const balanceAfter = walletBalanceAfter = Number(after?.availableBalance ?? 0)
       await tx.transaction.create({
         data: {
           userId: user.id,
@@ -158,6 +160,8 @@ export async function POST(request: NextRequest) {
         if (buyer.universityId) push.notifyAvailableRiders(orders[0].orderNumber, buyer.universityId)
       })
       .catch(err => console.error('wallet-pay push failed:', err))
+
+    await notifyWalletPayment(user.id, orders[0].orderNumber, total, walletBalanceAfter)
 
     return json({
       success: true,

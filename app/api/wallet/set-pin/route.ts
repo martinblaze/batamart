@@ -1,6 +1,7 @@
 ﻿// app/api/wallet/set-pin/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyPinChanged } from '@/lib/notify/events'
 import { getUserFromRequest, verifyOTP, checkSuspension } from '@/lib/auth/auth'
 import bcrypt from 'bcryptjs'
 
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
           withdrawalPinLockedUntil: null,
         },
       })
+      await notifyPinChanged(user.id, 'set')
       return NextResponse.json({ success: true, message: 'Withdrawal PIN set successfully' })
     }
 
@@ -107,6 +109,7 @@ export async function POST(request: NextRequest) {
           withdrawalPinLockedUntil: null,
         },
       })
+      await notifyPinChanged(user.id, 'changed')
       return NextResponse.json({ success: true, message: 'PIN changed successfully' })
     }
 
@@ -136,6 +139,7 @@ export async function POST(request: NextRequest) {
           withdrawalPinLockedUntil: null,
         },
       })
+      await notifyPinChanged(user.id, 'reset')
       return NextResponse.json({ success: true, message: 'PIN reset successfully' })
     }
 

@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyReceipt, notifyDeliveredToSeller, notifyRiderPaid, notifyReferralReward } from '@/lib/notify/events'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { processReferralReward } from '@/lib/referral/processReferralReward'
 import { RIDER_SHARE_PERCENT } from '@/lib/delivery/commission'
@@ -295,19 +296,21 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    for (const riderId of Array.from(new Set([pickupRiderId, deliveryRiderId].filter(Boolean) as string[]))) {
-      import('@/lib/notification')
-        .then(({ createNotification }) =>
-          createNotification({
-            userId: riderId,
-            type: 'ORDER_DELIVERED',
-            title: 'Delivery confirmed',
-            message: `The buyer confirmed Order #${order.orderNumber}. Your fee is in your wallet.`,
-            orderId,
-          }),
-        )
-        .catch(() => {})
-    }
+    // Everyone with a stake hears about it. Awaited: serverless can freeze
+    // the function the moment the response is returned.
+    const riderIds = Array.from(new Set([pickupRiderId, deliveryRiderId].filter(Boolean) as string[]))
+    const splitRiders = !!(pickupRiderId && deliveryRiderId && pickupRiderId !== deliveryRiderId)
+    const reward = await prisma.referralReward.findUnique({ where: { orderId }, select: { referrerId: true, amount: true } }).catch(() => null)
+    await Promise.allSettled([
+      notifyReceipt(
+        order.buyerId,
+        { id: order.id, orderNumber: order.orderNumber, totalAmount: order.totalAmount, deliveryFee: order.deliveryFee, productPrice: order.productPrice },
+        `Order for ${order.product.name}.`,
+      ),
+      notifyDeliveredToSeller({ id: order.id, orderNumber: order.orderNumber, sellerId: order.sellerId }),
+      ...riderIds.map(id => notifyRiderPaid(id, order.orderNumber, splitRiders ? riderShare / 2 : riderShare)),
+      ...(reward ? [notifyReferralReward(reward.referrerId, reward.amount, order.orderNumber)] : []),
+    ])
 
     return NextResponse.json({
       success: true,

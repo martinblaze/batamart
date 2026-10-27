@@ -677,6 +677,7 @@ export default function MyProfilePage() {
               <div className="px-5 py-4 border-b border-border">
                 <h3 className="ui-mono ui-mono-sm text-ink">Order Notifications</h3>
                 <p className="text-xs text-ink-secondary mt-0.5">Get alerted when your order is picked up and delivered</p>
+                <Link href="/notification-settings" className="ui-mono ui-mono-sm mt-2 inline-block text-primary">Choose what you receive</Link>
               </div>
 
               <div className="px-5 py-4">

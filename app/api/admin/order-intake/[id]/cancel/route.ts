@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notification'
+import { notifyOrderCancelledRefund } from '@/lib/notify/events'
 
 // Cancels an order the vendor cannot supply, refunds the buyer in full to
 // their wallet, releases the vendor's escrow, and puts the stock back. The
@@ -81,13 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     await Promise.all([
-      createNotification({
-        userId: result.order.buyerId,
-        type: 'ORDER_CANCELLED',
-        title: 'Order cancelled and refunded',
-        message: `Order #${result.order.orderNumber} was cancelled: ${reason}. ₦${result.refund.toLocaleString('en-NG')} has been refunded to your wallet.`,
-        orderId: result.order.id,
-      }),
+      notifyOrderCancelledRefund(result.order, reason, result.refund),
       createNotification({
         userId: result.order.sellerId,
         type: 'ORDER_CANCELLED',

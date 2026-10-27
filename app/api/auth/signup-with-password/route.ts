@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyWelcome, notifyReferralJoined, notifyMarketerSignup } from '@/lib/notify/events'
 import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
 
     // ── Field marketer payout ──────────────────────────────────────────────
     // Best-effort: a failed credit must never fail the signup itself.
+    let marketerNotice: { userId: string; total: number } | null = null
     if (fieldMarketerCode && typeof fieldMarketerCode === 'string') {
       try {
         const marketer = await prisma.fieldMarketer.findUnique({
@@ -189,7 +191,7 @@ export async function POST(request: NextRequest) {
           select: { id: true, userId: true },
         })
         if (marketer && marketer.userId !== user.id) {
-          await prisma.$transaction([
+          const [, updatedMarketer] = await prisma.$transaction([
             prisma.fieldMarketerSignup.create({
               data: {
                 marketerId:     marketer.id,
@@ -207,11 +209,19 @@ export async function POST(request: NextRequest) {
               },
             }),
           ])
+          marketerNotice = { userId: marketer.userId, total: updatedMarketer.totalSignups }
         }
       } catch (err) {
         console.error('Field marketer credit failed for new user', user.id, err)
       }
     }
+
+    // Notifications: awaited so a serverless function isn't frozen mid-send.
+    await Promise.allSettled([
+      notifyWelcome(user.id, user.name),
+      ...(referredById ? [notifyReferralJoined(referredById, user.name)] : []),
+      ...(marketerNotice ? [notifyMarketerSignup(marketerNotice.userId, FIELD_MARKETER_PAY_PER_SIGNUP, marketerNotice.total)] : []),
+    ])
 
     const token = generateToken(user.id, user.phone)
 

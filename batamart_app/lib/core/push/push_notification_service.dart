@@ -1,6 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+
+import '../api/api_client.dart';
+import '../storage/token_storage.dart';
 
 /// Client-side half of native push (BUILD_PLAN Phase 8 — "build FCM now,
 /// flag the backend gap"). BACKEND_REFERENCE.md §3.10 only documents Web
@@ -25,7 +30,18 @@ import 'package:flutter/foundation.dart';
 /// `productId`); confirm that shape with the backend team when the new
 /// FCM endpoint is built.
 class PushNotificationService {
-  PushNotificationService({this.onNotificationTap});
+  PushNotificationService({this.onNotificationTap, this.onForegroundMessage}) {
+    current = this;
+  }
+
+  /// The running instance, so login/logout can register or drop the device
+  /// token without threading the service through every layer.
+  static PushNotificationService? current;
+
+  /// Called for a message that arrives while the app is open. FCM shows
+  /// nothing itself in that case, so the app decides how to surface it.
+  final void Function(String? title, String? body, Map<String, dynamic> data)?
+  onForegroundMessage;
 
   /// Called with a tapped notification's raw `data` map — from a
   /// foreground tap, a backgrounded-app tap, or a cold start.
@@ -51,6 +67,10 @@ class PushNotificationService {
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission();
       _fcmToken = await messaging.getToken();
+      messaging.onTokenRefresh.listen((token) {
+        _fcmToken = token;
+        unawaited(registerWithBackend());
+      });
       FirebaseMessaging.onBackgroundMessage(_backgroundMessageHandler);
       FirebaseMessaging.onMessage.listen(_onForegroundMessage);
       FirebaseMessaging.onMessageOpenedApp.listen(
@@ -62,19 +82,56 @@ class PushNotificationService {
       if (initialMessage != null) onNotificationTap?.call(initialMessage.data);
 
       _initialized = true;
+      // If the user is already signed in (cold start), register right away.
+      unawaited(registerWithBackend());
     } catch (e) {
       debugPrint('PushNotificationService: setup failed ($e). Push disabled.');
     }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
-    // No local-notification package wired up yet — foreground messages
-    // are logged only. In-app Notifications screen (polling
-    // GET /api/notifications) is the reliable path until a backend
-    // endpoint exists to actually register this token server-side.
-    debugPrint(
-      'PushNotificationService: foreground message ${message.messageId}',
+    onForegroundMessage?.call(
+      message.notification?.title,
+      message.notification?.body,
+      message.data,
     );
+  }
+
+  /// Tells the server which device this is, so it can push to it. Needs a
+  /// signed-in user; quietly does nothing otherwise.
+  Future<void> registerWithBackend() async {
+    final token = _fcmToken;
+    if (token == null) return;
+    if (await TokenStorage.instance.readToken() == null) return;
+    try {
+      await ApiClient.instance.post(
+        '/api/push/device-token',
+        data: {
+          'token': token,
+          'platform': defaultTargetPlatform == TargetPlatform.iOS
+              ? 'ios'
+              : 'android',
+        },
+      );
+    } catch (e) {
+      debugPrint('PushNotificationService: could not register token ($e)');
+    }
+  }
+
+  /// Called on logout, while the session token still exists, so a shared
+  /// phone stops receiving the previous user's notifications.
+  Future<void> unregisterFromBackend() async {
+    final token = _fcmToken;
+    if (token == null) return;
+    if (await TokenStorage.instance.readToken() == null) return;
+    try {
+      await ApiClient.instance.delete(
+        '/api/push/device-token',
+        data: {'token': token},
+      );
+    } catch (e) {
+      debugPrint('PushNotificationService: could not unregister token ($e)');
+    }
   }
 }
 

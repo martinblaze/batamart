@@ -28,6 +28,16 @@ Future<void> main() async {
   // inside the feature-agnostic PushNotificationService itself.
   unawaited(
     PushNotificationService(
+      onForegroundMessage: (title, body, data) {
+        final context = rootNavigatorKey.currentContext;
+        if (context == null || (title == null && body == null)) return;
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text([title, body].whereType<String>().join('\n')),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      },
       onNotificationTap: (data) {
         final type = data['type'] as String?;
         final context = rootNavigatorKey.currentContext;

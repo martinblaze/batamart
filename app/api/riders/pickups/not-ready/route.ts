@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
-import { createNotification } from '@/lib/notification'
+import { notifyDeliveryMoved, notifyAdmins } from '@/lib/notify/events'
 import { formatDeliveryDate, getScheduledDeliveryDate } from '@/lib/delivery/schedule'
 
 export const dynamic = 'force-dynamic'
@@ -53,32 +53,9 @@ export async function POST(request: NextRequest) {
     })
 
     const when = formatDeliveryDate(nextDay)
-    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } })
     await Promise.allSettled([
-      createNotification({
-        userId: order.buyerId,
-        type: 'ORDER_PLACED',
-        title: 'Delivery moved',
-        message: `Your order #${order.orderNumber} wasn't ready for pickup. It is now scheduled for ${when}.`,
-        orderId: order.id,
-      }),
-      createNotification({
-        userId: order.sellerId,
-        type: 'ORDER_PLACED',
-        title: 'Rider found your product not ready',
-        message: `Order #${order.orderNumber} wasn't ready when the rider came. It rolls over to ${when}. Please have it ready.`,
-        orderId: order.id,
-      }),
-      ...admins.map(a =>
-        createNotification({
-          userId: a.id,
-          type: 'ORDER_PLACED',
-          title: 'Product not ready at pickup',
-          message: `Order #${order.orderNumber} was not ready. Rolled over to ${when}.`,
-          orderId: order.id,
-          metadata: { orderUrl: '/admin/order-intake' },
-        }),
-      ),
+      notifyDeliveryMoved(order, when),
+      notifyAdmins('Product not ready at pickup', `Order #${order.orderNumber} was not ready. Rolled over to ${when}.`),
     ])
 
     return NextResponse.json({ success: true, rolledTo: nextDay.toISOString() })

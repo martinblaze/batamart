@@ -4,7 +4,7 @@
 // unpack:  take it back out of its bag                   -> AT_HUB
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createNotification } from '@/lib/notification'
+import { notifyAtHub, notifyPacked } from '@/lib/notify/events'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,9 +56,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    Promise.allSettled(
-      notify.map(n => createNotification({ userId: n.buyerId, type: 'ORDER_PICKED_UP', title: n.title, message: n.message, orderId: n.orderId })),
-    ).catch(() => {})
+    await Promise.allSettled(
+      notify.map(n => {
+        const order = { id: n.orderId, orderNumber: n.orderNumber, buyerId: n.buyerId }
+        return action === 'receive' ? notifyAtHub(order) : notifyPacked(order)
+      }),
+    )
 
     return NextResponse.json({ success: true, changed })
   } catch (error) {

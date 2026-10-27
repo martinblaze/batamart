@@ -4,6 +4,7 @@
 // tx_ref.
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { notifyTopUp } from '@/lib/notify/events'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
     const amount = Number(tx?.amount)
     if (!Number.isFinite(amount) || amount < 1 || amount > 1_000_000) return appRedirect('/wallet?topup=failed')
 
+    let credited = null as number | null
     try {
       await prisma.$transaction(async db => {
         const already = await db.transaction.findFirst({ where: { reference: txRef, userId }, select: { id: true } })
@@ -72,12 +74,15 @@ export async function GET(request: NextRequest) {
             balanceAfter: before + amount,
           },
         })
+        credited = before + amount
       }, { isolationLevel: 'Serializable' })
     } catch (err: any) {
       // A concurrent callback for the same tx_ref won the race (serialization
       // failure): the credit is already applied.
       if (err?.code !== 'P2034') throw err
     }
+
+    if (credited !== null) await notifyTopUp(userId, amount, credited)
 
     return appRedirect('/wallet?topup=success')
   } catch (error) {
