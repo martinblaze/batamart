@@ -762,7 +762,7 @@ export default function RiderDashboardPage() {
             <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-sm text-danger mb-3 flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
-                Complete this return pickup before accepting new orders.
+                Collect this return on your next run. You can keep taking new pickups meanwhile.
                 You will earn your delivery share once confirmed.
               </span>
             </div>
@@ -898,7 +898,7 @@ export default function RiderDashboardPage() {
         {/* ── Pickups & Deliveries ──────────────────────────────────────── */}
         <RiderJobs
           showToast={showToast}
-          blocked={hasDisputePickupPending}
+          blocked={false}
           onActiveOrderIds={setJobOrderIds}
         />
 

@@ -16,24 +16,26 @@ final _usernamePattern = RegExp(r'^[a-z0-9]{3,20}$');
 /// Asks the user to pick a username. Sellers write it on the parcel instead of
 /// the buyer's real name or address, and checkout won't go through without
 /// one. Resolves to true once it is saved.
-Future<bool> showUsernameSheet(BuildContext context) async {
+Future<bool> showUsernameSheet(BuildContext context, {String? current}) async {
   final saved = await AppBottomSheet.show<bool>(
     context: context,
-    title: 'Choose a username',
-    child: const _UsernameForm(),
+    title: current == null ? 'Choose a username' : 'Change username',
+    child: _UsernameForm(initial: current),
   );
   return saved ?? false;
 }
 
 class _UsernameForm extends ConsumerStatefulWidget {
-  const _UsernameForm();
+  const _UsernameForm({this.initial});
+
+  final String? initial;
 
   @override
   ConsumerState<_UsernameForm> createState() => _UsernameFormState();
 }
 
 class _UsernameFormState extends ConsumerState<_UsernameForm> {
-  final _controller = TextEditingController();
+  late final _controller = TextEditingController(text: widget.initial ?? '');
   bool _isSubmitting = false;
   String? _error;
 

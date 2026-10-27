@@ -130,6 +130,7 @@ class AuthRepository {
     required String roomNumber,
     required String landmark,
     String? referralCode,
+    String? username,
   }) async {
     final locationToken = await _ensureLocationToken();
     final response = await _api.post(
@@ -147,6 +148,7 @@ class AuthRepository {
         'landmark': landmark,
         if (referralCode != null && referralCode.isNotEmpty)
           'referralCode': referralCode,
+        if (username != null && username.isNotEmpty) 'username': username,
       },
     );
     return AuthResult(

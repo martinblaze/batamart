@@ -14,7 +14,11 @@ import '../state/wallet_providers.dart';
 /// PIN required, plus an optional biometric confirmation layered on top
 /// client-side (the backend only knows about the PIN; biometrics are a
 /// device-local gate before we even send the PIN).
-Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
+Future<void> showWithdrawSheet(
+  BuildContext context,
+  WidgetRef ref, {
+  String source = 'MAIN',
+}) {
   final amountController = TextEditingController();
   final accountNumberController = TextEditingController();
   final accountNameController = TextEditingController();
@@ -25,7 +29,7 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
 
   return AppBottomSheet.show(
     context: context,
-    title: 'Withdraw',
+    title: source == 'MARKETING' ? 'Withdraw marketing earnings' : 'Withdraw',
     child: StatefulBuilder(
       builder: (context, setState) {
         return Column(
@@ -124,6 +128,7 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
                         accountNumber: accountNumberController.text.trim(),
                         accountName: accountNameController.text.trim(),
                         pin: pinController.text.trim(),
+                        source: source,
                       );
                   ref.invalidate(walletProvider);
                   ref.invalidate(walletTransactionsProvider);

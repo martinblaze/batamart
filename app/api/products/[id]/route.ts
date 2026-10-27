@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { MAX_LISTING_IMAGES } from '@/lib/listing-limits'
+import { notifyUser } from '@/lib/notify/dispatch'
+import { notifyAdmins } from '@/lib/notify/events'
 import { getUserFromRequest } from '@/lib/auth/auth'
 import { getCategoryDisplayInfo } from '@/lib/variants'
 import { getCampaignExpiry, isValidCampaignKey } from '@/lib/campaigns'
@@ -179,15 +181,55 @@ export async function PUT(
       }
     }
 
+    // Only an approved listing can be switched on by its seller; a pending or
+    // rejected one goes live through review, not through this flag.
+    if (updateData.isActive === true && product.moderationStatus !== 'APPROVED') {
+      delete updateData.isActive
+    }
+
+    // Editing what buyers actually see (name, photos, description, price,
+    // category) sends the listing back for review. It is taken off the
+    // marketplace until an admin approves it again. Stock, pausing, delivery
+    // time and pickup place don't need a new review.
+    const REVIEWED_FIELDS = [
+      'name', 'description', 'images', 'price', 'basePrice',
+      'category', 'categoryKey', 'subcategory', 'subcategoryKey', 'variantsEnabled',
+    ]
+    const needsReview = REVIEWED_FIELDS.some(
+      key => key in updateData && JSON.stringify(updateData[key]) !== JSON.stringify((product as any)[key]),
+    )
+    if (needsReview) {
+      updateData.moderationStatus = 'PENDING'
+      updateData.isActive = false
+      updateData.rejectionReason = null
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id: params.id },
       data: updateData,
     })
 
-    return NextResponse.json({ 
-      success: true, 
+    if (needsReview) {
+      await Promise.allSettled([
+        notifyUser(user.id, {
+          category: 'transactional',
+          type: 'ORDER_UPDATE',
+          title: 'Edit sent for review',
+          message: `"${updatedProduct.name}" is off the marketplace until it is approved again. We usually review within a day.`,
+          url: '/my-shop',
+          productId: updatedProduct.id,
+        }),
+        notifyAdmins('Edited listing needs review', `"${updatedProduct.name}" was edited and is waiting for approval.`, '/admin/products'),
+      ])
+    }
+
+    return NextResponse.json({
+      success: true,
       product: updatedProduct,
-      message: 'Product updated successfully',
+      needsReview,
+      message: needsReview
+        ? 'Saved. Your listing is off the marketplace until it is approved again.'
+        : 'Product updated successfully',
     })
   } catch (error) {
     console.error('Update product error:', {

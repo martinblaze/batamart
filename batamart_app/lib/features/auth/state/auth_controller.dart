@@ -122,6 +122,7 @@ class AuthController extends StateNotifier<AuthState> {
     required String roomNumber,
     required String landmark,
     String? referralCode,
+    String? username,
   }) async {
     final result = await _repository.signupWithPassword(
       email: email,
@@ -134,6 +135,7 @@ class AuthController extends StateNotifier<AuthState> {
       roomNumber: roomNumber,
       landmark: landmark,
       referralCode: referralCode,
+      username: username,
     );
     await _completeAuth(result);
   }

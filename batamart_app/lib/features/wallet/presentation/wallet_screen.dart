@@ -15,6 +15,7 @@ import '../../../core/widgets/states/error_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../data/wallet_models.dart';
 import '../state/wallet_providers.dart';
+import '../../../core/utils/money.dart';
 import 'topup_sheet.dart';
 import 'pin_sheets.dart';
 import 'withdraw_sheet.dart';
@@ -73,6 +74,47 @@ class WalletBody extends ConsumerWidget {
               pendingLabel: pendingLabel,
               onWithdraw: () => showWithdrawSheet(context, ref),
             ),
+            if (wallet.marketingBalance != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  border: Border.all(color: context.palette.hairline),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'MARKETING EARNINGS',
+                            style: AppTypography.label(
+                              size: 10,
+                              color: context.palette.inkSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            naira(wallet.marketingBalance!),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () =>
+                          showWithdrawSheet(context, ref, source: 'MARKETING'),
+                      child: const Text('Withdraw'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: AppSpacing.lg),
             Container(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),

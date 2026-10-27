@@ -6,6 +6,7 @@ class Wallet {
     required this.pendingBalance,
     required this.completedOrders,
     required this.role,
+    this.marketingBalance,
   });
 
   final double availableBalance;
@@ -13,12 +14,19 @@ class Wallet {
   final int completedOrders;
   final String role;
 
+  /// Field-marketer earnings, kept apart from the main balance. Null unless
+  /// the user has joined the field marketers programme.
+  final double? marketingBalance;
+
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(
       availableBalance: parseBalance(json['availableBalance']),
       pendingBalance: parseBalance(json['pendingBalance']),
       completedOrders: json['completedOrders'] as int? ?? 0,
       role: json['role'] as String? ?? 'BUYER',
+      marketingBalance: json['marketing'] is Map
+          ? parseBalance((json['marketing'] as Map)['balance'])
+          : null,
     );
   }
 }

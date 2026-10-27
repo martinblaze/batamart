@@ -18,7 +18,10 @@ import { Badge } from '@/components/ui/Badge'
 // Constants
 // ─────────────────────────────────────────────
 const DEALS_PAGE_SIZE = 16
-const HOT_DEAL_MIN_PERCENT = 12
+// Hot items include ones that are hot because people keep looking at them, not
+// because they are discounted, so the discount filter must start at 0 or those
+// are hidden and the page can look empty.
+const HOT_DEAL_MIN_PERCENT = 0
 
 const DEALS_CSS = `
   @keyframes fadeSlideUp {
@@ -516,7 +519,7 @@ export default function DealsPage() {
     if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return }
 
     setLoading(true)
-    fetch('/api/products/feed', { headers: { Authorization: `Bearer ${token}` } })
+    fetch('/api/products/hot-deals', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
         const products: any[] = data.products || []

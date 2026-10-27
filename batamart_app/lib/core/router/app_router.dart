@@ -45,6 +45,7 @@ import '../../features/seller/presentation/seller_products_list_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/referrals/presentation/referrals_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/seller/presentation/edit_product_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
 import '../api/api_client.dart';
@@ -86,6 +87,7 @@ class AppRoutes {
   static const reviewSeller = '/orders/:id/review-seller';
   static const myShop = '/my-shop';
   static const myShopProducts = '/my-shop/products';
+  static const editProduct = '/my-shop/products/:id/edit';
   static const sellProduct = '/sell';
   static const sales = '/sales';
   static const wallet = '/wallet';
@@ -99,6 +101,7 @@ class AppRoutes {
   static const report = '/report';
 
   static String productDetailPath(String id) => '/product/$id';
+  static String editProductPath(String id) => '/my-shop/products/$id/edit';
   static String fileDisputePath(String orderId) => '/disputes/file/$orderId';
   static String disputeDetailPath(String id) => '/disputes/$id';
   static String productReviewsPath(String id) => '/product/$id/reviews';
@@ -302,6 +305,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.myShopProducts,
         builder: (context, state) => const SellerProductsListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.editProduct,
+        builder: (context, state) =>
+            EditProductScreen(productId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.sellProduct,

@@ -17,6 +17,7 @@ import '../../../core/widgets/nav/buyer_seller_nav_shell.dart';
 import '../../cart/state/cart_controller.dart';
 import '../data/payments_repository.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/delivery_day.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -297,6 +298,28 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   const SizedBox(height: AppSpacing.md),
                   _SummaryRow(label: 'Subtotal', value: subtotal),
                   _SummaryRow(label: 'Delivery fee', value: deliveryFee),
+                  if ((quoteAsync.asData?.value.dates ?? const <DateTime>[]).isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xs),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'DELIVERY DAY',
+                            style: AppTypography.label(size: 10, color: context.palette.inkSecondary),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Flexible(
+                            child: Text(
+                              formatDeliveryDays(quoteAsync.asData!.value.dates),
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     child: Divider(height: 1, color: context.palette.hairline),

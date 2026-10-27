@@ -94,6 +94,38 @@ class SellerProductsRepository {
     return Product.fromJson(response['product'] as Map<String, dynamic>);
   }
 
+  /// The owner's view of a listing for the edit screen. Works while the
+  /// listing is paused, pending review or rejected, unlike the public GET.
+  Future<Map<String, dynamic>> fetchForEdit(String productId) async {
+    final response = await _api.get('/api/products/$productId/edit');
+    return (response['product'] as Map).cast<String, dynamic>();
+  }
+
+  /// Saves an edit. Returns true when the change sends the listing back for
+  /// review (it is then off the marketplace until approved again).
+  Future<bool> updateListing(
+    String productId, {
+    required String name,
+    required String description,
+    required List<String> images,
+    required String deliveryEstimate,
+    double? price,
+    int? quantity,
+  }) async {
+    final response = await _api.put(
+      '/api/products/$productId',
+      data: {
+        'name': name,
+        'description': description,
+        'images': images,
+        'deliveryEstimate': deliveryEstimate,
+        'price': ?price,
+        'quantity': ?quantity,
+      },
+    );
+    return response['needsReview'] as bool? ?? false;
+  }
+
   /// Pause/activate — `PUT /api/products/{id}` with just `isActive`.
   Future<void> setActive(String productId, bool isActive) {
     return _api.put('/api/products/$productId', data: {'isActive': isActive});

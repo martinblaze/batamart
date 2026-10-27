@@ -44,6 +44,7 @@ class Order {
     this.buyerName,
     this.buyerPhoto,
     this.disputeId,
+    this.deliveryDate,
   });
 
   final String id;
@@ -82,6 +83,9 @@ class Order {
   final String? buyerPhoto;
   final String? disputeId;
 
+  /// The day this order is on the Wednesday/Saturday delivery run.
+  final DateTime? deliveryDate;
+
   String get thumbnail => productImages.isNotEmpty ? productImages.first : '';
   bool get hasRider => riderId != null;
 
@@ -117,7 +121,23 @@ class Order {
   bool get isActiveDelivery =>
       status == 'RIDER_ASSIGNED' ||
       status == 'PICKED_UP' ||
+      status == 'AT_HUB' ||
+      status == 'PACKED' ||
       status == 'ON_THE_WAY';
+
+  /// The map is only for the last leg, from the hub to the buyer's door.
+  bool get showsLiveMap => status == 'ON_THE_WAY';
+
+  /// What is happening now, for the stages before the rider is on the way.
+  String? get stageNote => switch (status) {
+    'PENDING' => 'Waiting for the vendor to confirm.',
+    'PROCESSING' => 'Confirmed. A rider will collect it on the delivery day.',
+    'RIDER_ASSIGNED' => 'A rider is on the way to collect it from the vendor.',
+    'PICKED_UP' => 'Collected from the vendor and heading to our sorting hub.',
+    'AT_HUB' => 'At our hub, being checked.',
+    'PACKED' => 'Packed and waiting for a rider.',
+    _ => null,
+  };
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final product = json['product'] as Map<String, dynamic>?;
@@ -172,6 +192,7 @@ class Order {
       buyerName: buyer?['name'] as String?,
       buyerPhoto: buyer?['profilePhoto'] as String?,
       disputeId: (json['dispute'] as Map?)?['id'] as String?,
+      deliveryDate: parseDate(json['deliveryDate']),
     );
   }
 }

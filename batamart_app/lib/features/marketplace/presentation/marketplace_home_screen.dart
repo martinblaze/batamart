@@ -15,6 +15,7 @@ import '../../../core/widgets/cards/product_card.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../../core/widgets/states/loading_skeleton.dart';
 import '../data/product_models.dart';
+import '../state/recently_viewed.dart';
 import '../state/products_providers.dart';
 import 'widgets/home_sections.dart';
 import 'hot_deals_screen.dart';
@@ -189,6 +190,7 @@ class MarketplaceHomeScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
                 const _PeopleLikeYouRow(),
                 const SizedBox(height: AppSpacing.section),
+                const _RecentlyViewedRow(),
 
                 // Image-led category panels. Each subcategory chip filters
                 // Deals directly rather than dumping the user on Search.
@@ -407,6 +409,57 @@ class _PeopleLikeYouRow extends ConsumerWidget {
       ),
       loading: () => const SizedBox.shrink(),
       error: (error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Products opened on this device, newest first. Hidden until there is one.
+class _RecentlyViewedRow extends ConsumerWidget {
+  const _RecentlyViewedRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(recentlyViewedProvider);
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const FeedSection(
+          eyebrow: 'Pick up where you left off',
+          title: 'Recently',
+          accent: 'viewed.',
+        ),
+        SizedBox(
+          height: 320,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.lg),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return SizedBox(
+                width: 150,
+                child: ProductCard(
+                  imageUrl: item.image,
+                  name: item.name,
+                  price: naira(item.price),
+                  location: item.landmark,
+                  onTap: () => context.push(AppRoutes.productDetailPath(item.id)),
+                ),
+              );
+            },
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: () => ref.read(recentlyViewedProvider.notifier).clear(),
+            child: const Text('Clear history'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.section),
+      ],
     );
   }
 }

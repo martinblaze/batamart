@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { buildFeedQuery } from '@/lib/feed-signals'
 import {
   User, ShoppingBag, Store, PlusCircle, Wallet, Package,
   AlertTriangle, LogOut, ChevronRight, MapPin, Phone,
@@ -791,7 +792,7 @@ export default function MyProfilePage() {
                   </div>
                   <h2 className="ui-mono ui-mono-sm text-ink">Recommended For You</h2>
                 </div>
-                <Link href={isApp ? '/marketplace?app=true' : '/marketplace'}
+                <Link href={isApp ? '/recommended?app=true' : '/recommended'}
                   className="text-primary font-semibold text-xs flex items-center gap-1 hover:underline">
                   See All <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
@@ -831,13 +832,13 @@ function RecommendedProducts({ isApp }: { isApp: boolean }) {
   useEffect(() => {
     const fetchRecommended = async () => {
       try {
-        const res  = await fetch('/api/products?limit=6')
+        // The same personalised picks as the Recommended page, so "See All"
+        // continues the list instead of showing something different.
+        const token = localStorage.getItem('token')
+        const res  = await fetch(`/api/products/feed?${buildFeedQuery(100)}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
         const data = await res.json()
-        if (data.products) {
-          const interests = JSON.parse(localStorage.getItem('BATAMART-interests') || '[]')
-          const sorted = data.products.sort((a: any, b: any) => (interests.includes(b.category) ? 1 : 0) - (interests.includes(a.category) ? 1 : 0))
-          setProducts(sorted.slice(0, 6))
-        }
+        const picks = [...(data.forYouProducts ?? []), ...(data.discoverProducts ?? [])]
+        if (picks.length) setProducts(picks.slice(0, 6))
       } catch {} finally { setLoading(false) }
     }
     fetchRecommended()

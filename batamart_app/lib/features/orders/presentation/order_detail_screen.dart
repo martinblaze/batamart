@@ -19,6 +19,7 @@ import '../../../core/widgets/images/app_network_image.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../rider/state/rider_providers.dart';
+import 'live_rider_map.dart';
 import '../../seller/state/seller_providers.dart';
 import '../data/order_models.dart';
 import '../state/orders_providers.dart';
@@ -199,7 +200,28 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
           const SizedBox(height: AppSpacing.lg),
           _RiderCard(order: order),
         ],
-        if (order.isActiveDelivery) ...[
+        if (order.deliveryDate != null &&
+            !const {'DELIVERED', 'COMPLETED', 'CANCELLED'}.contains(order.status)) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Icon(LucideIcons.calendar, size: 18, color: context.palette.inkSecondary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Delivery day: ${DateFormat('EEEE, d MMM').format(order.deliveryDate!.toLocal())}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ],
+        if (order.stageNote != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            order.stageNote!,
+            style: TextStyle(color: context.palette.inkSecondary, fontSize: 13),
+          ),
+        ],
+        if (order.showsLiveMap) ...[
           const SizedBox(height: AppSpacing.lg),
           _LiveLocationSection(orderId: order.id),
         ],
@@ -540,14 +562,23 @@ class _LiveLocationSection extends ConsumerWidget {
                   ),
                 );
               }
-              return Text(
-                'Last seen at ${point.lat.toStringAsFixed(5)}, ${point.lng.toStringAsFixed(5)}'
-                '${point.at != null ? ' • ${DateFormat.jm().format(point.at!)}' : ''}\n'
-                '(Map view needs a Google Maps API key — not yet supplied.)',
-                style: TextStyle(
-                  color: context.palette.inkSecondary,
-                  fontSize: 12,
-                ),
+              final stale = point.at != null &&
+                  DateTime.now().difference(point.at!).inSeconds > 45;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LiveRiderMap(lat: point.lat, lng: point.lng),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    stale
+                        ? 'Signal lost${point.at != null ? ' since ${DateFormat.jm().format(point.at!.toLocal())}' : ''}. Your rider may be in a weak-signal area.'
+                        : 'Live${point.at != null ? ' • ${DateFormat.jm().format(point.at!.toLocal())}' : ''}',
+                    style: TextStyle(
+                      color: stale ? AppColors.danger : context.palette.inkSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               );
             },
             loading: () => const LinearProgressIndicator(),

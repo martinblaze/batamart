@@ -5,6 +5,7 @@ import { notifyVendorConfirmed } from '@/lib/notify/events';
 import jwt from 'jsonwebtoken';
 import { OrderStatus } from '@prisma/client';
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request';
+import { getEffectiveDeliveryDate, parseReadyDays } from '@/lib/delivery/schedule';
 
 function jsonResponse(body: unknown, init?: ResponseInit) {
   return NextResponse.json(body, {
@@ -98,6 +99,9 @@ export async function GET(
             reviewer: { select: { id: true, name: true, profilePhoto: true } },
           },
         },
+        items: {
+          select: { quantity: true, price: true, product: { select: { name: true, deliveryEstimate: true } } },
+        },
         // ✅ Expose dispute so the order detail page can link to it
         dispute: {
           select: { id: true, status: true, createdAt: true, resolution: true, refundAmount: true },
@@ -123,6 +127,7 @@ export async function GET(
     if (isSeller && !isBuyer && !isAdmin) {
       return jsonResponse({
         ...order,
+        deliveryDate: getEffectiveDeliveryDate(order, Math.max(0, ...(order.items.length ? order.items.map(i => i.product.deliveryEstimate) : [order.product.deliveryEstimate]).map(parseReadyDays))).toISOString(),
         buyer: { id: order.buyer.id, name: order.buyer.username ?? 'Buyer', username: order.buyer.username },
         deliveryHostel: '',
         deliveryRoom: '',
@@ -131,7 +136,14 @@ export async function GET(
       });
     }
 
-    return jsonResponse(order);
+    // The day this order is on the delivery run (Wed/Sat rule applied to when
+    // it will be ready), so apps don't each re-implement the schedule.
+    const estimates = order.items.length
+      ? order.items.map(i => i.product.deliveryEstimate)
+      : [order.product.deliveryEstimate];
+    const deliveryDate = getEffectiveDeliveryDate(order, Math.max(0, ...estimates.map(parseReadyDays))).toISOString();
+
+    return jsonResponse({ ...order, deliveryDate });
   } catch (error) {
     console.error('Error fetching order:', error);
     return jsonResponse({ error: 'Internal server error' }, { status: 500 });

@@ -27,18 +27,9 @@ export async function claimPickupOrders(
 ): Promise<ClaimResult> {
   if (orderIds.length === 0) return { ok: false, status: 400, error: 'No orders selected' }
 
-  const pendingReturn = await prisma.order.findFirst({
-    where: { riderId: rider.id, isDisputed: true, status: 'RIDER_ASSIGNED', dispute: { resolution: '__AWAITING_PICKUP__' } },
-    select: { orderNumber: true },
-  })
-  if (pendingReturn) {
-    return {
-      ok: false,
-      status: 400,
-      error: `You have a pending dispute pickup (Order #${pendingReturn.orderNumber}). Complete that return first.`,
-      blockReason: 'DISPUTE_PICKUP_PENDING',
-    }
-  }
+  // A pending dispute return does not block new pickups: with a small rider
+  // team, one open return would otherwise stop all work. Returns are folded
+  // into the normal Wednesday/Saturday run instead.
 
   const orders = await prisma.order.findMany({
     where: { id: { in: orderIds } },

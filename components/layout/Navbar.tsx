@@ -726,6 +726,12 @@ function AppBottomNav({
   )
 }
 
+// Desktop account menu row: compact, neutral hover, ink marker on the current page.
+const dropRow = (active: boolean) =>
+  `flex items-center gap-3 border-l-2 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
+    active ? 'border-ink bg-surface text-ink' : 'border-transparent text-ink-secondary hover:bg-surface hover:text-ink'
+  }`
+
 // Mobile menu row: flat, hairline-divided, with an ink marker on the current page.
 const menuRow = (active: boolean) =>
   `flex items-center gap-3 border-l-2 px-4 py-3.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
@@ -841,8 +847,15 @@ export function Navbar() {
         setIsUserDropdownOpen(false)
       }
     }
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsUserDropdownOpen(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
   }, [])
 
   useEffect(() => {
@@ -1017,7 +1030,7 @@ export function Navbar() {
                   className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-surface transition-all"
                 >
                   <div className="flex flex-col items-end">
-                    <span className="text-sm font-medium text-ink">Hi, {userName || 'User'}</span>
+                    <span className="max-w-[140px] truncate text-sm font-medium text-ink">{userName || 'User'}</span>
                     {userRole === 'SELLER' || userRole === 'ADMIN' ? (
                       isSellerMode ? (
                         <span
@@ -1043,76 +1056,105 @@ export function Navbar() {
                   <ChevronDown className={`w-4 h-4 text-ink-secondary transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} strokeWidth={1.75} />
                 </button>
                 {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-card rounded-xl shadow-soft border border-border py-2 z-50">
+                  <div
+                    role="menu"
+                    className="absolute right-0 z-50 mt-2 w-64 origin-top-right border border-border bg-card py-1 shadow-[0_1px_2px_rgba(19,19,17,0.06),0_14px_32px_-10px_rgba(19,19,17,0.22)]"
+                    style={{ animation: 'menuIn 140ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+                  >
+                    <style>{`@keyframes menuIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}`}</style>
+                    {/* Who is signed in: the identity lives inside the menu, not in a greeting */}
+                    <div className="px-4 pb-3 pt-3">
+                      <p className="truncate text-sm font-medium text-ink">{userName || 'User'}</p>
+                      <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">
+                        {userRole === 'SELLER' || userRole === 'ADMIN'
+                          ? `${userRole.toLowerCase()} · ${isSellerMode ? 'selling' : 'buying'}`
+                          : userRole.toLowerCase()}
+                      </p>
+                    </div>
+                    <div className="border-t border-border" />
                     {/* Rider-specific dropdown */}
                     {userRole === 'RIDER' ? (
                       <>
-                        <Link href="/rider-dashboard" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/rider-dashboard') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <LayoutGrid className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
-                          <span className="font-medium">Dashboard</span>
+                        <Link href="/rider-dashboard" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/rider-dashboard'))}>
+                          <LayoutGrid className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
+                          <span>Dashboard</span>
                         </Link>
-                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/wallet') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <Wallet className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
-                          <div className="flex items-center justify-between flex-1">
+                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/wallet'))}>
+                          <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
+                          <div className="flex flex-1 items-center justify-between">
                             <span>Earnings</span>
-                            {userBalance > 0 && <span className="text-xs text-success font-medium">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="font-sans text-xs normal-case tracking-normal text-ink-secondary">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
-                        <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/notifications') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <BellIcon className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
+                        <Link href="/notifications" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/notifications'))}>
+                          <BellIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                           <span>Notifications</span>
                         </Link>
                       </>
                     ) : (
                       /* Regular buyer/seller dropdown */
                       <>
-                        <Link href="/myprofile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors border-b border-border">
-                          <User className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span className="font-medium">My Account</span>
+                        <Link href="/myprofile" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/myprofile'))}>
+                          <User className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>My Account</span>
                         </Link>
-                        <Link href="/marketplace" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/marketplace') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <Globe className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Marketplace</span>
+                        <Link href="/marketplace" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/marketplace'))}>
+                          <Globe className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Marketplace</span>
                         </Link>
-                        <Link href="/my-shop" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/my-shop') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <Store className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
+                        <Link href="/my-shop" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/my-shop'))}>
+                          <Store className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                         </Link>
                         {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} data-tour="tour-desktop-sell" className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/sell') ? 'bg-primary/10 text-primary' : ''}`}>
-                            <PlusCircle className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Sell</span>
+                          <Link href="/sell" onClick={() => setIsUserDropdownOpen(false)} data-tour="tour-desktop-sell" role="menuitem" className={dropRow(isActive('/sell'))}>
+                            <PlusCircle className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Sell</span>
                           </Link>
                         )}
-                        <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/orders') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <Package className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
+                        <div className="my-1 border-t border-border" />
+                        <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/orders'))}>
+                          <Package className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
                         </Link>
-                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/wallet') ? 'bg-primary/10 text-primary' : ''}`}>
-                          <Wallet className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} />
-                          <div className="flex items-center justify-between flex-1">
+                        <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/wallet'))}>
+                          <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
+                          <div className="flex flex-1 items-center justify-between">
                             <span>Wallet</span>
-                            {userBalance > 0 && <span className="text-xs text-success font-medium">₦{userBalance.toLocaleString()}</span>}
+                            {userBalance > 0 && <span className="font-sans text-xs normal-case tracking-normal text-ink-secondary">₦{userBalance.toLocaleString()}</span>}
                           </div>
                         </Link>
-                        <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} className={`flex items-center px-4 py-3 text-ink hover:bg-surface transition-colors ${isActive('/dispute') ? 'bg-danger/10 text-danger' : ''}`}>
-                          <AlertTriangle className="w-5 h-5 mr-3 text-ink-muted" strokeWidth={1.75} /><span>Disputes</span>
+                        <Link href="/dispute/select-order" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/dispute'))}>
+                          <AlertTriangle className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Disputes</span>
                         </Link>
                         {(userRole === 'SELLER' || userRole === 'ADMIN') && (
-                          <div className="px-4 py-3 border-t border-border">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-ink-secondary">Mode</span>
-                              <button onClick={toggleRoleMode} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
-                                <span className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${isSellerMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                              </button>
-                              <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
+                          <>
+                            <div className="my-1 border-t border-border" />
+                            <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+                              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Mode</span>
+                              <div className="flex border border-border" role="group" aria-label="Mode">
+                                {([['Buying', false], ['Selling', true]] as const).map(([label, selling]) => (
+                                  <button
+                                    key={label}
+                                    onClick={() => { if (isSellerMode !== selling) toggleRoleMode() }}
+                                    aria-pressed={isSellerMode === selling}
+                                    className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${isSellerMode === selling ? 'bg-ink text-background' : 'bg-card text-ink-secondary hover:text-ink'}`}
+                                  >
+                                    {label}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          </>
                         )}
                         {userRole === 'BUYER' && (
-                          <Link href="/become-seller" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center px-4 py-3 text-primary hover:bg-primary/5 transition-colors border-t border-border">
-                            <PlusCircle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span className="font-medium">Become a seller</span>
+                          <>
+                          <div className="my-1 border-t border-border" />
+                          <Link href="/become-seller" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/become-seller'))}>
+                            <PlusCircle className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Become a seller</span>
                           </Link>
+                          </>
                         )}
                       </>
                     )}
-                    <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-danger hover:bg-danger/5 transition-colors border-t border-border">
-                      <LogOut className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Logout</span>
+                    <div className="my-1 border-t border-border" />
+                    <button onClick={handleLogout} role="menuitem" className={`w-full ${dropRow(false)}`}>
+                      <LogOut className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Log out</span>
                     </button>
                   </div>
                 )}

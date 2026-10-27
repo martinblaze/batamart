@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/haptics/haptics.dart';
 import '../../../core/settings/app_settings.dart';
@@ -8,6 +9,10 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
+import '../../../core/config/env.dart';
+import 'notification_preferences_section.dart';
+import '../../auth/presentation/username_sheet.dart';
+import '../../auth/state/auth_controller.dart';
 
 /// Dedicated Settings entry point (Profile tab previously had no such
 /// screen — notifications/dark-mode toggles now live here instead of
@@ -28,6 +33,28 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
+          const _SectionLabel('Account'),
+          Builder(
+            builder: (context) {
+              final username = ref.watch(authControllerProvider).user?.username;
+              final hasUsername = (username ?? '').isNotEmpty;
+              return _SettingsTile(
+                icon: LucideIcons.atSign,
+                title: hasUsername ? '@$username' : 'Set a username',
+                subtitle: hasUsername
+                    ? 'Sellers write this on your parcel. Tap to change it.'
+                    : 'Required to place an order. Sellers write it on your parcel.',
+                trailing: Icon(LucideIcons.chevronRight, size: 18, color: context.palette.inkMuted),
+                onTap: () async {
+                  final saved = await showUsernameSheet(context, current: hasUsername ? username : null);
+                  if (saved && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username saved.')));
+                  }
+                },
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
           const _SectionLabel('Appearance'),
           _SettingsTile(
             icon: LucideIcons.moon,
@@ -60,21 +87,14 @@ class SettingsScreen extends ConsumerWidget {
           ),
           if (notificationsEnabled) ...[
             const SizedBox(height: AppSpacing.sm),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppRadii.md),
-              ),
-              child: Text(
-                'In-app notifications always work (pull to refresh on the '
-                'Notifications screen). Push alerts to your device require a '
-                'small remaining backend setup on our end — you\'ll get them '
-                'automatically once that\'s live.',
-                style: TextStyle(fontSize: 12, color: context.palette.inkSecondary),
-              ),
-            ),
+            const NotificationPreferencesSection(),
           ],
+          const SizedBox(height: AppSpacing.lg),
+          const _SectionLabel('Help and legal'),
+          _LinkTile(icon: LucideIcons.lifeBuoy, title: 'Contact support', path: '/contact'),
+          _LinkTile(icon: LucideIcons.info, title: 'About BataMart', path: '/about'),
+          _LinkTile(icon: LucideIcons.fileText, title: 'Terms of service', path: '/terms'),
+          _LinkTile(icon: LucideIcons.shield, title: 'Privacy policy', path: '/privacy'),
           const SizedBox(height: AppSpacing.lg),
           const _SectionLabel('Feedback'),
           _SettingsTile(
@@ -220,16 +240,18 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final Widget trailing;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: context.palette.card,
@@ -262,6 +284,31 @@ class _SettingsTile extends StatelessWidget {
           ),
           trailing,
         ],
+      ),
+    );
+    return onTap == null ? card : InkWell(onTap: onTap, child: card);
+  }
+}
+
+
+/// A row that opens one of the website's pages (support, legal) in the browser.
+class _LinkTile extends StatelessWidget {
+  const _LinkTile({required this.icon, required this.title, required this.path});
+
+  final IconData icon;
+  final String title;
+  final String path;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, size: 20, color: context.palette.inkSecondary),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      trailing: Icon(LucideIcons.externalLink, size: 16, color: context.palette.inkMuted),
+      onTap: () => launchUrl(
+        Uri.parse('${Env.apiBaseUrl.replaceAll(RegExp(r'/$'), '')}$path'),
+        mode: LaunchMode.externalApplication,
       ),
     );
   }

@@ -1,3 +1,4 @@
+import '../state/recently_viewed.dart';
 import 'package:flutter/material.dart';
 import '../../../core/config/env.dart';
 import '../../../core/haptics/haptics.dart';
@@ -256,6 +257,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final productAsync = ref.watch(productDetailProvider(widget.productId));
+    ref.listen(productDetailProvider(widget.productId), (previous, next) {
+      next.whenData((p) => ref.read(recentlyViewedProvider.notifier).add(p));
+    });
+    // The listener only fires on change, so cover a page opened with the
+    // product already cached.
+    productAsync.whenData((p) {
+      if (ref.read(recentlyViewedProvider).firstOrNull?.id != p.id) {
+        Future.microtask(() => ref.read(recentlyViewedProvider.notifier).add(p));
+      }
+    });
 
     return productAsync.when(
       data: (product) => _ProductDetailBody(

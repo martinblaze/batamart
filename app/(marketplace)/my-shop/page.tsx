@@ -180,6 +180,14 @@ export default function MyShopPage() {
   }
 
   useEffect(() => {
+    const saved = new URLSearchParams(window.location.search).get('saved')
+    if (!saved) return
+    showToast(saved === 'review' ? 'Saved. Your listing is off the marketplace until it is approved again.' : 'Saved.')
+    window.history.replaceState(null, '', '/my-shop')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return }
     const loadUserData = async () => {
@@ -473,6 +481,10 @@ export default function MyShopPage() {
                           className="action-btn flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-primary/10 hover:bg-primary/10 text-primary rounded-xl font-semibold text-xs">
                           <Eye className="w-3.5 h-3.5" /> View
                         </button>
+                        <Link href={`/my-shop/edit/${product.id}`}
+                          className="action-btn px-3 py-2.5 bg-surface hover:bg-surface text-ink rounded-xl font-semibold text-xs">
+                          Edit
+                        </Link>
                         <button onClick={() => toggleActive(product.id, product.isActive)}
                           className={`action-btn px-3 py-2.5 rounded-xl font-semibold text-xs ${product.isActive ? 'bg-warning/10 text-warning hover:bg-warning/10' : 'bg-success/10 text-success hover:bg-success/10'}`}>
                           {product.isActive ? 'Pause' : 'Live'}
@@ -580,6 +592,10 @@ export default function MyShopPage() {
                             </button>
                           )
                         )}
+                        <Link href={`/my-shop/edit/${product.id}`}
+                          className="action-btn flex items-center gap-1.5 px-3.5 py-2 bg-surface hover:bg-surface text-ink rounded-xl font-semibold text-xs transition-all">
+                          Edit
+                        </Link>
                         <button onClick={() => toggleActive(product.id, product.isActive)}
                           className={`action-btn flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-semibold text-xs transition-all ${product.isActive ? 'bg-warning/10 hover:bg-warning/10 text-warning' : 'bg-success/10 hover:bg-success/10 text-success'}`}>
                           {product.isActive ? 'Deactivate' : 'Activate'}

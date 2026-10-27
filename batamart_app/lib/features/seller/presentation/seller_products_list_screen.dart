@@ -180,6 +180,8 @@ class _ProductRow extends ConsumerWidget {
           switch (value) {
             case 'view':
               context.push(AppRoutes.productDetailPath(product.id));
+            case 'edit':
+              context.push(AppRoutes.editProductPath(product.id));
             case 'toggle':
               _toggleActive(ref, context);
             case 'restock':
@@ -190,6 +192,7 @@ class _ProductRow extends ConsumerWidget {
         },
         itemBuilder: (context) => [
           const PopupMenuItem(value: 'view', child: Text('View')),
+          const PopupMenuItem(value: 'edit', child: Text('Edit')),
           PopupMenuItem(
             value: 'toggle',
             child: Text(product.isActive ? 'Pause' : 'Activate'),

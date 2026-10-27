@@ -47,6 +47,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _passwordController = TextEditingController();
   final _roomNumberController = TextEditingController();
   final _referralController = TextEditingController();
+  final _usernameController = TextEditingController();
 
   String? _otpSessionToken;
   String? _universityId;
@@ -76,6 +77,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _passwordController.dispose();
     _roomNumberController.dispose();
     _referralController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -151,6 +153,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       );
       return;
     }
+    if (!RegExp(r'^[a-z0-9]{3,20}$').hasMatch(_usernameController.text.trim().toLowerCase())) {
+      setState(() => _error = 'Choose a username of 3 to 20 letters and numbers, with no spaces or symbols.');
+      return;
+    }
     setState(() {
       _isSubmitting = true;
       _error = null;
@@ -171,6 +177,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             referralCode: _referralController.text.trim().isEmpty
                 ? null
                 : _referralController.text.trim(),
+            username: _usernameController.text.trim().toLowerCase(),
           );
       // On success the router's redirect guard takes over automatically.
     } on ApiException catch (e) {
@@ -345,6 +352,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 AppTextField(
                   controller: _roomNumberController,
                   label: 'Room Number',
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppTextField(
+                  controller: _usernameController,
+                  label: 'Username',
+                  hint: 'Letters and numbers only, e.g. chidi22',
+                  helper: 'Sellers write this on your parcel, so your real name and address stay private.',
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppTextField(

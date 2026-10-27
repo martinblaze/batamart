@@ -15,6 +15,7 @@ import '../../auth/state/auth_controller.dart';
 import '../data/cart_models.dart';
 import '../state/cart_controller.dart';
 import '../../../core/utils/money.dart';
+import '../../../core/utils/delivery_day.dart';
 import '../../../core/motion/motion.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -111,6 +112,13 @@ class CartScreen extends ConsumerWidget {
               label: 'Delivery fee',
               value: quoteAsync.isLoading ? 'Calculating…' : naira(deliveryFee),
             ),
+            if ((quoteAsync.asData?.value.dates ?? const <DateTime>[]).isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              _SummaryRow(
+                label: 'Delivery day',
+                value: formatDeliveryDays(quoteAsync.asData!.value.dates),
+              ),
+            ],
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Divider(height: 1, color: context.palette.hairline),

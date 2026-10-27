@@ -67,6 +67,7 @@ class WalletRepository {
     required String accountNumber,
     required String accountName,
     required String pin,
+    String source = 'MAIN',
   }) async {
     final idempotencyKey = 'wd-${DateTime.now().microsecondsSinceEpoch}';
     final response = await _api.post(
@@ -77,6 +78,7 @@ class WalletRepository {
         'accountNumber': accountNumber,
         'accountName': accountName,
         'pin': pin,
+        'source': source,
         'idempotencyKey': idempotencyKey,
       },
     );

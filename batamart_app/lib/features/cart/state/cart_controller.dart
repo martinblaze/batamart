@@ -126,8 +126,8 @@ class CartController extends StateNotifier<List<CartItem>> {
 /// (BACKEND_REFERENCE.md §3.5) — re-quotes whenever the cart contents
 /// change.
 final deliveryQuoteProvider =
-    FutureProvider.autoDispose<({double fee, int sellerCount})>((ref) {
+    FutureProvider.autoDispose<({double fee, int sellerCount, List<DateTime> dates})>((ref) {
       final items = ref.watch(cartControllerProvider);
-      if (items.isEmpty) return Future.value((fee: 0.0, sellerCount: 0));
+      if (items.isEmpty) return Future.value((fee: 0.0, sellerCount: 0, dates: <DateTime>[]));
       return ref.watch(cartRepositoryProvider).quoteDelivery(items);
     });

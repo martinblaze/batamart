@@ -39,7 +39,7 @@ class CartRepository {
   /// `POST /api/delivery/quote` (BACKEND_REFERENCE.md §3.5) — zones are
   /// derived server-side from each item's product/seller landmark and the
   /// caller's own profile landmark; only `productId` per item is sent.
-  Future<({double fee, int sellerCount})> quoteDelivery(
+  Future<({double fee, int sellerCount, List<DateTime> dates})> quoteDelivery(
     List<CartItem> items,
   ) async {
     final response = await _api.post(
@@ -53,6 +53,10 @@ class CartRepository {
     return (
       fee: (response['deliveryFee'] as num?)?.toDouble() ?? 0,
       sellerCount: response['sellerCount'] as int? ?? 1,
+      dates: (response['deliveryDates'] as List? ?? const [])
+          .map((d) => DateTime.tryParse('$d'))
+          .whereType<DateTime>()
+          .toList(),
     );
   }
 }
