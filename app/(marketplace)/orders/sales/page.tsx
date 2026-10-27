@@ -23,8 +23,7 @@ interface SalesItem {
 interface SalesBuyer {
   id: string
   name: string | null
-  phone: string | null
-  profilePhoto: string | null
+  username: string | null
 }
 
 interface SalesProduct {
@@ -42,7 +41,7 @@ interface SalesOrder {
   status: string
   orderNote: string | null
   totalAmount: number
-  deliveryAddress: string
+  rider?: { name: string | null; phone: string | null } | null
   /** Drop-off zone — pairs with product.landmark to form the route. */
   deliveryLandmark?: string | null
   createdAt: string
@@ -58,7 +57,9 @@ const STATUS_CONFIG: Record<string, { label: string; tone: BadgeStatus }> = {
   PROCESSING: { label: 'Processing', tone: 'verified' },
   SHIPPED: { label: 'Shipped', tone: 'verified' },
   RIDER_ASSIGNED: { label: 'Rider assigned', tone: 'verified' },
-  PICKED_UP: { label: 'Picked up', tone: 'verified' },
+  PICKED_UP: { label: 'Handed to rider', tone: 'verified' },
+  AT_HUB: { label: 'At our hub', tone: 'verified' },
+  PACKED: { label: 'Packed', tone: 'verified' },
   ON_THE_WAY: { label: 'On the way', tone: 'verified' },
   DELIVERED: { label: 'Delivered', tone: 'success' },
   COMPLETED: { label: 'Completed', tone: 'success' },
@@ -103,6 +104,29 @@ export default function SalesOrdersPage() {
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
   const [acceptError, setAcceptError] = useState<{ orderId: string; message: string } | null>(null)
+
+  const markHandedOver = async (orderId: string) => {
+    if (acceptingId) return
+    setAcceptingId(orderId)
+    setAcceptError(null)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`/api/orders/${orderId}/handover`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setAcceptError({ orderId, message: data.error || 'Could not update the order.' })
+        return
+      }
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: 'PICKED_UP' } : o)))
+    } catch {
+      setAcceptError({ orderId, message: 'Network error. Please try again.' })
+    } finally {
+      setAcceptingId(null)
+    }
+  }
 
   const acceptOrder = async (orderId: string) => {
     if (acceptingId) return
@@ -264,8 +288,13 @@ export default function SalesOrdersPage() {
                             </h3>
                             <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-ink-secondary">
                               <User className="h-3.5 w-3.5 text-ink-muted" strokeWidth={1.75} />
-                              {order.buyer?.name || 'Buyer'}
+                              {order.buyer?.username ? `@${order.buyer.username}` : 'Buyer'}
                             </p>
+                            {order.buyer?.username && ['PENDING', 'PROCESSING', 'RIDER_ASSIGNED'].includes(order.status) && (
+                              <p className="mt-1 text-xs text-ink-secondary">
+                                Wrap it well and write <span className="font-medium text-ink">@{order.buyer.username}</span> and <span className="font-medium text-ink">#{order.orderNumber}</span> on the parcel.
+                              </p>
+                            )}
                           </div>
                           <p className="ui-figure whitespace-nowrap text-base text-ink">{formatPrice(order.totalAmount)}</p>
                         </div>
@@ -274,10 +303,12 @@ export default function SalesOrdersPage() {
                         </p>
                         <VariantBadges orderNote={order.orderNote} />
                         <div className="mt-4 grid gap-2 text-sm text-ink-secondary">
-                          <p className="flex items-start gap-2">
-                            <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
-                            {order.deliveryAddress}
-                          </p>
+                          {order.rider && order.status === 'RIDER_ASSIGNED' && (
+                            <p className="flex items-start gap-2">
+                              <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-ink-muted" strokeWidth={1.75} />
+                              Rider coming: {order.rider.name}{order.rider.phone ? ` · ${order.rider.phone}` : ''}
+                            </p>
+                          )}
                           {order.product?.landmark && order.deliveryLandmark && (
                             <p className="ui-mono ui-mono-sm flex items-center gap-1.5 text-ink-muted">
                               {order.product.landmark}
@@ -310,6 +341,18 @@ export default function SalesOrdersPage() {
                               leftIcon={<CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />}
                             >
                               Accept order
+                            </Button>
+                          )}
+                          {order.status === 'RIDER_ASSIGNED' && (
+                            <Button
+                              variant="success"
+                              size="sm"
+                              onClick={() => markHandedOver(order.id)}
+                              isLoading={acceptingId === order.id}
+                              loadingText="Saving…"
+                              leftIcon={<CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />}
+                            >
+                              Mark picked up
                             </Button>
                           )}
                           <Link

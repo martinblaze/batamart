@@ -1,5 +1,6 @@
 import '../../../core/api/api_client.dart';
 import '../../orders/data/order_models.dart';
+import 'rider_hub_models.dart';
 import 'rider_models.dart';
 
 /// The exact string `POST /api/riders/decline-oversized` requires for
@@ -42,14 +43,79 @@ class RiderRepository {
         .toList();
   }
 
-  /// By individual `orderId`, not `batchId` — called once per leg
-  /// (§3.12). Enforced transitions only: RIDER_ASSIGNED→PICKED_UP→
-  /// ON_THE_WAY→DELIVERED.
+  /// By individual `orderId`. Only dispute-return legs can still be advanced
+  /// by the rider; for normal orders the server answers 403 because the vendor
+  /// marks "picked up" and the buyer marks "delivered".
   Future<void> updateOrderStatus(String orderId, String status) {
     return _api.post(
       '/api/riders/update-status',
       data: {'orderId': orderId, 'status': status},
     );
+  }
+
+  /// The product wasn't ready when the rider arrived: the order is released and
+  /// rolls over to the next delivery day.
+  Future<void> reportNotReady(String orderId) {
+    return _api.post(
+      '/api/riders/pickups/not-ready',
+      data: {'orderId': orderId},
+    );
+  }
+
+  Future<PickupsResult> fetchPickups() async {
+    final response = await _api.get('/api/riders/pickups');
+    List<PickupGroup> groups(String key) => (response[key] as List? ?? const [])
+        .whereType<Map>()
+        .map((g) => PickupGroup.fromJson(g.cast<String, dynamic>()))
+        .toList();
+    return PickupsResult(available: groups('available'), mine: groups('mine'));
+  }
+
+  /// Claims specific orders (a whole area at once).
+  Future<int> claimPickups(List<String> orderIds) async {
+    final res = await _api.post(
+      '/api/riders/claim-pickups',
+      data: {'orderIds': orderIds},
+    );
+    return (res['claimed'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<DeliveriesResult> fetchDeliveries() async {
+    final response = await _api.get('/api/riders/deliveries');
+    final bags = (response['bags'] as List? ?? const [])
+        .whereType<Map>()
+        .map(
+          (b) => PackedBag(
+            name: b['bag'] as String? ?? 'Bag',
+            count: (b['count'] as num?)?.toInt() ?? 0,
+            earn: (b['earn'] as num?)?.toInt() ?? 0,
+            orderIds: (b['orderIds'] as List? ?? const [])
+                .map((e) => '$e')
+                .toList(),
+          ),
+        )
+        .toList();
+    final mine = (response['mine'] as List? ?? const [])
+        .whereType<Map>()
+        .map(
+          (g) => DeliveryGroup(
+            area: g['area'] as String? ?? 'Other',
+            orders: (g['orders'] as List? ?? const [])
+                .whereType<Map>()
+                .map((o) => DeliveryOrder.fromJson(o.cast<String, dynamic>()))
+                .toList(),
+          ),
+        )
+        .toList();
+    return DeliveriesResult(bags: bags, mine: mine);
+  }
+
+  Future<int> takeBag(List<String> orderIds) async {
+    final res = await _api.post(
+      '/api/riders/take-bag',
+      data: {'orderIds': orderIds},
+    );
+    return (res['taken'] as num?)?.toInt() ?? 0;
   }
 
   Future<bool> toggleAvailability() async {
@@ -77,7 +143,9 @@ class RiderRepository {
     );
   }
 
-  Future<void> sendLiveLocation({
+  /// Returns how many active orders the server attached this ping to; 0 means
+  /// the rider has nothing left to track.
+  Future<int> sendLiveLocation({
     String? batchId,
     List<String>? orderIds,
     required double lat,
@@ -85,8 +153,8 @@ class RiderRepository {
     double? accuracy,
     double? heading,
     double? speed,
-  }) {
-    return _api.post(
+  }) async {
+    final res = await _api.post(
       '/api/riders/live-location',
       data: {
         'orderIds': ?orderIds,
@@ -98,5 +166,6 @@ class RiderRepository {
         'speed': ?speed,
       },
     );
+    return (res['written'] as num?)?.toInt() ?? 0;
   }
 }

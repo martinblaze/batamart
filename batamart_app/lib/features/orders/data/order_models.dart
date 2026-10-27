@@ -102,6 +102,8 @@ class Order {
       case 'RIDER_ASSIGNED':
         return 1;
       case 'PICKED_UP':
+      case 'AT_HUB':
+      case 'PACKED':
       case 'ON_THE_WAY':
         return 2;
       case 'DELIVERED':

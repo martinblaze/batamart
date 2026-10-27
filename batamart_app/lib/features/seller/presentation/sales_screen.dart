@@ -38,10 +38,25 @@ class _SalesScreenState extends ConsumerState<SalesScreen> {
           'PROCESSING',
           'RIDER_ASSIGNED',
           'PICKED_UP',
+          'AT_HUB',
+          'PACKED',
           'ON_THE_WAY',
         }.contains(order.status);
       case _SalesTab.completed:
         return const {'DELIVERED', 'COMPLETED'}.contains(order.status);
+    }
+  }
+
+  Future<void> _markPickedUp(Order order) async {
+    try {
+      await ref.read(sellerOrdersRepositoryProvider).markPickedUp(order.id);
+      ref.invalidate(salesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -136,6 +151,9 @@ class _SalesScreenState extends ConsumerState<SalesScreen> {
                               onAccept: order.status == 'PENDING'
                                   ? () => _accept(order)
                                   : null,
+                              onMarkPickedUp: order.status == 'RIDER_ASSIGNED'
+                                  ? () => _markPickedUp(order)
+                                  : null,
                             );
                           },
                         ),
@@ -178,10 +196,11 @@ class _SalesTabChip extends StatelessWidget {
 }
 
 class _SaleRow extends StatelessWidget {
-  const _SaleRow({required this.order, this.onAccept});
+  const _SaleRow({required this.order, this.onAccept, this.onMarkPickedUp});
 
   final Order order;
   final VoidCallback? onAccept;
+  final VoidCallback? onMarkPickedUp;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +243,11 @@ class _SaleRow extends StatelessWidget {
             ),
             if (onAccept != null)
               FilledButton(onPressed: onAccept, child: const Text('Accept'))
+            else if (onMarkPickedUp != null)
+              FilledButton(
+                onPressed: onMarkPickedUp,
+                child: const Text('Mark picked up'),
+              )
             else
               Icon(Icons.chevron_right, color: context.palette.inkSecondary),
           ],

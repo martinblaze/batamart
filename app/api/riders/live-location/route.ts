@@ -31,8 +31,10 @@ export async function POST(request: NextRequest) {
     }
 
     const where: any = {
-      riderId: user.id,
-      status: { in: TRACKABLE_STATUSES },
+      OR: [
+        { riderId: user.id, status: { in: TRACKABLE_STATUSES } },
+        { deliveryRiderId: user.id, status: 'ON_THE_WAY' },
+      ],
     }
 
     if (orderIds.length > 0) {

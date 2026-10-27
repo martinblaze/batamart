@@ -104,22 +104,11 @@ const ANIM_CSS = `
   .glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
 
   /* ── Product card ── */
-  .product-card {
-    transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.3s ease;
-    -webkit-transform: translateZ(0);   /* GPU layer on iOS */
-    transform: translateZ(0);
-    will-change: transform;
-  }
-  .product-card:hover {
-    transform: translateY(-4px) scale(1.015);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(99,102,241,0.08);
-  }
-  .product-card:active {
-    transform: scale(0.97);
-    transition: transform 0.12s ease;
-  }
+  /* Flat card: the border darkens on hover, nothing lifts or bounces. */
+  .product-card { transition: border-color 0.2s ease; }
+  .product-card:hover { border-color: var(--color-ink); }
   .product-img { transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
-  .product-card:hover .product-img { transform: scale(1.08); }
+  .product-card:hover .product-img { transform: scale(1.03); }
 
   .quick-actions {
     opacity: 0;
@@ -258,12 +247,7 @@ const ANIM_CSS = `
   .deal-card:active { transform: scale(0.97); }
   .deal-card:hover .product-img { transform: scale(1.07); }
 
-  .mini-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .mini-card:hover { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-  .mini-card:active { transform: scale(0.97); }
-  .mini-card:hover .product-img { transform: scale(1.05); }
+  .mini-card:hover .product-img { transform: scale(1.03); }
 
   .section-header-line::after {
     content: '';
@@ -506,110 +490,65 @@ function StarRating({ rating }: { rating: number }) {
 function ProductCard({ product, onClick, delay = 0 }: {
   product: any; onClick: () => void; delay?: number
 }) {
-  // Use real discount from market price check (stored in DB), not a fake computed value
+  // Real discount from the market price check (stored in DB), never computed.
   const discount     = (product.isDeal && product.discountPercent) ? product.discountPercent : 0
-  const stockLeft    = Number.isFinite(Number(product.quantity)) && product.quantity > 0 && product.quantity <= 7 ? Number(product.quantity) : null
+  const stockLeft    = Number.isFinite(Number(product.quantity)) && product.quantity > 0 && product.quantity <= 3 ? Number(product.quantity) : null
   const deliveryTag  = product.deliveryEstimate || null
-  // Show the actual market price as the "original" crossed-out price when it's a deal
   const originalPrice = (product.isDeal && product.marketPrice && product.marketPrice > product.price)
     ? Math.round(product.marketPrice)
     : null
 
+  // One label at most: the strongest true thing about this listing.
+  const label =
+    discount > 0 ? `-${discount}%`
+    : product.isTrending ? 'Hot'
+    : product.isNew ? 'New'
+    : null
+
+  const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
+
   return (
     <div
       onClick={onClick}
-      className="product-card card-enter bg-card rounded-xl overflow-hidden border border-border shadow-soft cursor-pointer flex flex-col group"
+      className="product-card card-enter bg-card overflow-hidden border border-border cursor-pointer flex flex-col group"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="relative aspect-square bg-surface overflow-hidden">
         <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.isTrending && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-warning text-white text-[10px] font-medium rounded-md">
-              <Flame className="w-2.5 h-2.5" strokeWidth={1.75} /> HOT
-            </span>
-          )}
-          {product.isNew && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <CrownIcon className="w-2.5 h-2.5" strokeWidth={1.75} /> NEW
-            </span>
-          )}
-          {product.isPersonalised && !product.isTrending && !product.isNew && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white text-[10px] font-medium rounded-md">
-              <Heart className="w-2.5 h-2.5 fill-white" strokeWidth={1.75} /> FOR YOU
-            </span>
-          )}
-        </div>
-        {discount > 0 && (
-          <div className="float-badge absolute top-2 right-2 discount-badge text-white text-[11px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1">
-            <Percent className="w-2.5 h-2.5" />-{discount}%
-          </div>
+        {label && (
+          <span className="absolute left-0 top-0 bg-ink px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-background">
+            {label}
+          </span>
         )}
-        {product.images?.length > 1 && (
-          <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-lg bg-black/50 text-white text-[10px] font-semibold backdrop-blur-sm">
-            {product.images.length} photos
-          </div>
-        )}
-        <div className="quick-actions absolute bottom-2 left-2 flex gap-1.5">
-          <button onClick={e => { e.stopPropagation(); onClick() }} className="w-7 h-7 bg-card/95 rounded-lg flex items-center justify-center shadow-soft transition-colors">
-            <Eye className="w-3.5 h-3.5 text-ink-secondary" />
-          </button>
-          <button onClick={e => { e.stopPropagation(); window.location.href = `/report?productId=${product.id}` }} className="w-7 h-7 bg-card/95 hover:bg-danger/10 rounded-lg flex items-center justify-center shadow-soft transition-colors">
-            <Flag className="w-3.5 h-3.5 text-ink-secondary hover:text-danger" />
-          </button>
-        </div>
       </div>
 
       <div className="p-2.5 sm:p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold text-ink-muted uppercase tracking-wider mb-0.5">
-          {(() => {
-            const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
-            return display.subcategory ? `${display.category} · ${display.subcategory}` : display.category
-          })()}
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted mb-1 truncate">
+          {display.subcategory ? `${display.category} · ${display.subcategory}` : display.category}
         </p>
-        <h3 className="font-semibold text-ink line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
+        <h3 className="font-medium text-ink line-clamp-2 text-xs sm:text-sm leading-snug flex-1">{product.name}</h3>
 
-        <div className="mt-2">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-primary font-semibold text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
-            {originalPrice && <span className="text-ink-muted font-medium text-[11px] line-through">{fmt(originalPrice)}</span>}
-          </div>
-          <StarRating rating={product.seller?.avgRating || 0} />
+        <div className="mt-2 flex items-baseline gap-1.5 flex-wrap">
+          <span className="text-ink font-semibold text-sm sm:text-base tracking-tight">{fmt(product.price)}</span>
+          {originalPrice && <span className="text-ink-muted text-[11px] line-through">{fmt(originalPrice)}</span>}
         </div>
 
-        {deliveryTag && (
-          <div className="mt-1.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full">
-              <Truck className="w-2.5 h-2.5" /> Delivery: {deliveryTag}
-            </span>
-          </div>
-        )}
+        <p className="mt-1.5 truncate font-mono text-[10px] uppercase tracking-[0.1em] text-ink-muted">
+          {[
+            deliveryTag ? `Ready ${deliveryTag}` : null,
+            product.landmark || null,
+            stockLeft ? `${stockLeft} left` : null,
+          ].filter(Boolean).join(' · ')}
+        </p>
 
-        {stockLeft && (
-          <div className="mt-1">
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-danger">
-              <Timer className="w-2.5 h-2.5" /> Only {stockLeft} left
-            </span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-2 mt-1.5 border-t border-border">
-          <div className="min-w-0 flex items-center gap-1 flex-wrap">
-            <Link
-              href={`/seller/${product.seller?.id}`}
-              className="text-[10px] font-semibold text-ink-secondary hover:text-primary truncate transition-colors"
-              onClick={e => e.stopPropagation()}
-            >
-              {product.seller?.name}
-            </Link>
-            <VerifiedBadge />
-            {product.landmark && (
-              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-ink-muted">
-                <MapPin className="w-2.5 h-2.5" strokeWidth={1.75} /> {product.landmark}
-              </span>
-            )}
-          </div>
-          <TrustPill level={product.seller?.trustLevel || 'BRONZE'} />
+        <div className="mt-2 border-t border-border pt-2">
+          <Link
+            href={`/seller/${product.seller?.id}`}
+            className="block truncate text-[11px] text-ink-secondary hover:text-ink transition-colors"
+            onClick={e => e.stopPropagation()}
+          >
+            {product.seller?.name}
+          </Link>
         </div>
       </div>
     </div>
@@ -622,24 +561,24 @@ function ProductCard({ product, onClick, delay = 0 }: {
 function MiniProductCard({ product, onClick }: { product: any; onClick: () => void }) {
   return (
     <div onClick={onClick} className="mini-card cursor-pointer group">
-      <div className="aspect-square rounded-xl overflow-hidden bg-surface mb-2">
+      <div className="aspect-square overflow-hidden bg-surface mb-2">
         <img src={product.images[0] || '/placeholder.png'} alt={product.name} className="product-img w-full h-full object-cover" />
       </div>
       <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{product.name}</p>
-      <p className="text-xs font-semibold text-primary mt-0.5">{fmt(product.price)}</p>
+      <p className="text-xs font-semibold text-ink mt-0.5">{fmt(product.price)}</p>
     </div>
   )
 }
 
 function SkeletonCard({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="card-enter bg-card rounded-xl overflow-hidden border border-border shadow-soft" style={{ animationDelay: `${delay}ms` }}>
+    <div className="card-enter bg-card overflow-hidden border border-border" style={{ animationDelay: `${delay}ms` }}>
       <div className="aspect-square shimmer" />
       <div className="p-3 space-y-2">
-        <div className="h-2.5 shimmer rounded-full w-1/2" />
-        <div className="h-3.5 shimmer rounded-full w-full" />
-        <div className="h-3.5 shimmer rounded-full w-3/4" />
-        <div className="h-5   shimmer rounded-full w-1/3 mt-3" />
+        <div className="h-2.5 shimmer w-1/2" />
+        <div className="h-3.5 shimmer w-full" />
+        <div className="h-3.5 shimmer w-3/4" />
+        <div className="h-5 shimmer w-1/3 mt-3" />
       </div>
     </div>
   )
@@ -683,58 +622,6 @@ function seededShuffle<T>(arr: T[], seed: number): T[] {
 // ─────────────────────────────────────────────
 // Price-Range Deal Panels (Amazon "Shop X for less" style)
 // ─────────────────────────────────────────────
-const PRICE_PANELS = [
-  {
-    title: 'Shop fashion for less',
-    category: 'Fashion',
-    catFilter: 'Fashion',
-    tiers: [
-      { label: 'Under ₦10k',  max: 10000 },
-      { label: 'Under ₦20k',  max: 20000 },
-      { label: 'Under ₦30k',  max: 30000 },
-      { label: 'Under ₦50k',  max: 50000 },
-    ],
-    icon: Shirt,
-  },
-  {
-    title: 'Tech deals on campus',
-    category: 'Electronics',
-    catFilter: 'Electronics',
-    tiers: [
-      { label: 'Under ₦20k',  max: 20000 },
-      { label: 'Under ₦50k',  max: 50000 },
-      { label: 'Under ₦100k', max: 100000 },
-      { label: 'Under ₦200k', max: 200000 },
-    ],
-    icon: Smartphone,
-  },
-  {
-    title: 'Beauty picks for less',
-    category: 'Beauty & Health',
-    catFilter: 'Beauty & Health',
-    tiers: [
-      { label: 'Under ₦5k',   max: 5000 },
-      { label: 'Under ₦10k',  max: 10000 },
-      { label: 'Under ₦20k',  max: 20000 },
-      { label: 'Under ₦30k',  max: 30000 },
-    ],
-    icon: CrownIcon,
-  },
-  {
-    title: 'Food & groceries under budget',
-    category: 'Food & Groceries',
-    catFilter: 'Food & Groceries',
-    tiers: [
-      { label: 'Under ₦2k',   max: 2000 },
-      { label: 'Under ₦5k',   max: 5000 },
-      { label: 'Under ₦10k',  max: 10000 },
-      { label: 'Under ₦20k',  max: 20000 },
-    ],
-    icon: UtensilsCrossed,
-  },
-]
-
-
 // ── Brand/search chips for the brand spotlight row ─────────────────────────
 const BRAND_CHIPS = [
   { label: 'iPhone',      icon: Smartphone, cat: 'Electronics' },
@@ -796,155 +683,37 @@ const MEGA_CATEGORIES: { name: string; icon: LucideIcon; count: string }[] = [
   { name: 'Arts & Crafts',        icon: Palette, count: '120+' },
 ]
 
-function PricePanelsRow({ allProducts, onCategorySelect, renderSeed }: {
+// ─────────────────────────────────────────────
+// Shop by budget: four large tiles, one real listing photo each
+// ─────────────────────────────────────────────
+const BUDGET_TIERS = [5000, 10000, 20000, 50000]
+
+function BudgetShelf({ allProducts, onSelect, renderSeed }: {
   allProducts: any[]
-  onCategorySelect: (cat: string, maxPrice?: number) => void
+  onSelect: (maxPrice: number) => void
   renderSeed: number
 }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {PRICE_PANELS.map((panel, pi) => {
-        const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
-        const Icon = panel.icon
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px border border-border bg-border">
+      {BUDGET_TIERS.map(max => {
+        const inTier = allProducts.filter((p: any) => p.price <= max && p.images?.[0])
+        const pick = seededShuffle(inTier, renderSeed + max)[0]
         return (
-          <div key={panel.title} className="bg-card rounded-xl border border-border overflow-hidden">
-            <div className="p-3 pb-2">
-              <p className="text-sm font-medium text-ink leading-tight">{panel.title}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-1 px-2 pb-1">
-              {panel.tiers.map((tier, ti) => {
-                const tierProds = catProds.filter(p => p.price <= tier.max)
-                const shuffled = seededShuffle(tierProds, renderSeed + pi * 100 + ti)
-                const pick = shuffled[0]
-                return (
-                  <div
-                    key={tier.label}
-                    onClick={() => onCategorySelect(panel.catFilter, tier.max)}
-                    className="cursor-pointer group"
-                  >
-                    <div className="aspect-square rounded-lg overflow-hidden bg-surface mb-1 relative">
-                      {pick ? (
-                        <img src={pick.images[0] || '/placeholder.png'} alt={pick.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Icon className="w-6 h-6 text-ink-muted" strokeWidth={1.75} />
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-[10px] font-medium text-ink-secondary text-center leading-tight pb-1">{tier.label}</p>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="px-3 pb-3">
-              <button
-                onClick={() => onCategorySelect(panel.catFilter)}
-                className="text-[11px] font-medium text-primary flex items-center gap-1 hover:underline"
-              >
-                See all deals <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-              </button>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────
-// Category Showcase Panels
-// ─────────────────────────────────────────────
-const SHOWCASE_PANELS = [
-  {
-    title: 'Level up your tech',
-    catFilter: 'Electronics',
-    subcats: ['Phones', 'Laptops', 'Earbuds', 'Power banks'],
-    icon: Smartphone,
-    cta: 'Explore tech',
-  },
-  {
-    title: 'Campus fashion',
-    catFilter: 'Fashion',
-    subcats: ['Sneakers', 'Bags', 'Watches', 'Accessories'],
-    icon: Shirt,
-    cta: 'Shop fashion',
-  },
-  {
-    title: 'Home & kitchen',
-    catFilter: 'Home & Kitchen',
-    subcats: ['Furniture', 'Appliances', 'Bedding', 'Decor'],
-    icon: Home,
-    cta: 'Shop home',
-  },
-  {
-    title: 'Food & groceries',
-    catFilter: 'Food & Groceries',
-    subcats: ['Jollof rice', 'Snacks', 'Drinks', 'Fast food'],
-    icon: UtensilsCrossed,
-    cta: 'Order food',
-  },
-  {
-    title: 'Fitness & sport',
-    catFilter: 'Sports & Fitness',
-    subcats: ['Gym gear', 'Sneakers', 'Jerseys', 'Supplements'],
-    icon: Dumbbell,
-    cta: 'Shop fitness',
-  },
-  {
-    title: 'Beauty & health',
-    catFilter: 'Beauty & Health',
-    subcats: ['Skincare', 'Makeup', 'Hair', 'Wellness'],
-    icon: CrownIcon,
-    cta: 'Shop beauty',
-  },
-]
-
-function ShowcasePanels({ allProducts, onCategorySelect, renderSeed }: {
-  allProducts: any[]
-  onCategorySelect: (cat: string) => void
-  renderSeed: number
-}) {
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-      {SHOWCASE_PANELS.map((panel, pi) => {
-        const catProds = allProducts.filter((p: any) => matchesCategoryFilter(p, panel.catFilter))
-        // Pick 4 random products, shuffled differently each render
-        const shuffled = seededShuffle(catProds, renderSeed + pi * 37)
-        const picks = shuffled.slice(0, 4)
-        const Icon = panel.icon
-        return (
-          <div
-            key={panel.title}
-            className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer group"
-            onClick={() => onCategorySelect(panel.catFilter)}
+          <button
+            key={max}
+            onClick={() => onSelect(max)}
+            className="group bg-card text-left"
           >
-            <div className="p-3 pb-1">
-              <p className="text-sm font-medium text-ink leading-tight">{panel.title}</p>
+            <div className="aspect-[4/3] overflow-hidden bg-surface">
+              {pick && (
+                <img src={pick.images[0]} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              )}
             </div>
-            {picks.length > 0 ? (
-              <div className="grid grid-cols-2 gap-1 px-2 pb-1">
-                {picks.map((p, i) => (
-                  <div key={p.id + i} className="aspect-square rounded-lg overflow-hidden bg-surface">
-                    <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-1 px-2 pb-1">
-                {panel.subcats.map((sub, i) => (
-                  <div key={i} className="aspect-square rounded-lg bg-surface flex flex-col items-center justify-center p-1">
-                    <Icon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
-                    <span className="text-[8px] font-medium text-ink-secondary text-center leading-tight mt-0.5">{sub}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="px-3 pb-3">
-              <span className="text-[11px] font-medium text-primary flex items-center gap-1">
-                {panel.cta} <ChevronRight className="w-3 h-3" strokeWidth={1.75} />
-              </span>
+            <div className="flex items-baseline justify-between px-3 py-3">
+              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink">Under ₦{max / 1000}k</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-muted">{inTier.length} items</span>
             </div>
-          </div>
+          </button>
         )
       })}
     </div>
@@ -962,7 +731,7 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
   const scrollBy = (dir: number) => rowRef.current?.scrollBy({ left: dir * 240, behavior: 'smooth' })
 
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+    <div className="bg-card border border-border overflow-hidden">
       <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
           <h2 className="text-lg font-semibold text-ink section-header-line">{title}</h2>
@@ -976,28 +745,22 @@ function BestSellersRow({ products, onProductClick, onSeeAll, title, subtitle }:
       </div>
       <div className="relative group/row px-5 py-4">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-4 overflow-x-auto no-scrollbar scroll-section">
           {products.map(p => (
             <div key={p.id} onClick={() => onProductClick(p.id)} className="deal-card flex-shrink-0 w-36 sm:w-44 cursor-pointer group/card">
-              <div className="aspect-square rounded-xl overflow-hidden bg-surface mb-2.5">
+              <div className="aspect-square overflow-hidden bg-surface mb-2.5">
                 <img src={p.images[0] || '/placeholder.png'} alt={p.name} className="product-img w-full h-full object-cover" />
               </div>
               <p className="text-xs font-semibold text-ink line-clamp-2 leading-snug">{p.name}</p>
-              <p className="text-xs font-semibold text-primary mt-1">{fmt(p.price)}</p>
-              {p.seller?.avgRating > 0 && (
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  <Star className="w-2.5 h-2.5 text-warning fill-warning" />
-                  <span className="text-[10px] text-ink-secondary font-medium">{p.seller.avgRating.toFixed(1)}</span>
-                </div>
-              )}
+              <p className="text-xs font-semibold text-ink mt-1">{fmt(p.price)}</p>
             </div>
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity hover:bg-primary hover:text-white hover:border-primary">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1015,7 +778,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
   const rowRef = useRef<HTMLDivElement>(null)
   const scrollBy = (dir: number) => rowRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' })
   return (
-    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
+    <div className="overflow-hidden border border-border">
       <div className={`${sectionClass} px-5 py-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -1037,7 +800,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
       </div>
       <div className="bg-card px-5 py-4 relative group/row">
         <button onClick={() => scrollBy(-1)}
-          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div ref={rowRef} className="flex gap-3 overflow-x-auto no-scrollbar scroll-section">
@@ -1048,7 +811,7 @@ function DealsSection({ products, onProductClick, onSeeAll, sectionClass, icon, 
           ))}
         </div>
         <button onClick={() => scrollBy(1)}
-          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border rounded-full shadow items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
+          className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-card border border-border items-center justify-center opacity-0 group-hover/row:opacity-100 transition-opacity">
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
@@ -1165,7 +928,7 @@ function JustDroppedSection({ allProducts, onProductClick }: {
   if (allNew.length === 0) return null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
+    <div className="overflow-hidden border border-border">
       <div className="section-stripe-emerald px-5 py-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
@@ -1355,7 +1118,7 @@ function MosaicRow({ products, onProductClick, title, subtitle, sectionClass }: 
   if (picks.length < 3) return null
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-border shadow-soft">
+    <div className="overflow-hidden border border-border">
       <div className={`${sectionClass} px-5 py-4`}>
         <h2 className="text-base font-semibold text-background">{title}</h2>
         <p className="text-white/70 text-[11px] mt-0.5">{subtitle}</p>
@@ -1438,7 +1201,7 @@ function TopSellersRow({ products, onProductClick }: {
   if (topSellers.length === 0) return null
 
   return (
-    <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+    <div className="bg-card border border-border overflow-hidden">
       <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
         <div>
           <h2 className="text-base font-semibold text-ink section-header-line">Top campus sellers</h2>
@@ -2272,7 +2035,7 @@ export default function MarketplacePage() {
         ) : viewMode === 'grid' ? (
           /* ── GRID VIEW ── */
           <div>
-            <div className="flex items-center justify-between mb-3 bg-card rounded-xl px-4 py-3 border border-border shadow-soft gap-2">
+            <div className="flex items-center justify-between mb-3 bg-card px-4 py-3 border border-border gap-2">
               <LiveStatsBar count={allProducts.length} />
               <select
                 value={sortMode}
@@ -2308,7 +2071,7 @@ export default function MarketplacePage() {
           <div className="space-y-4">
 
             {allProducts.length > 0 && (
-              <div className="bg-card rounded-xl border border-border shadow-soft px-4 py-3">
+              <div className="bg-card border border-border px-4 py-3">
                 <LiveStatsBar count={allProducts.length} />
               </div>
             )}
@@ -2328,16 +2091,6 @@ export default function MarketplacePage() {
 
             {/* ── Seasonal Campaign Banner ── */}
             <GirlfriendsDayBanner />
-
-            {/* ── Shop by Category (showcase panels) ── */}
-            {allProducts.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-semibold text-ink section-header-line">Shop by Category</h2>
-                </div>
-                <ShowcasePanels allProducts={allProducts} onCategorySelect={handleCategorySelect} renderSeed={renderSeed} />
-              </div>
-            )}
 
             {/* ── Flash Deals (highest % off first) ── */}
             {trendingProducts.length > 0 && (
@@ -2392,10 +2145,9 @@ export default function MarketplacePage() {
             {allProducts.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-semibold text-ink section-header-line">Campus Deals by Budget</h2>
-                  <span className="text-[11px] text-ink-muted font-medium">Tap a price to filter</span>
+                  <h2 className="text-base font-semibold text-ink section-header-line">Shop by budget</h2>
                 </div>
-                <PricePanelsRow allProducts={allProducts} onCategorySelect={handleCategorySelect} renderSeed={renderSeed} />
+                <BudgetShelf allProducts={allProducts} onSelect={(max) => handleCategorySelect('All', max)} renderSeed={renderSeed} />
               </div>
             )}
 
@@ -2412,7 +2164,7 @@ export default function MarketplacePage() {
 
             {/* ── Recently Viewed ── */}
             {recentlyViewed.length > 0 && (
-              <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
+              <div className="bg-card border border-border overflow-hidden">
                 <div className="flex items-end justify-between px-5 pt-5 pb-3 border-b border-border">
                   <div>
                     <h2 className="text-base font-semibold text-ink section-header-line">Recently Viewed</h2>
@@ -2572,7 +2324,7 @@ export default function MarketplacePage() {
 
             {/* ── All Listings ── */}
             {discoverProducts.length > 0 && (
-              <div className="bg-card rounded-2xl border border-border shadow-soft p-5">
+              <div className="bg-card border border-border p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-base font-semibold text-ink section-header-line">All Listings</h2>

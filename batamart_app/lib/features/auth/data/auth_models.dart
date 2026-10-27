@@ -41,6 +41,7 @@ class AppUser {
     this.phone,
     this.email,
     this.matricNumber,
+    this.username,
     this.profilePhoto,
     this.role = 'BUYER',
     this.isSellerMode = true,
@@ -68,6 +69,7 @@ class AppUser {
   final String? phone;
   final String? email;
   final String? matricNumber;
+  final String? username;
   final String? profilePhoto;
   final String role;
   final bool isSellerMode;
@@ -107,6 +109,7 @@ class AppUser {
       phone: json['phone'] as String?,
       email: json['email'] as String?,
       matricNumber: json['matricNumber'] as String?,
+      username: json['username'] as String?,
       profilePhoto: json['profilePhoto'] as String?,
       role: json['role'] as String? ?? 'BUYER',
       isSellerMode: json['isSellerMode'] as bool? ?? true,
@@ -145,6 +148,7 @@ class AppUser {
       phone: phone,
       email: email,
       matricNumber: matricNumber,
+      username: username,
       profilePhoto: profilePhoto,
       role: role ?? this.role,
       isSellerMode: isSellerMode ?? this.isSellerMode,

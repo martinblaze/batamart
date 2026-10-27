@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest } from '@/lib/auth/auth'
+import { getOrderDeliveryDate, parseReadyDays } from '@/lib/delivery/schedule'
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
         orders: {
           include: {
             product: {
-              select: { name: true, images: true, hostelName: true, landmark: true, estimatedWeightKg: true, dimensionsCm: true, campaignTag: true },
+              select: { name: true, images: true, hostelName: true, landmark: true, estimatedWeightKg: true, dimensionsCm: true, campaignTag: true, deliveryEstimate: true },
             },
             seller: {
               select: { name: true, phone: true },
@@ -94,7 +95,24 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ batches, disputePickups })
+    // Soonest delivery day first, then oldest order first within a day.
+    const scheduledBatches = batches
+      .map(batch => {
+        const readyDays = Math.max(0, ...batch.orders.map(o => parseReadyDays(o.product?.deliveryEstimate)))
+        const scheduled = getOrderDeliveryDate(batch.createdAt, readyDays)
+        return {
+          ...batch,
+          scheduledFor: scheduled.toISOString(),
+          canAcceptNow: Date.now() >= scheduled.getTime(),
+        }
+      })
+      .sort((a, b) =>
+        a.scheduledFor === b.scheduledFor
+          ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          : a.scheduledFor < b.scheduledFor ? -1 : 1,
+      )
+
+    return NextResponse.json({ batches: scheduledBatches, disputePickups })
   } catch (error) {
     console.error('available-orders error:', error)
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })

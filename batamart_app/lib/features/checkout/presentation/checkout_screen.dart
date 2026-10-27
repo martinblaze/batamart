@@ -9,7 +9,11 @@ import '../../../core/theme/app_palette.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bar.dart';
+import '../../auth/presentation/username_sheet.dart';
 import '../../auth/state/auth_controller.dart';
+import '../../../core/api/api_exception.dart';
+import '../../wallet/state/wallet_providers.dart';
+import '../../../core/widgets/nav/buyer_seller_nav_shell.dart';
 import '../../cart/state/cart_controller.dart';
 import '../data/payments_repository.dart';
 import '../../../core/utils/money.dart';
@@ -38,6 +42,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _noteController = TextEditingController();
   bool _deliverySuitabilityConfirmed = false;
   bool _isSubmitting = false;
+  bool _useWallet = false;
   String? _error;
 
   @override
@@ -54,6 +59,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             'Please confirm your delivery address is motorcycle-accessible.',
       );
       return;
+    }
+    // Sellers see only a username, so one is required before any order.
+    if ((ref.read(authControllerProvider).user?.username ?? '').isEmpty) {
+      final saved = await showUsernameSheet(context);
+      if (!saved || !mounted) return;
     }
     // Fires on the tap rather than after the payment round trip: this is the
     // moment the user commits, and the webview takes over from here.
@@ -81,6 +91,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         await cartController.setDeliveryAcknowledged(i, true);
       }
 
+      if (_useWallet) {
+        await _payFromWallet();
+        return;
+      }
+
       final result = await ref
           .read(paymentsRepositoryProvider)
           .initialize(ref.read(cartControllerProvider));
@@ -101,10 +116,60 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
   }
 
+  Future<String?> _askPin() {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Wallet PIN'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          decoration: const InputDecoration(hintText: '6-digit PIN'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Pay'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _payFromWallet() async {
+    final repo = ref.read(paymentsRepositoryProvider);
+    final items = ref.read(cartControllerProvider);
+    String? pin;
+    if (ref.read(authControllerProvider).user?.hasWithdrawalPin ?? false) {
+      pin = await _askPin();
+      if (pin == null || pin.isEmpty) return;
+    }
+    try {
+      final orderNumber = await repo.payWithWallet(items, pin: pin);
+      await ref.read(cartControllerProvider.notifier).clear();
+      ref.invalidate(walletProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Order $orderNumber placed from your wallet.')),
+      );
+      context.go(AppRoutes.home, extra: BuyerSellerNavTab.orders);
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authControllerProvider).user;
     final items = ref.watch(cartControllerProvider);
+    final walletBalance = ref.watch(walletProvider).asData?.value.availableBalance;
     final quoteAsync = ref.watch(deliveryQuoteProvider);
     final subtotal = ref.read(cartControllerProvider.notifier).subtotal;
     final deliveryFee = quoteAsync.asData?.value.fee ?? 0;
@@ -265,8 +330,35 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               Text(_error!, style: const TextStyle(color: AppColors.danger)),
             ],
             const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                ChoiceChip(
+                  label: const Text('Card or transfer'),
+                  selected: !_useWallet,
+                  onSelected: (_) => setState(() => _useWallet = false),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                ChoiceChip(
+                  label: Text(
+                    walletBalance == null
+                        ? 'Wallet'
+                        : 'Wallet (${naira(walletBalance)})',
+                  ),
+                  selected: _useWallet,
+                  onSelected: (_) => setState(() => _useWallet = true),
+                ),
+              ],
+            ),
+            if (_useWallet && walletBalance != null && walletBalance < total) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'Your wallet is short for this order. Add money from the Wallet tab first.',
+                style: const TextStyle(color: AppColors.danger, fontSize: 12),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
             PrimaryButton(
-              label: 'Pay with Flutterwave',
+              label: _useWallet ? 'Pay from wallet' : 'Pay with Flutterwave',
               icon: LucideIcons.lock,
               onPressed: items.isEmpty ? null : _pay,
               isLoading: _isSubmitting,

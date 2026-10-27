@@ -100,7 +100,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (order.status !== 'DELIVERED') {
+    // The buyer is the one who marks an order delivered: the rider has no
+    // delivered button. ON_THE_WAY is the normal case; DELIVERED covers
+    // orders marked by older rider builds.
+    if (order.status !== 'DELIVERED' && order.status !== 'ON_THE_WAY') {
       return NextResponse.json(
         { error: `Cannot confirm. Order status is: ${order.status}` },
         { status: 400 },
@@ -120,38 +123,77 @@ export async function POST(request: NextRequest) {
 
     const confirmedPrice = order.productPrice
     const riderShare = Math.round(order.deliveryFee * RIDER_SHARE_PERCENT * 100) / 100
-    const hasRider = !!order.riderId
+    const pickupRiderId = order.riderId
+    const deliveryRiderId = order.deliveryRiderId ?? order.riderId
+    const hasRider = !!(pickupRiderId || deliveryRiderId)
 
     const result = await prisma.$transaction(
       async tx => {
         const updatedOrder = await tx.order.update({
           where: { id: orderId },
-          data: { status: 'COMPLETED', completedAt: new Date() },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            ...(order.deliveredAt ? {} : { deliveredAt: new Date() }),
+          },
         })
 
-        if (order.riderId) {
+        // Rider fee: one rider doing both legs gets all of it; with two
+        // riders (pickup and delivery) it is split evenly.
+        const payouts: { riderId: string; amount: number; ref: string; note: string }[] = []
+        if (pickupRiderId && deliveryRiderId && pickupRiderId !== deliveryRiderId) {
+          const half = Math.round((riderShare / 2) * 100) / 100
+          payouts.push(
+            { riderId: pickupRiderId, amount: half, ref: `${order.orderNumber}-RIDER-RELEASE`, note: `Pickup fee for Order: ${order.orderNumber}` },
+            { riderId: deliveryRiderId, amount: Math.round((riderShare - half) * 100) / 100, ref: `${order.orderNumber}-RIDER-RELEASE-DELIVERY`, note: `Delivery fee for Order: ${order.orderNumber}` },
+          )
+        } else if (deliveryRiderId) {
+          payouts.push({ riderId: deliveryRiderId, amount: riderShare, ref: `${order.orderNumber}-RIDER-RELEASE`, note: `Delivery fee for Order: ${order.orderNumber}` })
+        }
+
+        for (const payout of payouts) {
           const rider = await tx.user.findUnique({
-            where: { id: order.riderId },
+            where: { id: payout.riderId },
             select: { availableBalance: true },
           })
           const riderBalance = Number(rider?.availableBalance ?? 0)
 
           await tx.user.update({
-            where: { id: order.riderId },
-            data: { availableBalance: { increment: riderShare } },
+            where: { id: payout.riderId },
+            data: { availableBalance: { increment: payout.amount } },
           })
 
           await tx.transaction.create({
             data: {
-              userId: order.riderId,
+              userId: payout.riderId,
               type: 'CREDIT',
-              amount: riderShare,
-              description: `Delivery fee for Order: ${order.orderNumber}`,
-              reference: `${order.orderNumber}-RIDER-RELEASE`,
+              amount: payout.amount,
+              description: payout.note,
+              reference: payout.ref,
               balanceBefore: riderBalance,
-              balanceAfter: riderBalance + riderShare,
+              balanceAfter: riderBalance + payout.amount,
             },
           })
+        }
+
+        if (deliveryRiderId) {
+          await tx.user.update({
+            where: { id: deliveryRiderId },
+            data: { completedOrders: { increment: 1 } },
+          })
+        }
+
+        if (order.batchId) {
+          const siblings = await tx.order.findMany({
+            where: { batchId: order.batchId },
+            select: { id: true, status: true },
+          })
+          const done = siblings.every(o =>
+            o.id === orderId || ['COMPLETED', 'DELIVERED', 'CANCELLED'].includes(o.status),
+          )
+          if (done) {
+            await tx.deliveryBatch.update({ where: { id: order.batchId }, data: { status: 'COMPLETED' } })
+          }
         }
 
         // Log referral reward processing with buyer info for audit trail
@@ -252,6 +294,20 @@ export async function POST(request: NextRequest) {
         console.error('Hot status update error (non-blocking):', err)
       }
     })
+
+    for (const riderId of Array.from(new Set([pickupRiderId, deliveryRiderId].filter(Boolean) as string[]))) {
+      import('@/lib/notification')
+        .then(({ createNotification }) =>
+          createNotification({
+            userId: riderId,
+            type: 'ORDER_DELIVERED',
+            title: 'Delivery confirmed',
+            message: `The buyer confirmed Order #${order.orderNumber}. Your fee is in your wallet.`,
+            orderId,
+          }),
+        )
+        .catch(() => {})
+    }
 
     return NextResponse.json({
       success: true,

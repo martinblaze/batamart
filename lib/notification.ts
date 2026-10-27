@@ -94,10 +94,18 @@ export async function notifyOrderPlaced(
   orderNumber: string,
   productName: string
 ) {
+  // Sellers only ever see the buyer's username, never their name or address.
+  const [buyer, seller, admins] = await Promise.all([
+    prisma.user.findUnique({ where: { id: buyerId }, select: { username: true } }),
+    prisma.user.findUnique({ where: { id: sellerId }, select: { name: true, phone: true } }),
+    prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } }),
+  ])
+  const handle = buyer?.username ? `@${buyer.username}` : 'a buyer'
+
   await createNotification({
     userId: buyerId,
     type: 'ORDER_PLACED',
-    title: '???? Order Placed!',
+    title: 'Order placed',
     message: `Your order (#${orderNumber}) for ${productName} was placed successfully.`,
     orderId,
     metadata: { orderNumber, productName },
@@ -106,11 +114,34 @@ export async function notifyOrderPlaced(
   await createNotification({
     userId: sellerId,
     type: 'ORDER_PLACED',
-    title: '???? New Order Received!',
-    message: `You have a new order (#${orderNumber}) for ${productName}`,
+    title: `New order from ${handle}`,
+    message: `You have a new order (#${orderNumber}) for ${productName} from ${handle}.`,
     orderId,
     metadata: { orderNumber, productName, sellerId, orderUrl: `/orders/sales?highlight=${orderId}` },
   })
+
+  await createNotification({
+    userId: sellerId,
+    type: 'ORDER_PLACED',
+    title: 'Wrap it well and label it',
+    message: `Please wrap order #${orderNumber} properly and write the buyer's username ${handle} and the order code ${orderNumber} on the package, so it can be sorted correctly.`,
+    orderId,
+    metadata: { orderNumber, username: buyer?.username ?? null },
+  })
+
+  // The admin calls the vendor to confirm when the product will be ready.
+  await Promise.all(
+    admins.map(admin =>
+      createNotification({
+        userId: admin.id,
+        type: 'ORDER_PLACED',
+        title: 'New order to confirm with vendor',
+        message: `Order #${orderNumber} for ${productName} (vendor: ${seller?.name ?? 'unknown'}${seller?.phone ? `, ${seller.phone}` : ''}). Call the vendor to confirm the ready date.`,
+        orderId,
+        metadata: { orderNumber, productName, sellerId, orderUrl: '/admin/order-intake' },
+      }).catch(() => null),
+    ),
+  )
 
   await pushOrderPlaced(buyerId, orderNumber)
 

@@ -26,6 +26,16 @@ class WalletRepository {
         .toList();
   }
 
+  /// Starts a Flutterwave top-up and returns the hosted payment URL. The
+  /// server credits the wallet once Flutterwave confirms the payment.
+  Future<String> startTopUp(int amount) async {
+    final response = await _api.post(
+      '/api/wallet/topup',
+      data: {'amount': amount},
+    );
+    return response['authorizationUrl'] as String;
+  }
+
   /// Three branches per §3.7: first-time set (neither param), change (via
   /// `currentPin`), forgot-PIN (via `otpCode`).
   Future<void> setPin({

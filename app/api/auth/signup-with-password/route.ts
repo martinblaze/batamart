@@ -6,6 +6,9 @@ import { generateToken, hashPassword } from '@/lib/auth/auth'
 import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
+import { normalizeUsername, validateUsername } from '@/lib/username'
+import { AWKA_ONLY_MESSAGE, verifyAwkaLocationToken } from '@/lib/auth/awka-location'
+import { FIELD_MARKETER_PAY_PER_SIGNUP } from '@/lib/field-marketer/config'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
@@ -42,12 +45,19 @@ export async function POST(request: NextRequest) {
       // only via the /become-seller flow (POST /api/auth/become-seller).
       phone,
       referralCode,
+      fieldMarketerCode,
+      locationToken,
+      username: rawUsername,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
       hostelName,
       roomNumber,
       landmark,
     } = body
+
+    if (!verifyAwkaLocationToken(locationToken)) {
+      return NextResponse.json({ error: AWKA_ONLY_MESSAGE, locationRequired: true }, { status: 403 })
+    }
 
     // ── Field presence check ───────────────────────────────────────────────
     if (!email || !otpSessionToken || !password || !name || !phone) {
@@ -110,6 +120,16 @@ export async function POST(request: NextRequest) {
     // ── Validate referral code (required) ───────────────────────────────────
     
 
+    // Optional at signup (older app builds don't send it); checkout requires one.
+    let username: string | undefined
+    if (rawUsername) {
+      username = normalizeUsername(rawUsername)
+      const problem = validateUsername(username)
+      if (problem) return NextResponse.json({ error: problem }, { status: 400 })
+      const taken = await prisma.user.findUnique({ where: { username }, select: { id: true } })
+      if (taken) return NextResponse.json({ error: 'That username is taken' }, { status: 400 })
+    }
+
     // ── Duplicate account check ────────────────────────────────────────────
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] },
@@ -150,6 +170,7 @@ export async function POST(request: NextRequest) {
         password:     hashedPassword,
         role:         'BUYER',
         referralCode: newReferralCode,
+        ...(username ? { username } : {}),
         universityId: university.id,
         // ── Delivery location ────────────────────────────────────────────
         hostelName:   String(hostelName).trim(),
@@ -158,6 +179,39 @@ export async function POST(request: NextRequest) {
         ...(referredById ? { referredById } : {}),
       },
     })
+
+    // ── Field marketer payout ──────────────────────────────────────────────
+    // Best-effort: a failed credit must never fail the signup itself.
+    if (fieldMarketerCode && typeof fieldMarketerCode === 'string') {
+      try {
+        const marketer = await prisma.fieldMarketer.findUnique({
+          where:  { code: fieldMarketerCode.trim().toUpperCase() },
+          select: { id: true, userId: true },
+        })
+        if (marketer && marketer.userId !== user.id) {
+          await prisma.$transaction([
+            prisma.fieldMarketerSignup.create({
+              data: {
+                marketerId:     marketer.id,
+                referredUserId: user.id,
+                amount:         FIELD_MARKETER_PAY_PER_SIGNUP,
+              },
+            }),
+            // Paid into the separate marketing wallet, not User.availableBalance.
+            prisma.fieldMarketer.update({
+              where: { id: marketer.id },
+              data: {
+                totalSignups: { increment: 1 },
+                totalEarned:  { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
+                balance:      { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
+              },
+            }),
+          ])
+        }
+      } catch (err) {
+        console.error('Field marketer credit failed for new user', user.id, err)
+      }
+    }
 
     const token = generateToken(user.id, user.phone)
 

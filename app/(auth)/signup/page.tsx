@@ -29,6 +29,8 @@ type SignupDraft = {
   deliveryPhone?: string
   referralCode?: string
   signupAccessCode?: string
+  fieldMarketerCode?: string
+  locationToken?: string
   showEmailForm?: boolean
   updatedAt: number
 }
@@ -165,6 +167,7 @@ function SignupForm() {
 
   const [password, setPassword]               = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [username, setUsername]             = useState('')
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
   const [referralCode, setReferralCode]       = useState(() => {
     if (typeof window === 'undefined') return ''
@@ -176,6 +179,13 @@ function SignupForm() {
     const urlRef = new URLSearchParams(window.location.search).get('ref')
     return hasSignupAccessCode(urlRef) ? normalizeSignupAccessCode(urlRef) : ''
   })
+
+  const [fieldMarketerCode, setFieldMarketerCode] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return (new URLSearchParams(window.location.search).get('fm') || '').trim().toUpperCase()
+  })
+  const [locationToken, setLocationToken] = useState('')
+  const [locating, setLocating]           = useState(false)
 
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
@@ -230,6 +240,9 @@ function SignupForm() {
     setDeliveryPhone(draft.deliveryPhone ?? '')
     setReferralCode(draft.referralCode ?? '')
     setSignupAccessCode(draft.signupAccessCode ?? '')
+    setLocationToken(draft.locationToken ?? '')
+    const urlFm = (new URLSearchParams(window.location.search).get('fm') || '').trim().toUpperCase()
+    setFieldMarketerCode(urlFm || draft.fieldMarketerCode || '')
     setShowEmailForm(Boolean(draft.showEmailForm))
     setDraftRestored(true)
   }, [])
@@ -275,6 +288,8 @@ function SignupForm() {
       deliveryPhone,
       referralCode,
       signupAccessCode,
+      fieldMarketerCode,
+      locationToken,
       showEmailForm,
       updatedAt: Date.now(),
     })
@@ -294,6 +309,8 @@ function SignupForm() {
     deliveryPhone,
     referralCode,
     signupAccessCode,
+    fieldMarketerCode,
+    locationToken,
     showEmailForm,
   ])
 
@@ -319,6 +336,61 @@ function SignupForm() {
     return ''
   }
 
+  // Batamart is Awka-only: get a GPS fix and trade it for a server-signed
+  // token that every later signup call must carry.
+  const handleCheckLocation = () => {
+    if (!effectiveSelectedUniversity) return
+    if (locationToken) { setStep(1); return }
+    if (!navigator.geolocation) {
+      setError('Your browser cannot share location, so we cannot confirm you are in Awka.')
+      return
+    }
+    setLocating(true)
+    setError('')
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch('/api/auth/verify-location', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              latitude:  pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy:  pos.coords.accuracy,
+            }),
+          })
+          const data = await res.json()
+          if (res.ok && data.locationToken) {
+            setLocationToken(data.locationToken)
+            setStep(1)
+          } else {
+            setError(data.error || 'Could not verify your location')
+          }
+        } catch {
+          setError('Network error. Please try again.')
+        } finally {
+          setLocating(false)
+        }
+      },
+      (err) => {
+        setLocating(false)
+        setError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Please allow location access. Batamart is only open to people in Awka, and we need to confirm you are there.'
+            : 'We could not get your location. Check that location is on and try again.'
+        )
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+    )
+  }
+
+  // The server says the location proof is missing or expired: restart at step 0.
+  const restartForLocation = (message: string) => {
+    setLocationToken('')
+    setStep(0)
+    setError(message)
+  }
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
     const emailDomainError = validateEmailDomain(email)
@@ -331,11 +403,12 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined, locationToken }),
       })
       const data = await response.json()
       
       if (response.ok) { setStep(2) }
+      else if (data.locationRequired) { restartForLocation(data.error) }
       else { setError(data.error || 'Failed to send OTP') }
     } catch {
       setError('Network error. Please try again.')
@@ -423,6 +496,7 @@ function SignupForm() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!agreedToTerms) { setError('Please agree to the Terms of Service'); return }
+    if (!/^[a-z0-9]{3,20}$/.test(username)) { setError('Choose a username of 3 to 20 letters or numbers, with no spaces or symbols'); return }
     const pwdError = validatePassword(password)
     if (pwdError) { setError(pwdError); return }
     if (password !== confirmPassword) { setError('Passwords do not match'); return }
@@ -439,7 +513,10 @@ function SignupForm() {
           email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
           referralCode: referralCode || undefined,
+          username,
           signupAccessCode: activeSignupAccessCode || undefined,
+          fieldMarketerCode: fieldMarketerCode || undefined,
+          locationToken,
           universityId: effectiveSelectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
@@ -456,6 +533,8 @@ function SignupForm() {
         localStorage.setItem('userId',   data.user.id)
         const redirectTo = searchParams.get('redirect')
         router.push(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/marketplace')
+      } else if (data.locationRequired) {
+        restartForLocation(data.error)
       } else {
         setError(data.error || 'Signup failed')
       }
@@ -539,14 +618,21 @@ function SignupForm() {
             </div>
           )}
 
+          <div className="mt-6">
+            <ErrorBox error={error} />
+          </div>
+
           <button
-            onClick={() => { if (effectiveSelectedUniversity) setStep(1) }}
-            disabled={!effectiveSelectedUniversity}
-            className="w-full mt-6 h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+            onClick={handleCheckLocation}
+            disabled={!effectiveSelectedUniversity || locating}
+            className="w-full mt-2 h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            Continue with {effectiveSelectedUniversity?.shortName ?? 'your campus'}
-            <ChevronRight className="w-5 h-5" strokeWidth={1.75} />
+            {locating ? 'Confirming you are in Awka...' : `Continue with ${effectiveSelectedUniversity?.shortName ?? 'your campus'}`}
+            {!locating && <ChevronRight className="w-5 h-5" strokeWidth={1.75} />}
           </button>
+          <p className="text-center text-xs text-ink-muted mt-2">
+            We will ask for your location once to confirm you are in Awka.
+          </p>
 
           <p className="text-center text-sm text-ink-secondary mt-4">
             Already have an account?{' '}
@@ -588,6 +674,7 @@ function SignupForm() {
                 universityId: effectiveSelectedUniversity?.id,
                 referralCode: referralCode || undefined,
                 signupAccessCode: activeSignupAccessCode || undefined,
+                locationToken,
               }}
               onError={setError}
               onLoading={setLoading}
@@ -674,6 +761,22 @@ function SignupForm() {
               {/* ── REMOVED: "I also want to sell" checkbox ── */}
               {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                   which redirects them to /become-seller to upgrade their account. */}
+
+              <div>
+                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())}
+                  maxLength={20}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  required
+                  placeholder="letters and numbers only"
+                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                />
+                <p className="text-xs text-ink-muted mt-1">Sellers see only this, never your name or address.</p>
+              </div>
 
               <div>
                 <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Referral Code (Optional)</label>

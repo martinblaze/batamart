@@ -59,60 +59,37 @@ export function OrderNotificationBanner({ postPayment = false }: Props) {
 
         {postPayment ? (
           /* ── POST-PAYMENT ─────────────────────────────────────────────── */
-          <div className="relative w-full rounded-2xl overflow-hidden bg-primary">
-            {/* Dismiss sits absolutely so it never squeezes the content */}
+          <div className="relative w-full overflow-hidden border border-border bg-card">
             <button
               onClick={handleDismiss}
               aria-label="Dismiss"
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center z-10 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center text-ink-muted transition-colors hover:text-ink"
             >
-              <X className="w-3.5 h-3.5" strokeWidth={1.75} />
+              <X className="h-4 w-4" strokeWidth={1.75} />
             </button>
 
-            {/* All content — right-padded to clear the dismiss button */}
             <div className="p-4 pr-12">
-
-              {/* Icon + headline row */}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-white/15">
-                  <Bell className="w-5 h-5 text-white" strokeWidth={1.75} />
-                </div>
-                <p className="font-medium text-white text-sm leading-snug">
-                  Order placed — track it with notifications
-                </p>
-              </div>
-
-              {/* Subtext */}
-              <p className="text-xs leading-relaxed mb-3 text-white/80">
-                Get real-time alerts when your order is picked up, on the way,
-                and delivered — even when the app is closed.
+              <p className="ui-mono-sm mb-1 text-ink-muted">Order placed</p>
+              <p className="text-sm font-medium leading-snug text-ink">Track it with notifications</p>
+              <p className="mb-4 mt-1 text-xs leading-relaxed text-ink-secondary">
+                Get alerts when your order is picked up, on the way, and delivered, even when the app is closed.
               </p>
 
-              {/* Chips — wrap naturally on any width */}
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {['Pickup alert', 'On the way', 'Delivered'].map((text) => (
-                  <span key={text} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white/15 text-white">
-                    {text}
-                  </span>
-                ))}
-              </div>
-
-              {/* Buttons — stacked on mobile (full-width), side-by-side on sm+ */}
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   onClick={handleEnable}
                   disabled={isBusy}
-                  className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 h-11 rounded-lg text-sm font-medium bg-card text-primary transition-all disabled:opacity-60 active:scale-[0.98]"
+                  className="flex h-11 w-full items-center justify-center gap-2 bg-ink px-5 font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-primary disabled:opacity-60 sm:w-auto"
                 >
                   {isBusy
-                    ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.75} />Enabling…</>
-                    : <><Bell className="w-4 h-4" strokeWidth={1.75} />Enable notifications</>
+                    ? <><Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />Enabling...</>
+                    : <><Bell className="h-4 w-4" strokeWidth={1.75} />Enable notifications</>
                   }
                 </button>
 
                 <button
                   onClick={handleDismiss}
-                  className="flex items-center justify-center w-full sm:w-auto px-4 h-11 rounded-lg text-sm font-medium bg-white/10 text-white/90 transition-colors active:scale-[0.98]"
+                  className="flex h-11 w-full items-center justify-center border border-border px-4 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors hover:text-ink sm:w-auto"
                 >
                   Maybe later
                 </button>

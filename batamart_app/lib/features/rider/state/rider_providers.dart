@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/location_broadcast_service.dart';
+import '../data/rider_hub_models.dart';
 import '../data/rider_models.dart';
 import '../data/rider_repository.dart';
 
@@ -25,4 +26,12 @@ final myDeliveriesProvider = FutureProvider.autoDispose<List<DeliveryBatch>>((
   ref,
 ) {
   return ref.watch(riderRepositoryProvider).fetchMyDeliveries();
+});
+
+final pickupsProvider = FutureProvider.autoDispose<PickupsResult>((ref) {
+  return ref.watch(riderRepositoryProvider).fetchPickups();
+});
+
+final deliveriesProvider = FutureProvider.autoDispose<DeliveriesResult>((ref) {
+  return ref.watch(riderRepositoryProvider).fetchDeliveries();
 });

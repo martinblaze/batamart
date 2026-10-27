@@ -1,4 +1,4 @@
-﻿// app/(marketplace)/wallet/page.tsx
+// app/(marketplace)/wallet/page.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -8,7 +8,7 @@ import {
   ArrowLeft, RefreshCw, Shield, TrendingUp, TrendingDown,
   Wallet, ArrowDownLeft, ArrowUpRight, Lock, AlertCircle,
   CheckCircle2, X, ChevronDown, Search, Loader2, Eye,
-  EyeOff, Key, RotateCcw, Zap, ChevronRight, Clock,
+  EyeOff, Key, RotateCcw, Zap, ChevronRight, Clock, Plus,
 } from 'lucide-react'
 import {
   enableWithdrawalBiometrics,
@@ -97,7 +97,10 @@ interface Transaction {
   id: string; type: string; amount: number; description: string
   reference: string; createdAt: string; balanceBefore: number; balanceAfter: number
 }
-interface WalletData { availableBalance: number; pendingBalance: number; completedOrders: number; role: string }
+interface WalletData {
+  availableBalance: number; pendingBalance: number; completedOrders: number; role: string
+  marketing?: { balance: number; totalSignups: number; totalEarned: number } | null
+}
 interface User { id: string; name: string; phone: string; email?: string; hasWithdrawalPin: boolean }
 interface Bank { code: string; name: string }
 
@@ -174,8 +177,16 @@ export default function WalletPage() {
   const [hideBalance, setHideBalance] = useState(false)
   const [refreshing, setRefreshing]   = useState(false)
 
+  // Top-up modal
+  const [showTopUp, setShowTopUp]       = useState(false)
+  const [topUpAmount, setTopUpAmount]   = useState('')
+  const [topUpLoading, setTopUpLoading] = useState(false)
+  const [topUpError, setTopUpError]     = useState('')
+  const [topUpNotice, setTopUpNotice]   = useState<'success' | 'failed' | null>(null)
+
   // Withdraw modal
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [withdrawSource, setWithdrawSource]       = useState<'MAIN' | 'MARKETING'>('MAIN')
   const [withdrawAmount, setWithdrawAmount]       = useState('')
   const [accountNumber, setAccountNumber]         = useState('')
   const [accountName, setAccountName]             = useState('')
@@ -234,6 +245,37 @@ export default function WalletPage() {
 
   useEffect(() => { fetchWalletData() }, [])
 
+  // Back from Flutterwave (?topup=success|failed), or sent here from checkout
+  // to top up (?topup=open).
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('topup')
+    if (t === 'success' || t === 'failed') {
+      setTopUpNotice(t)
+      window.history.replaceState(null, '', '/wallet')
+    } else if (t === 'open') {
+      setShowTopUp(true)
+    }
+  }, [])
+
+  const startTopUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const amount = Number(topUpAmount)
+    if (!Number.isInteger(amount) || amount < 100) { setTopUpError('Enter a whole amount of at least ₦100'); return }
+    setTopUpLoading(true); setTopUpError('')
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/wallet/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount }),
+      })
+      const d = await res.json()
+      if (!res.ok || !d.authorizationUrl) { setTopUpError(d.error || 'Could not start the top-up'); return }
+      window.location.href = d.authorizationUrl
+    } catch { setTopUpError('Network error. Please try again.') }
+    finally { setTopUpLoading(false) }
+  }
+
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -277,7 +319,8 @@ export default function WalletPage() {
     ? NIGERIAN_BANKS.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()))
     : NIGERIAN_BANKS
 
-  const openWithdrawModal = async () => {
+  const openWithdrawModal = async (source: 'MAIN' | 'MARKETING' = 'MAIN') => {
+    setWithdrawSource(source)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
@@ -315,11 +358,15 @@ export default function WalletPage() {
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const amount = parseFloat(withdrawAmount)
-    if (!amount || amount < 1000) { alert('Minimum withdrawal is ₦1,000'); return }
-    if (wallet && amount > wallet.availableBalance) { alert('Insufficient balance'); return }
+    const isMarketing = withdrawSource === 'MARKETING'
+    const sourceBalance = isMarketing ? (wallet?.marketing?.balance ?? 0) : (wallet?.availableBalance ?? 0)
+    if (!amount) { alert('Enter an amount'); return }
+    // The marketing wallet's floor is deliberately not hardcoded here; the server states it.
+    if (!isMarketing && amount < 2000) { alert('Minimum withdrawal is ₦2,000'); return }
+    if (wallet && amount > sourceBalance) { alert('Insufficient balance'); return }
     if (!accountNumber || !accountName) { alert('Please fill all fields'); return }
 
-    const payload = { amount, accountNumber, accountName, bankCode: selectedBank.code, idempotencyKey: withdrawalRequestKey || crypto.randomUUID() }
+    const payload = { amount, source: withdrawSource, accountNumber, accountName, bankCode: selectedBank.code, idempotencyKey: withdrawalRequestKey || crypto.randomUUID() }
     setPendingWithdrawal(payload)
 
     if (biometricEnabled && biometricAvailable) {
@@ -518,11 +565,17 @@ export default function WalletPage() {
             <p className="text-4xl sm:text-5xl font-semibold mb-1 tracking-tight">
               {hideBalance ? '₦ ••••••' : fmt(wallet.availableBalance)}
             </p>
-            <p className="text-white/50 text-xs mb-6">Ready to withdraw · No fees</p>
+            <p className="text-white/50 text-xs mb-6">Spend it at checkout or withdraw · No fees</p>
 
             <div className="flex flex-wrap gap-3">
               <button
-                onClick={openWithdrawModal}
+                onClick={() => { setTopUpError(''); setShowTopUp(true) }}
+                className="flex items-center gap-2 bg-white/10 border border-white/25 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:bg-white/20 active:scale-95"
+              >
+                <Plus className="w-4 h-4" /> Top up
+              </button>
+              <button
+                onClick={() => openWithdrawModal('MAIN')}
                 className="flex items-center gap-2 bg-card text-primary px-5 py-2.5 rounded-xl font-semibold text-sm shadow-soft transition-all hover:scale-105 active:scale-95"
               >
                 <ArrowUpRight className="w-4 h-4" /> Withdraw
@@ -534,6 +587,31 @@ export default function WalletPage() {
             </div>
           </div>
         </div>
+
+        {/* ── Marketing wallet (field marketers only) ── */}
+        {wallet.marketing && (
+          <div className="fade-up bg-card rounded-3xl border border-border shadow-soft p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-ink-secondary text-xs font-semibold uppercase tracking-wider">Marketing Wallet</p>
+              <span className="text-[10px] font-semibold text-ink-muted">{wallet.marketing.totalSignups} signup{wallet.marketing.totalSignups === 1 ? '' : 's'}</span>
+            </div>
+            <p className="text-3xl font-semibold text-ink tracking-tight mb-1">
+              {hideBalance ? '₦ ••••••' : fmt(wallet.marketing.balance)}
+            </p>
+            <p className="text-ink-muted text-xs mb-4">Field marketing earnings, kept apart from your main balance</p>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => openWithdrawModal('MARKETING')}
+                className="flex items-center gap-2 bg-ink text-background px-5 py-2.5 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95"
+              >
+                <ArrowUpRight className="w-4 h-4" /> Withdraw
+              </button>
+              <a href="/field-marketers" className="flex items-center gap-2 border border-border px-4 py-2.5 rounded-xl text-sm font-semibold text-ink-secondary hover:text-ink">
+                Field desk
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* ── Stats Row ── */}
         <div className="grid grid-cols-3 gap-3">
@@ -625,6 +703,55 @@ export default function WalletPage() {
           MODALS
       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
 
+      {topUpNotice && (
+        <div className="fixed left-0 right-0 top-4 z-50 flex justify-center px-4">
+          <div className={`flex w-full max-w-sm items-start gap-3 border px-4 py-3.5 ${topUpNotice === 'success' ? 'border-success/30 bg-success/10 text-success' : 'border-danger/30 bg-danger/10 text-danger'}`}>
+            <p className="flex-1 text-sm font-semibold">
+              {topUpNotice === 'success' ? 'Top-up received. Your balance is updated.' : 'The top-up did not go through. You were not charged.'}
+            </p>
+            <button onClick={() => setTopUpNotice(null)}><X className="w-4 h-4" /></button>
+          </div>
+        </div>
+      )}
+
+      {showTopUp && (
+        <ModalShell onClose={() => setShowTopUp(false)}>
+          <form onSubmit={startTopUp} className="space-y-4 p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-ink">Top up wallet</h2>
+              <button type="button" onClick={() => setShowTopUp(false)} className="text-ink-muted"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-sm text-ink-secondary">Add money by card or bank transfer, then use it at checkout.</p>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={100}
+              step={1}
+              value={topUpAmount}
+              onChange={e => setTopUpAmount(e.target.value)}
+              placeholder="Amount in ₦"
+              className="h-12 w-full border border-border bg-card px-3 text-base text-ink outline-none focus:border-ink/40"
+            />
+            <div className="flex flex-wrap gap-2">
+              {[1000, 2000, 5000, 10000].map(v => (
+                <button key={v} type="button" onClick={() => setTopUpAmount(String(v))}
+                  className="border border-border bg-card px-3 py-1.5 text-xs font-semibold text-ink-secondary hover:border-ink/30">
+                  ₦{v.toLocaleString()}
+                </button>
+              ))}
+            </div>
+            {topUpError && <p className="text-xs text-danger">{topUpError}</p>}
+            <button
+              type="submit"
+              disabled={topUpLoading}
+              className="flex h-12 w-full items-center justify-center gap-2 bg-ink text-sm font-semibold text-background disabled:opacity-50"
+            >
+              {topUpLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Continue to payment'}
+            </button>
+          </form>
+        </ModalShell>
+      )}
+
       {/* ── Withdraw Modal ── */}
       {showBiometricPrompt && (
         <ModalShell onClose={handleDeclineBiometric}>
@@ -661,7 +788,7 @@ export default function WalletPage() {
                 <ArrowUpRight className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-ink">Withdraw Funds</h2>
+                <h2 className="text-lg font-semibold text-ink">{withdrawSource === 'MARKETING' ? 'Withdraw Marketing Earnings' : 'Withdraw Funds'}</h2>
                 <p className="text-xs text-ink-muted">
                   {biometricEnabled ? 'Biometric verification enabled' : 'PIN verification required'}
                 </p>
@@ -684,15 +811,15 @@ export default function WalletPage() {
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted font-semibold text-sm">₦</span>
                   <input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)}
-                    placeholder="0.00" min="1000" max={wallet.availableBalance}
+                    placeholder="0.00" min={withdrawSource === 'MARKETING' ? 1 : 2000} max={withdrawSource === 'MARKETING' ? (wallet.marketing?.balance ?? 0) : wallet.availableBalance}
                     className="w-full pl-8 pr-4 py-3.5 bg-surface border-2 border-transparent rounded-xl text-sm font-semibold focus:border-primary focus:bg-card focus:outline-none transition-all"
                     required />
                 </div>
                 <div className="flex justify-between mt-1.5">
-                  <span className="text-xs text-ink-muted">Min: ₦1,000</span>
-                  <button type="button" onClick={() => setWithdrawAmount(String(wallet.availableBalance))}
+                  <span className="text-xs text-ink-muted">{withdrawSource === 'MARKETING' ? 'Marketing wallet' : 'Min: ₦2,000'}</span>
+                  <button type="button" onClick={() => setWithdrawAmount(String(withdrawSource === 'MARKETING' ? (wallet.marketing?.balance ?? 0) : wallet.availableBalance))}
                     className="text-xs text-primary font-semibold hover:underline">
-                    Max: {fmtShort(wallet.availableBalance)}
+                    Max: {fmtShort(withdrawSource === 'MARKETING' ? (wallet.marketing?.balance ?? 0) : wallet.availableBalance)}
                   </button>
                 </div>
               </div>
@@ -752,7 +879,7 @@ export default function WalletPage() {
               </div>
 
               {/* Summary */}
-              {withdrawAmount && parseFloat(withdrawAmount) >= 1000 && accountNumber.length >= 10 && accountName && (
+              {withdrawAmount && parseFloat(withdrawAmount) > 0 && accountNumber.length >= 10 && accountName && (
                 <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 text-sm space-y-2">
                   <p className="font-semibold text-primary text-xs uppercase tracking-wider">Summary</p>
                   {[

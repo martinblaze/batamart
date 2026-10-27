@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { X } from 'lucide-react'
 import { ANDROID_APK_URL, isAndroidDevice } from '@/lib/app-download'
 
 export default function InstallPrompt() {
@@ -79,80 +80,68 @@ export default function InstallPrompt() {
   return (
     <div
       className="fixed bottom-24 left-0 right-0 z-[9999] flex justify-center px-4"
-      style={{ animation: 'slideUpFade 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+      style={{ animation: 'installFadeUp 0.28s ease-out' }}
     >
       <style>{`
-        @keyframes slideUpFade {
-          from { opacity: 0; transform: translateY(24px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes installFadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
 
-      <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-card shadow-soft border border-primary/20">
-        {/* Top accent bar */}
-        <div className="h-1 w-full bg-primary" />
+      <div className="w-full max-w-sm border border-border bg-card shadow-soft">
+        <div className="relative flex items-center gap-3 p-4 pr-10">
+          <img
+            src="/icon-192x192.png"
+            alt="BataMart"
+            className="h-12 w-12 flex-shrink-0 border border-border object-cover"
+          />
 
-        <div className="p-4 flex items-center gap-3">
-          {/* App icon */}
-          <div className="relative flex-shrink-0 w-[52px] h-[52px] rounded-2xl overflow-hidden shadow-soft">
-            <img
-              src="/icon-192x192.png"
-              alt="BataMart"
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Text */}
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-ink text-sm leading-tight">
+          <div className="min-w-0 flex-1">
+            <p className="ui-mono-sm text-ink-muted">{isAndroid ? 'Android app' : 'Home screen'}</p>
+            <p className="mt-0.5 text-sm font-medium leading-tight text-ink">
               {isAndroid ? 'Get the BataMart app' : 'Install BataMart'}
             </p>
-            <p className="text-xs text-ink-secondary mt-0.5">
-              {isAndroid
-                ? 'The full Android app — faster than the website'
-                : 'Add to home screen for the best experience'}
+            <p className="mt-0.5 text-xs leading-snug text-ink-secondary">
+              {isAndroid ? 'Faster than the website. Free.' : 'Opens like an app, no browser bar.'}
             </p>
-
-            {/* Stars */}
-            <div className="flex items-center gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="w-3 h-3 text-warning" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-              <span className="text-[10px] text-ink-muted ml-1">Free</span>
-            </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex flex-col gap-1.5 flex-shrink-0">
-            <button
-              onClick={install}
-              disabled={installing}
-              className="bg-ink hover:bg-primary text-background text-xs font-semibold px-4 py-2 rounded-xl transition-opacity min-w-[72px]"
-              style={{ opacity: installing ? 0.7 : 1 }}
-            >
-              {installing ? 'Opening…' : isAndroid ? 'Download' : 'Install'}
-            </button>
-            <button
-              onClick={dismiss}
-              className="text-[11px] text-ink-muted text-center hover:text-ink-secondary transition-colors"
-            >
-              Not now
-            </button>
-          </div>
+          <button
+            onClick={dismiss}
+            aria-label="Dismiss"
+            className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center text-ink-muted transition-colors hover:text-ink"
+          >
+            <X className="h-4 w-4" strokeWidth={1.75} />
+          </button>
+        </div>
+
+        <div className="flex border-t border-border">
+          <button
+            onClick={dismiss}
+            className="h-11 flex-1 border-r border-border font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors hover:text-ink"
+          >
+            Not now
+          </button>
+          <button
+            onClick={install}
+            disabled={installing}
+            className="h-11 flex-1 bg-ink font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-primary disabled:opacity-60"
+          >
+            {installing ? 'Opening...' : isAndroid ? 'Download' : 'Install'}
+          </button>
         </div>
 
         {/* Sideloading an APK is not a one-tap flow: Chrome warns about the file
             type, and installing from a browser needs a permission the user has
             probably never granted. Without this they hit the warning and stop. */}
         {isAndroid && downloadStarted && (
-          <div className="border-t border-border bg-primary/5 px-4 py-3">
-            <p className="text-[11px] text-ink-secondary leading-relaxed">
-              <span className="font-semibold text-ink">Downloading…</span> Tap{' '}
-              <span className="font-semibold">Download anyway</span> if Chrome warns you,
-              then open the file. You may be asked to allow installs from your browser —
-              that&apos;s normal for apps outside the Play Store.
+          <div className="border-t border-border bg-surface px-4 py-3">
+            <p className="text-[11px] leading-relaxed text-ink-secondary">
+              <span className="font-medium text-ink">Downloading.</span> Tap{' '}
+              <span className="font-medium text-ink">Download anyway</span> if Chrome warns you,
+              then open the file. You may be asked to allow installs from your browser. That&apos;s
+              normal for apps outside the Play Store.
             </p>
           </div>
         )}

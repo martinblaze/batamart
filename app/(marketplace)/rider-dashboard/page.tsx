@@ -19,6 +19,7 @@ import {
   CheckCircle, X, ShoppingBag, ArrowRight, Bike, Upload, Heart,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
+import RiderJobs from '@/components/rider/RiderJobs'
 import { ANDROID_APK_URL, isAndroidDevice } from '@/lib/app-download'
 import { CAMPAIGNS, isCampaignDeliverable, isValidCampaignKey } from '@/lib/campaigns'
 
@@ -90,6 +91,7 @@ export default function RiderDashboardPage() {
   const [disputePickups,   setDisputePickups]   = useState<any[]>([])
   const [myBatches,        setMyBatches]        = useState<any[]>([])
   const [loading,          setLoading]          = useState(true)
+  const [jobOrderIds,      setJobOrderIds]      = useState<string[]>([])
   const [isAvailable,      setIsAvailable]      = useState(true)
   const [actionLoading,    setActionLoading]    = useState<Record<string, boolean>>({})
 
@@ -204,20 +206,18 @@ export default function RiderDashboardPage() {
 
   const fetchRiderData = async () => {
     try {
-      const [profileRes, batchesRes, myBatchesRes] = await Promise.all([
+      // Pickups and deliveries load inside <RiderJobs>; this only needs the
+      // profile and any dispute-return jobs.
+      const [profileRes, batchesRes] = await Promise.all([
         authFetch('/api/auth/me'),
         authFetch('/api/riders/available-orders'),
-        authFetch('/api/riders/my-deliveries'),
       ])
 
       const profileData   = await profileRes.json()
       const batchesData   = await batchesRes.json()
-      const myBatchData   = await myBatchesRes.json()
 
       setRider(profileData.user)
-      setAvailableBatches(batchesData.batches        || [])
       setDisputePickups(batchesData.disputePickups   || [])
-      setMyBatches(myBatchData.batches               || [])
       setIsAvailable(profileData.user.isAvailable)
     } catch (error) {
       console.error('Error fetching rider data:', error)
@@ -469,23 +469,16 @@ export default function RiderDashboardPage() {
   const blockingDisputeReturns = disputePickups.filter((o: any) => o.status !== 'DELIVERED')
 
   // ── Active orders count across all batches ────────────────────────────────
-  const totalActiveOrders = myBatches.reduce((sum, b) => sum + b.orders.length, 0)
+  const totalActiveOrders = jobOrderIds.length
   const liveOrderIds = useMemo(() => {
-    const set = new Set<string>()
-    myBatches.forEach((batch: any) => {
-      batch.orders.forEach((order: any) => {
-        if (['RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY'].includes(order.status)) {
-          set.add(order.id)
-        }
-      })
-    })
+    const set = new Set<string>(jobOrderIds)
     disputePickups.forEach((order: any) => {
       if (['RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY'].includes(order.status)) {
         set.add(order.id)
       }
     })
     return Array.from(set)
-  }, [myBatches, disputePickups])
+  }, [jobOrderIds, disputePickups])
 
   useEffect(() => {
     if (liveOrderIds.length === 0) {
@@ -902,336 +895,12 @@ export default function RiderDashboardPage() {
           </div>
         )}
 
-        {/* ── My Active Batches ─────────────────────────────────────────── */}
-        {myBatches.length > 0 && (
-          <div>
-            <h2 className="ui-eyebrow mb-5">
-              My Active Batch{myBatches.length > 1 ? 'es' : ''}
-            </h2>
-            <div className="space-y-4">
-              {myBatches.map((batch: any) => {
-                const deliveredCount = batch.orders.filter((o: any) => o.status === 'DELIVERED').length
-                const totalCount     = batch.orders.length
-
-                return (
-                  <div key={batch.id} className="border border-ink/25 bg-card">
-                    {/* Batch header */}
-                    <div className="bg-primary/5 px-5 py-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs font-semibold text-primary uppercase tracking-wide">
-                          Active Batch · {totalCount} order{totalCount > 1 ? 's' : ''}
-                        </p>
-                        <p className="text-xs text-ink-muted mt-0.5">#{batch.batchNumber}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-semibold text-success bg-success/10 px-2.5 py-1 rounded-full">
-                          {deliveredCount}/{totalCount} delivered
-                        </span>
-                        <p className="text-xs font-semibold text-primary mt-1">
-                          ₦{batchRiderTotal(batch).toLocaleString()} total
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Delivery address (one buyer, same for all) */}
-                    <div className="px-5 py-3 border-b border-border">
-                      <div className="flex items-start gap-2 bg-primary/10 rounded-xl p-3">
-                        <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-primary">
-                            {batch.buyer.hostelName}
-                            {batch.buyer.roomNumber ? ` — Room ${batch.buyer.roomNumber}` : ''}
-                          </p>
-                          {batch.buyer.landmark && (
-                            <p className="text-xs text-primary mt-0.5">{batch.buyer.landmark}</p>
-                          )}
-                          <div className="flex items-center gap-1 mt-1">
-                            <Phone className="w-3 h-3 text-primary" />
-                            <span className="text-xs font-semibold text-primary">{batch.buyer.phone}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Individual orders */}
-                    <div className="p-4 space-y-3">
-                      {batch.orders.map((order: any, idx: number) => (
-                        <div key={order.id} className="border border-border rounded-xl overflow-hidden">
-                          {/* Order info row */}
-                          <div className="flex items-center gap-3 p-3">
-                            {order.product.images?.[0] ? (
-                              <img
-                                src={order.product.images[0]}
-                                alt={order.product.name}
-                                className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-surface"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
-                                <ShoppingBag className="w-5 h-5 text-ink-muted" />
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-ink truncate">{order.product.name}</p>
-                              <p className="text-xs text-ink-muted truncate">
-                                Pickup from: <span className="text-ink-secondary font-semibold">{order.seller.name}</span>
-                              </p>
-                              {order.orderNote && <p className="text-xs text-primary truncate">Note: {order.orderNote}</p>}
-                              {(order.product.estimatedWeightKg || order.product.dimensionsCm) && (
-                                <p className="text-[11px] text-ink-secondary truncate">
-                                  {order.product.estimatedWeightKg ? `${order.product.estimatedWeightKg}kg` : ''}
-                                  {order.product.estimatedWeightKg && order.product.dimensionsCm ? ' · ' : ''}
-                                  {order.product.dimensionsCm ? `${order.product.dimensionsCm.length || '-'}x${order.product.dimensionsCm.width || '-'}x${order.product.dimensionsCm.height || '-'}cm` : ''}
-                                </p>
-                              )}
-                              {order.product.hostelName && (
-                                <p className="text-xs text-ink-muted truncate">{order.product.hostelName}</p>
-                              )}
-                              {order.seller.phone && (
-                                <p className="text-xs text-ink-muted flex items-center gap-1">
-                                  <Phone className="w-2.5 h-2.5" /> {order.seller.phone}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                              <StatusBadge status={order.status} />
-                              <CampaignItemBadge campaignTag={order.product.campaignTag} />
-                              <span className="text-[10px] font-semibold text-ink-muted">#{idx + 1}</span>
-                            </div>
-                          </div>
-
-                          {/* Status action buttons */}
-                          {order.status !== 'DELIVERED' && (
-                            <div className="px-3 pb-3">
-                              {order.status === 'RIDER_ASSIGNED' && (
-                                <div className="space-y-2">
-                                  <label className="w-full py-2.5 border border-border rounded-lg text-xs font-semibold text-ink-secondary flex items-center justify-center gap-1.5 cursor-pointer hover:bg-surface">
-                                    {actionLoading[`proof-${order.id}`]
-                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading proof...</>
-                                      : <><Upload className="w-3.5 h-3.5" /> {oversizedProofByOrder[order.id] ? 'Replace Oversized Proof Photo' : 'Upload Oversized Proof Photo (Optional)'}</>
-                                    }
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => uploadOversizedProof(order.id, e.target.files?.[0] || null)}
-                                      disabled={actionLoading[`proof-${order.id}`]}
-                                    />
-                                  </label>
-                                  {oversizedProofByOrder[order.id] && (
-                                    <p className="text-[11px] text-success truncate">Proof attached</p>
-                                  )}
-                                  <button
-                                    onClick={() => updateStatus(order.id, 'PICKED_UP')}
-                                    disabled={actionLoading[`status-${order.id}`]}
-                                    className="w-full py-2.5 bg-ink hover:bg-primary text-background rounded-lg text-xs font-semibold
-                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                  >
-                                    {actionLoading[`status-${order.id}`]
-                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...</>
-                                      : <><Package className="w-3.5 h-3.5" /> Mark as Picked Up</>
-                                    }
-                                  </button>
-                                  <button
-                                    onClick={() => declineOversized(order.id)}
-                                    disabled={actionLoading[`oversized-${order.id}`]}
-                                    className="w-full py-2.5 bg-danger hover:brightness-95 text-white rounded-lg text-xs font-semibold
-                                               flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                  >
-                                    {actionLoading[`oversized-${order.id}`]
-                                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Processing...</>
-                                      : 'Item Too Large For Motorcycle Delivery'
-                                    }
-                                  </button>
-                                </div>
-                              )}
-                              {order.status === 'PICKED_UP' && (
-                                <button
-                                  onClick={() => updateStatus(order.id, 'ON_THE_WAY')}
-                                  disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-warning hover:brightness-95 text-white rounded-lg text-xs font-semibold
-                                             flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                >
-                                  {actionLoading[`status-${order.id}`]
-                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...</>
-                                    : <><ArrowRight className="w-3.5 h-3.5" /> On The Way</>
-                                  }
-                                </button>
-                              )}
-                              {order.status === 'ON_THE_WAY' && (
-                                <button
-                                  onClick={() => updateStatus(order.id, 'DELIVERED')}
-                                  disabled={actionLoading[`status-${order.id}`]}
-                                  className="w-full py-2.5 bg-success hover:brightness-95 text-white rounded-lg text-xs font-semibold
-                                             flex items-center justify-center gap-1.5 disabled:opacity-50 transition-colors"
-                                >
-                                  {actionLoading[`status-${order.id}`]
-                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Updating...</>
-                                    : <><CheckCircle className="w-3.5 h-3.5" /> Mark as Delivered</>
-                                  }
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {order.status === 'DELIVERED' && (
-                            <div className="px-3 pb-3">
-                              <div className="w-full py-2 bg-success/10 rounded-lg text-center text-xs font-semibold text-success flex items-center justify-center gap-1.5">
-                                <CheckCircle className="w-3.5 h-3.5" /> Delivered
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ── Available Batches ─────────────────────────────────────────── */}
-        <div>
-          <h2 className="ui-eyebrow mb-5">
-            Available Batches ({availableBatches.length})
-          </h2>
-
-          {hasDisputePickupPending && (
-            <div className="mb-3 p-3 bg-warning/10 border border-warning/30 rounded-xl text-sm text-warning flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              New batches are locked until you complete the return pickup above.
-            </div>
-          )}
-
-          {availableBatches.length === 0 ? (
-            <div className="border border-dashed border-border bg-card p-10 text-center">
-              <Bike className="w-10 h-10 text-border mx-auto mb-2" />
-              <p className="text-ink-muted font-semibold text-sm">No available batches right now</p>
-              <p className="text-ink-muted text-xs mt-1">Check back soon</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {availableBatches.map((batch: any) => (
-                <div
-                  key={batch.id}
-                  className={`border border-border bg-card ${
-                    hasDisputePickupPending ? 'opacity-50 pointer-events-none' : ''
-                  }`}
-                >
-                  {/* Batch header */}
-                  <div className="bg-surface px-5 py-3 flex items-center justify-between border-b border-border">
-                    <div>
-                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                        {batch.orders.length} ORDER{batch.orders.length > 1 ? 'S' : ''} · 1 BATCH
-                      </span>
-                      <p className="text-xs text-ink-muted mt-1">#{batch.batchNumber}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-success">
-                        ₦{batchRiderTotal(batch).toLocaleString()}
-                      </p>
-                      <p className="text-[10px] text-ink-muted">you earn</p>
-                    </div>
-                  </div>
-
-                  {/* Delivery address */}
-                  <div className="px-5 py-3 border-b border-border">
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-ink-muted mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-semibold text-ink-secondary">
-                          Deliver to: {batch.buyer.hostelName}
-                          {batch.buyer.roomNumber ? ` — Room ${batch.buyer.roomNumber}` : ''}
-                        </p>
-                        {batch.buyer.landmark && (
-                          <p className="text-xs text-ink-muted">{batch.buyer.landmark}</p>
-                        )}
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Phone className="w-2.5 h-2.5 text-ink-muted" />
-                          <span className="text-xs text-ink-secondary">{batch.buyer.phone}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Orders list */}
-                  <div className="px-5 py-3 space-y-2">
-                    {batch.orders.map((order: any, idx: number) => (
-                      <div key={order.id} className="flex items-center gap-3">
-                        {order.product.images?.[0] ? (
-                          <img
-                            src={order.product.images[0]}
-                            alt={order.product.name}
-                            className="w-9 h-9 rounded-lg object-cover flex-shrink-0 bg-surface"
-                          />
-                        ) : (
-                          <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
-                            <Package className="w-4 h-4 text-ink-muted" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-ink truncate">{order.product.name}</p>
-                          <p className="text-xs text-ink-muted">
-                            From: {order.seller.name}
-                            {order.product.landmark ? ` · ${order.product.landmark}` : order.product.hostelName ? ` · ${order.product.hostelName}` : ''}
-                          </p>
-                        </div>
-                        <CampaignItemBadge campaignTag={order.product.campaignTag} />
-                        {order.status === 'PENDING' ? (
-                          <span className="text-[10px] font-semibold text-warning bg-warning/10 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
-                            Awaiting seller
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-success bg-success/10 px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
-                            Ready
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Accept button */}
-                  <div className="px-5 pb-5">
-                    {(() => {
-                      const pendingCount = batch.orders.filter((o: any) => o.status === 'PENDING').length
-                      const awaitingSeller = pendingCount > 0
-                      const notDeliverable = batch.orders.filter(
-                        (o: any) => isValidCampaignKey(o.product?.campaignTag) && !isCampaignDeliverable(o.product?.campaignTag)
-                      )
-                      const awaitingCampaignDate = notDeliverable.length > 0
-                      const releaseLabel = awaitingCampaignDate
-                        ? new Date(CAMPAIGNS[notDeliverable[0].product.campaignTag as keyof typeof CAMPAIGNS].deliverableFrom)
-                            .toLocaleDateString('en-NG', { day: 'numeric', month: 'long' })
-                        : ''
-                      return (
-                        <button
-                          onClick={() => acceptBatch(batch.id)}
-                          disabled={actionLoading[`accept-${batch.id}`] || hasDisputePickupPending || awaitingSeller || awaitingCampaignDate}
-                          className="w-full py-3 bg-ink hover:bg-primary text-background rounded-xl
-                                     font-semibold text-sm shadow-soft shadow-primary/20
-                                     flex items-center justify-center gap-2
-                                     disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                          {actionLoading[`accept-${batch.id}`]
-                            ? <><Loader2 className="w-4 h-4 animate-spin" /> Accepting...</>
-                            : awaitingSeller
-                              ? <>Waiting on {pendingCount} seller{pendingCount > 1 ? 's' : ''} to accept</>
-                              : awaitingCampaignDate
-                                ? <><Heart className="w-3.5 h-3.5" strokeWidth={2} /> Releases for pickup {releaseLabel}</>
-                                : <>
-                                    Accept Batch · ₦{batchRiderTotal(batch).toLocaleString()}
-                                    <ArrowRight className="w-4 h-4" />
-                                  </>
-                          }
-                        </button>
-                      )
-                    })()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ── Pickups & Deliveries ──────────────────────────────────────── */}
+        <RiderJobs
+          showToast={showToast}
+          blocked={hasDisputePickupPending}
+          onActiveOrderIds={setJobOrderIds}
+        />
 
       </div>
     </div>

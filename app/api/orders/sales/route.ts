@@ -24,14 +24,9 @@ export async function GET(req: NextRequest) {
     const orders = await prisma.order.findMany({
       where: { sellerId: user.id },
       include: {
-        buyer: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            profilePhoto: true,
-          },
-        },
+        // Vendors only see the buyer's username (the label on the parcel).
+        buyer: { select: { id: true, username: true } },
+        rider: { select: { name: true, phone: true } },
         product: {
           select: {
             id: true,
@@ -55,7 +50,12 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     })
 
-    return jsonResponse({ success: true, orders, count: orders.length })
+    const safe = orders.map(({ deliveryHostel, deliveryRoom, deliveryPhone, ...order }) => ({
+      ...order,
+      buyer: { id: order.buyer.id, name: order.buyer.username ?? 'Buyer', username: order.buyer.username },
+    }))
+
+    return jsonResponse({ success: true, orders: safe, count: safe.length })
   } catch (error) {
     console.error('Error fetching sales orders:', error)
     return jsonResponse({ error: 'Failed to fetch sales orders', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })

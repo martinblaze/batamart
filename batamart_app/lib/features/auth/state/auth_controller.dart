@@ -233,6 +233,7 @@ class AuthController extends StateNotifier<AuthState> {
     String? hostelName,
     String? roomNumber,
     String? landmark,
+    String? username,
   }) async {
     final user = await _repository.updateProfile(
       name: name,
@@ -240,6 +241,7 @@ class AuthController extends StateNotifier<AuthState> {
       hostelName: hostelName,
       roomNumber: roomNumber,
       landmark: landmark,
+      username: username,
     );
     state = state.copyWith(user: user);
   }

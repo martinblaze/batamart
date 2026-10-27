@@ -53,6 +53,7 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
   late final _roomController = TextEditingController(
     text: ref.read(authControllerProvider).user?.roomNumber ?? '',
   );
+  late final _usernameController = TextEditingController();
   String? _hostelName;
   final _hostelController = TextEditingController();
   String? _landmark;
@@ -72,6 +73,7 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
   void dispose() {
     _nameController.dispose();
     _hostelController.dispose();
+    _usernameController.dispose();
     _roomController.dispose();
     super.dispose();
   }
@@ -95,6 +97,9 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
                 ? null
                 : _roomController.text.trim(),
             landmark: _landmark,
+            username: _usernameController.text.trim().isEmpty
+                ? null
+                : _usernameController.text.trim().toLowerCase(),
           );
       if (mounted) {
         Navigator.of(context).pop();
@@ -121,6 +126,17 @@ class _EditProfileFormState extends ConsumerState<_EditProfileForm> {
         if (!widget.addressOnly) ...[
           AppTextField(controller: _nameController, label: 'Full name'),
           const SizedBox(height: AppSpacing.md),
+          if ((user?.username ?? '').isEmpty) ...[
+            AppTextField(
+              controller: _usernameController,
+              label: 'Username',
+              hint: 'Letters and numbers only',
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ] else ...[
+            Text('Username: @${user!.username}'),
+            const SizedBox(height: AppSpacing.md),
+          ],
         ],
         // Typed, not picked. The university's hostel list is a fixed
         // picklist that cannot know about private lodges and off-campus

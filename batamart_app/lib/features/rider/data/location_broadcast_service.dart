@@ -1,27 +1,41 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:geolocator/geolocator.dart';
 
 import 'rider_repository.dart';
 
-/// Foreground-only GPS broadcast for `POST /api/riders/live-location`
-/// (BACKEND_REFERENCE.md §3.12 — "client's discretion" on interval; 20s
-/// matches the doc's suggested 15-30s range). Polls `getCurrentPosition`
-/// on a timer rather than a continuous position stream, to avoid
-/// spamming the endpoint on every GPS update.
+/// GPS broadcast for `POST /api/riders/live-location`.
 ///
-/// **Not background-safe** — broadcasting stops the moment the app is
-/// backgrounded, since there's no foreground service wired up (a real
-/// background-safe stream is a much larger scope item; see README
-/// "Phase 10 status"). Acceptable for a rider actively navigating with
-/// the app open, not for backgrounded delivery tracking.
+/// Uses a continuous position stream rather than a timer around
+/// `getCurrentPosition`, because a timer dies with the app's UI isolate the
+/// moment the phone sleeps. The stream is backed by:
+///   * Android — a foreground service (persistent "Delivery in progress"
+///     notification) with a wake lock, which the OS keeps alive while the
+///     screen is off or the app is backgrounded.
+///   * iOS — `allowBackgroundLocationUpdates` (needs the `location` entry in
+///     UIBackgroundModes) with the blue background-location indicator.
+///
+/// Pings are throttled to one every [_minInterval], and the stream stops
+/// itself once the server reports it attached the ping to zero orders for
+/// [_idleStopAfter] pings in a row (delivery finished), so the notification
+/// doesn't outlive the job.
 class LocationBroadcastService {
   LocationBroadcastService(this._repository);
 
-  final RiderRepository _repository;
-  Timer? _timer;
+  static const _minInterval = Duration(seconds: 8);
+  static const _idleStopAfter = 3;
 
-  bool get isBroadcasting => _timer != null;
+  final RiderRepository _repository;
+  StreamSubscription<Position>? _subscription;
+  DateTime _lastSentAt = DateTime.fromMillisecondsSinceEpoch(0);
+  int _idlePings = 0;
+  bool _sending = false;
+
+  /// Called when the service stops itself because there is nothing to track.
+  void Function()? onAutoStopped;
+
+  bool get isBroadcasting => _subscription != null;
 
   Future<bool> ensurePermission() async {
     var permission = await Geolocator.checkPermission();
@@ -34,23 +48,60 @@ class LocationBroadcastService {
         permission == LocationPermission.whileInUse;
   }
 
-  void start({String? batchId, List<String>? orderIds}) {
-    stop();
-    _timer = Timer.periodic(
-      const Duration(seconds: 20),
-      (_) => _ping(batchId, orderIds),
-    );
-    _ping(batchId, orderIds);
-  }
-
-  Future<void> _ping(String? batchId, List<String>? orderIds) async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
+  LocationSettings _settings() {
+    if (Platform.isAndroid) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 8,
+        intervalDuration: const Duration(seconds: 5),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'BataMart delivery in progress',
+          notificationText: 'Sharing your live location with the customer.',
+          enableWakeLock: true,
+          setOngoing: true,
         ),
       );
-      await _repository.sendLiveLocation(
+    }
+    if (Platform.isIOS) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.high,
+        activityType: ActivityType.automotiveNavigation,
+        distanceFilter: 8,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+        allowBackgroundLocationUpdates: true,
+      );
+    }
+    return const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 8,
+    );
+  }
+
+  void start({String? batchId, List<String>? orderIds}) {
+    stop();
+    _idlePings = 0;
+    _lastSentAt = DateTime.fromMillisecondsSinceEpoch(0);
+    _subscription = Geolocator.getPositionStream(locationSettings: _settings())
+        .listen(
+          (position) => _ping(position, batchId, orderIds),
+          onError: (_) {
+            // Best-effort — the stream keeps running through transient errors.
+          },
+        );
+  }
+
+  Future<void> _ping(
+    Position position,
+    String? batchId,
+    List<String>? orderIds,
+  ) async {
+    final now = DateTime.now();
+    if (_sending || now.difference(_lastSentAt) < _minInterval) return;
+    _sending = true;
+    _lastSentAt = now;
+    try {
+      final written = await _repository.sendLiveLocation(
         batchId: batchId,
         orderIds: orderIds,
         lat: position.latitude,
@@ -59,13 +110,20 @@ class LocationBroadcastService {
         heading: position.heading,
         speed: position.speed,
       );
+      _idlePings = written == 0 ? _idlePings + 1 : 0;
+      if (_idlePings >= _idleStopAfter) {
+        stop();
+        onAutoStopped?.call();
+      }
     } catch (_) {
-      // Best-effort — a missed ping isn't fatal, the next timer tick retries.
+      // A missed ping isn't fatal; the next position update retries.
+    } finally {
+      _sending = false;
     }
   }
 
   void stop() {
-    _timer?.cancel();
-    _timer = null;
+    _subscription?.cancel();
+    _subscription = null;
   }
 }

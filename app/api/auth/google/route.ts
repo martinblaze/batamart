@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createRemoteJWKSet, jwtVerify } from 'jose'
+import { AWKA_ONLY_MESSAGE, verifyAwkaLocationToken } from '@/lib/auth/awka-location'
 import { generateToken } from '@/lib/auth/auth'
 import { issueGoogleSignupToken } from '@/lib/auth/google-signup-token'
 
@@ -15,7 +16,7 @@ function googleAudience() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { idToken, mode, universityId, referralCode, signupAccessCode } = await request.json()
+    const { idToken, mode, universityId, referralCode, signupAccessCode, locationToken } = await request.json()
 
     if (!idToken || typeof idToken !== 'string') {
       return NextResponse.json({ error: 'Google token is required' }, { status: 400 })
@@ -45,7 +46,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'No account found. Use Sign up with Google first.' }, { status: 404 })
       }
 
-      // ── Block new signups until June 22 ────────────────────────────────────
+      if (!verifyAwkaLocationToken(locationToken)) {
+        return NextResponse.json({ error: AWKA_ONLY_MESSAGE, locationRequired: true }, { status: 403 })
+      }
+
       const signupToken = issueGoogleSignupToken({
         email,
         name,

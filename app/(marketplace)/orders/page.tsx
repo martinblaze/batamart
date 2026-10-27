@@ -54,6 +54,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   SHIPPED: { label: 'Shipped', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
   RIDER_ASSIGNED: { label: 'Rider assigned', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
   PICKED_UP: { label: 'Picked up', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
+  AT_HUB: { label: 'At our hub', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
+  PACKED: { label: 'Packed', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
   ON_THE_WAY: { label: 'On the way', color: 'text-primary', bg: 'bg-primary/10', ring: 'ring-primary/30', dot: 'bg-primary' },
   DELIVERED: { label: 'Delivered', color: 'text-success', bg: 'bg-success/10', ring: 'ring-success/30', dot: 'bg-success' },
   COMPLETED: { label: 'Completed', color: 'text-success', bg: 'bg-success/10', ring: 'ring-success/30', dot: 'bg-success' },
@@ -180,7 +182,7 @@ export default function OrdersPage() {
 
   const confirmDelivery = async (orderId: string) => {
     if (actionLoading[`confirm-${orderId}`]) return
-    if (!confirm('Confirm you received the product? This will release payment to seller and rider.')) return
+    if (!confirm('Confirm you received the product? The rider is paid when you do, and the seller after the dispute window.')) return
     setActionLoading(prev => ({ ...prev, [`confirm-${orderId}`]: true }))
     try {
       const token = localStorage.getItem('token')
@@ -515,7 +517,7 @@ export default function OrdersPage() {
                     )}
 
                     {/* Confirm Delivery */}
-                    {order.status === 'DELIVERED' && (
+                    {(order.status === 'DELIVERED' || order.status === 'ON_THE_WAY') && (
                       <button
                         onClick={() => confirmDelivery(order.id)}
                         disabled={!!actionLoading[`confirm-${order.id}`]}
@@ -523,7 +525,7 @@ export default function OrdersPage() {
                       >
                         {actionLoading[`confirm-${order.id}`]
                           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Processing...</>
-                          : <><CheckCircle className="w-3.5 h-3.5" /> Confirm Received</>}
+                          : <><CheckCircle className="w-3.5 h-3.5" /> Mark Delivered</>}
                       </button>
                     )}
 

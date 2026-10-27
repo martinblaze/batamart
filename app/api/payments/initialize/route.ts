@@ -9,7 +9,7 @@ import { flutterwaveRequest, getFlutterwaveSecretKey } from '@/lib/finance/flutt
 import { getDeliveryFee } from '@/lib/delivery/pricing'
 import { RIDER_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/lib/delivery/commission'
 import { isValidCampaignKey } from '@/lib/campaigns'
-import { z } from 'zod'
+import { resolveCheckoutItems } from '@/lib/checkout/resolve-items'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,143 +99,22 @@ export async function POST(request: NextRequest) {
       return jsonResponse({ error: 'Too many checkout attempts. Please wait.' }, { status: 429, headers: { 'Retry-After': String(rate.retryAfterSecs) } })
     }
 
+    const buyerRecord = await prisma.user.findUnique({ where: { id: user.id }, select: { username: true } })
+    if (!buyerRecord?.username) {
+      return jsonResponse(
+        { error: 'Set a username in your profile settings before placing an order.', code: 'USERNAME_REQUIRED' },
+        { status: 400 },
+      )
+    }
+
     const body = await request.json()
-    const schema = z.object({
-      productId: z.string().min(1).optional(),
-      variantId: z.string().min(1).optional().nullable(),
-      variantData: z.record(z.string()).optional().nullable(),
-      orderNote: z.string().max(300).optional(),
-      cartItems: z.array(z.object({
-        productId: z.string().min(1),
-        variantId: z.string().min(1).optional().nullable(),
-        variantData: z.record(z.string()).optional().nullable(),
-        quantity: z.number().int().min(1).max(50),
-        orderNote: z.string().max(300).optional(),
-        buyerDeliveryAcknowledged: z.boolean().optional(),
-      }).strict()).max(50).optional(),
-    }).strict()
-    const parsed = schema.safeParse(body)
-    if (!parsed.success) {
-      return jsonResponse({ error: 'Invalid request payload' }, { status: 400 })
+    const resolved = await resolveCheckoutItems(body, user)
+    if (!resolved.ok) {
+      return jsonResponse({ error: resolved.error }, { status: resolved.status })
     }
-    const { productId, cartItems } = parsed.data
+    const items = resolved.items
 
-    type CartItem = {
-      productId:  string
-      variantId?: string | null
-      price:      number
-      quantity:   number
-      sellerId:   string
-      landmark:   string
-      orderNote?: string
-      buyerDeliveryAcknowledged?: boolean
-    }
-
-    let items: CartItem[] = []
-
-    if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
-      if (cartItems.length > 50) {
-        return jsonResponse({ error: 'Too many items in one checkout' }, { status: 400 })
-      }
-      // Server always re-fetches price from DB — client-supplied price is IGNORED
-      for (const item of cartItems) {
-        const safeQuantity = Number(item?.quantity)
-        if (!Number.isInteger(safeQuantity) || safeQuantity < 1 || safeQuantity > 50) {
-          return jsonResponse({ error: 'Invalid quantity in cart item' }, { status: 400 })
-        }
-        const product = await prisma.product.findUnique({
-          where:   { id: item.productId },
-          include: { seller: true, variants: true },
-        })
-        if (!product) {
-          return jsonResponse({ error: `Product not found: ${item.productId}` }, { status: 404 })
-        }
-        let resolvedPrice = product.price
-        let resolvedStock = product.quantity
-
-        if (item.variantId) {
-          const variant = product.variants.find(v => v.id === item.variantId)
-          if (!variant) {
-            return jsonResponse({ error: `Variant not found for product: ${product.name}` }, { status: 400 })
-          }
-          resolvedPrice = variant.price
-          resolvedStock = variant.stock
-        }
-        const seller = await prisma.user.findUnique({ where: { id: product.sellerId }, select: { isSuspended: true } })
-        if (seller?.isSuspended || product.moderationStatus === 'UNDER_REVIEW' || product.moderationStatus === 'REMOVED') {
-          return jsonResponse({ error: `Product unavailable: ${product.name}` }, { status: 400 })
-        }
-        // Delivery is hyperlocal (motorcycle riders within one campus) — a
-        // product link can be viewed from any university, but only buyers on
-        // the same campus as the seller can actually check out.
-        if (product.universityId && product.universityId !== user.universityId) {
-          return jsonResponse({ error: `${product.name} isn't available for delivery to your campus` }, { status: 400 })
-        }
-
-        if (!product.isActive || resolvedStock < safeQuantity) {
-          return jsonResponse({ error: `Product unavailable: ${product.name}` }, { status: 400 })
-        }
-        if (item.orderNote && String(item.orderNote).length > 300) {
-          return jsonResponse({ error: 'Order note must be under 300 characters' }, { status: 400 })
-        }
-        items.push({
-          productId:  product.id,
-          variantId:  item.variantId || null,
-          price:      resolvedPrice, // ? always from DB, never from client
-          quantity:   safeQuantity,
-          sellerId:   product.sellerId,
-          landmark:   product.landmark,
-          orderNote:  item.orderNote,
-          buyerDeliveryAcknowledged: item.buyerDeliveryAcknowledged === true,
-        })
-      }
-    } else if (productId) {
-      const product = await prisma.product.findUnique({
-        where:   { id: productId },
-        include: { seller: true, variants: true },
-      })
-      if (!product) {
-        return jsonResponse({ error: 'Product not found' }, { status: 404 })
-      }
-      let resolvedPrice = product.price
-      let resolvedStock = product.quantity
-      const variantId = body.variantId || null
-
-      if (variantId) {
-        const variant = product.variants.find(v => v.id === variantId)
-        if (!variant) {
-          return jsonResponse({ error: `Variant not found for product: ${product.name}` }, { status: 400 })
-        }
-        resolvedPrice = variant.price
-        resolvedStock = variant.stock
-      }
-
-      if (product.universityId && product.universityId !== user.universityId) {
-        return jsonResponse({ error: `${product.name} isn't available for delivery to your campus` }, { status: 400 })
-      }
-
-      if (!product.isActive || resolvedStock < 1) {
-        return jsonResponse({ error: 'Product unavailable' }, { status: 400 })
-      }
-      items = [{
-        productId:  product.id,
-        variantId:  variantId,
-        price:      resolvedPrice,
-        quantity:   1,
-        sellerId:   product.sellerId,
-        landmark:   product.landmark,
-        orderNote:  body.orderNote,
-        buyerDeliveryAcknowledged: false,
-      }]
-    } else {
-      return jsonResponse({ error: 'No products provided' }, { status: 400 })
-    }
-
-    // Can't buy own product
-    const ownProduct = items.find(i => i.sellerId === user.id)
-    if (ownProduct) {
-      return jsonResponse({ error: 'You cannot buy your own product' }, { status: 400 })
-    }
+    type CartItem = (typeof items)[number]
 
     // ── Calculate totals ──────────────────────────────────────────────────────
     // One order per seller, each with its own zone-priced delivery fee
@@ -300,7 +179,16 @@ export async function POST(request: NextRequest) {
         },
         meta: {
           userId: user.id,
-          cartItems: JSON.stringify(items),
+          cartItems: JSON.stringify(items.map(i => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            price: i.price,
+            quantity: i.quantity,
+            sellerId: i.sellerId,
+            landmark: i.landmark,
+            orderNote: i.orderNote,
+            buyerDeliveryAcknowledged: i.buyerDeliveryAcknowledged,
+          }))),
           orderReference: reference,
         },
       },
@@ -374,7 +262,8 @@ export async function createOrders(
     landmark?:    string | null
     universityId?: string | null
   },
-  paymentReference: string
+  paymentReference: string,
+  paymentMethod: 'CARD' | 'WALLET' = 'CARD',
 ) {
   console.log('📝 createOrders called — reference:', paymentReference)
 
@@ -480,7 +369,7 @@ export async function createOrders(
             payment: {
               create: {
                 amount:        Number(orderFees.totalAmount),
-                method:        'CARD' as const,
+                method:        paymentMethod,
                 status:        'COMPLETED' as const,
                 transactionId: paymentReference,
                 paidAt:        new Date(),
@@ -567,15 +456,17 @@ export async function createOrders(
               balanceBefore: sellerPendingBalance,
               balanceAfter:  sellerPendingBalance + sellerShare,
             },
-            {
+            // Wallet payments write their own ledger row (with real balances)
+            // in app/api/payments/wallet-pay/route.ts.
+            ...(paymentMethod === 'WALLET' ? [] : [{
               userId:        user.id,
-              type:          'DEBIT',
+              type:          'DEBIT' as const,
               amount:        Number(orderFees.totalAmount),
               description:   `Payment for ${itemsList} (Order: ${orderNumber})`,
               reference:     `${orderNumber}-BUYER-PAYMENT`,
               balanceBefore: 0,
               balanceAfter:  0,
-            },
+            }]),
           ],
         })
 

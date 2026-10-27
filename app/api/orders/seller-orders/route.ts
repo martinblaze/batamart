@@ -26,11 +26,10 @@ export async function GET(req: NextRequest) {
       where: { sellerId: user.id },
       include: {
         buyer: {
+          // Sellers never see the buyer's real name, phone or address, only
+          // the username written on the parcel.
           select: {
-            id:    true,
-            name:  true,
-            phone: true,
-            email: true,
+            username: true,
           },
         },
         product: {
@@ -62,10 +61,15 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
+    const safe = orders.map(({ deliveryHostel, deliveryRoom, deliveryPhone, ...order }) => ({
+      ...order,
+      buyer: { id: '', name: order.buyer.username ?? 'Buyer', username: order.buyer.username },
+    }))
+
     return jsonResponse({
       success: true,
-      orders,
-      count: orders.length,
+      orders: safe,
+      count: safe.length,
     })
   } catch (error) {
     console.error('Error fetching seller orders:', error)

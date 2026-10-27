@@ -15,6 +15,12 @@ class SellerOrdersRepository {
         .toList();
   }
 
+  /// The vendor confirms they gave the parcel to the rider; riders cannot
+  /// mark this themselves (`POST /api/orders/{id}/handover`).
+  Future<void> markPickedUp(String orderId) {
+    return _api.post('/api/orders/$orderId/handover');
+  }
+
   /// "Accept Order" — the seller's only allowed manual transition
   /// (`PENDING` → `PROCESSING`) via `PATCH /api/orders/{id}` (§3.6).
   Future<void> acceptOrder(String orderId) {

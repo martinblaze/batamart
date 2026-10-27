@@ -112,7 +112,7 @@ const PROFILE_CSS = `
 interface UserProfile {
   id: string; name: string; email: string; phone: string
   hostelName: string; roomNumber: string; landmark: string
-  role: string; isSellerMode: boolean
+  role: string; isSellerMode: boolean; username?: string | null
 }
 interface WalletData { availableBalance: number }
 
@@ -127,6 +127,10 @@ export default function MyProfilePage() {
   const [editedUser, setEditedUser] = useState<Partial<UserProfile>>({})
   const [saveError, setSaveError]   = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
+  // Set when the checkout (or another page) sent the user here to finish a
+  // required detail; after saving we send them back where they were.
+  const [setupReason, setSetupReason] = useState<'username' | 'address' | null>(null)
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isApp, setIsApp]           = useState(false)
   const [isIOSBrowser, setIsIOSBrowser] = useState(false)
@@ -195,7 +199,14 @@ export default function MyProfilePage() {
       ])
       const userData  = await userRes.json()
       const walletData = await walletRes.json()
-      if (userRes.ok) { setUser(userData.user); setEditedUser(userData.user) }
+      if (userRes.ok) {
+        setUser(userData.user); setEditedUser(userData.user)
+        const qs = new URLSearchParams(window.location.search)
+        const setup = qs.get('setup')
+        const back = qs.get('redirect')
+        if (setup === 'username' || setup === 'address') { setSetupReason(setup); setIsEditing(true) }
+        if (back && back.startsWith('/')) setReturnTo(back)
+      }
       if (walletRes.ok) setWallet(walletData.wallet)
     } catch {}
     finally { setLoading(false) }
@@ -208,11 +219,17 @@ export default function MyProfilePage() {
       const response = await fetch('/api/auth/update-profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: editedUser.name, phone: editedUser.phone, hostelName: editedUser.hostelName, roomNumber: editedUser.roomNumber, landmark: editedUser.landmark }),
+        body: JSON.stringify({ name: editedUser.name, phone: editedUser.phone, hostelName: editedUser.hostelName, roomNumber: editedUser.roomNumber, landmark: editedUser.landmark, ...(editedUser.username ? { username: editedUser.username } : {}) }),
       })
       const data = await response.json()
       if (response.ok) {
-        setUser({ ...user!, ...editedUser }); setIsEditing(false); setSaveSuccess(true)
+        const saved = { ...user!, ...editedUser, username: data.user?.username ?? editedUser.username }
+        setUser(saved); setEditedUser(saved); setIsEditing(false); setSaveSuccess(true)
+        // Back to checkout (or wherever) once the missing detail is filled in.
+        const satisfied =
+          setupReason === 'username' ? !!saved.username :
+          setupReason === 'address' ? !!(saved.hostelName && saved.roomNumber) : false
+        if (returnTo && satisfied) { router.push(returnTo); return }
         if (editedUser.name) localStorage.setItem('userName', editedUser.name)
         window.dispatchEvent(new Event('auth-change'))
         setTimeout(() => setSaveSuccess(false), 3000)
@@ -488,6 +505,27 @@ export default function MyProfilePage() {
                   {isEditing && <span className="ml-auto text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">EDITING</span>}
                 </div>
                 <div className="p-5 space-y-4">
+                  {setupReason && (
+                    <p className="border border-border bg-surface px-3.5 py-3 text-sm text-ink-secondary">
+                      {setupReason === 'username'
+                        ? 'Choose a username to continue. Sellers will see only this, never your name or address.'
+                        : 'Add your delivery address to continue.'}
+                    </p>
+                  )}
+                  <div>
+                    <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Username</label>
+                    {isEditing ? (
+                      <>
+                        <input type="text" value={editedUser.username || ''} maxLength={20} autoCapitalize="none" autoCorrect="off"
+                          onChange={e => setEditedUser({ ...editedUser, username: e.target.value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() })}
+                          placeholder="letters and numbers only"
+                          className="input-field h-12 w-full border border-border bg-card px-3.5 text-sm text-ink transition-[border-color,box-shadow] duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" />
+                        <p className="text-[11px] text-ink-muted mt-1">3 to 20 letters or numbers. It goes on your parcels instead of your name.</p>
+                      </>
+                    ) : (
+                      <p className="text-ink font-semibold">{user.username ? `@${user.username}` : <span className="text-ink-muted font-medium">Not set</span>}</p>
+                    )}
+                  </div>
                   <div>
                     <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Full Name</label>
                     {isEditing ? (

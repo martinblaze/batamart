@@ -15,6 +15,7 @@ import { Reveal } from '@/components/motion/AppMotion'
 import { useCartStore } from '@/lib/cart-store'
 import { authFetch } from '@/lib/auth-client'
 import { formatVariantSelection } from '@/lib/variants'
+import { formatDeliveryDate } from '@/lib/delivery/schedule'
 import {
   Lock, Shield, Truck, CheckCircle,
   MapPin, Phone, User, Home, Loader2, AlertCircle,
@@ -31,12 +32,26 @@ export default function CheckoutPage() {
 
   // Delivery fee and totals come from the server, not hardcoded
   const [serverDeliveryFee, setServerDeliveryFee] = useState<number | null>(null)
+  const [deliveryDates, setDeliveryDates] = useState<string[]>([])
 
   // Per-item EXTRA notes (variant summary is auto-prepended separately)
   const [orderNotes, setOrderNotes] = useState<Record<string, string>>({})
   const [deliverySuitabilityConfirmed, setDeliverySuitabilityConfirmed] = useState(false)
   const [paymentsEnabled, setPaymentsEnabled] = useState(true)
   const [paymentsStatusLoaded, setPaymentsStatusLoaded] = useState(false)
+
+  // Pay by card (Flutterwave) or straight from the wallet balance.
+  const [walletBalance, setWalletBalance] = useState<number | null>(null)
+  const [payMethod, setPayMethod] = useState<'CARD' | 'WALLET'>('CARD')
+  const [walletPin, setWalletPin] = useState('')
+  const [needsPin, setNeedsPin] = useState(false)
+
+  useEffect(() => {
+    authFetch('/api/wallet')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.wallet) setWalletBalance(Number(d.wallet.availableBalance) || 0) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -111,6 +126,7 @@ export default function CheckoutPage() {
       .then(res => res.json())
       .then(data => {
         if (typeof data.deliveryFee === 'number') setServerDeliveryFee(data.deliveryFee)
+        if (Array.isArray(data.deliveryDates)) setDeliveryDates(data.deliveryDates)
       })
       .catch(err => console.error('Delivery quote error:', err))
   }, [cartItems])
@@ -163,8 +179,12 @@ export default function CheckoutPage() {
       setError('Please confirm rider-delivery suitability before payment.')
       return
     }
-    if (!user?.hostelName) {
-      router.push('/profile/setup')
+    if (!user?.username) {
+      router.push('/myprofile?setup=username&redirect=/checkout')
+      return
+    }
+    if (!user?.hostelName || !user?.roomNumber) {
+      router.push('/myprofile?setup=address&redirect=/checkout')
       return
     }
 
@@ -182,6 +202,25 @@ export default function CheckoutPage() {
         orderNote: buildOrderNote(item),
         buyerDeliveryAcknowledged: deliverySuitabilityConfirmed,
       }))
+
+      if (payMethod === 'WALLET') {
+        const walletRes = await authFetch('/api/payments/wallet-pay', {
+          method: 'POST',
+          body: JSON.stringify({ cartItems: cartItemsWithNotes, ...(walletPin ? { pin: walletPin } : {}) }),
+        })
+        const walletData = await walletRes.json()
+        if (!walletRes.ok) {
+          if (walletData.code === 'PIN_REQUIRED' || walletData.code === 'PIN_INVALID') setNeedsPin(true)
+          if (walletData.code === 'INSUFFICIENT_BALANCE' && typeof walletData.balance === 'number') setWalletBalance(walletData.balance)
+          setError(walletData.error || 'Wallet payment failed. Please try again.')
+          return
+        }
+        sessionStorage.removeItem('checkout_product')
+        sessionStorage.removeItem('checkout_cart')
+        clearCart()
+        router.push(walletData.redirect || `/orders?payment=success&order=${walletData.orderNumber}`)
+        return
+      }
 
       // ── FIX #4: We do NOT send deliveryFee from the client.
       const response = await authFetch('/api/payments/initialize', {
@@ -238,7 +277,7 @@ export default function CheckoutPage() {
   // This flat guess only shows for the brief moment before /api/delivery/quote
   // resolves — it's immediately replaced by serverDeliveryFee.
   const uniqueSellers = Math.max(1, new Set(cartItems.map(item => item.sellerId)).size)
-  const fallbackDeliveryFee = uniqueSellers * 2000
+  const fallbackDeliveryFee = uniqueSellers * 1200
   const deliveryFee   = serverDeliveryFee ?? fallbackDeliveryFee
   const subtotal      = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalAmount   = subtotal + deliveryFee
@@ -279,7 +318,7 @@ export default function CheckoutPage() {
                   <MapPin className="h-4 w-4 text-ink-muted" strokeWidth={1.75} />
                   <h2 className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink">Delivery address</h2>
                 </div>
-                <Link href="/profile/setup" className="text-xs font-semibold text-primary hover:underline transition-colors flex items-center gap-1">
+                <Link href="/myprofile?setup=address&redirect=/checkout" className="text-xs font-semibold text-primary hover:underline transition-colors flex items-center gap-1">
                   Edit <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -487,6 +526,14 @@ export default function CheckoutPage() {
                     {serverDeliveryFee !== null ? formatPrice(serverDeliveryFee) : formatPrice(fallbackDeliveryFee)}
                   </span>
                 </div>
+                {deliveryDates.length > 0 && (
+                  <div className="flex justify-between gap-4 text-sm">
+                    <span className="text-ink-secondary">{deliveryDates.length > 1 ? 'Delivery days' : 'Delivery day'}</span>
+                    <span className="text-right font-semibold text-ink">
+                      {deliveryDates.map(d => formatDeliveryDate(new Date(d))).join(' and ')}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 mb-6 flex items-baseline justify-between">
@@ -513,6 +560,49 @@ export default function CheckoutPage() {
                 </span>
               </label>
 
+              <div className="mb-4 grid grid-cols-2 gap-px border border-border bg-border">
+                <button
+                  type="button"
+                  onClick={() => { setPayMethod('CARD'); setError('') }}
+                  className={`px-3 py-3 text-left ${payMethod === 'CARD' ? 'bg-ink text-background' : 'bg-card text-ink'}`}
+                >
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.16em]">Card or transfer</span>
+                  <span className={`mt-1 block text-xs ${payMethod === 'CARD' ? 'text-background/70' : 'text-ink-muted'}`}>Pay with Flutterwave</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPayMethod('WALLET'); setError('') }}
+                  className={`px-3 py-3 text-left ${payMethod === 'WALLET' ? 'bg-ink text-background' : 'bg-card text-ink'}`}
+                >
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.16em]">Wallet</span>
+                  <span className={`mt-1 block text-xs ${payMethod === 'WALLET' ? 'text-background/70' : 'text-ink-muted'}`}>
+                    {walletBalance === null ? 'Checking balance...' : formatPrice(walletBalance)}
+                  </span>
+                </button>
+              </div>
+
+              {payMethod === 'WALLET' && (
+                <div className="mb-4 space-y-3">
+                  {walletBalance !== null && walletBalance < totalAmount && (
+                    <p className="border border-warning/25 bg-warning/5 px-3 py-2 text-xs text-warning">
+                      Your wallet has {formatPrice(walletBalance)}; this order is {formatPrice(totalAmount)}.{' '}
+                      <a href="/wallet?topup=open" className="font-semibold underline">Top up your wallet</a>
+                    </p>
+                  )}
+                  {needsPin && (
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={walletPin}
+                      onChange={e => setWalletPin(e.target.value.replace(/\D/g, ''))}
+                      placeholder="6-digit wallet PIN"
+                      className="h-11 w-full border border-border bg-card px-3 text-sm text-ink outline-none focus:border-ink/40"
+                    />
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={handlePayment}
                 disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed}
@@ -525,7 +615,7 @@ export default function CheckoutPage() {
                 ) : !paymentsEnabled ? (
                   <>Payments Temporarily Disabled</>
                 ) : (
-                  <><Lock className="w-4 h-4" /> Pay Securely - {formatPrice(totalAmount)}</>
+                  <><Lock className="w-4 h-4" /> {payMethod === 'WALLET' ? 'Pay from wallet' : 'Pay Securely'} - {formatPrice(totalAmount)}</>
                 )}
               </button>
 

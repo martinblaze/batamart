@@ -10,7 +10,7 @@ import '../../../core/widgets/inputs/app_text_field.dart';
 import '../data/nigerian_banks.dart';
 import '../state/wallet_providers.dart';
 
-/// `POST /api/wallet/withdraw` (BACKEND_REFERENCE.md §3.7) — ₦1,000-500,000,
+/// `POST /api/wallet/withdraw` (BACKEND_REFERENCE.md §3.7) — ₦2,000-500,000,
 /// PIN required, plus an optional biometric confirmation layered on top
 /// client-side (the backend only knows about the PIN; biometrics are a
 /// device-local gate before we even send the PIN).
@@ -34,7 +34,7 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
           children: [
             AppTextField(
               controller: amountController,
-              label: 'Amount (₦1,000 - ₦500,000)',
+              label: 'Amount (₦2,000 - ₦500,000)',
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -75,11 +75,11 @@ Future<void> showWithdrawSheet(BuildContext context, WidgetRef ref) {
               isLoading: isSubmitting,
               onPressed: () async {
                 final amount = int.tryParse(amountController.text.trim());
-                if (amount == null || amount < 1000 || amount > 500000) {
+                if (amount == null || amount < 2000 || amount > 500000) {
                   Haptics.error();
                   setState(
                     () =>
-                        error = 'Enter an amount between ₦1,000 and ₦500,000.',
+                        error = 'Enter an amount between ₦2,000 and ₦500,000.',
                   );
                   return;
                 }

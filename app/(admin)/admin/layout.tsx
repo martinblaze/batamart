@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Package, AlertTriangle,
-  FileText, DollarSign, BarChart3, LogOut, Menu, X, Send, MessageSquare, Navigation, Database, Truck,
+  FileText, DollarSign, BarChart3, LogOut, Menu, X, Send, MessageSquare, Navigation, Database, Truck, ClipboardList, PackageCheck,
 } from 'lucide-react'
 import { Logo } from '@/components/layout/Logo'
 
@@ -15,6 +15,8 @@ import { Logo } from '@/components/layout/Logo'
 const adminRoutes = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
   { label: 'Users',     icon: Users,           href: '/admin/users' },
+  { label: 'Order intake', icon: ClipboardList, href: '/admin/order-intake' },
+  { label: 'Sorting room', icon: PackageCheck, href: '/admin/sorting' },
   { label: 'Products',  icon: Package,         href: '/admin/products' },
   { label: 'Disputes',  icon: AlertTriangle,   href: '/admin/disputes' },
   { label: 'Reports',   icon: FileText,        href: '/admin/reports' },

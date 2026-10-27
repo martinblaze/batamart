@@ -8,10 +8,10 @@ export function OfflineStatusBanner() {
   if (isOnline) return null
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[12000] bg-warning text-white">
-      <div className="max-w-7xl mx-auto px-4 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2">
-        <WifiOff className="w-4 h-4" />
-        You are offline. Showing last synced data where available.
+    <div className="fixed left-0 right-0 top-0 z-[12000] border-b border-border bg-card">
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink">
+        <WifiOff className="h-3.5 w-3.5 text-warning" strokeWidth={1.75} />
+        Offline. Showing last synced data.
       </div>
     </div>
   )

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import ReviewModal from '@/components/reviews/ReviewModal';
 import ProductReviewModal from '@/components/reviews/ProductReviewModal';
@@ -35,6 +36,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { formatDeliveryDate, getOrderDeliveryDate, getEffectiveDeliveryDate, parseReadyDays } from '@/lib/delivery/schedule';
 import { Shell, PageHeader, EmptyState, Skeleton, DataRow } from '@/components/ui/Shell';
 import { Badge, type BadgeStatus } from '@/components/ui/Badge';
 
@@ -45,10 +47,22 @@ const ACTIVE_STATUSES = [
   'SHIPPED',
   'RIDER_ASSIGNED',
   'PICKED_UP',
+  'AT_HUB',
+  'PACKED',
   'ON_THE_WAY',
 ]
 
-const LIVE_TRACKING_STATUSES = ['RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY']
+// Leaflet reads `window` on import, so the map is client-only.
+const LiveRiderMap = dynamic(() => import('@/components/marketplace/LiveRiderMap'), {
+  ssr: false,
+  loading: () => <div className="h-72 w-full animate-pulse bg-surface" />,
+});
+
+// A ping older than this means the rider's phone has stopped reporting.
+const STALE_PING_MS = 45_000;
+
+// The buyer's map is the last leg only: from the hub to their door.
+const LIVE_TRACKING_STATUSES = ['ON_THE_WAY']
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -102,9 +116,26 @@ export default function OrderDetailPage() {
     }
 
     fetchLiveTracking()
-    const interval = setInterval(() => fetchLiveTracking(true), 8000)
+    const interval = setInterval(() => fetchLiveTracking(true), 5000)
     return () => clearInterval(interval)
   }, [order?.id, order?.riderId, order?.status])
+
+  // Hooks must run before the loading/error early returns below.
+  const livePoints = useMemo(
+    () =>
+      (liveTracking?.points ?? []).map((p: any) => ({ lat: p.lat, lng: p.lng, heading: p.heading })),
+    [liveTracking?.points],
+  );
+
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const lastPingAgoSec = liveTracking?.latestPoint
+    ? Math.max(0, Math.round((nowTick - new Date(liveTracking.latestPoint.at).getTime()) / 1000))
+    : null;
+  const pingIsStale = lastPingAgoSec != null && lastPingAgoSec * 1000 > STALE_PING_MS;
 
   const fetchOrder = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -208,6 +239,8 @@ export default function OrderDetailPage() {
       case 'SHIPPED':
       case 'RIDER_ASSIGNED':
       case 'PICKED_UP':
+      case 'AT_HUB':
+      case 'PACKED':
       case 'ON_THE_WAY': return 'verified';
       default: return 'neutral';
     }
@@ -237,6 +270,31 @@ export default function OrderDetailPage() {
     if (currentUserId === order.riderId) return 'RIDER';
     return null;
   };
+
+  const handleMarkDelivered = async () => {
+    if (!order?.id) return
+    if (!window.confirm('Confirm you have received this order? The rider will be paid once you do.')) return
+    setUpdating(true)
+    setUpdateError(null)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch('/api/orders/confirm-delivery', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUpdateError(data.error || 'Could not mark as delivered')
+        return
+      }
+      await fetchOrder(true)
+    } catch {
+      setUpdateError('Network error. Please try again.')
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   const canSellerConfirmReturn = () => {
     return (
@@ -389,10 +447,6 @@ export default function OrderDetailPage() {
     return checkpoint?.status?.replace(/_/g, ' ') || 'Tracking update'
   }
 
-  const liveMapUrl = liveTracking?.latestPoint
-    ? `https://www.google.com/maps?q=${liveTracking.latestPoint.lat},${liveTracking.latestPoint.lng}&z=16&output=embed`
-    : null
-
   const openMapUrl = liveTracking?.latestPoint
     ? `https://www.google.com/maps/search/?api=1&query=${liveTracking.latestPoint.lat},${liveTracking.latestPoint.lng}`
     : null
@@ -475,7 +529,9 @@ export default function OrderDetailPage() {
                     order.status === 'PROCESSING' ? 20 :
                       order.status === 'SHIPPED' ? 40 :
                         order.status === 'RIDER_ASSIGNED' ? 55 :
-                          order.status === 'PICKED_UP' ? 70 :
+                          order.status === 'PICKED_UP' ? 66 :
+                            order.status === 'AT_HUB' ? 72 :
+                              order.status === 'PACKED' ? 78 :
                             order.status === 'ON_THE_WAY' ? 85 : 100
                   }%`
               }}
@@ -484,10 +540,11 @@ export default function OrderDetailPage() {
               { key: 'PENDING', label: 'Placed', icon: ShoppingBag },
               { key: 'PROCESSING', label: 'Confirmed', icon: CheckCircle },
               { key: 'PICKED_UP', label: 'Picked up', icon: Package },
+              { key: 'AT_HUB', label: 'At hub', icon: Package },
               { key: 'ON_THE_WAY', label: 'On the way', icon: Truck },
               { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle },
             ].map((step, i) => {
-              const statusOrder = ['PENDING', 'PROCESSING', 'SHIPPED', 'RIDER_ASSIGNED', 'PICKED_UP', 'ON_THE_WAY', 'DELIVERED']
+              const statusOrder = ['PENDING', 'PROCESSING', 'SHIPPED', 'RIDER_ASSIGNED', 'PICKED_UP', 'AT_HUB', 'PACKED', 'ON_THE_WAY', 'DELIVERED']
               const currentIdx = statusOrder.indexOf(order.status)
               const stepIdx = statusOrder.indexOf(step.key)
               const isDone = currentIdx >= stepIdx
@@ -591,7 +648,16 @@ export default function OrderDetailPage() {
                 <Truck className="h-3.5 w-3.5" strokeWidth={1.75} />
                 Delivery
               </p>
+              {userRole === 'BUYER' && order.status === 'ON_THE_WAY' && (
+                <div className="mb-6 border border-border bg-surface p-4">
+                  <p className="text-sm text-ink">Once the rider hands you the parcel, mark it as delivered.</p>
+                  <Button onClick={handleMarkDelivered} variant="ink" size="sm" className="mt-3" disabled={updating}>
+                    {updating ? 'Saving…' : 'Mark as delivered'}
+                  </Button>
+                </div>
+              )}
               <div className="ui-divide">
+                <DataRow label="Delivery day" value={formatDeliveryDate(getEffectiveDeliveryDate(order, Math.max(parseReadyDays(order.product?.deliveryEstimate), ...((order.items ?? []).map((i: any) => parseReadyDays(i.product?.deliveryEstimate))))))} />
                 <DataRow label="Hostel" value={order.deliveryHostel || 'Not specified'} />
                 <DataRow label="Room" value={order.deliveryRoom || 'Not specified'} />
                 {order.deliveryLandmark && (
@@ -826,20 +892,29 @@ export default function OrderDetailPage() {
 
               {liveTracking?.latestPoint ? (
                 <>
-                  <div className="overflow-hidden border border-border">
-                    <iframe
-                      title="Rider live location map"
-                      src={liveMapUrl || undefined}
-                      className="h-56 w-full"
-                      loading="lazy"
-                    />
+                  <div className="relative overflow-hidden border border-border">
+                    <LiveRiderMap points={livePoints} className="h-72 w-full" />
+                    <span
+                      className={`ui-mono ui-mono-sm absolute left-2 top-2 z-[500] border bg-card px-2 py-1 ${
+                        pingIsStale ? 'border-warning/40 text-warning' : 'border-border text-ink'
+                      }`}
+                    >
+                      {pingIsStale ? 'Signal lost' : 'Live'}
+                    </span>
                   </div>
+                  {pingIsStale && (
+                    <p className="mt-3 border border-warning/25 bg-warning/5 px-3.5 py-2.5 text-xs text-warning">
+                      Last seen {lastPingAgoSec != null && lastPingAgoSec >= 120
+                        ? `${Math.round(lastPingAgoSec / 60)} min`
+                        : `${lastPingAgoSec}s`} ago. The rider&apos;s phone may be offline or out of signal. The pin will move again when it reconnects.
+                    </p>
+                  )}
 
                   <div className="mt-4 grid grid-cols-2 gap-px border border-border bg-border">
                     <div className="bg-card px-3 py-2.5">
                       <p className="ui-mono ui-mono-sm text-ink-muted">Last ping</p>
                       <p className="ui-figure mt-1 text-[13px] text-ink">
-                        {format(new Date(liveTracking.latestPoint.at), 'h:mm:ss a')}
+                        {lastPingAgoSec != null && lastPingAgoSec < 60 ? `${lastPingAgoSec}s ago` : format(new Date(liveTracking.latestPoint.at), 'h:mm:ss a')}
                       </p>
                     </div>
                     <div className="bg-card px-3 py-2.5">

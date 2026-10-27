@@ -31,6 +31,11 @@ export async function GET(request: NextRequest) {
       await releaseMaturedSellerEscrowForUser(user.id)
     }
 
+    const marketer = await prisma.fieldMarketer.findUnique({
+      where: { userId: user.id },
+      select: { balance: true, totalSignups: true, totalEarned: true },
+    })
+
     // Count completed orders directly from orders table — accurate regardless
     // of whether the completedOrders counter was incremented correctly
     let completedOrders = 0
@@ -65,6 +70,9 @@ export async function GET(request: NextRequest) {
         pendingBalance: Math.max(0, Number(userData.pendingBalance)),
         completedOrders,
         role: userData.role,
+        marketing: marketer
+          ? { balance: marketer.balance, totalSignups: marketer.totalSignups, totalEarned: marketer.totalEarned }
+          : null,
       },
     })
   } catch (error) {

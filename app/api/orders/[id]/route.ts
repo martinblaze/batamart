@@ -20,6 +20,8 @@ const ORDER_STATUS_VALUES: OrderStatus[] = [
   'PROCESSING',
   'RIDER_ASSIGNED',
   'PICKED_UP',
+  'AT_HUB',
+  'PACKED',
   'ON_THE_WAY',
   'DELIVERED',
   'COMPLETED',
@@ -71,7 +73,7 @@ export async function GET(
           },
         },
         buyer: {
-          select: { id: true, name: true, profilePhoto: true, email: true },
+          select: { id: true, name: true, username: true, profilePhoto: true, email: true },
         },
         seller: {
           select: {
@@ -113,6 +115,19 @@ export async function GET(
 
     if (!isBuyer && !isSeller && !isRider && !isAdmin) {
       return jsonResponse({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // The vendor only ever sees the buyer's username (the label on the
+    // parcel), never their real name, contact or address.
+    if (isSeller && !isBuyer && !isAdmin) {
+      return jsonResponse({
+        ...order,
+        buyer: { id: order.buyer.id, name: order.buyer.username ?? 'Buyer', username: order.buyer.username },
+        deliveryHostel: '',
+        deliveryRoom: '',
+        deliveryLandmark: '',
+        deliveryPhone: '',
+      });
     }
 
     return jsonResponse(order);
@@ -165,7 +180,9 @@ export async function PATCH(
       PENDING:        ['PROCESSING', 'RIDER_ASSIGNED'],
       PROCESSING:     ['RIDER_ASSIGNED'],
       RIDER_ASSIGNED: ['PICKED_UP'],
-      PICKED_UP:      ['ON_THE_WAY'],
+      PICKED_UP:      ['AT_HUB', 'ON_THE_WAY'],
+      AT_HUB:         ['PACKED'],
+      PACKED:         ['ON_THE_WAY'],
       ON_THE_WAY:     ['DELIVERED'],
       DELIVERED:      ['COMPLETED'],
       COMPLETED:      [],
@@ -187,12 +204,8 @@ export async function PATCH(
     if (!isAdmin) {
       const actorAllowed = (
         (isSeller && (
-          currentStatus === 'PENDING' && nextStatus === 'PROCESSING'
-        )) ||
-        (isRider && (
-          (currentStatus === 'RIDER_ASSIGNED' && nextStatus === 'PICKED_UP') ||
-          (currentStatus === 'PICKED_UP' && nextStatus === 'ON_THE_WAY') ||
-          (currentStatus === 'ON_THE_WAY' && nextStatus === 'DELIVERED')
+          (currentStatus === 'PENDING' && nextStatus === 'PROCESSING') ||
+          (currentStatus === 'RIDER_ASSIGNED' && nextStatus === 'PICKED_UP')
         )) ||
         (isBuyer && (
           currentStatus === 'DELIVERED' && nextStatus === 'COMPLETED'

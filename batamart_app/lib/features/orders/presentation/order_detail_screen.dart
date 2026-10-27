@@ -65,12 +65,15 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
   bool _isConfirming = false;
   bool _isRiderUpdating = false;
 
-  String? get _riderNextStatus => switch (widget.order.status) {
-    'RIDER_ASSIGNED' => 'PICKED_UP',
-    'PICKED_UP' => 'ON_THE_WAY',
-    'ON_THE_WAY' => 'DELIVERED',
-    _ => null,
-  };
+  // Riders no longer advance normal orders: the vendor marks "picked up" and
+  // the buyer marks "delivered". Only dispute-return legs are driven here.
+  String? get _riderNextStatus => widget.order.hasExistingDispute
+      ? switch (widget.order.status) {
+          'PICKED_UP' => 'ON_THE_WAY',
+          'ON_THE_WAY' => 'DELIVERED',
+          _ => null,
+        }
+      : null;
 
   bool get _isReturnPickupLeg =>
       widget.order.status == 'RIDER_ASSIGNED' &&
@@ -312,7 +315,6 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
           else if (_riderNextStatus != null)
             PrimaryButton(
               label: switch (_riderNextStatus) {
-                'PICKED_UP' => 'Mark Picked Up',
                 'ON_THE_WAY' => 'Mark On The Way',
                 _ => 'Mark Delivered',
               },
@@ -320,9 +322,11 @@ class _OrderDetailBodyState extends ConsumerState<_OrderDetailBody> {
               isLoading: _isRiderUpdating,
             ),
         ] else ...[
-          if (order.status == 'DELIVERED')
+          if (order.status == 'DELIVERED' || order.status == 'ON_THE_WAY')
             PrimaryButton(
-              label: 'Confirm Received',
+              label: order.status == 'ON_THE_WAY'
+                  ? 'Mark Delivered'
+                  : 'Confirm Received',
               onPressed: _confirmReceived,
               isLoading: _isConfirming,
             ),

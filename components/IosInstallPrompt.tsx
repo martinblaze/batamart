@@ -1,6 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Bell, Share, SquarePlus, X } from 'lucide-react'
+
+const STEPS = [
+  { icon: Share, title: 'Tap the Share button', note: 'At the bottom of Safari' },
+  { icon: SquarePlus, title: 'Tap "Add to Home Screen"', note: 'Scroll down in the share sheet to find it' },
+  { icon: Bell, title: 'Then enable notifications', note: 'Open the installed app, then Profile, then Enable Notifications' },
+]
 
 export default function IosInstallPrompt() {
   const [show, setShow] = useState(false)
@@ -14,7 +21,8 @@ export default function IosInstallPrompt() {
 
     if (!isIos || isStandalone || isSnoozed) return
 
-    setTimeout(() => setShow(true), 4000)
+    const timer = setTimeout(() => setShow(true), 4000)
+    return () => clearTimeout(timer)
   }, [])
 
   const dismiss = () => {
@@ -30,143 +38,69 @@ export default function IosInstallPrompt() {
     <>
       <style>{`
         @keyframes iosSlideUp {
-          from { opacity: 0; transform: translateY(100%); }
+          from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes bounceCaret {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(4px); }
-        }
-        .ios-prompt-sheet {
-          animation: iosSlideUp 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-        }
-        .bounce-caret {
-          animation: bounceCaret 1.4s ease-in-out infinite;
-        }
+        .ios-prompt-sheet { animation: iosSlideUp 0.3s ease-out forwards; }
       `}</style>
 
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[9998] bg-black/35 backdrop-blur-sm"
-        onClick={dismiss}
-      />
+      <div className="fixed inset-0 z-[9998] bg-ink/40" onClick={dismiss} aria-hidden="true" />
 
-      {/* Sheet */}
       <div
-        className="ios-prompt-sheet fixed bottom-0 left-0 right-0 z-[9999] rounded-t-3xl overflow-hidden bg-card shadow-soft"
-        style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}
+        role="dialog"
+        aria-label="Add BataMart to your Home Screen"
+        className="ios-prompt-sheet fixed bottom-0 left-0 right-0 z-[9999] border-t border-border bg-card"
+        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-border rounded-full" />
-        </div>
-
-        {/* Header */}
-        <div className="px-6 pt-3 pb-5">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="mx-auto max-w-md">
+          <div className="flex items-start gap-3 p-5 pb-4">
             <img
               src="/icon-192x192.png"
               alt="BataMart"
-              className="w-14 h-14 rounded-2xl shadow-soft"
+              className="h-12 w-12 flex-shrink-0 border border-border object-cover"
             />
-            <div>
-              <h2 className="text-lg font-semibold text-ink leading-tight">
-                Add BataMart to
-                <br />Home Screen
-              </h2>
-              <p className="text-xs text-ink-secondary mt-0.5">
-                Get the full app experience
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="ui-mono-sm text-ink-muted">Home screen</p>
+              <h2 className="mt-0.5 text-lg font-semibold leading-tight text-ink">Add BataMart to your Home Screen</h2>
             </div>
+            <button
+              onClick={dismiss}
+              aria-label="Close"
+              className="-mr-1 flex h-7 w-7 flex-shrink-0 items-center justify-center text-ink-muted transition-colors hover:text-ink"
+            >
+              <X className="h-4 w-4" strokeWidth={1.75} />
+            </button>
           </div>
 
-          {/* Steps */}
-          <div className="space-y-3">
+          <ol className="ui-divide border-y border-border">
+            {STEPS.map(({ icon: Icon, title, note }, i) => (
+              <li key={title} className="ui-row flex items-center gap-3 px-5 py-3.5">
+                <span className="ui-mono-sm w-5 flex-shrink-0 text-ink-muted">0{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ink">{title}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-ink-secondary">{note}</p>
+                </div>
+                <Icon className="h-5 w-5 flex-shrink-0 text-ink" strokeWidth={1.5} />
+              </li>
+            ))}
+          </ol>
 
-            {/* Step 1 */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-primary/5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary shadow-soft">
-                {/* iOS Share icon */}
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-ink">
-                  Tap the Share button
-                </p>
-                <p className="text-xs text-ink-secondary mt-0.5">
-                  At the bottom of your Safari browser
-                </p>
-              </div>
-              <div className="bounce-caret">
-                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-primary/5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary shadow-soft">
-                {/* Plus icon */}
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-ink">
-                  Tap "Add to Home Screen"
-                </p>
-                <p className="text-xs text-ink-secondary mt-0.5">
-                  Scroll down in the share sheet to find it
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 — Notifications */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-warning/10">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-warning shadow-soft">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-ink">
-                  Then enable notifications
-                </p>
-                <p className="text-xs text-ink-secondary mt-0.5">
-                  Open the installed app → Profile → Enable Notifications
-                </p>
-              </div>
-            </div>
+          <div className="flex gap-px p-5 pt-4">
+            <button
+              onClick={dismiss}
+              className="h-11 flex-1 border border-border font-mono text-[10px] uppercase tracking-[0.14em] text-ink-secondary transition-colors hover:text-ink"
+            >
+              Maybe later
+            </button>
+            <button
+              onClick={dismiss}
+              className="h-11 flex-1 bg-ink font-mono text-[10px] uppercase tracking-[0.14em] text-background transition-colors duration-300 hover:bg-primary"
+            >
+              Got it
+            </button>
           </div>
-
-          {/* CTA */}
-          <button
-            onClick={dismiss}
-            className="mt-5 w-full py-3.5 rounded-2xl text-sm font-semibold text-white bg-primary hover:brightness-95 shadow-soft"
-          >
-            Got it!
-          </button>
-
-          <button
-            onClick={dismiss}
-            className="mt-2 w-full py-2 text-xs text-ink-muted"
-          >
-            Maybe later
-          </button>
         </div>
       </div>
-
-      {/* Arrow pointing to Safari share button */}
-      <div
-        className="fixed bottom-0 left-1/2 z-[9997]"
-        style={{
-          transform: 'translateX(-50%)',
-          pointerEvents: 'none',
-        }}
-      />
     </>
   )
 }

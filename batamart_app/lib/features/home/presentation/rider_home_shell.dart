@@ -12,7 +12,7 @@ import '../../../core/widgets/nav/rider_nav_shell.dart';
 import '../../auth/presentation/edit_profile_sheet.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../rider/presentation/rider_dashboard_screen.dart';
-import '../../rider/presentation/rider_deliveries_screen.dart';
+import '../../rider/presentation/rider_jobs_screen.dart';
 import '../../rider/state/rider_providers.dart';
 import '../../wallet/presentation/wallet_screen.dart';
 
@@ -72,7 +72,7 @@ class _RiderHomeShellState extends ConsumerState<RiderHomeShell> {
       case RiderNavTab.dashboard:
         return const RiderDashboardScreen();
       case RiderNavTab.deliveries:
-        return const RiderDeliveriesScreen();
+        return const RiderJobsScreen();
       case RiderNavTab.earnings:
         return const WalletBody();
       case RiderNavTab.profile:

@@ -36,9 +36,16 @@ class _RiderDeliveriesScreenState extends ConsumerState<RiderDeliveriesScreen> {
   bool _isBroadcasting = false;
 
   @override
-  void dispose() {
-    ref.read(locationBroadcastServiceProvider).stop();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // The service outlives this screen (it is a provider, and now a
+    // foreground service), so reflect whether it is already running and hear
+    // about it stopping itself when the delivery ends.
+    final service = ref.read(locationBroadcastServiceProvider);
+    _isBroadcasting = service.isBroadcasting;
+    service.onAutoStopped = () {
+      if (mounted) setState(() => _isBroadcasting = false);
+    };
   }
 
   Future<void> _toggleBroadcast(String? batchId) async {
@@ -173,28 +180,23 @@ class _DeliveryOrderCard extends ConsumerStatefulWidget {
 class _DeliveryOrderCardState extends ConsumerState<_DeliveryOrderCard> {
   bool _isUpdating = false;
 
-  String? get _nextStatus => switch (widget.order.status) {
-    'RIDER_ASSIGNED' => 'PICKED_UP',
-    'PICKED_UP' => 'ON_THE_WAY',
-    'ON_THE_WAY' => 'DELIVERED',
-    _ => null,
-  };
+  /// Riders no longer mark orders picked up or delivered: the vendor marks
+  /// "picked up" and the buyer marks "delivered". A rider can only report that
+  /// the product was not ready, which rolls it to the next delivery day.
+  Future<void> _notReady() async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: 'Product not ready?',
+      message:
+          'The order goes back to the pool and moves to the next delivery day (Wednesday or Saturday).',
+      confirmLabel: 'Roll to next day',
+      isDestructive: true,
+    );
+    if (!confirmed) return;
 
-  String get _actionLabel => switch (_nextStatus) {
-    'PICKED_UP' => 'Mark Picked Up',
-    'ON_THE_WAY' => 'Mark On The Way',
-    'DELIVERED' => 'Mark Delivered',
-    _ => '',
-  };
-
-  Future<void> _advance() async {
-    final next = _nextStatus;
-    if (next == null) return;
     setState(() => _isUpdating = true);
     try {
-      await ref
-          .read(riderRepositoryProvider)
-          .updateOrderStatus(widget.order.id, next);
+      await ref.read(riderRepositoryProvider).reportNotReady(widget.order.id);
       ref.invalidate(myDeliveriesProvider);
     } on ApiException catch (e) {
       if (mounted) {
@@ -299,28 +301,49 @@ class _DeliveryOrderCardState extends ConsumerState<_DeliveryOrderCard> {
               onPressed: _confirmReturnPickup,
               isLoading: _isUpdating,
             )
-          else if (_nextStatus != null)
+          else if (order.status == 'RIDER_ASSIGNED') ...[
+            Text(
+              'Ask the vendor to tap "Mark picked up".',
+              style: TextStyle(
+                color: context.palette.inkSecondary,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Expanded(
-                  child: PrimaryButton(
-                    label: _actionLabel,
-                    onPressed: _advance,
-                    isLoading: _isUpdating,
+                  child: SecondaryButton(
+                    label: 'Not ready, roll to next day',
+                    onPressed: _isUpdating ? null : _notReady,
                   ),
                 ),
-                if (order.status == 'RIDER_ASSIGNED') ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  IconButton(
-                    tooltip: 'Item too large',
-                    icon: const Icon(
-                      Icons.report_gmailerrorred,
-                      color: AppColors.danger,
-                    ),
-                    onPressed: _isUpdating ? null : _declineOversized,
+                const SizedBox(width: AppSpacing.sm),
+                IconButton(
+                  tooltip: 'Item too large',
+                  icon: const Icon(
+                    Icons.report_gmailerrorred,
+                    color: AppColors.danger,
                   ),
-                ],
+                  onPressed: _isUpdating ? null : _declineOversized,
+                ),
               ],
+            ),
+          ] else if (order.status == 'PICKED_UP')
+            Text(
+              'Handed over by the vendor. Take it to the sorting hub.',
+              style: TextStyle(
+                color: context.palette.inkSecondary,
+                fontSize: 12,
+              ),
+            )
+          else if (order.status == 'ON_THE_WAY')
+            Text(
+              'After handing it over, ask the buyer to tap "Mark delivered".',
+              style: TextStyle(
+                color: context.palette.inkSecondary,
+                fontSize: 12,
+              ),
             ),
         ],
       ),

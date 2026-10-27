@@ -1,4 +1,4 @@
-﻿// app/api/wallet/withdraw/route.ts
+// app/api/wallet/withdraw/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getUserFromRequest, checkSuspension } from '@/lib/auth/auth'
@@ -7,18 +7,20 @@ import { releaseMaturedSellerEscrowForUser } from '@/lib/escrow'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
+import { FIELD_MARKETER_MIN_WITHDRAWAL, withdrawalFloorMessage } from '@/lib/field-marketer/config'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_PIN_ATTEMPTS = 5
 const PIN_LOCK_DURATION = 15 * 60 * 1000
-const MIN_WITHDRAWAL = 1_000
+const MIN_WITHDRAWAL = 2_000
 const MAX_WITHDRAWAL = 500_000
 const WITHDRAW_COOLDOWN = 30_000
 
 const withdrawalSchema = z.object({
   amount: z.number().int().min(MIN_WITHDRAWAL).max(MAX_WITHDRAWAL),
+  source: z.enum(['MAIN', 'MARKETING']).optional(),
   bankCode: z.string().trim().min(2).max(20),
   accountNumber: z.string().trim().min(6).max(20),
   accountName: z.string().trim().min(2).max(100),
@@ -42,12 +44,19 @@ async function rejectWithdrawalRequest(requestId: string, reason: string) {
   })
 }
 
-async function refundBalance(userId: string, amount: number): Promise<void> {
+async function refundBalance(userId: string, amount: number, source: 'MAIN' | 'MARKETING'): Promise<void> {
   try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { availableBalance: { increment: amount } },
-    })
+    if (source === 'MARKETING') {
+      await prisma.fieldMarketer.update({
+        where: { userId },
+        data: { balance: { increment: amount } },
+      })
+    } else {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { availableBalance: { increment: amount } },
+      })
+    }
     console.log(`[withdraw] Refunded ₦${amount} to user ${userId} after Flutterwave failure`)
   } catch (err) {
     console.error(`[withdraw] CRITICAL: Failed to refund ₦${amount} to user ${userId}`, err)
@@ -100,6 +109,20 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(rateKey, WITHDRAW_COOLDOWN)
 
     const body = await request.json()
+    // The marketing wallet has a higher floor, only revealed here when hit.
+    if (body?.source === 'MARKETING') {
+      const marketer = await prisma.fieldMarketer.findUnique({
+        where: { userId: user.id },
+        select: { balance: true },
+      })
+      if (!marketer) {
+        return NextResponse.json({ error: 'No marketing wallet on this account' }, { status: 403 })
+      }
+      if (typeof body.amount !== 'number' || body.amount < FIELD_MARKETER_MIN_WITHDRAWAL) {
+        return NextResponse.json({ error: withdrawalFloorMessage(marketer.balance) }, { status: 400 })
+      }
+    }
+
     const parsed = withdrawalSchema.safeParse(body)
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid withdrawal payload' }, { status: 400 })
@@ -111,9 +134,11 @@ export async function POST(request: NextRequest) {
       accountNumber,
       accountName,
       pin,
+      source: sourceInput,
       idempotencyKey,
       clientRequestId,
     } = parsed.data
+    const source: 'MAIN' | 'MARKETING' = sourceInput ?? 'MAIN'
     const requestKey = clientRequestId || idempotencyKey || null
 
     if (!requestKey) {
@@ -243,16 +268,29 @@ export async function POST(request: NextRequest) {
       throw err
     }
 
-    const balanceBefore = Number(currentUser.availableBalance)
-    const deductResult = await prisma.user.updateMany({
-      where: {
-        id: user.id,
-        availableBalance: { gte: amount },
-      },
-      data: {
-        availableBalance: { decrement: amount },
-      },
-    })
+    let balanceBefore = Number(currentUser.availableBalance)
+    let deductResult: { count: number }
+    if (source === 'MARKETING') {
+      const marketer = await prisma.fieldMarketer.findUnique({
+        where: { userId: user.id },
+        select: { balance: true },
+      })
+      balanceBefore = marketer?.balance ?? 0
+      deductResult = await prisma.fieldMarketer.updateMany({
+        where: { userId: user.id, balance: { gte: amount } },
+        data: { balance: { decrement: amount } },
+      })
+    } else {
+      deductResult = await prisma.user.updateMany({
+        where: {
+          id: user.id,
+          availableBalance: { gte: amount },
+        },
+        data: {
+          availableBalance: { decrement: amount },
+        },
+      })
+    }
 
     if (deductResult.count === 0) {
       await rejectWithdrawalRequest(withdrawalRequest.id, 'Insufficient balance')
@@ -282,7 +320,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (!ok || transferData?.status !== 'success') {
-        await refundBalance(user.id, amount)
+        await refundBalance(user.id, amount, source)
         await rejectWithdrawalRequest(withdrawalRequest.id, transferData?.message || 'Transfer initiation failed')
         return NextResponse.json(
           { error: transferData?.message || 'Transfer initiation failed' },
@@ -316,7 +354,7 @@ export async function POST(request: NextRequest) {
             userId: user.id,
             type: 'WITHDRAWAL',
             amount,
-            description: `Withdrawal to ${accountName} - ${maskedAccount(accountNumber)}`,
+            description: `${source === 'MARKETING' ? 'Marketing wallet withdrawal' : 'Withdrawal'} to ${accountName} - ${maskedAccount(accountNumber)}`,
             reference: transferReference,
             balanceBefore,
             balanceAfter: balanceBefore - amount,
@@ -334,6 +372,7 @@ export async function POST(request: NextRequest) {
               bankCode,
               accountNumber: maskedAccount(accountNumber),
               accountName,
+              source,
               transferReference,
               transferCode,
               flutterwaveStatus: flwStatus,
@@ -356,7 +395,7 @@ export async function POST(request: NextRequest) {
     } catch (flutterwaveErr) {
       console.error('Flutterwave error during withdrawal:', flutterwaveErr)
       if (balanceDeducted) {
-        await refundBalance(user.id, amount)
+        await refundBalance(user.id, amount, source)
       }
       await rejectWithdrawalRequest(withdrawalRequest.id, 'Payment provider error')
       return NextResponse.json(

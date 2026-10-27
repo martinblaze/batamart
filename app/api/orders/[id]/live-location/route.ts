@@ -27,6 +27,8 @@ export async function GET(
         buyerId: true,
         sellerId: true,
         riderId: true,
+        deliveryRiderId: true,
+        packedAt: true,
         rider: {
           select: {
             id: true,
@@ -46,6 +48,7 @@ export async function GET(
       order.buyerId === user.id ||
       order.sellerId === user.id ||
       order.riderId === user.id ||
+      order.deliveryRiderId === user.id ||
       user.role === 'ADMIN'
 
     if (!isOwner) {
@@ -72,8 +75,14 @@ export async function GET(
 
     const orderedLogs = logs.reverse()
 
+    // The buyer's map is for the last leg only (hub to their door). Pings from
+    // the vendor-pickup trip are older than packing and are never shown.
+    const deliveryLeg = order.status === 'ON_THE_WAY'
+    const legStart = order.packedAt ? order.packedAt.getTime() : 0
+
     const points = orderedLogs
       .filter(log => log.action === 'RIDER_LOCATION_UPDATE')
+      .filter(log => deliveryLeg && log.createdAt.getTime() >= legStart)
       .map(log => {
         const payload = (log.newValue || {}) as any
         return {
@@ -104,11 +113,18 @@ export async function GET(
 
     const latestPoint = points.length > 0 ? points[points.length - 1] : null
 
+    const deliveryRider = order.deliveryRiderId && order.deliveryRiderId !== order.riderId
+      ? await prisma.user.findUnique({
+          where: { id: order.deliveryRiderId },
+          select: { id: true, name: true, phone: true, profilePhoto: true },
+        })
+      : order.rider
+
     return NextResponse.json({
       success: true,
       orderId: order.id,
       orderStatus: order.status,
-      rider: order.rider,
+      rider: deliveryLeg ? deliveryRider : order.rider,
       latestPoint,
       points: points.slice(-80),
       checkpoints: checkpoints.slice(-20),

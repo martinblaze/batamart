@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       where: { id: orderId },
       select: {
         id:          true,
+        status:      true,
         riderId:     true,
         buyerId:     true,
         sellerId:    true,
@@ -41,6 +42,17 @@ export async function POST(request: NextRequest) {
 
     if (order.riderId !== user.id) {
       return NextResponse.json({ error: 'Not your delivery' }, { status: 403 })
+    }
+
+    // Regular orders: the vendor marks "picked up" and the buyer marks
+    // "delivered". Riders only drive the status for dispute returns.
+    if (!order.isDisputed) {
+      return NextResponse.json({
+        error: status === 'PICKED_UP'
+          ? 'Ask the vendor to mark this order as picked up.'
+          : 'Ask the buyer to mark this order as delivered.',
+        blockReason: 'RIDER_CANNOT_MARK',
+      }, { status: 403 })
     }
 
     const validTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {

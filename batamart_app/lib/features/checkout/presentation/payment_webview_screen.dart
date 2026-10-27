@@ -56,6 +56,17 @@ class _PaymentWebViewScreenState extends ConsumerState<PaymentWebViewScreen> {
     final uri = Uri.tryParse(request.url);
     if (uri == null) return NavigationDecision.navigate;
 
+    // Wallet top-up: /api/wallet/topup/verify redirects to /wallet?topup=...
+    if (uri.path.contains('/wallet') &&
+        uri.queryParameters.containsKey('topup')) {
+      _resolved = true;
+      final ok = uri.queryParameters['topup'] == 'success';
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.pop(ok);
+      });
+      return NavigationDecision.prevent;
+    }
+
     if (uri.path.contains('/orders') &&
         uri.queryParameters['payment'] == 'success') {
       _resolved = true;

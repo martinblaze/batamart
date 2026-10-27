@@ -74,6 +74,7 @@ model User {
   email                    String?             @unique
   password                 String
   matricNumber             String?             @unique
+  username                 String?             @unique
   name                     String
   profilePhoto             String?
   role                     UserRole            @default(BUYER)
@@ -140,6 +141,8 @@ model User {
   university               University?         @relation(fields: [universityId], references: [id])
   withdrawalRequests       WithdrawalRequest[]
   pendingCharges           PendingCharge[]
+  fieldMarketer            FieldMarketer?
+  fieldMarketerSignup      FieldMarketerSignup?
 
   @@index([role])
   @@index([trustLevel])
@@ -444,6 +447,15 @@ model Order {
   oversizedCancellationReason String?
   campaignTag                 String? // snapshot of a tagged item's campaign at purchase time — permanent, never re-derived from the live Product
   batchId                     String?
+  // Sorting-room workflow: the rider hands parcels to the hub (AT_HUB), staff
+  // bag them by area (PACKED + bagLabel), a delivery rider takes the bag.
+  hubReceivedAt               DateTime?
+  packedAt                    DateTime?
+  bagLabel                    String?
+  deliveryRiderId             String?
+  // Set when a rider arrives and the product isn't ready: pushes the delivery
+  // to the next delivery day.
+  deferredUntil               DateTime?
   dispute                     Dispute?
   batch                       DeliveryBatch?  @relation(fields: [batchId], references: [id])
   buyer                       User            @relation("BuyerOrders", fields: [buyerId], references: [id])
@@ -468,6 +480,7 @@ model Order {
   @@index([sellerId, status])
   @@index([riderId, status])
   @@index([campaignTag])
+  @@index([deliveryRiderId])
   @@schema("public")
 }
 
@@ -934,6 +947,8 @@ enum OrderStatus {
   SHIPPED
   RIDER_ASSIGNED
   PICKED_UP
+  AT_HUB
+  PACKED
   ON_THE_WAY
   DELIVERED
   COMPLETED
@@ -1120,3 +1135,36 @@ enum PaymentMethod {
 
 
 
+
+// Opt-in programme: a signed-in user joins from the unlisted /field-marketers
+// page and gets a personal signup link (?fm=CODE). Each signup through it pays
+// FIELD_MARKETER_PAY_PER_SIGNUP into availableBalance. totalSignups and
+// totalEarned are denormalised so the leaderboard is a single ordered read.
+model FieldMarketer {
+  id           String                @id @default(cuid())
+  userId       String                @unique
+  code         String                @unique
+  totalSignups Int                   @default(0)
+  totalEarned  Int                   @default(0)
+  balance      Int                   @default(0)
+  joinedAt     DateTime              @default(now())
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signups      FieldMarketerSignup[]
+
+  @@index([totalSignups])
+  @@schema("public")
+}
+
+model FieldMarketerSignup {
+  id             String        @id @default(cuid())
+  marketerId     String
+  referredUserId String        @unique
+  amount         Int
+  createdAt      DateTime      @default(now())
+  marketer       FieldMarketer @relation(fields: [marketerId], references: [id], onDelete: Cascade)
+  referredUser   User          @relation(fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  @@index([marketerId])
+  @@index([createdAt])
+  @@schema("public")
+}

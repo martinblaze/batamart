@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         phone:          true,
         email:          true,
         matricNumber:   true,
+        username:       true,
         profilePhoto:   true,
         role:           true,
         isSellerMode:   true,

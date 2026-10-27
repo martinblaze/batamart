@@ -29,6 +29,30 @@ class PaymentsRepository {
     return response['enabled'] as bool? ?? true;
   }
 
+  /// Pays for the cart from the wallet balance. Returns the first order
+  /// number. A failure carries `body['code']`: USERNAME_REQUIRED,
+  /// INSUFFICIENT_BALANCE, PIN_REQUIRED, PIN_INVALID, OUT_OF_STOCK.
+  Future<String> payWithWallet(List<CartItem> items, {String? pin}) async {
+    final response = await _api.post(
+      '/api/payments/wallet-pay',
+      data: {
+        'cartItems': items
+            .map(
+              (item) => {
+                'productId': item.productId,
+                'variantId': item.variantId,
+                'quantity': item.quantity,
+                'orderNote': item.orderNote,
+                'buyerDeliveryAcknowledged': item.buyerDeliveryAcknowledged,
+              },
+            )
+            .toList(),
+        'pin': ?pin,
+      },
+    );
+    return response['orderNumber'] as String? ?? '';
+  }
+
   Future<PaymentInitResult> initialize(List<CartItem> items) async {
     final response = await _api.post(
       '/api/payments/initialize',

@@ -15,6 +15,7 @@ import '../../../core/widgets/states/error_state.dart';
 import '../../auth/state/auth_controller.dart';
 import '../data/wallet_models.dart';
 import '../state/wallet_providers.dart';
+import 'topup_sheet.dart';
 import 'pin_sheets.dart';
 import 'withdraw_sheet.dart';
 
@@ -86,11 +87,7 @@ class WalletBody extends ConsumerWidget {
                   _QuickAction(
                     icon: LucideIcons.plus,
                     label: 'Add Money',
-                    onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No top-up endpoint documented yet.'),
-                      ),
-                    ),
+                    onTap: () => showTopUpSheet(context, ref),
                   ),
                   _QuickAction(
                     icon: LucideIcons.history,

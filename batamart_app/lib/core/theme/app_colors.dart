@@ -58,6 +58,8 @@ class AppColors {
       case 'RIDER_ASSIGNED':
         return info;
       case 'PICKED_UP':
+      case 'AT_HUB':
+      case 'PACKED':
       case 'ON_THE_WAY':
         return info;
       case 'DELIVERED':

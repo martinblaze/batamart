@@ -104,7 +104,7 @@ export default function CartPage() {
   // Real per-seller zone pricing once /api/delivery/quote resolves; a rough
   // flat guess until then (checkout re-quotes and payment always charges
   // the authoritative zone-based fee regardless of what's shown here).
-  const deliveryFee   = serverDeliveryFee ?? (2000 * Math.max(1, uniqueSellers))
+  const deliveryFee   = serverDeliveryFee ?? (1200 * Math.max(1, uniqueSellers))
   const subtotal      = getTotalPrice()
   const total         = subtotal + deliveryFee
 
