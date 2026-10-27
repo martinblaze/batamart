@@ -53,24 +53,27 @@ export default function FieldMarketersPage() {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<boolean> => {
     const token = localStorage.getItem('token')
-    if (!token) { router.push(LOGIN_REDIRECT); return }
+    if (!token) { router.push(LOGIN_REDIRECT); return false }
     const headers = { Authorization: `Bearer ${token}` }
     try {
-      const res = await fetch('/api/field-marketer/me', { headers })
-      if (res.status === 401) { router.push(LOGIN_REDIRECT); return }
+      const res = await fetch(`/api/field-marketer/me?t=${Date.now()}`, { headers, cache: 'no-store' })
+      if (res.status === 401) { router.push(LOGIN_REDIRECT); return false }
       const data = await res.json()
-      if (!res.ok) { setError(data.error || 'Failed to load'); return }
+      if (!res.ok) { setError(data.error || 'Failed to load'); return false }
       if (data.joined) {
+        setError('')
         setStats(data)
         const lb = await fetch('/api/field-marketer/leaderboard', { headers })
         if (lb.ok) setBoard((await lb.json()).entries ?? [])
-      } else {
-        setStats(null)
+        return true
       }
+      setStats(null)
+      return false
     } catch {
       setError('Network error. Please try again.')
+      return false
     } finally {
       setLoading(false)
     }
@@ -91,7 +94,10 @@ export default function FieldMarketersPage() {
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Could not join'); return }
       setLoading(true)
-      await load()
+      const loaded = await load()
+      // Joined on the server but the dashboard didn't come back: say so
+      // instead of silently showing the join button again.
+      if (!loaded) setError(prev => prev || 'You are in, but your dashboard did not load. Refresh the page.')
     } catch {
       setError('Network error. Please try again.')
     } finally {

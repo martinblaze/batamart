@@ -726,6 +726,12 @@ function AppBottomNav({
   )
 }
 
+// Mobile menu row: flat, hairline-divided, with an ink marker on the current page.
+const menuRow = (active: boolean) =>
+  `flex items-center gap-3 border-l-2 px-4 py-3.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors ${
+    active ? 'border-ink bg-surface text-ink' : 'border-transparent text-ink-secondary hover:bg-surface hover:text-ink'
+  }`
+
 export function Navbar() {
   const router   = useRouter()
   const pathname = usePathname()
@@ -1145,10 +1151,10 @@ export function Navbar() {
           <div className="px-4 py-4">
             <div className="flex items-center justify-end gap-4 mb-4 pb-4 border-b border-border">
               {isLoggedIn && userRole !== 'RIDER' && (
-                <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-primary">
+                <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-ink">
                   <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-medium w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-ink text-background text-[10px] font-medium w-5 h-5 rounded-full flex items-center justify-center">
                       {cartCount > 9 ? '9+' : cartCount}
                     </span>
                   )}
@@ -1157,51 +1163,51 @@ export function Navbar() {
               {isLoggedIn && <NotificationBell />}
             </div>
             {isLoggedIn ? (
-              <div className="space-y-2">
+              <div className="border-y border-border divide-y divide-border">
                 {userRole === 'RIDER' ? (
                   /* Rider-only mobile menu */
                   <>
-                    <Link href="/rider-dashboard" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/rider-dashboard') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <LayoutGrid className="w-5 h-5 mr-3" strokeWidth={1.75} />
+                    <Link href="/rider-dashboard" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/rider-dashboard'))}>
+                      <LayoutGrid className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                       <span>Dashboard</span>
                     </Link>
-                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/wallet') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <Wallet className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Earnings</span>
+                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/wallet'))}>
+                      <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Earnings</span>
                     </Link>
-                    <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/notifications') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <BellIcon className="w-5 h-5 mr-3" strokeWidth={1.75} />
+                    <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/notifications'))}>
+                      <BellIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                       <span>Notifications</span>
                     </Link>
                   </>
                 ) : (
                   /* Regular buyer/seller mobile menu */
                   <>
-                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 rounded-lg text-white bg-primary">
-                      <User className="w-5 h-5 mr-3" strokeWidth={1.75} /><span className="font-medium">My Account</span>
+                    <Link href="/myprofile" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/myprofile'))}>
+                      <User className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>My Account</span>
                     </Link>
-                    <Link href="/marketplace" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/marketplace') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <Globe className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Marketplace</span>
+                    <Link href="/marketplace" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/marketplace'))}>
+                      <Globe className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Marketplace</span>
                     </Link>
-                    <Link href="/my-shop" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/my-shop') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <Store className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
+                    <Link href="/my-shop" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/my-shop'))}>
+                      <Store className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>{isSellerMode && (userRole === 'SELLER' || userRole === 'ADMIN') ? 'My Shop' : 'My Items'}</span>
                     </Link>
                     {isLoggedIn && (userRole === 'SELLER' || userRole === 'ADMIN') && isSellerMode && (
-                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} data-tour="tour-hamburger-sell" className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/sell') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                        <PlusCircle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Sell</span>
+                      <Link href="/sell" onClick={() => setIsMenuOpen(false)} data-tour="tour-hamburger-sell" className={menuRow(isActive('/sell'))}>
+                        <PlusCircle className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Sell</span>
                       </Link>
                     )}
-                    <Link href="/orders" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/orders') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <Package className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Orders</span>
+                    <Link href="/orders" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/orders'))}>
+                      <Package className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
                     </Link>
-                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/wallet') ? 'bg-primary/10 text-primary' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <Wallet className="w-5 h-5 mr-3" strokeWidth={1.75} />
-                      <div className="flex items-center justify-between flex-1">
+                    <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/wallet'))}>
+                      <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
+                      <div className="flex flex-1 items-center justify-between">
                         <span>Wallet</span>
-                        {userBalance > 0 && <span className="text-sm text-success font-medium">₦{userBalance.toLocaleString()}</span>}
+                        {userBalance > 0 && <span className="font-sans text-sm normal-case tracking-normal text-ink">₦{userBalance.toLocaleString()}</span>}
                       </div>
                     </Link>
-                    <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={`flex items-center px-4 py-3 rounded-lg transition-all ${isActive('/dispute') ? 'bg-danger/10 text-danger' : 'text-ink-secondary hover:bg-surface'}`}>
-                      <AlertTriangle className="w-5 h-5 mr-3" strokeWidth={1.75} /><span>Disputes</span>
+                    <Link href="/dispute/select-order" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/dispute'))}>
+                      <AlertTriangle className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Disputes</span>
                     </Link>
                   </>
                 )}
@@ -1209,13 +1215,13 @@ export function Navbar() {
                 <div className="pt-4 border-t border-border mt-4">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-ink font-medium">Hi, {userName || 'User'}!</div>
-                      <div className="text-sm text-ink-secondary capitalize">{userRole.toLowerCase()}</div>
+                      <div className="text-ink font-medium">{userName || 'User'}</div>
+                      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">{userRole.toLowerCase()}</div>
                     </div>
                     {(userRole === 'SELLER' || userRole === 'ADMIN') && (
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-ink-secondary">{isSellerMode ? 'Selling' : 'Buying'}</span>
-                        <button onClick={toggleRoleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full ${isSellerMode ? 'bg-primary' : 'bg-border'}`}>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">{isSellerMode ? 'Selling' : 'Buying'}</span>
+                        <button onClick={toggleRoleMode} className={`relative inline-flex h-5 w-10 items-center rounded-full ${isSellerMode ? 'bg-ink' : 'bg-border'}`}>
                           <span className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${isSellerMode ? 'translate-x-5' : 'translate-x-1'}`} />
                         </button>
                       </div>
@@ -1223,16 +1229,16 @@ export function Navbar() {
                   </div>
                   <button
                     onClick={() => { handleLogout(); setIsMenuOpen(false) }}
-                    className="flex items-center justify-center w-full space-x-2 bg-danger text-white px-4 py-3 rounded-lg font-medium hover:brightness-95 transition-all"
+                    className="flex w-full items-center justify-center gap-2 border border-ink px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-ink transition-colors hover:bg-ink hover:text-background"
                   >
-                    <LogOut className="w-5 h-5" strokeWidth={1.75} /><span>Logout</span>
+                    <LogOut className="w-4 h-4" strokeWidth={1.75} /><span>Logout</span>
                   </button>
                 </div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
-                <Link href="/login" onClick={() => setIsMenuOpen(false)} className="text-center h-11 flex items-center justify-center border border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-white transition-all">Login</Link>
-                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="text-center h-11 flex items-center justify-center text-white rounded-lg font-medium transition-all bg-primary hover:brightness-95">Sign up</Link>
+                <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex h-11 items-center justify-center border border-ink font-mono text-[11px] uppercase tracking-[0.14em] text-ink transition-colors hover:bg-ink hover:text-background">Login</Link>
+                <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="flex h-11 items-center justify-center bg-ink font-mono text-[11px] uppercase tracking-[0.14em] text-background transition-colors hover:bg-ink/85">Sign up</Link>
               </div>
             )}
           </div>
