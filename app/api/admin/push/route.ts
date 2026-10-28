@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const deadline = Date.now() + 50_000
-    const totals = { attempted: 0, reached: 0, webPush: 0, appPush: 0, email: 0, inApp: 0, alreadyReceived: 0, optedOut: 0 }
+    const totals = { failed: 0, attempted: 0, reached: 0, webPush: 0, appPush: 0, email: 0, inApp: 0, alreadyReceived: 0, optedOut: 0 }
     let processed = 0
 
     for (let i = 0; i < userIds.length; i += 15) {
@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         else {
           totals.attempted++
           if (r.sent) totals.reached++
+          else totals.failed++
           if (r.channels.webPush) totals.webPush++
           if (r.channels.appPush) totals.appPush++
           if (r.channels.email) totals.email++
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       message:
         totals.reached === 0 && totals.alreadyReceived > 0 && remaining === 0
           ? 'Everyone in this audience already received this broadcast.'
-          : `Sent to ${totals.reached} of ${userIds.length} users: ${parts.join(', ')}.${totals.optedOut ? ` ${totals.optedOut} opted out of offers.` : ''}${remaining > 0 ? ` Stopped early with ${remaining} still to go. Send again to continue.` : ''}`,
+          : `Sent to ${totals.reached} of ${userIds.length} users: ${parts.join(', ')}.${totals.optedOut ? ` ${totals.optedOut} opted out of offers.` : ''}${remaining > 0 ? ` Stopped early with ${remaining} still to go. Send again to continue.` : ''}${totals.failed > 0 ? ` ${totals.failed} could not be sent (a provider limit or a missing address). Send again later to retry just those.` : ''}`,
     })
   } catch (error) {
     console.error('[ADMIN PUSH] Error sending push notification:', error)

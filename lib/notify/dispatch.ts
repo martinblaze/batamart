@@ -166,13 +166,18 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
           subject: subject ?? opts.title,
           html: renderEmail({ ...content, showPreferences: !alwaysOn }),
         })
-          .then(() => { result.channels.email = true })
+          .then(ok => { result.channels.email = ok === true })
           .catch(err => console.error('[notify] email failed:', err)),
       )
     }
 
     await Promise.all(tasks)
     result.sent = Object.values(result.channels).some(Boolean)
+    // Nothing got through (for example an email provider's daily limit): free the
+    // once-only slot so sending again can reach this person.
+    if (!result.sent && opts.dedupeKey) {
+      await prisma.notificationLog.deleteMany({ where: { userId, key: opts.dedupeKey } }).catch(() => {})
+    }
     return result
   } catch (error) {
     console.error('[notify] failed for user', userId, error)

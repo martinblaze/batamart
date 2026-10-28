@@ -142,6 +142,7 @@ type AdminPushResult = {
   alreadyReceived: number
   optedOut: number
   remaining: number
+  failed: number
   broadcastId: string
   channel: 'push' | 'email' | 'both'
 }
@@ -246,7 +247,7 @@ This cannot be undone.`)
       const data = await res.json()
       if (res.ok) {
         setResult(data)
-        setRetryId(data.remaining > 0 ? data.broadcastId : null)
+        setRetryId(data.remaining > 0 || data.failed > 0 ? data.broadcastId : null)
         setStatus(data.success ? { kind: 'success', text: data.message } : { kind: 'warning', text: data.message })
       } else {
         setStatus({ kind: 'error', text: data.error || 'Failed to send push notification.' })
@@ -471,6 +472,7 @@ This cannot be undone.`)
               {result.optedOut > 0 && <DataRow label="Opted out of offers" value={result.optedOut} className="px-4" />}
               {result.alreadyReceived > 0 && <DataRow label="Already received" value={result.alreadyReceived} className="px-4" />}
               {result.remaining > 0 && <DataRow label="Still to send" value={result.remaining} className="px-4" />}
+              {result.failed > 0 && <DataRow label="Failed, send again to retry" value={result.failed} className="px-4" />}
             </div>
           )}
         </div>
