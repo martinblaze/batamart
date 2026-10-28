@@ -63,6 +63,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title and message are required' }, { status: 400 })
     }
 
+    // A broadcast relies on the sent-log table so nobody gets it twice. Without
+    // the migration, stop with a clear message instead of reporting "0 sent".
+    try {
+      await prisma.notificationLog.findFirst({ select: { id: true } })
+    } catch (error: any) {
+      if (error?.code === 'P2021') {
+        return NextResponse.json(
+          { error: 'The notifications database update has not been applied yet. Run "npx prisma migrate deploy" (migration 20260731090000_notifications_engine), then send again. Nothing was sent.' },
+          { status: 503 },
+        )
+      }
+      throw error
+    }
+
     let userIds: string[]
     const firstNames = new Map<string, string>()
     if (target === 'user') {

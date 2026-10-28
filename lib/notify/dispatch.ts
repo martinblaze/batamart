@@ -70,13 +70,21 @@ const isQuietHours = () => {
 export async function notifyUser(userId: string, opts: NotifyOptions): Promise<NotifyResult> {
   const result: NotifyResult = { sent: false, channels: { inApp: false, webPush: false, appPush: false, email: false } }
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, notificationPreference: true },
-    })
+    let user: { id: string; email: string | null; notificationPreference?: any } | null
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, notificationPreference: true },
+      })
+    } catch (error: any) {
+      // The preferences table is missing (migration not applied yet): carry on
+      // with everyone's defaults instead of failing every message.
+      if (error?.code !== 'P2021') throw error
+      user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } })
+    }
     if (!user) return { ...result, skipped: 'no-user' }
 
-    const prefs = user.notificationPreference
+    const prefs = user.notificationPreference ?? null
     const alwaysOn = opts.category === 'transactional' || opts.category === 'security'
 
     if (!alwaysOn) {
@@ -92,7 +100,8 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
         await prisma.notificationLog.create({ data: { userId, key: opts.dedupeKey } })
       } catch (error: any) {
         if (error?.code === 'P2002') return { ...result, skipped: 'duplicate' }
-        throw error
+        // No log table yet: send anyway, without the once-only guarantee.
+        if (error?.code !== 'P2021') throw error
       }
     }
 

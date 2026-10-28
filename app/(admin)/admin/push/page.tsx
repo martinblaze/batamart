@@ -11,8 +11,6 @@ import { renderEmail } from '@/lib/notify/email'
 import { autoDraftEmail } from '@/lib/notify/email-drafts'
 import { EMAIL_TOPICS, EMAIL_TOPIC_GROUPS } from '@/lib/notify/email-topics'
 
-const sampleMessage = `This is a test push notification from BataMart Admin. Please confirm receipt in your browser.`
-
 const GFD_TITLE = "Girlfriend's Day is live 💕"
 const GFD_MESSAGE = 'Got something she’d love? List it and tag it "Girlfriend’s Day" so gift shoppers can find it. Selling a package? Describe everything inside the box. Tap for a quick walkthrough.'
 
@@ -149,8 +147,10 @@ type AdminPushResult = {
 }
 
 export default function AdminPushPage() {
-  const [title, setTitle] = useState('BataMart test notification')
-  const [message, setMessage] = useState(sampleMessage)
+  // Empty on purpose: a prefilled test message was once sent to real users by
+  // pressing Send without reading it.
+  const [title, setTitle] = useState('')
+  const [message, setMessage] = useState('')
   const [target, setTarget] = useState<'all' | 'user'>('all')
   const [email, setEmail] = useState('')
   const [url, setUrl] = useState('/')
@@ -217,6 +217,22 @@ export default function AdminPushPage() {
   const handleSend = async () => {
     setStatus(null)
     setResult(null)
+
+    if (!title.trim() || !message.trim()) {
+      setStatus({ kind: 'warning', text: 'Write a title and a message first.' })
+      return
+    }
+    if (/test (push )?notification|this is a test/i.test(`${title} ${message}`)) {
+      setStatus({ kind: 'warning', text: 'That looks like test text. Write the real message before sending.' })
+      return
+    }
+    if (target === 'all' && !retryId) {
+      const how = channel === 'push' ? 'a push notification' : channel === 'email' ? 'an email' : 'a push notification and an email'
+      const ok = window.confirm(`Send "${title.trim()}" as ${how} to ALL users?
+
+This cannot be undone.`)
+      if (!ok) return
+    }
     setLoading(true)
 
     try {
@@ -262,6 +278,7 @@ export default function AdminPushPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className={`${controlClass} h-12`}
+                placeholder="A short headline"
               />
             </div>
 
@@ -281,6 +298,7 @@ export default function AdminPushPage() {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              placeholder="What do you want people to know?"
               rows={5}
               className={`${controlClass} resize-none py-3.5 leading-relaxed`}
             />
