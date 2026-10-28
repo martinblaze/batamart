@@ -25,6 +25,7 @@ class ProductCard extends StatelessWidget {
     required this.price,
     this.originalPrice,
     this.percentOff,
+    this.isHot = false,
     this.rating,
     this.reviewCount,
     this.location,
@@ -43,6 +44,9 @@ class ProductCard extends StatelessWidget {
   final String price;
   final String? originalPrice;
   final int? percentOff;
+
+  /// Shows a "Hot" flag on the left; the percentage off sits on the right.
+  final bool isHot;
   final double? rating;
   final int? reviewCount;
 
@@ -94,8 +98,8 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
 
-                // One flag, top-left. The discount is the story on a deals
-                // grid, so it wins over every other possible label.
+                // Left: what it is (Hot, campaign). Right: the exact percentage
+                // off, with the favourite button underneath it.
                 Positioned(
                   top: AppSpacing.sm,
                   left: AppSpacing.sm,
@@ -103,23 +107,31 @@ class ProductCard extends StatelessWidget {
                     spacing: 4,
                     runSpacing: 4,
                     children: [
-                      if (percentOff != null && percentOff! > 0)
-                        _Flag(label: '-$percentOff%', background: p.slab, foreground: p.slabFg),
+                      if (isHot) _Flag(label: 'Hot', background: p.slab, foreground: p.slabFg),
                       if (campaignTag != null) CampaignBadge(tag: campaignTag!),
                     ],
                   ),
                 ),
 
-                if (onFavoriteTap != null)
-                  Positioned(
-                    top: AppSpacing.sm,
-                    right: AppSpacing.sm,
-                    child: _IconPill(
-                      icon: isFavorite ? LucideIcons.heart : LucideIcons.heart,
-                      filled: isFavorite,
-                      onTap: onFavoriteTap!,
-                    ),
+                Positioned(
+                  top: AppSpacing.sm,
+                  right: AppSpacing.sm,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (percentOff != null && percentOff! > 0)
+                        _Flag(label: '$percentOff% off', background: AppColors.danger, foreground: Colors.white),
+                      if (onFavoriteTap != null) ...[
+                        if (percentOff != null && percentOff! > 0) const SizedBox(height: 4),
+                        _IconPill(
+                          icon: LucideIcons.heart,
+                          filled: isFavorite,
+                          onTap: onFavoriteTap!,
+                        ),
+                      ],
+                    ],
                   ),
+                ),
               ],
             ),
           ),

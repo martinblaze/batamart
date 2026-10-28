@@ -112,7 +112,9 @@ export async function POST(
         await tx.user.update({
           where: { id: rider.id },
           data: {
-            pendingBalance: { decrement: riderPay },
+            // Riders are paid from delivery confirmation now and may have nothing
+            // in pending; never push it below zero.
+            pendingBalance: { decrement: Math.min(riderPay, Math.max(0, Number(riderRecord?.pendingBalance ?? 0))) },
             availableBalance: { increment: riderPay },
           },
         })

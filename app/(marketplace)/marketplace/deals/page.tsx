@@ -195,16 +195,19 @@ function DealCard({ product, onClick, delay = 0 }: { product: any; onClick: () =
         {/* One flag, not four. The discount is the story on this page, so the
             percentage carries it and the tier words are dropped. */}
         <div className="ui-tile__flags">
-          {discount > 0 ? (
-            <Badge status="ink">
-              <Tag className="h-2.5 w-2.5" strokeWidth={2} /> {discount}% off
-            </Badge>
-          ) : isHot ? (
+          {isHot && (
             <Badge status="ink">
               <Flame className="h-2.5 w-2.5" strokeWidth={2} /> Hot
             </Badge>
-          ) : null}
+          )}
         </div>
+        {discount > 0 && (
+          <div className="absolute right-[0.6rem] top-[0.6rem] z-[2]">
+            <Badge status="danger">
+              <Tag className="h-2.5 w-2.5" strokeWidth={2} /> {discount}% off
+            </Badge>
+          </div>
+        )}
 
         {product.images?.length > 1 && (
           <div className="ui-mono ui-mono-sm absolute bottom-2 right-2 bg-ink/70 px-2 py-1 text-background backdrop-blur-sm">

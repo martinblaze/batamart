@@ -37,6 +37,8 @@ export interface NotifyOptions {
   email?: EmailContent & { subject?: string }
   push?: boolean
   inApp?: boolean
+  /** Skip the promotional daily cap and quiet hours (opt-outs still apply). For admin-triggered sends. */
+  bypassLimits?: boolean
 }
 
 export interface NotifyResult {
@@ -97,7 +99,7 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
     // Promotional pushes: capped per day and silent overnight. They still land
     // in the bell so nothing is lost.
     let allowPush = opts.push !== false && (alwaysOn || prefs?.pushEnabled !== false)
-    if (allowPush && !alwaysOn) {
+    if (allowPush && !alwaysOn && !opts.bypassLimits) {
       if (isQuietHours()) allowPush = false
       else {
         const recent = await prisma.notification.count({

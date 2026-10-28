@@ -498,12 +498,8 @@ function ProductCard({ product, onClick, delay = 0 }: {
     ? Math.round(product.marketPrice)
     : null
 
-  // One label at most: the strongest true thing about this listing.
-  const label =
-    discount > 0 ? `-${discount}%`
-    : product.isTrending ? 'Hot'
-    : product.isNew ? 'New'
-    : null
+  // Left: what kind of listing it is. Right: the exact percentage off.
+  const label = (product.isHot || product.isTrending) ? 'Hot' : product.isNew ? 'New' : null
 
   const display = getCategoryDisplayInfo(product.categoryKey, product.subcategoryKey, product.category, product.subcategory)
 
@@ -518,6 +514,11 @@ function ProductCard({ product, onClick, delay = 0 }: {
         {label && (
           <span className="absolute left-0 top-0 bg-ink px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-background">
             {label}
+          </span>
+        )}
+        {discount > 0 && (
+          <span className="absolute right-0 top-0 bg-danger px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-white">
+            {discount}% off
           </span>
         )}
       </div>

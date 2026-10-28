@@ -129,12 +129,20 @@ function GirlfriendsDayAnnounceCard() {
 type AdminPushResult = {
   success: boolean
   message: string
-  attempted: number
-  delivered: number
   target: 'all' | 'user'
   targetedEmail?: string
-  userSubscriptionCount?: number
-  totalSubscribers?: number
+  audience: number
+  attempted: number
+  reached: number
+  webPush: number
+  appPush: number
+  email: number
+  inApp: number
+  alreadyReceived: number
+  optedOut: number
+  remaining: number
+  broadcastId: string
+  channel: 'push' | 'email' | 'both'
 }
 
 export default function AdminPushPage() {
@@ -146,6 +154,9 @@ export default function AdminPushPage() {
   const [status, setStatus] = useState<{ kind: 'success' | 'warning' | 'error'; text: string } | null>(null)
   const [result, setResult] = useState<AdminPushResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [channel, setChannel] = useState<'push' | 'email' | 'both'>('both')
+  // Kept while a send is unfinished, so sending again continues instead of repeating.
+  const [retryId, setRetryId] = useState<string | null>(null)
 
   const handleSend = async () => {
     setStatus(null)
@@ -153,7 +164,8 @@ export default function AdminPushPage() {
     setLoading(true)
 
     try {
-      const body = { title, message, target, email: target === 'user' ? email : undefined, url }
+      const broadcastId = retryId || crypto.randomUUID()
+      const body = { title, message, target, email: target === 'user' ? email : undefined, url, channel, broadcastId }
       const res = await adminFetch('/api/admin/push', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -162,6 +174,7 @@ export default function AdminPushPage() {
       const data = await res.json()
       if (res.ok) {
         setResult(data)
+        setRetryId(data.remaining > 0 ? data.broadcastId : null)
         setStatus(data.success ? { kind: 'success', text: data.message } : { kind: 'warning', text: data.message })
       } else {
         setStatus({ kind: 'error', text: data.error || 'Failed to send push notification.' })
@@ -256,10 +269,31 @@ export default function AdminPushPage() {
           </div>
 
           <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="max-w-[52ch] text-sm text-ink-secondary">
-              Only reaches users with an active push subscription — everyone else is skipped
-              silently.
-            </p>
+            <div className="max-w-[56ch] space-y-3">
+              <div>
+                <p className={labelClass}>Send as</p>
+                <div className="flex gap-2">
+                  {([['push', 'Push'], ['email', 'Email'], ['both', 'Both']] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setChannel(value)}
+                      data-active={channel === value}
+                      className="ui-chip h-11 flex-1 justify-center"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-sm text-ink-secondary">
+                {channel === 'push' && 'Browser push, app push and the in-app bell. No email.'}
+                {channel === 'email' && 'Email only. No push and nothing in the bell.'}
+                {channel === 'both' && 'Browser push, app push, the in-app bell and email.'}{' '}
+                Reaches every user, not just people with push turned on. People who switched off
+                offers are skipped, and sending the same broadcast again never repeats it to anyone.
+              </p>
+            </div>
             <AdminButton
               onClick={handleSend}
               disabled={loading}
@@ -267,7 +301,7 @@ export default function AdminPushPage() {
               icon={Send}
               className="h-11 flex-shrink-0 px-6"
             >
-              {loading ? 'Sending…' : 'Send push'}
+              {loading ? 'Sending…' : retryId ? 'Continue sending' : 'Send'}
             </AdminButton>
           </div>
 
@@ -283,22 +317,15 @@ export default function AdminPushPage() {
                 value={result.target === 'all' ? 'All users' : 'Single user'}
                 className="px-4"
               />
-              <DataRow label="Attempted" value={result.attempted} className="px-4" />
-              <DataRow label="Delivered" value={result.delivered} emphasis className="px-4" />
-              {typeof result.userSubscriptionCount === 'number' && (
-                <DataRow
-                  label="User subscriptions"
-                  value={result.userSubscriptionCount}
-                  className="px-4"
-                />
-              )}
-              {typeof result.totalSubscribers === 'number' && (
-                <DataRow
-                  label="Subscribed users"
-                  value={result.totalSubscribers}
-                  className="px-4"
-                />
-              )}
+              <DataRow label="Audience" value={result.audience} className="px-4" />
+              <DataRow label="Reached" value={result.reached} emphasis className="px-4" />
+              {result.channel !== 'email' && <DataRow label="Browser push" value={result.webPush} className="px-4" />}
+              {result.channel !== 'email' && <DataRow label="App push" value={result.appPush} className="px-4" />}
+              {result.channel !== 'push' && <DataRow label="Email" value={result.email} className="px-4" />}
+              {result.channel !== 'email' && <DataRow label="In the bell" value={result.inApp} className="px-4" />}
+              {result.optedOut > 0 && <DataRow label="Opted out of offers" value={result.optedOut} className="px-4" />}
+              {result.alreadyReceived > 0 && <DataRow label="Already received" value={result.alreadyReceived} className="px-4" />}
+              {result.remaining > 0 && <DataRow label="Still to send" value={result.remaining} className="px-4" />}
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { reverseSellerEscrow } from '@/lib/escrow'
 import { createNotification, notifyAccountSuspended } from '@/lib/notification'
 
 const OVERSIZED_REASON = 'Item Too Large For Motorcycle Delivery'
@@ -32,6 +33,8 @@ export async function applyOversizedDecline(params: { orderId: string; riderId: 
       data: { status: 'REFUNDED', refundedAt: now, refundAmount, refundReason: 'Oversized item declined by rider' },
     })
     await tx.user.update({ where: { id: order.buyerId }, data: { availableBalance: { increment: refundAmount } } })
+    // The buyer is refunded, so the vendor's held money for this order goes too.
+    await reverseSellerEscrow(tx, order)
     await tx.transaction.create({
       data: {
         userId: order.buyerId,

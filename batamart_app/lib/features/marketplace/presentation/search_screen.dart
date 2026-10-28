@@ -225,6 +225,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         imageUrl: product.thumbnail,
                         name: product.name,
                         price: naira(product.price),
+                        isHot: product.isHot,
                         percentOff: product.hasDiscount
                             ? product.discountPercent
                             : null,

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createNotification } from '@/lib/notification'
 import { notifyOrderCancelledRefund } from '@/lib/notify/events'
+import { reverseSellerEscrow } from '@/lib/escrow'
 
 // Cancels an order the vendor cannot supply, refunds the buyer in full to
 // their wallet, releases the vendor's escrow, and puts the stock back. The
@@ -53,16 +54,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       })
 
       // Give back the escrow that was held for the vendor at checkout.
-      const escrow = await tx.transaction.findFirst({
-        where: { userId: order.sellerId, type: 'ESCROW', reference: `${order.orderNumber}-SELLER-ESCROW` },
-        select: { amount: true },
-      })
-      if (escrow) {
-        await tx.user.update({
-          where: { id: order.sellerId },
-          data: { pendingBalance: { decrement: Number(escrow.amount) } },
-        })
-      }
+      await reverseSellerEscrow(tx, order)
 
       // Restore stock.
       for (const item of order.items) {

@@ -14,6 +14,7 @@ type ProductCardProduct = {
   isHot?: boolean
   isNew?: boolean
   isDeal?: boolean
+  discountPercent?: number | null
   campaignTag?: string | null
   campaignExpiresAt?: string | Date | null
   deliveryEstimate?: string | null
@@ -80,13 +81,24 @@ export default function ProductCard({
   const campaignLabel = campaignActive ? CAMPAIGNS[product.campaignTag as keyof typeof CAMPAIGNS]?.label : null
   const soldOut = stock === 0
 
+  // A deal shows its exact percentage off on the right; "Deal" is only used
+  // when there is no percentage to show.
+  const discount = product.isDeal && product.discountPercent ? product.discountPercent : 0
+
   const flags = (
-    <div className="ui-tile__flags">
-      {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
-      {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
-      {product.isNew && <Badge status="ink">New</Badge>}
-      {product.isDeal && <Badge status="success">Deal</Badge>}
-    </div>
+    <>
+      <div className="ui-tile__flags">
+        {campaignLabel && <Badge status="campaign" icon={Heart}>{campaignLabel}</Badge>}
+        {product.isHot && <Badge status="warning" icon={Flame}>Hot</Badge>}
+        {product.isNew && <Badge status="ink">New</Badge>}
+        {product.isDeal && discount === 0 && <Badge status="success">Deal</Badge>}
+      </div>
+      {discount > 0 && (
+        <div className="absolute right-[0.6rem] top-[0.6rem] z-[2]">
+          <Badge status="danger">{discount}% off</Badge>
+        </div>
+      )}
+    </>
   )
 
   const sellerLine = showSeller ? (

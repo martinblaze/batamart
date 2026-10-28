@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { getHeldSellerEscrow, reverseSellerEscrow } from '@/lib/escrow'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import prisma from '@/lib/prisma'
@@ -45,8 +46,8 @@ export async function POST(
       return NextResponse.json({ error: 'Return has not been delivered by rider yet' }, { status: 400 })
     }
 
-    const subtotal = dispute.order.totalAmount - (dispute.order.riderId ? 800 : 0)
-    const sellerEscrowHeld = Math.max(0, subtotal - dispute.order.platformCommission)
+    // What the seller actually has held for this order (not a recomputation).
+    const sellerEscrowHeld = await getHeldSellerEscrow(prisma, dispute.order)
 
     const gatewayFee = Math.round(flutterwaveFeePerOrder(sellerEscrowHeld) * 100) / 100
     const serviceFee = Math.round(sellerEscrowHeld * SERVICE_FEE_RATE * 100) / 100
@@ -58,10 +59,9 @@ export async function POST(
         select: { availableBalance: true },
       })
 
-      await tx.user.update({
-        where: { id: dispute.sellerId },
-        data: { pendingBalance: { decrement: netRefund } },
-      })
+      // The whole held amount leaves escrow: the buyer gets the net refund and
+      // the fees go to the platform. Taking only the net left the fees locked.
+      await reverseSellerEscrow(tx, dispute.order)
 
       await tx.user.update({
         where: { id: dispute.buyerId },
