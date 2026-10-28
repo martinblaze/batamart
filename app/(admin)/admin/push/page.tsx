@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Send, Users, Mail, ArrowRight, CheckCircle2, AlertTriangle, XCircle, Heart } from 'lucide-react'
+import { Send, Users, Mail, ArrowRight, CheckCircle2, AlertTriangle, XCircle, Heart, Sparkles, Loader2 } from 'lucide-react'
 import { adminFetch } from '@/lib/auth-client'
 import {
   AdminHeader, AdminPanel, AdminButton,
 } from '@/components/admin/AdminUI'
 import { DataRow } from '@/components/ui/Shell'
+import { renderEmail } from '@/lib/notify/email'
+import { autoDraftEmail } from '@/lib/notify/email-drafts'
+import { EMAIL_TOPICS, EMAIL_TOPIC_GROUPS } from '@/lib/notify/email-topics'
 
 const sampleMessage = `This is a test push notification from BataMart Admin. Please confirm receipt in your browser.`
 
@@ -155,6 +158,59 @@ export default function AdminPushPage() {
   const [result, setResult] = useState<AdminPushResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [channel, setChannel] = useState<'push' | 'email' | 'both'>('both')
+  // Email fields follow the push text until you edit them.
+  const [emailSubject, setEmailSubject] = useState<string | null>(null)
+  const [emailHeading, setEmailHeading] = useState<string | null>(null)
+  const [emailBody, setEmailBody] = useState<string | null>(null)
+  const [emailButton, setEmailButton] = useState<string | null>(null)
+  // '' means detect the topic from the text automatically.
+  const [topicKey, setTopicKey] = useState('')
+  const [drafting, setDrafting] = useState(false)
+  const [draftNote, setDraftNote] = useState('')
+
+  // Writes the full email from the short text above; the result stays editable.
+  const draftEmail = async () => {
+    setDrafting(true)
+    setDraftNote('')
+    try {
+      const res = await adminFetch('/api/admin/push/draft-email', {
+        method: 'POST',
+        body: JSON.stringify({ title, message, url }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setDraftNote(data.error || 'Could not write the email.'); return }
+      setEmailSubject(data.draft.subject)
+      setEmailHeading(data.draft.heading)
+      setEmailBody(data.draft.body)
+      setEmailButton(data.draft.button)
+      setDraftNote(data.note || 'Written for you. Read it through and edit anything you like before sending.')
+    } catch {
+      setDraftNote('Could not write the email. Check your connection and try again.')
+    } finally {
+      setDrafting(false)
+    }
+  }
+
+  // Written automatically from the push text, live. Editing a field takes it over.
+  const auto = autoDraftEmail({ title, message, url, topic: topicKey || undefined })
+  const subjectValue = emailSubject ?? auto.subject
+  const headingValue = emailHeading ?? auto.heading
+  const bodyValue = emailBody ?? auto.body
+  const buttonValue = emailButton ?? auto.button
+  const edited = emailSubject !== null || emailHeading !== null || emailBody !== null || emailButton !== null
+  const resetToAuto = () => {
+    setEmailSubject(null); setEmailHeading(null); setEmailBody(null); setEmailButton(null); setDraftNote('')
+  }
+  const previewHtml = renderEmail({
+    preheader: message,
+    greeting: 'Hi Chidi,',
+    heading: headingValue,
+    lines: bodyValue.split(/\n\s*\n/).map(p => p.trim().replace(/\n/g, ' ')).filter(Boolean),
+    ctaLabel: buttonValue || 'Open BataMart',
+    ctaUrl: url || '/',
+    signoff: 'The BataMart team',
+    showPreferences: true,
+  })
   // Kept while a send is unfinished, so sending again continues instead of repeating.
   const [retryId, setRetryId] = useState<string | null>(null)
 
@@ -165,7 +221,7 @@ export default function AdminPushPage() {
 
     try {
       const broadcastId = retryId || crypto.randomUUID()
-      const body = { title, message, target, email: target === 'user' ? email : undefined, url, channel, broadcastId }
+      const body = { title, message, target, email: target === 'user' ? email : undefined, url, channel, broadcastId, emailSubject: subjectValue, emailHeading: headingValue, emailBody: bodyValue, emailButton: buttonValue }
       const res = await adminFetch('/api/admin/push', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -229,6 +285,77 @@ export default function AdminPushPage() {
               className={`${controlClass} resize-none py-3.5 leading-relaxed`}
             />
           </div>
+
+          {channel !== 'push' && (
+            <div className="space-y-5 border border-border bg-surface/50 p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className={labelClass}>The email</p>
+                  <p className="max-w-[56ch] text-sm text-ink-secondary">
+                    Written for you automatically from the title and message above, and it updates as you type.
+                    It opens with the person&apos;s first name, ends with a button to your redirect link, and closes
+                    with a sign-off. Change any field below to take it over.
+                  </p>
+                </div>
+                <div className="flex flex-shrink-0 flex-wrap gap-2">
+                  {edited && (
+                    <AdminButton onClick={resetToAuto} tone="default" className="h-11 px-4">Back to automatic</AdminButton>
+                  )}
+                  <AdminButton onClick={draftEmail} disabled={drafting || (!title && !message)} tone="default" icon={drafting ? Loader2 : Sparkles} className="h-11 px-4">
+                    {drafting ? 'Writing…' : 'Rewrite with AI (optional)'}
+                  </AdminButton>
+                </div>
+              </div>
+              {draftNote && <p className="text-sm text-ink-secondary">{draftNote}</p>}
+              <div>
+                <label className={labelClass}>Topic</label>
+                <select
+                  value={topicKey}
+                  onChange={(e) => { setTopicKey(e.target.value); setEmailBody(null); setEmailButton(null) }}
+                  className={`${controlClass} h-12`}
+                >
+                  <option value="">Detect automatically (now: {auto.topicLabel})</option>
+                  {EMAIL_TOPIC_GROUPS.map(group => (
+                    <optgroup key={group} label={group}>
+                      {EMAIL_TOPICS.filter(t => t.group === group).map(t => (
+                        <option key={t.key} value={t.key}>{t.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <p className="mt-2 text-xs text-ink-secondary">
+                  The topic decides the extra paragraphs and the button text. Pick one yourself if the automatic choice is not right.
+                </p>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className={labelClass}>Subject line</label>
+                  <input value={subjectValue} onChange={(e) => setEmailSubject(e.target.value)} className={`${controlClass} h-12`} />
+                </div>
+                <div>
+                  <label className={labelClass}>Button text</label>
+                  <input value={buttonValue} onChange={(e) => setEmailButton(e.target.value)} className={`${controlClass} h-12`} placeholder="Set my username" />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Heading</label>
+                <input value={headingValue} onChange={(e) => setEmailHeading(e.target.value)} className={`${controlClass} h-12`} />
+              </div>
+              <div>
+                <label className={labelClass}>Body (leave a blank line between paragraphs)</label>
+                <textarea
+                  value={bodyValue}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  rows={7}
+                  className={`${controlClass} resize-y py-3.5 leading-relaxed`}
+                />
+              </div>
+              <div>
+                <p className={labelClass}>Preview</p>
+                <iframe title="Email preview" srcDoc={previewHtml} className="h-[620px] w-full border border-border bg-white" />
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>

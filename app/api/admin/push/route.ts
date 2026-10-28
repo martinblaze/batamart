@@ -51,27 +51,38 @@ export async function POST(request: NextRequest) {
     const alsoEmail = channel !== 'push'
     const broadcastId = String(body.broadcastId || '').trim() || `${Date.now()}`
 
+    // The email can say more than the push. Anything left blank falls back to
+    // the push title and message.
+    const emailSubject = String(body.emailSubject || '').trim() || title
+    const emailHeading = String(body.emailHeading || '').trim() || title
+    const emailBody = String(body.emailBody || '').trim() || message
+    const emailButton = String(body.emailButton || '').trim() || 'Open BataMart'
+    const emailParagraphs = emailBody.split(/\n\s*\n/).map(p => p.trim().replace(/\n/g, ' ')).filter(Boolean)
+
     if (!title || !message) {
       return NextResponse.json({ error: 'Title and message are required' }, { status: 400 })
     }
 
     let userIds: string[]
+    const firstNames = new Map<string, string>()
     if (target === 'user') {
       if (!email) {
         return NextResponse.json({ error: 'User email is required for target=user' }, { status: 400 })
       }
-      const user = await prisma.user.findUnique({ where: { email }, select: { id: true } })
+      const user = await prisma.user.findUnique({ where: { email }, select: { id: true, name: true } })
       if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
       userIds = [user.id]
+      firstNames.set(user.id, (user.name || '').trim().split(/\s+/)[0] || '')
     } else {
       const users = await prisma.user.findMany({
         where: { isSuspended: false, role: { in: ['BUYER', 'SELLER', 'RIDER'] } },
-        select: { id: true },
+        select: { id: true, name: true },
         orderBy: { createdAt: 'asc' },
       })
       userIds = users.map(u => u.id)
+      users.forEach(u => firstNames.set(u.id, (u.name || '').trim().split(/\s+/)[0] || ''))
     }
 
     const deadline = Date.now() + 50_000
@@ -94,7 +105,18 @@ export async function POST(request: NextRequest) {
             inApp: sendPush,
             dedupeKey: `broadcast:${broadcastId}`,
             ...(alsoEmail
-              ? { email: { subject: title, heading: title, lines: [message], ctaLabel: 'Open BataMart', ctaUrl: url } }
+              ? {
+                  email: {
+                    subject: emailSubject,
+                    preheader: message,
+                    greeting: firstNames.get(id) ? `Hi ${firstNames.get(id)},` : 'Hello,',
+                    heading: emailHeading,
+                    lines: emailParagraphs,
+                    ctaLabel: emailButton,
+                    ctaUrl: url,
+                    signoff: 'The BataMart team',
+                  },
+                }
               : {}),
           }),
         ),

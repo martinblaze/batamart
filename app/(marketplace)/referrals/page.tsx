@@ -141,7 +141,7 @@ export default function ReferralsPage() {
             <span className="ui-serif text-[#4DABFF]"> earn cash.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-slab-fg/60">
-            Invite friends and earn from every order they make. No cap. No expiry.
+            Invite friends and earn ₦120 on every order they get delivered. No cap. No expiry.
           </p>
         </div>
       </div>
@@ -210,7 +210,7 @@ export default function ReferralsPage() {
             {[
               { step: '1', text: 'Share your referral link with friends' },
               { step: '2', text: 'They sign up using your link' },
-              { step: '3', text: 'When they complete an order, you earn ₦120 from the delivery fee' },
+              { step: '3', text: 'Every time one of their orders is delivered, ₦120 goes into your wallet. One order is one seller, and there is no limit' },
             ].map(item => (
               <div key={item.step} className="flex items-start gap-3">
                 <div className="w-7 h-7 rounded-full bg-primary text-white text-sm font-semibold flex items-center justify-center flex-shrink-0">

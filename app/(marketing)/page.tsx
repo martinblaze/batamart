@@ -63,28 +63,28 @@ const STEPS: StackItem[] = [
   {
     index: '02',
     title: 'Pay, protected',
-    body: 'Checkout runs through secure payment providers. The seller is not settled the moment you pay — settlement is tied to the order reaching completion and the dispute window closing.',
+    body: 'Pay by card, transfer or from your wallet. Your money is held safely: the seller is paid 48 hours after you confirm delivery, once the dispute window has passed.',
     image: `${IMG}/scene-payment.webp`,
     imageAlt: 'A card payment being taken on a handheld terminal',
   },
   {
     index: '03',
     title: 'A rider closes it out',
-    body: 'Where rider coverage is available, the order moves through the BataMart delivery flow with status updates the whole way. You have 48 hours after delivery to raise anything that went wrong.',
+    body: 'Riders collect from sellers on Wednesdays and Saturdays, bring everything to our sorting hub, then deliver to your door. You confirm when it arrives, and you have 48 hours after delivery to raise anything that went wrong.',
     image: `${IMG}/scene-parcel.webp`,
     imageAlt: 'A parcel being handed from one person to another',
   },
 ]
 
+// The areas riders actually run: pickup and drop-off points around campus.
 const ZONES = [
-  { name: 'Main hostel block', note: 'Highest order volume', image: 'scene-building' },
-  { name: 'Engineering faculty', note: 'Weekday peak, 12–4pm', image: 'story-laptop' },
-  { name: 'Sciences complex', note: 'Lab-hours delivery', image: 'scene-library' },
-  { name: 'Law faculty', note: 'Books & supplies heavy', image: 'cat-books' },
-  { name: 'Student union bldg', note: 'Food & snacks corridor', image: 'cat-food' },
-  { name: 'Library', note: 'Quiet-drop point', image: 'scene-library' },
-  { name: 'Sports complex', note: 'Evening deliveries', image: 'hero-campus' },
-  { name: 'Admin block', note: 'Daytime only', image: 'scene-skyline' },
+  { name: 'Ifite', note: 'Flat ₦1,200 delivery', image: 'scene-building' },
+  { name: 'Aroma', note: 'Flat ₦1,200 delivery', image: 'story-laptop' },
+  { name: 'Tempsite', note: 'Flat ₦1,200 delivery', image: 'scene-library' },
+  { name: 'Express Gate', note: 'Flat ₦1,200 delivery', image: 'cat-books' },
+  { name: 'Bus Stand', note: 'Flat ₦1,200 delivery', image: 'cat-food' },
+  { name: 'School Hostel', note: 'Flat ₦1,200 delivery', image: 'hero-campus' },
+  { name: 'Amansea', note: 'Flat ₦1,200 delivery', image: 'scene-skyline' },
 ]
 
 const AUDIENCE = [
@@ -118,12 +118,12 @@ const FAQS = [
   {
     question: 'Is my payment secure?',
     answer:
-      'Payments are processed through secure providers, and BataMart applies settlement and dispute rules before a seller payout is finalised. A seller is not paid out the instant you check out.',
+      'Yes. You pay by card, transfer or from your wallet, and your money is held in escrow. The seller is only paid 48 hours after you confirm delivery, if no dispute is open.',
   },
   {
     question: 'How long does delivery take?',
     answer:
-      'It depends on rider availability, seller readiness and distance. Rather than promise a number we cannot hold to, the order status updates at every step inside your account.',
+      'Deliveries run every Wednesday and Saturday. Orders placed from Saturday to Tuesday arrive on Wednesday, and orders placed from Wednesday to Friday arrive on Saturday. If a seller needs a few days to get your item ready, it goes out on the first Wednesday or Saturday after that. Checkout and your order page show your delivery day, and you can follow the rider live on a map for the last stretch.',
   },
   {
     question: 'What if something is wrong with my order?',
@@ -138,7 +138,7 @@ const FAQS = [
   {
     question: 'How does referral earning work?',
     answer:
-      'You share your referral link and your friend signs up. When their eligible delivery orders complete, referral rewards are credited to your wallet — currently shown in-app as ₦120 per eligible referral delivery.',
+      'You share your referral code or link and your friend signs up with it. For every order of theirs that gets delivered, ₦120 goes into your wallet. There is no limit. One order is one seller, so two items from the same seller pay once and items from different sellers pay separately. The reward is paid when your friend confirms the delivery.',
   },
   {
     question: 'Can I become a rider?',
@@ -388,7 +388,7 @@ export default function HomePage() {
             index="05"
             eyebrow="Coverage"
             lines={['Delivering across', 'your campus']}
-            body="Availability and timing depend on riders, distance and how quickly the seller is ready. These are the zones the rider flow currently runs through."
+            body="Every order is a flat ₦1,200 to any of these areas, delivered on Wednesdays and Saturdays."
           />
 
           <div className="mt-[clamp(3rem,6vw,5rem)] grid gap-12 lg:grid-cols-[1.45fr_1fr] lg:gap-16 lg:items-start">

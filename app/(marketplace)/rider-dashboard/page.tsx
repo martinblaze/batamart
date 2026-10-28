@@ -35,7 +35,7 @@ function CampaignItemBadge({ campaignTag }: { campaignTag?: string | null }) {
   )
 }
 
-// Delivery fees are zone-priced now (not a flat ₦800) — rider always gets 70%
+// Delivery is a flat ₦1,200 per order now (not zone-priced); rider gets 70%
 // of whatever that order's route costs. See lib/delivery/commission.ts.
 const RIDER_SHARE_PERCENT = 0.7
 const riderShareFor = (order: any) => Math.round((order?.deliveryFee || 0) * RIDER_SHARE_PERCENT)

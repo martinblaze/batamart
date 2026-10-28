@@ -65,6 +65,7 @@ const SECTIONS: LegalSection[] = [
           { text: 'Prices must be in Nigerian Naira (₦). Price manipulation and price gouging are not permitted.' },
           { text: 'BataMart may flag or remove listings that appear fraudulent, spam, or artificially inflated.' },
           { text: 'Listing on BataMart is completely free — no listing fees are charged.' },
+          { text: 'Editing a listing’s name, photos, description or price sends it back for review. It is hidden from the marketplace until it is approved again. Changing stock, pausing it or updating the ready time does not need a new review.' },
         ]}
       />
     ),
@@ -73,14 +74,15 @@ const SECTIONS: LegalSection[] = [
     id: 'payments',
     title: 'Payments and escrow',
     summary:
-      'Funds are held until the buyer confirms delivery. This is the core of the seller agreement.',
+      'Funds are held until the buyer confirms delivery and the 48-hour dispute window passes. This is the core of the seller agreement.',
     body: (
       <LegalList
         items={[
-          { text: "All payments are processed through BataMart's secure escrow system. Funds are held until the buyer confirms delivery." },
-          { text: 'You receive payment into your BataMart wallet after successful delivery confirmation by the buyer.' },
+          { text: "All payments are processed through BataMart's secure escrow system. The buyer's money is held while the order is collected, delivered and confirmed." },
+          { text: 'You are paid into your BataMart wallet 48 hours after the buyer confirms delivery, if no dispute has been opened in that time. It is not paid when the order is placed.' },
           { text: "In the event of a dispute, funds remain in escrow until the dispute is resolved by BataMart's support team." },
-          { text: 'BataMart may charge a platform fee on transactions. Current fee rates are displayed in your seller dashboard.' },
+          { text: 'BataMart charges a 5% commission on the product price of each completed order. The delivery fee is paid by the buyer and is not taken from you.' },
+          { text: 'If an order is cancelled before pickup, for example because the product is not available, the buyer is refunded and the money held for you is released back.' },
         ]}
       />
     ),
@@ -91,7 +93,7 @@ const SECTIONS: LegalSection[] = [
     body: (
       <LegalList
         items={[
-          { text: 'All withdrawal requests from your BataMart wallet require your configured security checks, such as a withdrawal PIN and account validation.' },
+          { text: 'All withdrawal requests from your BataMart wallet require your configured security checks, such as a withdrawal PIN and account validation. The minimum withdrawal is ₦2,000.' },
           { text: 'You are responsible for keeping your account credentials and payout details accurate and confidential.' },
           { text: 'BataMart may temporarily hold or review withdrawal requests flagged by our risk and security systems.' },
           { text: 'If a withdrawal fails repeatedly, contact support for manual review and resolution.' },
@@ -105,9 +107,13 @@ const SECTIONS: LegalSection[] = [
     body: (
       <LegalList
         items={[
-          { text: 'You are responsible for ensuring your product is ready for pickup when an order is placed.' },
-          { text: 'Orders must be made available for pickup or delivery within the timeframe stated on your listing.' },
+          { text: 'Set an honest ready time on every listing, from 1 to 30 days. BataMart staff may phone you after an order to confirm when it will be ready.' },
+          { text: 'Deliveries run on Wednesdays and Saturdays. Riders collect from you on the delivery day, which is the first Wednesday or Saturday after your item is ready.' },
           { text: "BataMart's rider network handles logistics. You must cooperate with riders and keep accurate pickup location details in your profile." },
+          { text: "You see the buyer's username, not their name, phone number or address. Wrap each parcel well and write the buyer's @username and the order code on it." },
+          { text: 'When the rider collects the parcel, tap Mark picked up on the order. Riders cannot mark it picked up for you.' },
+          { text: 'If a rider arrives and your product is not ready, the order moves to the next delivery day and the buyer is told.' },
+          { text: 'Items that are too large to carry safely by motorcycle can be declined by the rider. The buyer is refunded, your listing goes under review and you receive a strike. The first strike is a warning, the second a 3-day suspension, the third a 14-day suspension and the fourth is permanent.' },
           { text: 'Repeated failures to fulfil orders may result in penalties, including temporary or permanent suspension of your seller account.' },
         ]}
       />
@@ -181,7 +187,7 @@ export default function SellerTermsPage() {
         imageAlt="A student trader arranging goods for sale"
         meta={[
           { label: 'Listing fees', value: '₦0' },
-          { label: 'Payout', value: 'On delivery' },
+          { label: 'Payout', value: '48h after delivery' },
           { label: 'Dispute window', value: '48h' },
           { label: 'Appeal window', value: '7 days' },
         ]}

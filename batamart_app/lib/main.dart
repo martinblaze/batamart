@@ -11,6 +11,7 @@ import 'core/settings/app_settings.dart';
 import 'core/widgets/chrome/connection_banner.dart';
 import 'core/theme/app_theme.dart';
 import 'features/notifications/data/notification_models.dart';
+import 'features/notifications/state/notifications_providers.dart';
 import 'features/notifications/presentation/notification_router.dart';
 
 Future<void> main() async {
@@ -31,6 +32,8 @@ Future<void> main() async {
       onForegroundMessage: (title, body, data) {
         final context = rootNavigatorKey.currentContext;
         if (context == null || (title == null && body == null)) return;
+        // Refresh the notifications list and the unread badge right away.
+        ProviderScope.containerOf(context).invalidate(notificationsProvider);
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
             content: Text([title, body].whereType<String>().join('\n')),

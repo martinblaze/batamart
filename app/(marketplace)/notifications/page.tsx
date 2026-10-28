@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { applyRecentlyRead, rememberRead, useNotificationRefresh } from '@/lib/notification-client'
 import {
   Bell, Trash2, Check, Filter, ShoppingCart, Bike, Package, Truck,
   CheckCircle2, Star, AlertTriangle, MessageCircle, Ban, Banknote,
@@ -57,9 +58,9 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
 
   // Fetch notifications
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (silent = false) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const token = localStorage.getItem('token')
       const response = await fetch('/api/notifications', {
         headers: {
@@ -69,7 +70,7 @@ export default function NotificationsPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setNotifications(data.notifications)
+        setNotifications(applyRecentlyRead<Notification>(data.notifications))
       }
     } catch (error) {
       console.error('Fetch notifications error:', error)
@@ -80,6 +81,7 @@ export default function NotificationsPage() {
 
   // Mark as read
   const markAsRead = async (notificationIds: string[]) => {
+    rememberRead(notificationIds)
     try {
       const token = localStorage.getItem('token')
       await fetch('/api/notifications', {
@@ -103,6 +105,7 @@ export default function NotificationsPage() {
 
   // Mark all as read
   const markAllAsRead = async () => {
+    rememberRead(notifications.map(n => n.id))
     try {
       const token = localStorage.getItem('token')
       await fetch('/api/notifications', {
@@ -148,6 +151,10 @@ export default function NotificationsPage() {
   useEffect(() => {
     fetchNotifications()
   }, [])
+
+  // New pushes appear here by themselves: on a push, when you come back to the
+  // tab, and every 20 seconds while it is open.
+  useNotificationRefresh(() => fetchNotifications(true), 20_000)
 
   // Get link for notification — deep-links to the exact screen it's about
   // (same logic as components/layout/NotificationBell.tsx; kept in sync

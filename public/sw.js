@@ -169,7 +169,14 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    Promise.all([
+      self.registration.showNotification(data.title, options),
+      // Open pages (the bell, the notifications list) refresh themselves
+      // instead of waiting for their next poll.
+      self.clients
+        .matchAll({ type: 'window', includeUncontrolled: true })
+        .then((clients) => clients.forEach((client) => client.postMessage({ type: 'PUSH_RECEIVED' }))),
+    ])
   )
 })
 

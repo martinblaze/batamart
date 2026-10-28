@@ -9,7 +9,7 @@ import { PageIntro } from '@/components/marketing/ui'
 import { Reveal } from '@/components/marketing/motion'
 
 const IMG = '/images/marketing'
-const LAST_UPDATED = 'January 2026'
+const LAST_UPDATED = 'October 2026'
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -44,10 +44,28 @@ const SECTIONS: LegalSection[] = [
     title: 'Eligibility',
     body: (
       <p>
-        BataMart is designed for campus commerce users. You must be at least 16
+        BataMart is built for the Awka campus community. You must be at least 16
         years old to use the platform, and you must provide accurate account and
-        profile information.
+        profile information. Signing up includes a one-time check that your
+        device is in Awka.
       </p>
+    ),
+  },
+  {
+    id: 'usernames',
+    title: 'Usernames',
+    summary:
+      'Your username is how sellers recognise your parcel without ever seeing your name, phone or address.',
+    body: (
+      <LegalList
+        items={[
+          { text: 'You choose a username when you sign up, or later in your profile settings. It must be 3 to 20 letters and numbers, with no spaces or symbols.' },
+          { text: 'Each username belongs to one person. Once someone has taken it, nobody else can use it.' },
+          { text: 'You need a username to place an order. If you do not have one yet, checkout asks you to set one first.' },
+          { text: 'Sellers see your username on your orders and write it on your parcel. They do not see your name, phone number or delivery address.' },
+          { text: 'You cannot change your username while you have an order in progress. Impersonating someone, or choosing a name meant to mislead or offend, is not allowed and may lead to the name being removed.' },
+        ]}
+      />
     ),
   },
   {
@@ -112,11 +130,12 @@ const SECTIONS: LegalSection[] = [
       <>
         <LegalList
           items={[
-            { text: 'All payments are processed through secure payment gateways.' },
-            { text: 'Seller settlement follows BataMart order completion and dispute rules.' },
+            { text: 'You can pay by card or bank transfer through secure payment gateways, or from your BataMart wallet balance.' },
+            { text: 'Your payment is held in escrow. The rider and any referral reward are paid when you confirm delivery. The seller is paid 48 hours after you confirm, if no dispute has been opened.' },
             { text: 'Sellers do not receive an immediate payout at checkout.' },
-            { text: 'Refunds are processed according to our dispute resolution policy.' },
-            { text: 'BataMart charges a 5% commission on completed sales.' },
+            { text: 'If an order is cancelled, for example because the product is not available, the full amount is refunded to your BataMart wallet. You can spend it on any order or withdraw it. Other refunds follow our dispute resolution policy.' },
+            { text: 'You can top up your wallet at any time and use it to pay for orders. Withdrawals need your wallet PIN, and the minimum withdrawal is ₦2,000.' },
+            { text: 'BataMart charges a 5% commission on the product price of completed sales. The delivery fee is paid by the buyer and is not taken from the seller.' },
           ]}
         />
         <LegalNote title="Why settlement waits">
@@ -133,11 +152,14 @@ const SECTIONS: LegalSection[] = [
     body: (
       <LegalList
         items={[
-          { text: 'Delivery may be facilitated through BataMart rider flows where available.' },
-          { text: 'The standard delivery fee is ₦800 per order.' },
-          { text: 'Delivery timing depends on rider availability, distance and seller readiness.' },
-          { text: 'Sellers must package items securely.' },
-          { text: 'Buyers must be available to receive deliveries.' },
+          { text: 'Deliveries run twice a week, on Wednesdays and Saturdays. Orders placed from Saturday to Tuesday are delivered on Wednesday. Orders placed from Wednesday to Friday are delivered on Saturday.' },
+          { text: 'If a seller needs days to get an item ready, it is delivered on the first Wednesday or Saturday after it is ready. Checkout and your order page show your delivery day.' },
+          { text: 'The delivery fee is a flat ₦1,200 per order, the same for every location. One order is one seller, so a cart with items from two sellers has two deliveries and two fees.' },
+          { text: 'Riders collect from sellers and bring parcels to the BataMart sorting hub. Parcels are checked and packed by area, then a rider takes them to your door. You can follow your rider live on a map for that last stretch.' },
+          { text: 'You confirm delivery yourself by tapping Mark delivered. A rider cannot mark an order delivered for you, and the rider is paid when you confirm.' },
+          { text: 'If a product is not ready when the rider arrives, the order moves to the next delivery day and you are told.' },
+          { text: 'If a rider finds an item too large to carry safely by motorcycle, the product amount is refunded to your wallet. The delivery fee is not refunded.' },
+          { text: 'Sellers must package items securely. Buyers must be available to receive deliveries.' },
         ]}
       />
     ),
@@ -165,10 +187,29 @@ const SECTIONS: LegalSection[] = [
     body: (
       <LegalList
         items={[
-          { text: 'Each user gets a personal referral code and link from their BataMart account.' },
-          { text: 'The referral reward is tied to completed, eligible delivery orders from referred users.' },
-          { text: 'The current reward logic pays from delivery economics, shown in-app as ₦120 per eligible referral delivery.' },
-          { text: 'Rewards are credited to your wallet balance and appear in referral and wallet history.' },
+          { text: 'Every user has a personal referral code and link on their Referrals page. There is nothing to apply for.' },
+          { text: 'You earn ₦120 for every order your referred friends get delivered. One order is one seller, so two items from the same seller pay once, and items from different sellers pay separately.' },
+          { text: 'There is no cap on how much you can earn from referrals.' },
+          { text: 'The reward is credited to your wallet when your friend confirms delivery, and appears in your referral and wallet history. Orders that are cancelled or refunded do not pay a reward.' },
+          { text: 'Referring yourself, or creating fake or duplicate accounts, is not allowed and forfeits any reward.' },
+        ]}
+      />
+    ),
+  },
+  {
+    id: 'field-marketers',
+    title: 'Field marketers',
+    summary:
+      'A separate programme for people who bring new students onto BataMart.',
+    body: (
+      <LegalList
+        items={[
+          { text: 'Field marketers is open to signed-in users who join from its private page. It is separate from the referral programme above.' },
+          { text: 'Each field marketer gets their own signup link. You earn ₦100 for every new account that signs up through it.' },
+          { text: 'These earnings are kept in a separate marketing wallet, apart from your main balance. A minimum applies before you can withdraw them, and it is shown when you withdraw.' },
+          { text: 'A leaderboard shows the top field marketers, and the top performers may receive gifts at BataMart’s discretion.' },
+          { text: 'Fake or duplicate signups, signups from outside Awka and signing yourself up are not paid, and can lead to your removal from the programme.' },
+          { text: 'A new user who joins through a field marketer link can also have their own referral code applied. The referral reward on their orders is paid to their referrer, and the ₦100 signup payment is paid to the field marketer.' },
         ]}
       />
     ),
@@ -285,7 +326,7 @@ export default function TermsPage() {
         imageAlt="A market trader behind a stall of stacked goods"
         meta={[
           { label: 'Dispute window', value: '48h' },
-          { label: 'Delivery fee', value: '₦800' },
+          { label: 'Delivery fee', value: '₦1,200' },
           { label: 'Commission', value: '5%' },
           { label: 'Minimum age', value: '16' },
         ]}

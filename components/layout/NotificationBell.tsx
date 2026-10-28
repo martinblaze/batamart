@@ -4,6 +4,7 @@
 // Real-time notification bell with polling, mark-as-read, and delete.
 
 import { useState, useEffect, useCallback } from 'react'
+import { applyRecentlyRead, recentlyRead, rememberRead, useNotificationRefresh } from '@/lib/notification-client'
 import {
   Bell, X, Trash2, CheckCheck, ShoppingCart, Bike, Package, Truck,
   CheckCircle2, Star, AlertTriangle, MessageCircle, Ban, Banknote, Gift,
@@ -143,8 +144,13 @@ export default function NotificationBell() {
 
       if (res.ok) {
         const data = await res.json()
-        setNotifications(data.notifications || [])
-        setUnreadCount(data.unreadCount || 0)
+        const merged = applyRecentlyRead<Notification>(data.notifications || [])
+        // Items the server still lists as unread but we just marked read.
+        const staleReads = (data.notifications || []).filter(
+          (n: Notification) => !n.isRead && recentlyRead.has(n.id),
+        ).length
+        setNotifications(merged)
+        setUnreadCount(Math.max(0, (data.unreadCount || 0) - staleReads))
         setLastFetched(Date.now())
       }
     } catch (err) {
@@ -152,12 +158,13 @@ export default function NotificationBell() {
     }
   }, [lastFetched])
 
-  // Poll every 30s; also fetch immediately on mount
+  // Fetch immediately on mount (polling is handled by useNotificationRefresh below)
   useEffect(() => {
     fetchNotifications(true)
-    const interval = setInterval(() => fetchNotifications(true), 30_000)
-    return () => clearInterval(interval)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // And whenever a push arrives or the tab comes back into view
+  useNotificationRefresh(() => fetchNotifications(true), 30_000)
 
   // Fetch fresh when opening the dropdown
   useEffect(() => {
@@ -166,6 +173,7 @@ export default function NotificationBell() {
 
   // ── Mark as read ─────────────────────────────────────────────────────────
   const markAsRead = async (ids: string[]) => {
+    rememberRead(ids)
     // Optimistic update
     setNotifications((prev) =>
       prev.map((n) => (ids.includes(n.id) ? { ...n, isRead: true } : n))
@@ -188,6 +196,7 @@ export default function NotificationBell() {
   }
 
   const markAllAsRead = async () => {
+    rememberRead(notifications.map(n => n.id))
     // Optimistic update
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
     setUnreadCount(0)

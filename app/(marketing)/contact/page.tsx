@@ -54,7 +54,7 @@ const FAQS = [
   {
     question: 'How long does delivery take?',
     answer:
-      'Delivery time varies by rider availability, seller readiness and distance. You can follow order status updates inside your account.',
+      'Deliveries run every Wednesday and Saturday. Orders placed from Saturday to Tuesday arrive on Wednesday, and orders placed from Wednesday to Friday arrive on Saturday. If a seller needs a few days to get your item ready, it goes out on the first Wednesday or Saturday after that. Checkout and your order page show your delivery day, and you can follow the rider live on a map for the last stretch.',
   },
   {
     question: 'What if I have an issue with my order?',
@@ -64,7 +64,12 @@ const FAQS = [
   {
     question: 'How exactly does referral earning work?',
     answer:
-      'You share your referral link and your friend signs up. When eligible delivery orders complete, you earn referral rewards to your wallet — currently shown in-app as ₦120 per eligible referral delivery.',
+      'You share your referral code or link and your friend signs up with it. For every order of theirs that gets delivered, ₦120 goes into your wallet. There is no limit. One order is one seller, so two items from the same seller pay once and items from different sellers pay separately. The reward is paid when your friend confirms the delivery.',
+  },
+  {
+    question: 'What is my username for?',
+    answer:
+      'Sellers write your username on your parcel instead of your name and address, so your details stay private. You choose it when you sign up or in your profile settings, and you need one to place an order. It can be 3 to 20 letters and numbers.',
   },
   {
     question: 'How do I become a seller?',

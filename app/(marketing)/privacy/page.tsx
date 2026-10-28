@@ -32,6 +32,14 @@ const SECTIONS: LegalSection[] = [
             text: 'When you create a BataMart account we collect details such as your name, email, phone number and the profile information you choose to provide.',
           },
           {
+            term: 'Username',
+            text: 'The username you choose is shown to sellers on your orders and written on your parcel, so they never need your real name or address.',
+          },
+          {
+            term: 'Location',
+            text: 'When you sign up we check once that your device is in Awka, and we do not keep that location. While a rider is delivering to you, their live location is shared with you and recorded as part of that order’s tracking history.',
+          },
+          {
             term: 'Transaction data',
             text: 'We collect information about your purchases, sales and delivery details in order to carry out transactions and improve the service.',
           },
@@ -59,7 +67,7 @@ const SECTIONS: LegalSection[] = [
           },
           {
             term: 'Communication',
-            text: 'To send order updates, important notices and promotional messages — the last of which you can opt out of.',
+            text: 'To send order updates, receipts, security alerts and, unless you switch them off, reminders, deal alerts and offers. These arrive as push notifications, in the app and by email, and you choose what you receive in Settings, under Notifications.',
           },
           {
             term: 'Improvement',
@@ -79,11 +87,11 @@ const SECTIONS: LegalSection[] = [
         items={[
           {
             term: 'Between users',
-            text: 'When you make a transaction, we share the information needed to complete the order — name, phone and delivery address — between buyer and seller.',
+            text: 'To protect your address, sellers see only your username and the order details. They never see your name, phone number or delivery address.',
           },
           {
-            term: 'With riders',
-            text: 'Delivery riders receive delivery addresses and phone numbers in order to complete deliveries.',
+            term: 'With riders and our sorting hub',
+            text: 'A rider collecting from a seller sees the order code and your username. Our sorting hub staff see the same. Your name, hostel, room and phone number are shown only to the rider who delivers your order, and only for that delivery.',
           },
           {
             term: 'Service providers',

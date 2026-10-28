@@ -78,7 +78,7 @@ const FEATURES = [
   {
     icon: Truck,
     title: 'Rider delivery',
-    body: 'Delivery runs through the BataMart rider workflow wherever coverage supports it, with status updates throughout.',
+    body: 'Deliveries run every Wednesday and Saturday for a flat ₦1,200 per order. You get status updates the whole way and a live map for the last stretch to your door.',
   },
   {
     icon: Package,
@@ -99,7 +99,7 @@ export default function AboutPage() {
         meta={[
           { label: 'Marketplace access', value: '24/7' },
           { label: 'Dispute window', value: '48h' },
-          { label: 'Delivery fee', value: '₦800' },
+          { label: 'Delivery fee', value: '₦1,200' },
           { label: 'Listing fees', value: '₦0' },
         ]}
       />

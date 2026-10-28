@@ -40,7 +40,8 @@ async function arePaymentsEnabled() {
 // DELIVERY MODEL (batch):
 //   Each order in the cart gets its own delivery fee, priced per the
 //   pickup-zone <-> dropoff-zone route (see lib/delivery/pricing.ts) —
-//   no longer a flat ₦800 per order.
+//   no longer a flat ₦800 per order (it is now a flat ₦1,200 per order, see
+//   lib/delivery/pricing.ts).
 //   Rider gets 70% of that order's delivery fee.
 //   Platform keeps 30% of that order's delivery fee (gross).
 //   Referral reward (₦120) fires ONCE per batch (not per order), paid out
