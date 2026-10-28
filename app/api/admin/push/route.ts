@@ -103,9 +103,27 @@ export async function POST(request: NextRequest) {
     const totals = { failed: 0, attempted: 0, reached: 0, webPush: 0, appPush: 0, email: 0, inApp: 0, alreadyReceived: 0, optedOut: 0 }
     let processed = 0
 
-    for (let i = 0; i < userIds.length; i += 15) {
+    // Skip people who already got this broadcast in one query. Letting the
+    // dedupe insert reject them one by one costs ~0.35s each and used up the
+    // time budget before the last users on a re-send were reached.
+    let queue = userIds
+    try {
+      const done = await prisma.notificationLog.findMany({
+        where: { key: `broadcast:${broadcastId}`, userId: { in: userIds } },
+        select: { userId: true },
+      })
+      if (done.length > 0) {
+        const received = new Set(done.map(d => d.userId))
+        queue = userIds.filter(id => !received.has(id))
+        totals.alreadyReceived = received.size
+      }
+    } catch {
+      // table missing or lookup failed: fall back to the per-user dedupe
+    }
+
+    for (let i = 0; i < queue.length; i += 15) {
       if (Date.now() > deadline) break
-      const chunk = userIds.slice(i, i + 15)
+      const chunk = queue.slice(i, i + 15)
       const results = await Promise.all(
         chunk.map(id =>
           notifyUser(id, {
@@ -151,7 +169,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const remaining = userIds.length - processed
+    const remaining = queue.length - processed
     const parts = [
       sendPush ? `${totals.webPush} browser push` : null,
       sendPush ? `${totals.appPush} app push` : null,
