@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
         phone:           user.phone,
         email:           user.email,
         matricNumber:    user.matricNumber,
+        username:       user.username,
         profilePhoto:    user.profilePhoto,
         role:            user.role,
         isSellerMode:    user.isSellerMode,
