@@ -133,7 +133,7 @@ export default function CheckoutPage() {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await authFetch('/api/auth/me')
+      const response = await authFetch('/api/auth/me', { cache: 'no-store' })
       const data = await response.json()
       if (response.ok) setUser(data.user)
     } catch (error) {
@@ -177,10 +177,6 @@ export default function CheckoutPage() {
     }
     if (!deliverySuitabilityConfirmed) {
       setError('Please confirm rider-delivery suitability before payment.')
-      return
-    }
-    if (!user?.username) {
-      setError('Your username is missing. Please check your profile details before placing this order.')
       return
     }
     if (!user?.hostelName || !user?.roomNumber) {

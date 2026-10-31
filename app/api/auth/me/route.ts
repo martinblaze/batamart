@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         universityId:    user.universityId,
         university:      user.university,
       },
-    })
+    }, { headers: { 'Cache-Control': 'private, no-store, max-age=0' } })
   } catch (error) {
     console.error('Get user error:', error)
     return NextResponse.json({ error: 'Failed to get user' }, { status: 500 })
