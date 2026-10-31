@@ -34,15 +34,34 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const universityId = searchParams.get('universityId')
     const uniFilter = universityId ? { universityId } : {}
+    const period = searchParams.get('period') || 'all'
+    if (!['today', 'week', 'month', 'year', 'all'].includes(period)) {
+      return NextResponse.json({ error: 'Invalid revenue period' }, { status: 400 })
+    }
 
     const now = new Date()
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+    const periodStart = period === 'today'
+      ? todayStart
+      : period === 'week'
+        ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        : period === 'month'
+          ? new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+          : period === 'year'
+            ? new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+            : null
+    const periodOrderWhere = {
+      status: 'COMPLETED' as const,
+      ...(periodStart ? { createdAt: { gte: periodStart } } : {}),
+      ...uniFilter,
+    }
 
     const [
       allCompletedOrders,
+      periodCompletedOrders,
       thisMonthCompletedOrders,
       lastMonthCompletedOrders,
       todayCompletedOrders,
@@ -62,6 +81,19 @@ export async function GET(req: NextRequest) {
           product: { select: { landmark: true } },
         },
       }),
+      periodStart
+        ? prisma.order.findMany({
+            where: periodOrderWhere,
+            select: {
+              totalAmount: true,
+              platformCommission: true,
+              deliveryFee: true,
+              deliveryLandmark: true,
+              product: { select: { landmark: true } },
+              sellerId: true,
+            },
+          })
+        : Promise.resolve([]),
       prisma.order.findMany({
         where: { status: 'COMPLETED', createdAt: { gte: thisMonthStart }, ...uniFilter },
         select: { totalAmount: true, platformCommission: true },
@@ -80,7 +112,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.order.groupBy({
         by: ['sellerId'],
-        where: { status: 'COMPLETED', ...uniFilter },
+        where: periodOrderWhere,
         _sum: { totalAmount: true, platformCommission: true },
         _count: true,
         orderBy: { _sum: { totalAmount: 'desc' } },
@@ -112,7 +144,8 @@ export async function GET(req: NextRequest) {
     // order.deliveryLandmark. Unordered pair (A↔B) since routes are
     // bidirectional — see lib/delivery/pricing.ts.
     const routeStats = new Map<string, { zoneA: string; zoneB: string; count: number; totalDeliveryFee: number; riderTotal: number }>()
-    for (const order of allCompletedOrders as any[]) {
+    const periodOrders = (period === 'all' ? allCompletedOrders : periodCompletedOrders) as any[]
+    for (const order of periodOrders) {
       const pickup = order.product?.landmark?.trim()
       const dropoff = order.deliveryLandmark?.trim()
       if (!pickup || !dropoff) continue
@@ -129,6 +162,7 @@ export async function GET(req: NextRequest) {
       .slice(0, 10)
 
     const allTime = sumOrders(allCompletedOrders)
+    const selectedPeriod = sumOrders(periodOrders)
     const thisMonth = sumOrders(thisMonthCompletedOrders)
     const lastMonth = sumOrders(lastMonthCompletedOrders)
     const today = sumOrders(todayCompletedOrders)
@@ -177,6 +211,14 @@ export async function GET(req: NextRequest) {
       revenue: {
         totalRevenue: allTime.totalAmount,
         totalOrders: allTime.count,
+        period: {
+          key: period,
+          revenue: selectedPeriod.totalAmount,
+          orders: selectedPeriod.count,
+          platformEarned: selectedPeriod.platformCommission,
+          flutterwaveFees: selectedPeriod.flutterwaveFees,
+          netAfterFees: selectedPeriod.platformCommission - selectedPeriod.flutterwaveFees,
+        },
         flutterwaveFeeConfig,
         platform: {
           gross: {

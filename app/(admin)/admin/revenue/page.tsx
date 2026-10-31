@@ -1,7 +1,7 @@
 ﻿'use client'
 // app/(admin)/admin/revenue/page.tsx
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AlertCircle, Truck, Info, ShieldCheck, Building2, RefreshCw } from 'lucide-react'
 import {
   AdminHeader, AdminPanel, StatGrid, AdminButton, type AdminStat,
@@ -10,10 +10,21 @@ import { DataRow } from '@/components/ui/Shell'
 
 interface University { id: string; name: string; shortName: string }
 
+type RevenuePeriod = 'today' | 'week' | 'month' | 'year' | 'all'
+
+const REVENUE_PERIOD_LABELS: Record<RevenuePeriod, string> = {
+  today: 'Today',
+  week: '1 week',
+  month: '1 month',
+  year: '1 year',
+  all: 'All time',
+}
+
 export default function RevenuePage() {
   const [revenue, setRevenue]           = useState<any>(null)
   const [loading, setLoading]           = useState(true)
   const [selectedUni, setSelectedUni]   = useState('all')
+  const [selectedPeriod, setSelectedPeriod] = useState<RevenuePeriod>('all')
   const [universities, setUniversities] = useState<University[]>([])
 
   useEffect(() => {
@@ -24,13 +35,13 @@ export default function RevenuePage() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => { fetchRevenue() }, [selectedUni])
-
-  const fetchRevenue = async () => {
+  const fetchRevenue = useCallback(async () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
-      const qs = selectedUni !== 'all' ? `?universityId=${selectedUni}` : ''
+      const params = new URLSearchParams({ period: selectedPeriod })
+      if (selectedUni !== 'all') params.set('universityId', selectedUni)
+      const qs = `?${params.toString()}`
       const response = await fetch(`/api/admin/revenue${qs}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -43,7 +54,9 @@ export default function RevenuePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedUni, selectedPeriod])
+
+  useEffect(() => { void fetchRevenue() }, [fetchRevenue])
 
   const selectedUniName = selectedUni === 'all'
     ? 'All Universities'
@@ -68,6 +81,8 @@ export default function RevenuePage() {
   const topSellers  = revenue?.topSellers    || []
   const topRoutes   = revenue?.topRoutes     || []
   const breakdown   = withdrawal.breakdown   || {}
+  const periodData  = revenue?.period        || {}
+  const periodLabel = REVENUE_PERIOD_LABELS[selectedPeriod]
 
   return (
     <div className="space-y-8">
@@ -97,10 +112,54 @@ export default function RevenuePage() {
                 ))}
               </select>
             </div>
+            <div className="flex h-9 items-center gap-2 border border-border bg-card px-3">
+              <select
+                value={selectedPeriod}
+                onChange={e => setSelectedPeriod(e.target.value as RevenuePeriod)}
+                aria-label="Revenue period"
+                className="cursor-pointer bg-transparent text-[13px] text-ink focus:outline-none"
+              >
+                {(Object.keys(REVENUE_PERIOD_LABELS) as RevenuePeriod[]).map(period => (
+                  <option key={period} value={period}>{REVENUE_PERIOD_LABELS[period]}</option>
+                ))}
+              </select>
+            </div>
             <AdminButton onClick={fetchRevenue} icon={RefreshCw}>Refresh</AdminButton>
           </>
         }
       />
+
+      <AdminPanel
+        title={`Revenue — ${periodLabel}`}
+        description={`Completed orders for ${periodLabel.toLowerCase()} at ${selectedUniName.toLowerCase()}.`}
+        padded={false}
+      >
+        <StatGrid
+          columns={4}
+          stats={[
+            {
+              label: 'Sales revenue',
+              value: `₦${(periodData.revenue || 0).toLocaleString()}`,
+              note: `${periodData.orders || 0} completed orders`,
+            },
+            {
+              label: 'Completed orders',
+              value: (periodData.orders || 0).toLocaleString(),
+              note: periodLabel,
+            },
+            {
+              label: 'Platform commission',
+              value: `₦${(periodData.platformEarned || 0).toLocaleString()}`,
+              note: 'Before fees',
+            },
+            {
+              label: 'Net after fees',
+              value: `₦${(periodData.netAfterFees || 0).toLocaleString()}`,
+              note: `Flutterwave fees ₦${(periodData.flutterwaveFees || 0).toLocaleString()}`,
+            },
+          ] as AdminStat[]}
+        />
+      </AdminPanel>
 
       {/* ── Safe withdrawal ──────────────────────────────────────────────
           The single most consequential number on the panel, so it gets the
@@ -170,7 +229,7 @@ export default function RevenuePage() {
         <AdminHeader
           eyebrow="Net profit"
           title="Over time"
-          description="After Flutterwave fees, with referral payouts and user obligations deducted from the all-time figure."
+          description="These figures compare fixed periods; the selected date filter applies to the revenue summary and rankings."
           className="mb-6"
         />
         <StatGrid
@@ -255,7 +314,7 @@ export default function RevenuePage() {
 
       {/* ── Top Sellers ── */}
       {topSellers.length > 0 && (
-        <AdminPanel title="Top sellers by revenue" padded={false}>
+        <AdminPanel title={`Top sellers by revenue — ${periodLabel}`} padded={false}>
           <div className="ui-divide">
             {topSellers.map((seller: any, i: number) => (
               <div key={i} className="flex items-center gap-4 px-5 py-3.5">
@@ -286,7 +345,7 @@ export default function RevenuePage() {
       {topRoutes.length > 0 && (
         <AdminPanel
           title="Top delivery routes"
-          description="By completed order volume, all time."
+          description={`By completed order volume for ${periodLabel.toLowerCase()}.`}
           padded={false}
         >
           <div className="ui-divide">
