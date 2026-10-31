@@ -30,7 +30,6 @@ type SignupDraft = {
   referralCode?: string
   signupAccessCode?: string
   fieldMarketerCode?: string
-  locationToken?: string
   showEmailForm?: boolean
   updatedAt: number
 }
@@ -184,9 +183,6 @@ function SignupForm() {
     if (typeof window === 'undefined') return ''
     return (new URLSearchParams(window.location.search).get('fm') || '').trim().toUpperCase()
   })
-  const [locationToken, setLocationToken] = useState('')
-  const [locating, setLocating]           = useState(false)
-
   const [loading, setLoading]             = useState(false)
   const [error, setError]                 = useState('')
   const [showEmailForm, setShowEmailForm] = useState(false)
@@ -240,7 +236,6 @@ function SignupForm() {
     setDeliveryPhone(draft.deliveryPhone ?? '')
     setReferralCode(draft.referralCode ?? '')
     setSignupAccessCode(draft.signupAccessCode ?? '')
-    setLocationToken(draft.locationToken ?? '')
     const urlFm = (new URLSearchParams(window.location.search).get('fm') || '').trim().toUpperCase()
     setFieldMarketerCode(urlFm || draft.fieldMarketerCode || '')
     setShowEmailForm(Boolean(draft.showEmailForm))
@@ -289,7 +284,6 @@ function SignupForm() {
       referralCode,
       signupAccessCode,
       fieldMarketerCode,
-      locationToken,
       showEmailForm,
       updatedAt: Date.now(),
     })
@@ -310,7 +304,6 @@ function SignupForm() {
     referralCode,
     signupAccessCode,
     fieldMarketerCode,
-    locationToken,
     showEmailForm,
   ])
 
@@ -336,61 +329,6 @@ function SignupForm() {
     return ''
   }
 
-  // Batamart is Awka-only: get a GPS fix and trade it for a server-signed
-  // token that every later signup call must carry.
-  const handleCheckLocation = () => {
-    if (!effectiveSelectedUniversity) return
-    if (locationToken) { setStep(1); return }
-    if (!navigator.geolocation) {
-      setError('Your browser cannot share location, so we cannot confirm you are in Awka.')
-      return
-    }
-    setLocating(true)
-    setError('')
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch('/api/auth/verify-location', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              latitude:  pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy:  pos.coords.accuracy,
-            }),
-          })
-          const data = await res.json()
-          if (res.ok && data.locationToken) {
-            setLocationToken(data.locationToken)
-            setStep(1)
-          } else {
-            setError(data.error || 'Could not verify your location')
-          }
-        } catch {
-          setError('Network error. Please try again.')
-        } finally {
-          setLocating(false)
-        }
-      },
-      (err) => {
-        setLocating(false)
-        setError(
-          err.code === err.PERMISSION_DENIED
-            ? 'Please allow location access. Batamart is only open to people in Awka, and we need to confirm you are there.'
-            : 'We could not get your location. Check that location is on and try again.'
-        )
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
-    )
-  }
-
-  // The server says the location proof is missing or expired: restart at step 0.
-  const restartForLocation = (message: string) => {
-    setLocationToken('')
-    setStep(0)
-    setError(message)
-  }
-
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
     const emailDomainError = validateEmailDomain(email)
@@ -403,12 +341,11 @@ function SignupForm() {
       const response = await fetch('/api/auth/send-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined, locationToken }),
+        body:    JSON.stringify({ email, referralCode: referralCode || undefined, signupAccessCode: activeSignupAccessCode || undefined }),
       })
       const data = await response.json()
       
       if (response.ok) { setStep(2) }
-      else if (data.locationRequired) { restartForLocation(data.error) }
       else { setError(data.error || 'Failed to send OTP') }
     } catch {
       setError('Network error. Please try again.')
@@ -516,7 +453,6 @@ function SignupForm() {
           username,
           signupAccessCode: activeSignupAccessCode || undefined,
           fieldMarketerCode: fieldMarketerCode || undefined,
-          locationToken,
           universityId: effectiveSelectedUniversity!.id,
           hostelName:   hostelName.trim(),
           roomNumber:   roomNumber.trim(),
@@ -533,8 +469,6 @@ function SignupForm() {
         localStorage.setItem('userId',   data.user.id)
         const redirectTo = searchParams.get('redirect')
         router.push(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/marketplace')
-      } else if (data.locationRequired) {
-        restartForLocation(data.error)
       } else {
         setError(data.error || 'Signup failed')
       }
@@ -623,16 +557,13 @@ function SignupForm() {
           </div>
 
           <button
-            onClick={handleCheckLocation}
-            disabled={!effectiveSelectedUniversity || locating}
+            onClick={() => setStep(1)}
+            disabled={!effectiveSelectedUniversity}
             className="w-full mt-2 h-11 rounded-lg text-white font-medium text-[15px] bg-primary hover:brightness-95 transition-all disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            {locating ? 'Confirming you are in Awka...' : `Continue with ${effectiveSelectedUniversity?.shortName ?? 'your campus'}`}
-            {!locating && <ChevronRight className="w-5 h-5" strokeWidth={1.75} />}
+            {`Continue with ${effectiveSelectedUniversity?.shortName ?? 'your campus'}`}
+            <ChevronRight className="w-5 h-5" strokeWidth={1.75} />
           </button>
-          <p className="text-center text-xs text-ink-muted mt-2">
-            We will ask for your location once to confirm you are in Awka.
-          </p>
 
           <p className="text-center text-sm text-ink-secondary mt-4">
             Already have an account?{' '}
@@ -674,7 +605,6 @@ function SignupForm() {
                 universityId: effectiveSelectedUniversity?.id,
                 referralCode: referralCode || undefined,
                 signupAccessCode: activeSignupAccessCode || undefined,
-                locationToken,
               }}
               onError={setError}
               onLoading={setLoading}
@@ -1108,5 +1038,4 @@ export default function SignupPage() {
     </Suspense>
   )
 }
-
 

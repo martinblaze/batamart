@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createOTP, sendEmailOTP } from '@/lib/auth/auth'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
-import { AWKA_ONLY_MESSAGE, verifyAwkaLocationToken } from '@/lib/auth/awka-location'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
 const RATE_LIMIT_MAX = 5
@@ -36,7 +35,7 @@ export async function POST(request: NextRequest) {
     await incrementRateLimit(`send-otp:${ip}`, RATE_LIMIT_WINDOW_MS)
 
     const body = await request.json()
-    const { email, isLogin, locationToken } = body
+    const { email, isLogin } = body
 
     if (!email) {
       return NextResponse.json(
@@ -55,9 +54,6 @@ export async function POST(request: NextRequest) {
         )
       }
     } else {
-      if (!verifyAwkaLocationToken(locationToken)) {
-        return NextResponse.json({ error: AWKA_ONLY_MESSAGE, locationRequired: true }, { status: 403 })
-      }
       const existingUser = await prisma.user.findUnique({ where: { email } })
       if (existingUser) {
         return NextResponse.json(

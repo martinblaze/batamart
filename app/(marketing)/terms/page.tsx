@@ -46,8 +46,7 @@ const SECTIONS: LegalSection[] = [
       <p>
         BataMart is built for the Awka campus community. You must be at least 16
         years old to use the platform, and you must provide accurate account and
-        profile information. Signing up includes a one-time check that your
-        device is in Awka.
+        profile information.
       </p>
     ),
   },

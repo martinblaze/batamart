@@ -37,7 +37,7 @@ const SECTIONS: LegalSection[] = [
           },
           {
             term: 'Location',
-            text: 'When you sign up we check once that your device is in Awka, and we do not keep that location. While a rider is delivering to you, their live location is shared with you and recorded as part of that order’s tracking history.',
+            text: 'While a rider is delivering to you, their live location is shared with you and recorded as part of that order’s tracking history.',
           },
           {
             term: 'Transaction data',

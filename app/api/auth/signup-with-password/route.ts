@@ -8,7 +8,6 @@ import { generateUniqueReferralCode } from '@/lib/referral/generateReferralCode'
 import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { normalizeUsername, validateUsername } from '@/lib/username'
-import { AWKA_ONLY_MESSAGE, verifyAwkaLocationToken } from '@/lib/auth/awka-location'
 import { FIELD_MARKETER_PAY_PER_SIGNUP } from '@/lib/field-marketer/config'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
       phone,
       referralCode,
       fieldMarketerCode,
-      locationToken,
       username: rawUsername,
       universityId,
       // ── Delivery location ──────────────────────────────────────────────
@@ -55,10 +53,6 @@ export async function POST(request: NextRequest) {
       roomNumber,
       landmark,
     } = body
-
-    if (!verifyAwkaLocationToken(locationToken)) {
-      return NextResponse.json({ error: AWKA_ONLY_MESSAGE, locationRequired: true }, { status: 403 })
-    }
 
     // ── Field presence check ───────────────────────────────────────────────
     if (!email || !otpSessionToken || !password || !name || !phone) {

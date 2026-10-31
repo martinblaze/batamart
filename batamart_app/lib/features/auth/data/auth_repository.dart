@@ -1,5 +1,3 @@
-import 'package:geolocator/geolocator.dart';
-
 import '../../../core/api/api_client.dart';
 import '../../../core/config/env.dart';
 import 'auth_models.dart';
@@ -21,55 +19,6 @@ class AuthRepository {
 
   Map<String, dynamic> get _originHeader => {'Origin': Env.appOrigin};
 
-  String? _locationToken;
-  DateTime? _locationTokenAt;
-
-  /// Batamart signup is Awka-only. The backend wants a short-lived token
-  /// proving a GPS fix inside Awka on `send-otp` (signup), `google` (signup)
-  /// and `signup-with-password`. Cached for 50 min (token lives 60).
-  Future<String> _ensureLocationToken() async {
-    final cached = _locationToken;
-    final at = _locationTokenAt;
-    if (cached != null &&
-        at != null &&
-        DateTime.now().difference(at) < const Duration(minutes: 50)) {
-      return cached;
-    }
-
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      throw const LocationProofException(
-        'Please allow location access. Batamart is only open to people in Awka, and we need to confirm you are there.',
-      );
-    }
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const LocationProofException(
-        'Turn on your phone location so we can confirm you are in Awka.',
-      );
-    }
-
-    final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-    );
-    final response = await _api.post(
-      '/api/auth/verify-location',
-      data: {
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'accuracy': position.accuracy,
-      },
-      headers: _originHeader,
-    );
-    final token = response['locationToken'] as String;
-    _locationToken = token;
-    _locationTokenAt = DateTime.now();
-    return token;
-  }
-
   Future<AuthResult> loginWithPassword({
     required String email,
     required String password,
@@ -88,10 +37,9 @@ class AuthRepository {
   /// No `name` — signup flow. Returns an `otpSessionToken` to pass into
   /// [signupWithPassword].
   Future<String> sendSignupOtp({required String email}) async {
-    final locationToken = await _ensureLocationToken();
     await _api.post(
       '/api/auth/send-otp',
-      data: {'email': email, 'isLogin': false, 'locationToken': locationToken},
+      data: {'email': email, 'isLogin': false},
       headers: _originHeader,
     );
     return email;
@@ -132,11 +80,9 @@ class AuthRepository {
     String? referralCode,
     String? username,
   }) async {
-    final locationToken = await _ensureLocationToken();
     final response = await _api.post(
       '/api/auth/signup-with-password',
       data: {
-        'locationToken': locationToken,
         'email': email,
         'name': name,
         'password': password,
@@ -182,12 +128,10 @@ class AuthRepository {
     String? universityId,
     String? referralCode,
   }) async {
-    final locationToken = mode == 'signup' ? await _ensureLocationToken() : null;
     final response = await _api.post(
       '/api/auth/google',
       data: {
         'idToken': idToken,
-        'locationToken': ?locationToken,
         'mode': ?mode,
         'universityId': ?universityId,
         'referralCode': ?referralCode,
@@ -288,14 +232,4 @@ class AuthRepository {
       headers: _originHeader,
     );
   }
-}
-
-/// Thrown when we cannot even attempt the Awka location check (permission
-/// refused, location off). Carries a user-facing message.
-class LocationProofException implements Exception {
-  const LocationProofException(this.message);
-  final String message;
-
-  @override
-  String toString() => message;
 }

@@ -33,7 +33,7 @@ const CHANNELS = [
   },
   {
     label: 'WhatsApp',
-    value: '+234 XXX XXX XXXX',
+    value: '+234 7076770305',
     href: 'https://wa.me/234XXXXXXXXXX',
     note: 'Fastest during support hours',
     external: true,
