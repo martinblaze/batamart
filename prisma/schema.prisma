@@ -164,6 +164,8 @@ model DeliveryBatch {
   riderId          String?
   universityId     String
   paymentReference String?
+  gatewayFee       Float?
+  gatewayFeeEstimated Boolean @default(false)
   referralPaid     Boolean     @default(false)
   status           BatchStatus @default(PENDING)
   createdAt        DateTime    @default(now())
@@ -616,7 +618,7 @@ model Payment {
   amount          Float
   method          PaymentMethod
   status          PaymentStatus @default(PENDING)
-  transactionId   String?       @unique
+  transactionId   String?
   gatewayResponse Json?
   paidAt          DateTime?
   refundedAt      DateTime?
@@ -642,6 +644,8 @@ model Transaction {
   reference     String?
   balanceBefore Float
   balanceAfter  Float
+  gatewayFee    Float?
+  gatewayFeeEstimated Boolean @default(false)
   createdAt     DateTime        @default(now())
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { createOrders } from '../initialize/route'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
+import { getFlutterwaveGatewayFee } from '@/lib/finance/fees'
 import { getDeliveryFee } from '@/lib/delivery/pricing'
 
 export const dynamic = 'force-dynamic'
@@ -350,7 +351,18 @@ export async function GET(request: NextRequest) {
 
     let orders: Awaited<ReturnType<typeof createOrders>>
     try {
-      orders = await createOrders(enrichedCartItems, buyer, transRef)
+      const { amount: gatewayFee, estimated: gatewayFeeEstimated } = getFlutterwaveGatewayFee(
+        verifyData.data,
+        expectedAmountNaira,
+      )
+      orders = await createOrders(
+        enrichedCartItems,
+        buyer,
+        transRef,
+        'CARD',
+        gatewayFee,
+        gatewayFeeEstimated,
+      )
     } catch (createErr) {
       // Handle the STOCK_GONE error thrown by the TOCTOU-safe updateMany guard.
       if (createErr instanceof Error && createErr.message.startsWith('STOCK_GONE:')) {
@@ -584,4 +596,3 @@ async function notifySellerOfNewOrder(
 
   await Promise.allSettled(tasks)
 }
-

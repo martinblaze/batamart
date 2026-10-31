@@ -44,9 +44,8 @@ async function arePaymentsEnabled() {
 //   lib/delivery/pricing.ts).
 //   Rider gets 70% of that order's delivery fee.
 //   Platform keeps 30% of that order's delivery fee (gross).
-//   Referral reward (₦120) fires ONCE per batch (not per order), paid out
-//   of the platform's share at the reporting layer — see
-//   lib/delivery/commission.ts for the full accounting note.
+//   A referral reward may be credited per completed order when that order has
+//   a rider; the actual credits are recorded in ReferralReward.
 // ============================================================
 export function calculateFees(subtotal: number, deliveryFee: number) {
   const PLATFORM_RATE         = 0.05
@@ -265,6 +264,8 @@ export async function createOrders(
   },
   paymentReference: string,
   paymentMethod: 'CARD' | 'WALLET' = 'CARD',
+  gatewayFee?: number | null,
+  gatewayFeeEstimated = false,
 ) {
   console.log('📝 createOrders called — reference:', paymentReference)
 
@@ -278,6 +279,8 @@ export async function createOrders(
       buyerId:          user.id,
       universityId:     user.universityId ?? '',
       paymentReference,
+      gatewayFee:       gatewayFee ?? (paymentMethod === 'WALLET' ? 0 : null),
+      gatewayFeeEstimated,
       status:           'PENDING',
     },
   })

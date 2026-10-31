@@ -7,6 +7,7 @@ import { releaseMaturedSellerEscrowForUser } from '@/lib/escrow'
 import { enforceJsonRequest, enforceSameOrigin } from '@/lib/security/request'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
+import { getFlutterwaveTransferFee } from '@/lib/finance/fees'
 import { FIELD_MARKETER_MIN_WITHDRAWAL, withdrawalFloorMessage } from '@/lib/field-marketer/config'
 import { z } from 'zod'
 
@@ -330,6 +331,10 @@ export async function POST(request: NextRequest) {
 
       transferCode = transferData.data?.id ? String(transferData.data.id) : null
       flwStatus = transferData.data?.status ?? null
+      const { amount: gatewayFee, estimated: gatewayFeeEstimated } = getFlutterwaveTransferFee(
+        transferData.data ?? {},
+        amount,
+      )
 
       await prisma.$transaction(async (tx) => {
         await tx.withdrawalRequest.update({
@@ -358,6 +363,8 @@ export async function POST(request: NextRequest) {
             reference: transferReference,
             balanceBefore,
             balanceAfter: balanceBefore - amount,
+            gatewayFee,
+            gatewayFeeEstimated,
           },
         })
 
@@ -408,4 +415,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to process withdrawal' }, { status: 500 })
   }
 }
-

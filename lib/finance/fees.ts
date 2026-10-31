@@ -37,6 +37,36 @@ export function flutterwaveFeePerOrder(orderAmount: number): number {
   return Math.min(fee, config.cap)
 }
 
+export function getFlutterwaveGatewayFee(
+  transaction: {
+    charged_amount?: unknown
+    amount_settled?: unknown
+    app_fee?: unknown
+    merchant_fee?: unknown
+  },
+  fallbackAmount: number,
+): { amount: number; estimated: boolean } {
+  const chargedAmount = Number(transaction.charged_amount)
+  const settledAmount = Number(transaction.amount_settled)
+  if (
+    Number.isFinite(chargedAmount) &&
+    Number.isFinite(settledAmount) &&
+    chargedAmount >= settledAmount
+  ) {
+    return { amount: Math.round((chargedAmount - settledAmount) * 100) / 100, estimated: false }
+  }
+
+  const feeFields = [transaction.app_fee, transaction.merchant_fee]
+    .map(Number)
+    .filter((fee) => Number.isFinite(fee) && fee >= 0)
+  if (feeFields.length > 0) {
+    const fee = feeFields.reduce((total, current) => total + current, 0)
+    return { amount: Math.round(fee * 100) / 100, estimated: false }
+  }
+
+  return { amount: flutterwaveFeePerOrder(fallbackAmount), estimated: true }
+}
+
 // Flutterwave transfer (payout) fee tiers — flat fee per transfer, not a percentage.
 export function getFlutterwaveTransferFeeTiers(): { max: number; fee: number }[] {
   return [
@@ -51,4 +81,16 @@ export function flutterwaveTransferFee(amount: number): number {
   const tiers = getFlutterwaveTransferFeeTiers()
   const tier = tiers.find((t) => amount <= t.max)
   return tier ? tier.fee : tiers[tiers.length - 1].fee
+}
+
+export function getFlutterwaveTransferFee(
+  transfer: { fee?: unknown },
+  amount: number,
+): { amount: number; estimated: boolean } {
+  const recordedFee = Number(transfer.fee)
+  if (Number.isFinite(recordedFee) && recordedFee >= 0) {
+    return { amount: Math.round(recordedFee * 100) / 100, estimated: false }
+  }
+
+  return { amount: flutterwaveTransferFee(amount), estimated: true }
 }

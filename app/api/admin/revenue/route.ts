@@ -3,7 +3,11 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
-import { flutterwaveFeePerOrder, getFlutterwaveFeeConfig } from '@/lib/finance/fees'
+import {
+  flutterwaveFeePerOrder,
+  flutterwaveTransferFee,
+  getFlutterwaveFeeConfig,
+} from '@/lib/finance/fees'
 
 async function verifyAdmin(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -23,6 +27,131 @@ async function verifyAdmin(req: NextRequest) {
 // account is on a custom/negotiated plan.
 const feeForOrder = flutterwaveFeePerOrder
 const flutterwaveFeeConfig = getFlutterwaveFeeConfig()
+
+type RevenueOrder = {
+  id: string
+  batchId: string | null
+  totalAmount: number
+  platformCommission: number
+  payment: { method: string; transactionId: string | null } | null
+  batch: { gatewayFee: number | null; gatewayFeeEstimated: boolean } | null
+}
+
+function getCheckoutFees(orders: RevenueOrder[], allCompletedOrders: RevenueOrder[]) {
+  const completedByPayment = new Map<string, {
+    amount: number
+    method: string
+    fee: number | null
+    estimated: boolean
+  }>()
+  for (const order of allCompletedOrders) {
+    const key = order.batchId
+      ? `batch:${order.batchId}`
+      : order.payment?.transactionId
+        ? `payment:${order.payment.transactionId}`
+        : `order:${order.id}`
+    const payment = completedByPayment.get(key) ?? {
+      amount: 0,
+      method: order.payment?.method ?? 'UNKNOWN',
+      fee: order.batch?.gatewayFee ?? null,
+      estimated: order.batch?.gatewayFeeEstimated ?? false,
+    }
+    payment.amount += order.totalAmount || 0
+    payment.fee ??= order.batch?.gatewayFee ?? null
+    payment.estimated ||= order.batch?.gatewayFeeEstimated ?? false
+    if (payment.method === 'UNKNOWN' && order.payment?.method) payment.method = order.payment.method
+    completedByPayment.set(key, payment)
+  }
+
+  const selectedByPayment = new Map<string, {
+    amount: number
+    method: string
+    fee: number | null
+    estimated: boolean
+  }>()
+  for (const order of orders) {
+    const key = order.batchId
+      ? `batch:${order.batchId}`
+      : order.payment?.transactionId
+        ? `payment:${order.payment.transactionId}`
+        : `order:${order.id}`
+    const payment = selectedByPayment.get(key) ?? {
+      amount: 0,
+      method: order.payment?.method ?? 'UNKNOWN',
+      fee: order.batch?.gatewayFee ?? null,
+      estimated: order.batch?.gatewayFeeEstimated ?? false,
+    }
+    payment.amount += order.totalAmount || 0
+    payment.fee ??= order.batch?.gatewayFee ?? null
+    payment.estimated ||= order.batch?.gatewayFeeEstimated ?? false
+    if (payment.method === 'UNKNOWN' && order.payment?.method) payment.method = order.payment.method
+    selectedByPayment.set(key, payment)
+  }
+
+  let fees = 0
+  let estimatedTransactions = 0
+  for (const [key, selectedPayment] of Array.from(selectedByPayment.entries())) {
+    if (selectedPayment.method === 'WALLET') continue
+    const completedPayment = completedByPayment.get(key)
+    const completedAmount = completedPayment?.amount ?? selectedPayment.amount
+    if (completedAmount <= 0) continue
+
+    const recordedFee = selectedPayment.fee ?? completedPayment?.fee ?? null
+    if (recordedFee === null || selectedPayment.estimated || completedPayment?.estimated) {
+      estimatedTransactions += 1
+    }
+    fees += (recordedFee ?? feeForOrder(completedAmount))
+      * Math.min(selectedPayment.amount / completedAmount, 1)
+  }
+
+  return {
+    fees: Math.round(fees * 100) / 100,
+    estimatedTransactions,
+  }
+}
+
+type FinancialLedgerEntry = {
+  type: string
+  reference: string | null
+  amount: number
+  gatewayFee: number | null
+  gatewayFeeEstimated: boolean
+  createdAt: Date
+}
+
+function getFinancialLedgerTotals(
+  entries: FinancialLedgerEntry[],
+  start?: Date | null,
+  end?: Date,
+  endExclusive = false,
+) {
+  const relevantEntries = entries.filter(entry =>
+    (!start || entry.createdAt >= start) &&
+    (!end || (endExclusive ? entry.createdAt < end : entry.createdAt <= end)),
+  )
+
+  return relevantEntries.reduce((totals, entry) => {
+    if (entry.type === 'CREDIT' && entry.reference?.startsWith('TOPUP-')) {
+      totals.walletTopUpFees += entry.gatewayFee ?? flutterwaveFeePerOrder(entry.amount)
+      if (entry.gatewayFee == null || entry.gatewayFeeEstimated) totals.estimatedFeeTransactions += 1
+    } else if (entry.type === 'WITHDRAWAL') {
+      totals.withdrawalFees += entry.gatewayFee ?? flutterwaveTransferFee(entry.amount)
+      if (entry.gatewayFee == null || entry.gatewayFeeEstimated) totals.estimatedFeeTransactions += 1
+    } else if (
+      entry.type === 'DEBIT' &&
+      entry.reference?.startsWith('DISPUTE-FEE-SELLER-CONFIRM-')
+    ) {
+      totals.disputeFeeRecovery += entry.amount
+    }
+
+    return totals
+  }, {
+    walletTopUpFees: 0,
+    withdrawalFees: 0,
+    disputeFeeRecovery: 0,
+    estimatedFeeTransactions: 0,
+  })
+}
 
 function getNigeriaCalendarStart(now: Date, monthOffset = 0, useCurrentDay = false): Date {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -92,45 +221,73 @@ export async function GET(req: NextRequest) {
       thisMonthReferralStats,
       lastMonthReferralStats,
       todayReferralStats,
+      financialLedgerEntries,
       completedOrdersMissingCompletedAt,
       completedOrdersMissingPayment,
     ] = await Promise.all([
       prisma.order.findMany({
         where: { status: 'COMPLETED', ...orderUniFilter },
         select: {
+          id: true,
+          batchId: true,
           totalAmount: true,
           platformCommission: true,
           deliveryFee: true,
           deliveryLandmark: true,
           product: { select: { landmark: true } },
-          payment: { select: { method: true } },
+          payment: { select: { method: true, transactionId: true } },
+          batch: { select: { gatewayFee: true, gatewayFeeEstimated: true } },
         },
       }),
       periodStart
         ? prisma.order.findMany({
             where: periodOrderWhere,
             select: {
+              id: true,
+              batchId: true,
               totalAmount: true,
               platformCommission: true,
               deliveryFee: true,
               deliveryLandmark: true,
               product: { select: { landmark: true } },
               sellerId: true,
-              payment: { select: { method: true } },
+              payment: { select: { method: true, transactionId: true } },
+              batch: { select: { gatewayFee: true, gatewayFeeEstimated: true } },
             },
           })
         : Promise.resolve([]),
       prisma.order.findMany({
         where: { status: 'COMPLETED', completedAt: { gte: thisMonthStart, lte: now }, ...orderUniFilter },
-        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
+        select: {
+          id: true,
+          batchId: true,
+          totalAmount: true,
+          platformCommission: true,
+          payment: { select: { method: true, transactionId: true } },
+          batch: { select: { gatewayFee: true, gatewayFeeEstimated: true } },
+        },
       }),
       prisma.order.findMany({
         where: { status: 'COMPLETED', completedAt: { gte: lastMonthStart, lt: thisMonthStart }, ...orderUniFilter },
-        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
+        select: {
+          id: true,
+          batchId: true,
+          totalAmount: true,
+          platformCommission: true,
+          payment: { select: { method: true, transactionId: true } },
+          batch: { select: { gatewayFee: true, gatewayFeeEstimated: true } },
+        },
       }),
       prisma.order.findMany({
         where: { status: 'COMPLETED', completedAt: { gte: todayStart, lte: now }, ...orderUniFilter },
-        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
+        select: {
+          id: true,
+          batchId: true,
+          totalAmount: true,
+          platformCommission: true,
+          payment: { select: { method: true, transactionId: true } },
+          batch: { select: { gatewayFee: true, gatewayFeeEstimated: true } },
+        },
       }),
       prisma.order.findMany({
         where: { status: { notIn: ['COMPLETED', 'CANCELLED'] }, isPaid: true, ...orderUniFilter },
@@ -180,6 +337,24 @@ export async function GET(req: NextRequest) {
         _sum: { amount: true },
         _count: true,
       }),
+      prisma.transaction.findMany({
+        where: {
+          OR: [
+            { type: 'CREDIT', reference: { startsWith: 'TOPUP-' } },
+            { type: 'WITHDRAWAL' },
+            { type: 'DEBIT', reference: { startsWith: 'DISPUTE-FEE-SELLER-CONFIRM-' } },
+          ],
+          user: userUniFilter,
+        },
+        select: {
+          type: true,
+          reference: true,
+          amount: true,
+          gatewayFee: true,
+          gatewayFeeEstimated: true,
+          createdAt: true,
+        },
+      }),
       prisma.order.count({
         where: { status: 'COMPLETED', completedAt: null, ...orderUniFilter },
       }),
@@ -188,18 +363,10 @@ export async function GET(req: NextRequest) {
       }),
     ])
 
-    const sumOrders = (orders: {
-      totalAmount: number
-      platformCommission: number
-      payment?: { method: string } | null
-    }[]) => ({
+    const sumOrders = (orders: { totalAmount: number; platformCommission: number }[]) => ({
       totalAmount: orders.reduce((s, o) => s + (o.totalAmount || 0), 0),
       platformCommission: orders.reduce((s, o) => s + (o.platformCommission || 0), 0),
       count: orders.length,
-      flutterwaveFees: orders.reduce(
-        (s, o) => s + (o.payment?.method === 'WALLET' ? 0 : feeForOrder(o.totalAmount || 0)),
-        0,
-      ),
     })
 
     // ── Top delivery routes by volume/revenue ───────────────────────────────
@@ -217,7 +384,7 @@ export async function GET(req: NextRequest) {
       const existing = routeStats.get(key) || { zoneA, zoneB, count: 0, totalDeliveryFee: 0, riderTotal: 0 }
       existing.count += 1
       existing.totalDeliveryFee += order.deliveryFee || 0
-      existing.riderTotal += Math.round((order.deliveryFee || 0) * 0.7)
+      existing.riderTotal += Math.round((order.deliveryFee || 0) * 0.7 * 100) / 100
       routeStats.set(key, existing)
     }
     const topRoutes = Array.from(routeStats.values())
@@ -230,6 +397,36 @@ export async function GET(req: NextRequest) {
     const lastMonth = sumOrders(lastMonthCompletedOrders)
     const today = sumOrders(todayCompletedOrders)
     const pending = sumOrders(pendingOrders)
+    const allTimeCheckoutFees = getCheckoutFees(allCompletedOrders, allCompletedOrders)
+    const selectedCheckoutFees = getCheckoutFees(periodOrders, allCompletedOrders)
+    const thisMonthCheckoutFees = getCheckoutFees(thisMonthCompletedOrders, allCompletedOrders)
+    const lastMonthCheckoutFees = getCheckoutFees(lastMonthCompletedOrders, allCompletedOrders)
+    const todayCheckoutFees = getCheckoutFees(todayCompletedOrders, allCompletedOrders)
+    const allTimeLedger = getFinancialLedgerTotals(financialLedgerEntries, null, now)
+    const selectedPeriodLedger = getFinancialLedgerTotals(financialLedgerEntries, periodStart, now)
+    const thisMonthLedger = getFinancialLedgerTotals(financialLedgerEntries, thisMonthStart, now)
+    const lastMonthLedger = getFinancialLedgerTotals(
+      financialLedgerEntries,
+      lastMonthStart,
+      thisMonthStart,
+      true,
+    )
+    const todayLedger = getFinancialLedgerTotals(financialLedgerEntries, todayStart, now)
+    const allTimeFees = allTimeCheckoutFees.fees
+      + allTimeLedger.walletTopUpFees
+      + allTimeLedger.withdrawalFees
+    const selectedPeriodFees = selectedCheckoutFees.fees
+      + selectedPeriodLedger.walletTopUpFees
+      + selectedPeriodLedger.withdrawalFees
+    const thisMonthFees = thisMonthCheckoutFees.fees
+      + thisMonthLedger.walletTopUpFees
+      + thisMonthLedger.withdrawalFees
+    const lastMonthFees = lastMonthCheckoutFees.fees
+      + lastMonthLedger.walletTopUpFees
+      + lastMonthLedger.withdrawalFees
+    const todayFees = todayCheckoutFees.fees
+      + todayLedger.walletTopUpFees
+      + todayLedger.withdrawalFees
 
     const allTimeReferralRewards = Number(allReferralStats._sum.amount ?? 0)
     const periodReferralRewards = Number(periodReferralStats._sum.amount ?? 0)
@@ -237,14 +434,17 @@ export async function GET(req: NextRequest) {
     const lastMonthReferralRewards = Number(lastMonthReferralStats._sum.amount ?? 0)
     const todayReferralRewards = Number(todayReferralStats._sum.amount ?? 0)
 
-    const netAllTime = allTime.platformCommission - allTime.flutterwaveFees - allTimeReferralRewards
+    const netAllTime = allTime.platformCommission - allTimeFees
+      - allTimeReferralRewards + allTimeLedger.disputeFeeRecovery
     const netSelectedPeriod = selectedPeriod.platformCommission
-      - selectedPeriod.flutterwaveFees
-      - periodReferralRewards
-    const netThisMonth = thisMonth.platformCommission - thisMonth.flutterwaveFees - thisMonthReferralRewards
-    const netLastMonth = lastMonth.platformCommission - lastMonth.flutterwaveFees - lastMonthReferralRewards
-    const netToday = today.platformCommission - today.flutterwaveFees - todayReferralRewards
-    const netPending = pending.platformCommission - pending.flutterwaveFees
+      - selectedPeriodFees
+      - periodReferralRewards + selectedPeriodLedger.disputeFeeRecovery
+    const netThisMonth = thisMonth.platformCommission - thisMonthFees
+      - thisMonthReferralRewards + thisMonthLedger.disputeFeeRecovery
+    const netLastMonth = lastMonth.platformCommission - lastMonthFees
+      - lastMonthReferralRewards + lastMonthLedger.disputeFeeRecovery
+    const netToday = today.platformCommission - todayFees
+      - todayReferralRewards + todayLedger.disputeFeeRecovery
 
     const sellersAvailableNow = totalSellersBalance._sum.availableBalance?.toNumber() ?? 0
     const sellersPending = totalSellersBalance._sum.pendingBalance?.toNumber() ?? 0
@@ -279,7 +479,13 @@ export async function GET(req: NextRequest) {
           revenue: selectedPeriod.totalAmount,
           orders: selectedPeriod.count,
           platformEarned: selectedPeriod.platformCommission,
-          flutterwaveFees: selectedPeriod.flutterwaveFees,
+          flutterwaveFees: selectedPeriodFees,
+          checkoutFees: selectedCheckoutFees.fees,
+          walletTopUpFees: selectedPeriodLedger.walletTopUpFees,
+          withdrawalFees: selectedPeriodLedger.withdrawalFees,
+          disputeFeeRecovery: selectedPeriodLedger.disputeFeeRecovery,
+          estimatedFeeTransactions:
+            selectedCheckoutFees.estimatedTransactions + selectedPeriodLedger.estimatedFeeTransactions,
           referralRewards: periodReferralRewards,
           referralRewardCount: periodReferralStats._count,
           netAfterDeductions: netSelectedPeriod,
@@ -291,21 +497,18 @@ export async function GET(req: NextRequest) {
             thisMonth: thisMonth.platformCommission,
             lastMonth: lastMonth.platformCommission,
             today: today.platformCommission,
-            pending: pending.platformCommission,
           },
           net: {
             allTime: netAllTime,
             thisMonth: netThisMonth,
             lastMonth: netLastMonth,
             today: netToday,
-            pending: netPending,
           },
           flutterwaveFees: {
-            allTime: allTime.flutterwaveFees,
-            thisMonth: thisMonth.flutterwaveFees,
-            lastMonth: lastMonth.flutterwaveFees,
-            today: today.flutterwaveFees,
-            pending: pending.flutterwaveFees,
+            allTime: allTimeFees,
+            thisMonth: thisMonthFees,
+            lastMonth: lastMonthFees,
+            today: todayFees,
           },
         },
         thisMonth: {

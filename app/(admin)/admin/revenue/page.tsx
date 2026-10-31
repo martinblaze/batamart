@@ -18,6 +18,11 @@ interface RevenueData {
     orders: number
     platformEarned: number
     flutterwaveFees: number
+    checkoutFees: number
+    walletTopUpFees: number
+    withdrawalFees: number
+    disputeFeeRecovery: number
+    estimatedFeeTransactions: number
     referralRewards: number
     netAfterDeductions: number
   }
@@ -202,7 +207,7 @@ export default function RevenuePage() {
           columns={4}
           stats={[
             {
-              label: 'Sales revenue',
+              label: 'Gross order value',
               value: `₦${(periodData.revenue || 0).toLocaleString()}`,
               note: `${periodData.orders || 0} completed orders`,
             },
@@ -219,19 +224,34 @@ export default function RevenuePage() {
             {
               label: 'Estimated net earnings',
               value: `₦${(periodData.netAfterDeductions || 0).toLocaleString()}`,
-              note: `Est. fees ₦${(periodData.flutterwaveFees || 0).toLocaleString()} · rewards ₦${(periodData.referralRewards || 0).toLocaleString()}`,
+              note: `Fees ₦${(periodData.flutterwaveFees || 0).toLocaleString()} · rewards ₦${(periodData.referralRewards || 0).toLocaleString()} · recovered ₦${(periodData.disputeFeeRecovery || 0).toLocaleString()}`,
             },
           ] as AdminStat[]}
         />
       </AdminPanel>
 
-      {(dataQuality.completedOrdersMissingCompletedAt > 0 || dataQuality.completedOrdersMissingPayment > 0) && (
+      {(dataQuality.completedOrdersMissingCompletedAt > 0
+        || dataQuality.completedOrdersMissingPayment > 0
+        || periodData.estimatedFeeTransactions > 0) && (
         <div className="flex items-start gap-3 border border-warning/25 bg-warning/5 p-4 text-sm text-warning">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
           <span className="leading-relaxed">
-            Report data is incomplete: {dataQuality.completedOrdersMissingCompletedAt || 0} completed orders
-            lack a completion time, and {dataQuality.completedOrdersMissingPayment || 0} lack a payment record.
-            Period totals cannot reliably place orders without completion times.
+            Financial data note:{' '}
+            {dataQuality.completedOrdersMissingCompletedAt > 0 && (
+              <>
+                {dataQuality.completedOrdersMissingCompletedAt} completed orders lack a completion time, so
+                period totals cannot place them accurately.{' '}
+              </>
+            )}
+            {dataQuality.completedOrdersMissingPayment > 0 && (
+              <>{dataQuality.completedOrdersMissingPayment} completed orders lack a payment record.{' '}</>
+            )}
+            {periodData.estimatedFeeTransactions > 0 && (
+              <>
+                Fees for {periodData.estimatedFeeTransactions} checkout, wallet top-up, or withdrawal
+                transaction(s) are estimated because Flutterwave fee details were not recorded.
+              </>
+            )}
           </span>
         </div>
       )}
@@ -243,14 +263,13 @@ export default function RevenuePage() {
             <Info className="h-5 w-5 text-success" strokeWidth={1.5} />
           </span>
           <div className="min-w-0">
-            <p className="ui-eyebrow mb-3">Estimated earnings · {periodLabel}</p>
+            <p className="ui-eyebrow mb-3">Platform earnings · {periodLabel}</p>
             <p className="ui-figure text-[clamp(2rem,5vw,3rem)] leading-none text-success">
               ₦{(periodData.netAfterDeductions || 0).toLocaleString()}
             </p>
             <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-secondary">
-              Estimated platform commission for {periodLabel.toLowerCase()} after estimated collection fees and referral rewards.
-              This is not your live Flutterwave balance or a safe-to-withdraw amount. Fees are estimated from
-              order amounts; reconcile with Flutterwave settlement records, especially for wallet top-ups.
+              Platform commission after actual or estimated collection and transfer fees, less referral rewards,
+              plus dispute fees recovered. This is not your live Flutterwave balance or a safe-to-withdraw amount.
             </p>
           </div>
         </div>
@@ -263,12 +282,24 @@ export default function RevenuePage() {
               value={<span className="text-ink">+ ₦{(periodData.platformEarned || 0).toLocaleString()}</span>}
             />
             <DataRow
-              label="Estimated Flutterwave collection fees"
-              value={<span className="text-danger">− ₦{(periodData.flutterwaveFees || 0).toLocaleString()}</span>}
+              label="Checkout collection fees"
+              value={<span className="text-danger">− ₦{(periodData.checkoutFees || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Wallet top-up fees"
+              value={<span className="text-danger">− ₦{(periodData.walletTopUpFees || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Withdrawal transfer fees"
+              value={<span className="text-danger">− ₦{(periodData.withdrawalFees || 0).toLocaleString()}</span>}
             />
             <DataRow
               label={`Referral rewards credited (${periodLabel.toLowerCase()})`}
               value={<span className="text-danger">− ₦{(periodData.referralRewards || 0).toLocaleString()}</span>}
+            />
+            <DataRow
+              label="Dispute fees recovered"
+              value={<span className="text-ink">+ ₦{(periodData.disputeFeeRecovery || 0).toLocaleString()}</span>}
             />
             <DataRow
               label={`Estimated net earnings (${periodLabel.toLowerCase()})`}

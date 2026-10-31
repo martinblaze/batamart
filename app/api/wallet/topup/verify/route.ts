@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { notifyTopUp } from '@/lib/notify/events'
 import { flutterwaveRequest } from '@/lib/finance/flutterwave'
+import { getFlutterwaveGatewayFee } from '@/lib/finance/fees'
 import { checkRateLimitDistributed, getIpKey } from '@/lib/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
 
     const amount = Number(tx?.amount)
     if (!Number.isFinite(amount) || amount < 1 || amount > 1_000_000) return appRedirect('/wallet?topup=failed')
+    const { amount: gatewayFee, estimated: gatewayFeeEstimated } = getFlutterwaveGatewayFee(tx, amount)
 
     let credited = null as number | null
     try {
@@ -72,6 +74,8 @@ export async function GET(request: NextRequest) {
             reference: txRef,
             balanceBefore: before,
             balanceAfter: before + amount,
+            gatewayFee,
+            gatewayFeeEstimated,
           },
         })
         credited = before + amount
