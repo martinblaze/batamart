@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface Notification {
   id: string
@@ -119,6 +120,7 @@ function timeAgo(dateString: string): string {
 }
 
 export default function NotificationBell() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
@@ -173,41 +175,43 @@ export default function NotificationBell() {
 
   // ── Mark as read ─────────────────────────────────────────────────────────
   const markAsRead = async (ids: string[]) => {
-    rememberRead(ids)
-    // Optimistic update
-    setNotifications((prev) =>
-      prev.map((n) => (ids.includes(n.id) ? { ...n, isRead: true } : n))
-    )
-    setUnreadCount((prev) => Math.max(0, prev - ids.filter((id) => {
-      const n = notifications.find((n) => n.id === id)
-      return n && !n.isRead
-    }).length))
-
     try {
       const token = localStorage.getItem('token')
-      await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ notificationIds: ids }),
       })
+      if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
+
+      rememberRead(ids)
+      setNotifications((prev) =>
+        prev.map((n) => (ids.includes(n.id) ? { ...n, isRead: true } : n))
+      )
+      setUnreadCount((prev) => Math.max(0, prev - ids.filter((id) => {
+        const n = notifications.find((n) => n.id === id)
+        return n && !n.isRead
+      }).length))
+      return true
     } catch (err) {
       console.error('[NotificationBell] markAsRead error:', err)
+      return false
     }
   }
 
   const markAllAsRead = async () => {
-    rememberRead(notifications.map(n => n.id))
-    // Optimistic update
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-    setUnreadCount(0)
-
     try {
       const token = localStorage.getItem('token')
-      await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ markAllAsRead: true }),
       })
+      if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
+
+      rememberRead(notifications.map(n => n.id))
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      setUnreadCount(0)
     } catch (err) {
       console.error('[NotificationBell] markAllAsRead error:', err)
     }
@@ -234,8 +238,12 @@ export default function NotificationBell() {
   }
 
   // ── Notification click ────────────────────────────────────────────────────
-  const handleClick = (notification: Notification) => {
-    if (!notification.isRead) markAsRead([notification.id])
+  const handleClick = async (event: React.MouseEvent<HTMLAnchorElement>, notification: Notification) => {
+    if (!notification.isRead) {
+      event.preventDefault()
+      await markAsRead([notification.id])
+      router.push(getNotificationLink(notification, currentUserId))
+    }
     setIsOpen(false)
   }
 
@@ -309,11 +317,12 @@ export default function NotificationBell() {
                 <div className="divide-y divide-border">
                   {notifications.map((notification) => {
                     const { icon: Icon, tone } = NOTIFICATION_ICONS[notification.type] || DEFAULT_NOTIFICATION_ICON
+                    const href = getNotificationLink(notification, currentUserId)
                     return (
                     <Link
                       key={notification.id}
-                      href={getNotificationLink(notification, currentUserId)}
-                      onClick={() => handleClick(notification)}
+                      href={href}
+                      onClick={(event) => { void handleClick(event, notification) }}
                       className={`flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-surface group ${
                         !notification.isRead ? 'bg-primary/5' : ''
                       }`}

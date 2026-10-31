@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // Design bible section 6 — lucide-react only, no emoji. Status-colored icons
 // use the matching status token; everything else inherits ink-secondary.
@@ -53,6 +54,7 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
@@ -81,10 +83,9 @@ export default function NotificationsPage() {
 
   // Mark as read
   const markAsRead = async (notificationIds: string[]) => {
-    rememberRead(notificationIds)
     try {
       const token = localStorage.getItem('token')
-      await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +93,9 @@ export default function NotificationsPage() {
         },
         body: JSON.stringify({ notificationIds })
       })
+      if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
 
+      rememberRead(notificationIds)
       setNotifications(prev =>
         prev.map(n =>
           notificationIds.includes(n.id) ? { ...n, isRead: true } : n
@@ -105,10 +108,9 @@ export default function NotificationsPage() {
 
   // Mark all as read
   const markAllAsRead = async () => {
-    rememberRead(notifications.map(n => n.id))
     try {
       const token = localStorage.getItem('token')
-      await fetch('/api/notifications', {
+      const response = await fetch('/api/notifications', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +118,9 @@ export default function NotificationsPage() {
         },
         body: JSON.stringify({ markAllAsRead: true })
       })
+      if (!response.ok) throw new Error(`Request failed with status ${response.status}`)
 
+      rememberRead(notifications.map(n => n.id))
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
     } catch (error) {
       console.error('Mark all as read error:', error)
@@ -314,6 +318,7 @@ export default function NotificationsPage() {
             <div className="divide-y divide-border">
               {filteredNotifications.map((notification) => {
                 const { icon: NotifIcon, tone } = NOTIFICATION_ICONS[notification.type] || DEFAULT_NOTIFICATION_ICON
+                const href = getNotificationLink(notification)
                 return (
                 <div
                   key={notification.id}
@@ -331,10 +336,11 @@ export default function NotificationsPage() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <Link
-                        href={getNotificationLink(notification)}
-                        onClick={() => {
+                        href={href}
+                        onClick={(event) => {
                           if (!notification.isRead) {
-                            markAsRead([notification.id])
+                            event.preventDefault()
+                            void markAsRead([notification.id]).then(() => router.push(href))
                           }
                         }}
                         className="block"

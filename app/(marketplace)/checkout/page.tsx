@@ -180,11 +180,11 @@ export default function CheckoutPage() {
       return
     }
     if (!user?.username) {
-      router.push('/myprofile?setup=username&redirect=/checkout')
+      setError('Your username is missing. Please check your profile details before placing this order.')
       return
     }
     if (!user?.hostelName || !user?.roomNumber) {
-      router.push('/myprofile?setup=address&redirect=/checkout')
+      setError('Your delivery address is incomplete. Use Edit in the Delivery address section to update it before paying.')
       return
     }
 
