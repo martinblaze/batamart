@@ -20,6 +20,7 @@ type SignupDraft = {
   email?: string
   name?: string
   phone?: string
+  username?: string
   otp?: string[]
   otpSessionToken?: string
   selectedUniversityId?: string
@@ -227,6 +228,7 @@ function SignupForm() {
     setEmail(draft.email ?? '')
     setName(draft.name ?? '')
     setPhone(draft.phone ?? '')
+    setUsername(draft.username ?? '')
     setOtp(normalizeOtpDigits(draft.otp))
     setOtpSessionToken(draft.otpSessionToken ?? '')
     setSelectedUniversityId(draft.selectedUniversityId ?? '')
@@ -274,6 +276,7 @@ function SignupForm() {
       email,
       name,
       phone,
+      username,
       otp,
       otpSessionToken,
       selectedUniversityId: selectedUniversity?.id ?? selectedUniversityId,
@@ -293,6 +296,7 @@ function SignupForm() {
     email,
     name,
     phone,
+    username,
     otp,
     otpSessionToken,
     selectedUniversity?.id,
@@ -693,22 +697,6 @@ function SignupForm() {
                   which redirects them to /become-seller to upgrade their account. */}
 
               <div>
-                <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Username</label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())}
-                  maxLength={20}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  required
-                  placeholder="letters and numbers only"
-                  className="w-full h-11 px-4 rounded-lg border border-border bg-surface text-[15px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-                />
-                <p className="text-xs text-ink-muted mt-1">Sellers see only this, never your name or address.</p>
-              </div>
-
-              <div>
                 <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Referral Code (Optional)</label>
                 <input
                   type="text"
@@ -966,6 +954,24 @@ function SignupForm() {
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div>
+            <label htmlFor="signup-username" className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Username</label>
+            <input
+              id="signup-username"
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())}
+              minLength={3}
+              maxLength={20}
+              autoCapitalize="none"
+              autoCorrect="off"
+              autoComplete="username"
+              required
+              placeholder="3-20 letters or numbers"
+              className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-muted/80 focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+            <p className="text-xs text-ink-muted mt-1">Sellers see this name, not your name or address.</p>
+          </div>
+          <div>
             <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Password</label>
             <input
               type="password"
@@ -1038,4 +1044,3 @@ export default function SignupPage() {
     </Suspense>
   )
 }
-
