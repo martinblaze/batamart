@@ -10,8 +10,8 @@ async function verifyAdmin(req: NextRequest) {
   if (!authHeader?.startsWith('Bearer ')) return null
   try {
     const token = authHeader.substring(7)
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    if (decoded.role !== 'ADMIN') return null
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+    if (typeof decoded === 'string' || decoded.role !== 'ADMIN') return null
     return decoded
   } catch {
     return null
@@ -24,6 +24,21 @@ async function verifyAdmin(req: NextRequest) {
 const feeForOrder = flutterwaveFeePerOrder
 const flutterwaveFeeConfig = getFlutterwaveFeeConfig()
 
+function getNigeriaCalendarStart(now: Date, monthOffset = 0, useCurrentDay = false): Date {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Africa/Lagos',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now)
+  const year = Number(parts.find(part => part.type === 'year')?.value)
+  const month = Number(parts.find(part => part.type === 'month')?.value) - 1
+  const currentDay = Number(parts.find(part => part.type === 'day')?.value)
+
+  const day = useCurrentDay ? currentDay : 1
+  return new Date(Date.UTC(year, month + monthOffset, day, -1))
+}
+
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req)
   if (!admin) {
@@ -33,17 +48,20 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const universityId = searchParams.get('universityId')
-    const uniFilter = universityId ? { universityId } : {}
+    const userUniFilter = universityId ? { universityId } : {}
+    const orderUniFilter = universityId ? { buyer: { universityId } } : {}
+    const referralUniFilter = universityId
+      ? { order: { buyer: { universityId } } }
+      : {}
     const period = searchParams.get('period') || 'all'
     if (!['today', 'week', 'month', 'year', 'all'].includes(period)) {
       return NextResponse.json({ error: 'Invalid revenue period' }, { status: 400 })
     }
 
     const now = new Date()
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+    const thisMonthStart = getNigeriaCalendarStart(now)
+    const lastMonthStart = getNigeriaCalendarStart(now, -1)
+    const todayStart = getNigeriaCalendarStart(now, 0, true)
     const periodStart = period === 'today'
       ? todayStart
       : period === 'week'
@@ -55,8 +73,8 @@ export async function GET(req: NextRequest) {
             : null
     const periodOrderWhere = {
       status: 'COMPLETED' as const,
-      ...(periodStart ? { createdAt: { gte: periodStart } } : {}),
-      ...uniFilter,
+      ...(periodStart ? { completedAt: { gte: periodStart, lte: now } } : {}),
+      ...orderUniFilter,
     }
 
     const [
@@ -69,16 +87,23 @@ export async function GET(req: NextRequest) {
       topSellersRaw,
       totalSellersBalance,
       totalRidersBalance,
-      referralStats,
+      allReferralStats,
+      periodReferralStats,
+      thisMonthReferralStats,
+      lastMonthReferralStats,
+      todayReferralStats,
+      completedOrdersMissingCompletedAt,
+      completedOrdersMissingPayment,
     ] = await Promise.all([
       prisma.order.findMany({
-        where: { status: 'COMPLETED', ...uniFilter },
+        where: { status: 'COMPLETED', ...orderUniFilter },
         select: {
           totalAmount: true,
           platformCommission: true,
           deliveryFee: true,
           deliveryLandmark: true,
           product: { select: { landmark: true } },
+          payment: { select: { method: true } },
         },
       }),
       periodStart
@@ -91,23 +116,24 @@ export async function GET(req: NextRequest) {
               deliveryLandmark: true,
               product: { select: { landmark: true } },
               sellerId: true,
+              payment: { select: { method: true } },
             },
           })
         : Promise.resolve([]),
       prisma.order.findMany({
-        where: { status: 'COMPLETED', createdAt: { gte: thisMonthStart }, ...uniFilter },
-        select: { totalAmount: true, platformCommission: true },
+        where: { status: 'COMPLETED', completedAt: { gte: thisMonthStart, lte: now }, ...orderUniFilter },
+        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
       }),
       prisma.order.findMany({
-        where: { status: 'COMPLETED', createdAt: { gte: lastMonthStart, lte: lastMonthEnd }, ...uniFilter },
-        select: { totalAmount: true, platformCommission: true },
+        where: { status: 'COMPLETED', completedAt: { gte: lastMonthStart, lt: thisMonthStart }, ...orderUniFilter },
+        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
       }),
       prisma.order.findMany({
-        where: { status: 'COMPLETED', createdAt: { gte: todayStart }, ...uniFilter },
-        select: { totalAmount: true, platformCommission: true },
+        where: { status: 'COMPLETED', completedAt: { gte: todayStart, lte: now }, ...orderUniFilter },
+        select: { totalAmount: true, platformCommission: true, payment: { select: { method: true } } },
       }),
       prisma.order.findMany({
-        where: { status: { notIn: ['COMPLETED', 'CANCELLED'] }, isPaid: true, ...uniFilter },
+        where: { status: { notIn: ['COMPLETED', 'CANCELLED'] }, isPaid: true, ...orderUniFilter },
         select: { totalAmount: true, platformCommission: true },
       }),
       prisma.order.groupBy({
@@ -119,24 +145,61 @@ export async function GET(req: NextRequest) {
         take: 10,
       }),
       prisma.user.aggregate({
-        where: { role: 'SELLER', ...(universityId ? { universityId } : {}) },
+        where: { role: 'SELLER', ...userUniFilter },
         _sum: { pendingBalance: true, availableBalance: true },
       }),
       prisma.user.aggregate({
-        where: { role: 'RIDER', ...(universityId ? { universityId } : {}) },
+        where: { role: 'RIDER', ...userUniFilter },
         _sum: { pendingBalance: true, availableBalance: true },
       }),
       prisma.referralReward.aggregate({
+        where: referralUniFilter,
         _sum: { amount: true },
         _count: true,
-      }).catch(() => ({ _sum: { amount: 0 }, _count: 0 })),
+      }),
+      prisma.referralReward.aggregate({
+        where: {
+          ...referralUniFilter,
+          ...(periodStart ? { createdAt: { gte: periodStart, lte: now } } : {}),
+        },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.referralReward.aggregate({
+        where: { ...referralUniFilter, createdAt: { gte: thisMonthStart, lte: now } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.referralReward.aggregate({
+        where: { ...referralUniFilter, createdAt: { gte: lastMonthStart, lt: thisMonthStart } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.referralReward.aggregate({
+        where: { ...referralUniFilter, createdAt: { gte: todayStart, lte: now } },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.order.count({
+        where: { status: 'COMPLETED', completedAt: null, ...orderUniFilter },
+      }),
+      prisma.order.count({
+        where: { status: 'COMPLETED', payment: null, ...orderUniFilter },
+      }),
     ])
 
-    const sumOrders = (orders: { totalAmount: number; platformCommission: number }[]) => ({
+    const sumOrders = (orders: {
+      totalAmount: number
+      platformCommission: number
+      payment?: { method: string } | null
+    }[]) => ({
       totalAmount: orders.reduce((s, o) => s + (o.totalAmount || 0), 0),
       platformCommission: orders.reduce((s, o) => s + (o.platformCommission || 0), 0),
       count: orders.length,
-      flutterwaveFees: orders.reduce((s, o) => s + feeForOrder(o.totalAmount || 0), 0),
+      flutterwaveFees: orders.reduce(
+        (s, o) => s + (o.payment?.method === 'WALLET' ? 0 : feeForOrder(o.totalAmount || 0)),
+        0,
+      ),
     })
 
     // ── Top delivery routes by volume/revenue ───────────────────────────────
@@ -144,7 +207,7 @@ export async function GET(req: NextRequest) {
     // order.deliveryLandmark. Unordered pair (A↔B) since routes are
     // bidirectional — see lib/delivery/pricing.ts.
     const routeStats = new Map<string, { zoneA: string; zoneB: string; count: number; totalDeliveryFee: number; riderTotal: number }>()
-    const periodOrders = (period === 'all' ? allCompletedOrders : periodCompletedOrders) as any[]
+    const periodOrders = period === 'all' ? allCompletedOrders : periodCompletedOrders
     for (const order of periodOrders) {
       const pickup = order.product?.landmark?.trim()
       const dropoff = order.deliveryLandmark?.trim()
@@ -168,12 +231,19 @@ export async function GET(req: NextRequest) {
     const today = sumOrders(todayCompletedOrders)
     const pending = sumOrders(pendingOrders)
 
-    const referralPaidOut = Number(referralStats._sum.amount ?? 0)
+    const allTimeReferralRewards = Number(allReferralStats._sum.amount ?? 0)
+    const periodReferralRewards = Number(periodReferralStats._sum.amount ?? 0)
+    const thisMonthReferralRewards = Number(thisMonthReferralStats._sum.amount ?? 0)
+    const lastMonthReferralRewards = Number(lastMonthReferralStats._sum.amount ?? 0)
+    const todayReferralRewards = Number(todayReferralStats._sum.amount ?? 0)
 
-    const netAllTime = allTime.platformCommission - allTime.flutterwaveFees - referralPaidOut
-    const netThisMonth = thisMonth.platformCommission - thisMonth.flutterwaveFees
-    const netLastMonth = lastMonth.platformCommission - lastMonth.flutterwaveFees
-    const netToday = today.platformCommission - today.flutterwaveFees
+    const netAllTime = allTime.platformCommission - allTime.flutterwaveFees - allTimeReferralRewards
+    const netSelectedPeriod = selectedPeriod.platformCommission
+      - selectedPeriod.flutterwaveFees
+      - periodReferralRewards
+    const netThisMonth = thisMonth.platformCommission - thisMonth.flutterwaveFees - thisMonthReferralRewards
+    const netLastMonth = lastMonth.platformCommission - lastMonth.flutterwaveFees - lastMonthReferralRewards
+    const netToday = today.platformCommission - today.flutterwaveFees - todayReferralRewards
     const netPending = pending.platformCommission - pending.flutterwaveFees
 
     const sellersAvailableNow = totalSellersBalance._sum.availableBalance?.toNumber() ?? 0
@@ -183,13 +253,6 @@ export async function GET(req: NextRequest) {
 
     const totalOwedToSellers = sellersAvailableNow + sellersPending
     const totalOwedToRiders = ridersAvailableNow + ridersPending
-
-    const safeToWithdraw = Math.max(
-      0,
-      netAllTime - sellersAvailableNow - ridersAvailableNow,
-    )
-
-    const flutterwaveHeldApprox = allTime.totalAmount
 
     const topSellers = await Promise.all(
       topSellersRaw.map(async (s) => {
@@ -217,7 +280,9 @@ export async function GET(req: NextRequest) {
           orders: selectedPeriod.count,
           platformEarned: selectedPeriod.platformCommission,
           flutterwaveFees: selectedPeriod.flutterwaveFees,
-          netAfterFees: selectedPeriod.platformCommission - selectedPeriod.flutterwaveFees,
+          referralRewards: periodReferralRewards,
+          referralRewardCount: periodReferralStats._count,
+          netAfterDeductions: netSelectedPeriod,
         },
         flutterwaveFeeConfig,
         platform: {
@@ -272,22 +337,16 @@ export async function GET(req: NextRequest) {
           ridersPending,
         },
         referrals: {
-          totalPaidOut: referralPaidOut,
-          totalRewards: referralStats._count,
+          totalCredited: Number(periodReferralStats._sum.amount ?? 0),
+          totalRewards: periodReferralStats._count,
+          allTimeCredited: allTimeReferralRewards,
+          allTimeRewards: allReferralStats._count,
+        },
+        dataQuality: {
+          completedOrdersMissingCompletedAt,
+          completedOrdersMissingPayment,
         },
         topRoutes,
-        withdrawal: {
-          safeToWithdraw,
-          flutterwaveHeldApprox,
-          breakdown: {
-            grossCommission: allTime.platformCommission,
-            minusFlutterwaveFees: allTime.flutterwaveFees,
-            minusReferralPayouts: referralPaidOut,
-            minusSellersAvailable: sellersAvailableNow,
-            minusRidersAvailable: ridersAvailableNow,
-            result: safeToWithdraw,
-          },
-        },
         topSellers,
       },
     })

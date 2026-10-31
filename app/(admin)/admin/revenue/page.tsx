@@ -2,7 +2,7 @@
 // app/(admin)/admin/revenue/page.tsx
 
 import { useState, useEffect, useCallback } from 'react'
-import { AlertCircle, Truck, Info, ShieldCheck, Building2, RefreshCw } from 'lucide-react'
+import { AlertCircle, Info, Building2, RefreshCw } from 'lucide-react'
 import {
   AdminHeader, AdminPanel, StatGrid, AdminButton, type AdminStat,
 } from '@/components/admin/AdminUI'
@@ -11,6 +11,55 @@ import { DataRow } from '@/components/ui/Shell'
 interface University { id: string; name: string; shortName: string }
 
 type RevenuePeriod = 'today' | 'week' | 'month' | 'year' | 'all'
+
+interface RevenueData {
+  period: {
+    revenue: number
+    orders: number
+    platformEarned: number
+    flutterwaveFees: number
+    referralRewards: number
+    netAfterDeductions: number
+  }
+  platform: {
+    gross: { allTime: number; thisMonth: number; lastMonth: number; today: number }
+    net: { allTime: number; thisMonth: number; lastMonth: number; today: number }
+  }
+  obligations: {
+    totalOwedToSellers: number
+    totalOwedToRiders: number
+    sellersAvailableNow: number
+    sellersPending: number
+    ridersAvailableNow: number
+    ridersPending: number
+  }
+  referrals: {
+    totalCredited: number
+    totalRewards: number
+    allTimeCredited: number
+    allTimeRewards: number
+  }
+  dataQuality: {
+    completedOrdersMissingCompletedAt: number
+    completedOrdersMissingPayment: number
+  }
+  thisMonth: { orders: number }
+  lastMonth: { orders: number }
+  today: { orders: number }
+  topSellers: {
+    name: string
+    totalOrders: number
+    totalRevenue: number
+    platformEarned: number
+  }[]
+  topRoutes: {
+    zoneA: string
+    zoneB: string
+    count: number
+    totalDeliveryFee: number
+    riderTotal: number
+  }[]
+}
 
 const REVENUE_PERIOD_LABELS: Record<RevenuePeriod, string> = {
   today: 'Today',
@@ -21,8 +70,9 @@ const REVENUE_PERIOD_LABELS: Record<RevenuePeriod, string> = {
 }
 
 export default function RevenuePage() {
-  const [revenue, setRevenue]           = useState<any>(null)
+  const [revenue, setRevenue]           = useState<RevenueData | null>(null)
   const [loading, setLoading]           = useState(true)
+  const [error, setError]               = useState<string | null>(null)
   const [selectedUni, setSelectedUni]   = useState('all')
   const [selectedPeriod, setSelectedPeriod] = useState<RevenuePeriod>('all')
   const [universities, setUniversities] = useState<University[]>([])
@@ -37,20 +87,29 @@ export default function RevenuePage() {
 
   const fetchRevenue = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const token = localStorage.getItem('adminToken')
       const params = new URLSearchParams({ period: selectedPeriod })
       if (selectedUni !== 'all') params.set('universityId', selectedUni)
       const qs = `?${params.toString()}`
       const response = await fetch(`/api/admin/revenue${qs}`, {
+        cache: 'no-store',
         headers: { Authorization: `Bearer ${token}` },
       })
-      if (response.ok) {
-        const data = await response.json()
-        setRevenue(data.revenue)
+      const data = await response.json().catch(() => ({})) as {
+        error?: string
+        revenue?: RevenueData
       }
+      if (!response.ok) {
+        throw new Error(data.error || `Revenue request failed (${response.status})`)
+      }
+      if (!data.revenue) throw new Error('Revenue response did not contain report data')
+      setRevenue(data.revenue)
     } catch (error) {
       console.error('Failed to fetch revenue:', error)
+      setRevenue(null)
+      setError(error instanceof Error ? error.message : 'Failed to fetch revenue')
     } finally {
       setLoading(false)
     }
@@ -70,18 +129,23 @@ export default function RevenuePage() {
     )
   }
 
-  const p           = revenue?.platform      || {}
-  const gross       = p.gross                || {}
-  const net         = p.net                  || {}
-  const fees        = p.flutterwaveFees            || {}
-  const feeConfig    = revenue?.flutterwaveFeeConfig || {}
-  const obligations = revenue?.obligations   || {}
-  const withdrawal  = revenue?.withdrawal    || {}
-  const referrals   = revenue?.referrals     || {}
-  const topSellers  = revenue?.topSellers    || []
-  const topRoutes   = revenue?.topRoutes     || []
-  const breakdown   = withdrawal.breakdown   || {}
-  const periodData  = revenue?.period        || {}
+  if (error || !revenue) {
+    return (
+      <AdminPanel title="Revenue data unavailable">
+        <p className="text-sm text-ink-secondary">{error || 'No revenue data was returned.'}</p>
+        <AdminButton onClick={fetchRevenue} icon={RefreshCw}>Try again</AdminButton>
+      </AdminPanel>
+    )
+  }
+
+  const gross       = revenue.platform.gross
+  const net         = revenue.platform.net
+  const obligations = revenue.obligations
+  const referrals   = revenue.referrals
+  const topSellers  = revenue.topSellers
+  const topRoutes   = revenue.topRoutes
+  const periodData  = revenue.period
+  const dataQuality = revenue.dataQuality
   const periodLabel = REVENUE_PERIOD_LABELS[selectedPeriod]
 
   return (
@@ -153,30 +217,40 @@ export default function RevenuePage() {
               note: 'Before fees',
             },
             {
-              label: 'Net after fees',
-              value: `₦${(periodData.netAfterFees || 0).toLocaleString()}`,
-              note: `Flutterwave fees ₦${(periodData.flutterwaveFees || 0).toLocaleString()}`,
+              label: 'Estimated net earnings',
+              value: `₦${(periodData.netAfterDeductions || 0).toLocaleString()}`,
+              note: `Est. fees ₦${(periodData.flutterwaveFees || 0).toLocaleString()} · rewards ₦${(periodData.referralRewards || 0).toLocaleString()}`,
             },
           ] as AdminStat[]}
         />
       </AdminPanel>
 
-      {/* ── Safe withdrawal ──────────────────────────────────────────────
-          The single most consequential number on the panel, so it gets the
-          page's only large figure and a full derivation underneath it. */}
+      {(dataQuality.completedOrdersMissingCompletedAt > 0 || dataQuality.completedOrdersMissingPayment > 0) && (
+        <div className="flex items-start gap-3 border border-warning/25 bg-warning/5 p-4 text-sm text-warning">
+          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
+          <span className="leading-relaxed">
+            Report data is incomplete: {dataQuality.completedOrdersMissingCompletedAt || 0} completed orders
+            lack a completion time, and {dataQuality.completedOrdersMissingPayment || 0} lack a payment record.
+            Period totals cannot reliably place orders without completion times.
+          </span>
+        </div>
+      )}
+
+      {/* ── Estimated earnings ─────────────────────────────────────────── */}
       <section className="border border-border bg-card">
         <div className="flex items-start gap-4 border-b border-border p-5 sm:p-6">
           <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-success/30 bg-success/5">
-            <ShieldCheck className="h-5 w-5 text-success" strokeWidth={1.5} />
+            <Info className="h-5 w-5 text-success" strokeWidth={1.5} />
           </span>
           <div className="min-w-0">
-            <p className="ui-eyebrow mb-3">Safe to withdraw</p>
+            <p className="ui-eyebrow mb-3">Estimated earnings · {periodLabel}</p>
             <p className="ui-figure text-[clamp(2rem,5vw,3rem)] leading-none text-success">
-              ₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}
+              ₦{(periodData.netAfterDeductions || 0).toLocaleString()}
             </p>
             <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-secondary">
-              Your actual profit from the Flutterwave-managed balance, after every deduction —
-              including money still owed to sellers and riders.
+              Estimated platform commission for {periodLabel.toLowerCase()} after estimated collection fees and referral rewards.
+              This is not your live Flutterwave balance or a safe-to-withdraw amount. Fees are estimated from
+              order amounts; reconcile with Flutterwave settlement records, especially for wallet top-ups.
             </p>
           </div>
         </div>
@@ -185,59 +259,41 @@ export default function RevenuePage() {
           <p className="ui-eyebrow mb-4">How it derives</p>
           <div className="ui-divide">
             <DataRow
-              label="Gross commission (all time)"
-              value={<span className="text-ink">+ ₦{(breakdown.grossCommission || 0).toLocaleString()}</span>}
+              label={`Gross platform commission (${periodLabel.toLowerCase()})`}
+              value={<span className="text-ink">+ ₦{(periodData.platformEarned || 0).toLocaleString()}</span>}
             />
             <DataRow
-              label="Flutterwave fees (2%, capped ₦2,000)"
-              value={<span className="text-danger">− ₦{(breakdown.minusFlutterwaveFees || 0).toLocaleString()}</span>}
+              label="Estimated Flutterwave collection fees"
+              value={<span className="text-danger">− ₦{(periodData.flutterwaveFees || 0).toLocaleString()}</span>}
             />
             <DataRow
-              label="Referral rewards paid out"
-              value={<span className="text-danger">− ₦{(breakdown.minusReferralPayouts || 0).toLocaleString()}</span>}
+              label={`Referral rewards credited (${periodLabel.toLowerCase()})`}
+              value={<span className="text-danger">− ₦{(periodData.referralRewards || 0).toLocaleString()}</span>}
             />
             <DataRow
-              label="Seller balances (settled, unwithdrawn)"
-              value={<span className="text-warning">− ₦{(breakdown.minusSellersAvailable || 0).toLocaleString()}</span>}
-            />
-            <DataRow
-              label="Rider balances (settled, unwithdrawn)"
-              value={<span className="text-warning">− ₦{(breakdown.minusRidersAvailable || 0).toLocaleString()}</span>}
-            />
-            <DataRow
-              label="Net profit"
+              label={`Estimated net earnings (${periodLabel.toLowerCase()})`}
               emphasis
-              value={<span className="text-success">₦{(withdrawal.safeToWithdraw || 0).toLocaleString()}</span>}
+              value={<span className="text-success">₦{(periodData.netAfterDeductions || 0).toLocaleString()}</span>}
             />
           </div>
 
-          {(breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0) > 0 && (
-            <div className="mt-6 flex items-start gap-3 border border-warning/25 bg-warning/5 p-4 text-sm text-warning">
-              <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
-              <span className="leading-relaxed">
-                ₦{((breakdown.minusSellersAvailable || 0) + (breakdown.minusRidersAvailable || 0)).toLocaleString()}{' '}
-                of the managed balance belongs to sellers and riders who have not withdrawn yet.
-                That amount must stay in the account.
-              </span>
-            </div>
-          )}
         </div>
       </section>
 
       {/* ── Net profit over time ── */}
       <div>
         <AdminHeader
-          eyebrow="Net profit"
-          title="Over time"
-          description="These figures compare fixed periods; the selected date filter applies to the revenue summary and rankings."
+          eyebrow="Estimated earnings"
+          title="Over fixed periods"
+          description="These estimates use completed-order dates. The selected filter applies to the summary, rankings, and referral rewards; user balances below are current snapshots."
           className="mb-6"
         />
         <StatGrid
           columns={4}
           stats={[
             {
-              label: 'All time',
-              value: `₦${(withdrawal.safeToWithdraw || 0).toLocaleString()}`,
+              label: 'All time (estimate)',
+              value: `₦${(net.allTime || 0).toLocaleString()}`,
               note: `Gross ₦${(gross.allTime || 0).toLocaleString()}`,
             },
             {
@@ -261,11 +317,11 @@ export default function RevenuePage() {
 
       {/* ── Obligations ── */}
       <AdminPanel
-        title="Money owed to users"
+        title="Current money owed to users"
         description={
           <span className="inline-flex items-center gap-1.5">
             <Info className="h-3 w-3" strokeWidth={2} />
-            Keep this in the managed balance — it belongs to sellers and riders.
+            Live balance snapshot, not historical period totals. Keep this money available for sellers and riders.
           </span>
         }
         padded={false}
@@ -295,28 +351,31 @@ export default function RevenuePage() {
       </AdminPanel>
 
       {/* ── Referrals ── */}
-      <AdminPanel title="Referral rewards" padded={false}>
+      <AdminPanel title={`Referral rewards — ${periodLabel}`} padded={false}>
         <div className="grid gap-px bg-border sm:grid-cols-2">
           <div className="bg-card p-5">
-            <p className="ui-mono ui-mono-sm text-ink-muted">Total paid out</p>
+            <p className="ui-mono ui-mono-sm text-ink-muted">Credited in this period</p>
             <p className="ui-figure mt-2.5 text-2xl text-ink">
-              ₦{(referrals.totalPaidOut || 0).toLocaleString()}
+              ₦{(referrals.totalCredited || 0).toLocaleString()}
             </p>
           </div>
           <div className="bg-card p-5">
-            <p className="ui-mono ui-mono-sm text-ink-muted">Rewards given</p>
+            <p className="ui-mono ui-mono-sm text-ink-muted">Rewards credited</p>
             <p className="ui-figure mt-2.5 text-2xl text-ink">
               {(referrals.totalRewards || 0).toLocaleString()}
             </p>
           </div>
         </div>
+        <p className="px-5 py-3 text-xs text-ink-muted">
+          All-time credited: ₦{(referrals.allTimeCredited || 0).toLocaleString()} ({(referrals.allTimeRewards || 0).toLocaleString()} rewards)
+        </p>
       </AdminPanel>
 
       {/* ── Top Sellers ── */}
       {topSellers.length > 0 && (
         <AdminPanel title={`Top sellers by revenue — ${periodLabel}`} padded={false}>
           <div className="ui-divide">
-            {topSellers.map((seller: any, i: number) => (
+            {topSellers.map((seller, i) => (
               <div key={i} className="flex items-center gap-4 px-5 py-3.5">
                 <span className="ui-mono ui-mono-sm w-5 flex-shrink-0 text-ink-muted">
                   {String(i + 1).padStart(2, '0')}
@@ -349,7 +408,7 @@ export default function RevenuePage() {
           padded={false}
         >
           <div className="ui-divide">
-            {topRoutes.map((route: any, i: number) => (
+            {topRoutes.map((route, i) => (
               <div key={i} className="flex items-center gap-4 px-5 py-3.5">
                 <span className="ui-mono ui-mono-sm w-5 flex-shrink-0 text-ink-muted">
                   {String(i + 1).padStart(2, '0')}
