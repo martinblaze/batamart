@@ -171,7 +171,9 @@ function SignupForm() {
   const [agreedToTerms, setAgreedToTerms]     = useState(false)
   const [referralCode, setReferralCode]       = useState(() => {
     if (typeof window === 'undefined') return ''
-    const urlRef = new URLSearchParams(window.location.search).get('ref')
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('fm')?.trim()) return ''
+    const urlRef = params.get('ref')
     return hasSignupAccessCode(urlRef) ? '' : normalizeSignupAccessCode(urlRef || '')
   })
   const [signupAccessCode, setSignupAccessCode] = useState(() => {
@@ -204,6 +206,14 @@ function SignupForm() {
 
   // ── Update countdown display without blocking signup access ──────────────────
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const fieldCode = (params.get('fm') || '').trim().toUpperCase()
+    if (fieldCode) {
+      setFieldMarketerCode(fieldCode)
+      setReferralCode('')
+      return
+    }
+
     const ref = normalizeSignupAccessCode(searchParams.get('ref') || new URLSearchParams(window.location.search).get('ref'))
     if (hasSignupAccessCode(ref)) {
       setSignupAccessCode(ref)
@@ -236,10 +246,10 @@ function SignupForm() {
     setHostelName(draft.hostelName ?? '')
     setRoomNumber(draft.roomNumber ?? '')
     setDeliveryPhone(draft.deliveryPhone ?? '')
-    setReferralCode(draft.referralCode ?? '')
     setSignupAccessCode(draft.signupAccessCode ?? '')
     const urlFm = (new URLSearchParams(window.location.search).get('fm') || '').trim().toUpperCase()
     setFieldMarketerCode(urlFm || draft.fieldMarketerCode || '')
+    setReferralCode(urlFm ? '' : draft.referralCode ?? '')
     setShowEmailForm(Boolean(draft.showEmailForm))
     setDraftRestored(true)
   }, [])
@@ -453,7 +463,7 @@ function SignupForm() {
         body: JSON.stringify({
           email, name, phone: accountPhone, password, otpSessionToken,
           role:         'BUYER', // ← Always sign up as BUYER. Upgrade to SELLER via become-seller flow.
-          referralCode: referralCode || undefined,
+          referralCode: fieldMarketerCode ? undefined : referralCode || undefined,
           username,
           signupAccessCode: activeSignupAccessCode || undefined,
           fieldMarketerCode: fieldMarketerCode || undefined,
@@ -696,7 +706,7 @@ function SignupForm() {
               {/* Everyone signs up as a BUYER. To sell, they click "Sell Product"
                   which redirects them to /become-seller to upgrade their account. */}
 
-              <div>
+              {!fieldMarketerCode && <div>
                 <label className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-ink-secondary">Referral Code (Optional)</label>
                 <input
                   type="text"
@@ -706,7 +716,12 @@ function SignupForm() {
                   className="h-12 w-full rounded-lg border border-border bg-card px-4 text-[15px] uppercase text-ink outline-none transition-[border-color,box-shadow] duration-200 tracking-[0.12em] focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
                 <p className="text-xs text-ink-muted mt-1">Paste a code from a friend or use their referral link.</p>
-              </div>
+              </div>}
+              {fieldMarketerCode && (
+                <div className="rounded-lg border border-success/20 bg-success/5 p-3 text-sm text-success">
+                  Field-marketer code <strong>{fieldMarketerCode}</strong> applied
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -838,10 +853,11 @@ function SignupForm() {
 
           <ErrorBox error={error} />
 
-          {referralCode && (
+          {(fieldMarketerCode || referralCode) && (
             <div className="mb-4 p-3 bg-success/5 rounded-lg border border-success/20 text-sm text-success flex items-center gap-2">
               <Gift className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
-              Referral code <strong>{referralCode}</strong> applied
+              {fieldMarketerCode ? 'Field-marketer code' : 'Referral code'}{' '}
+              <strong>{fieldMarketerCode || referralCode}</strong> applied
             </div>
           )}
 
@@ -994,10 +1010,11 @@ function SignupForm() {
             />
           </div>
 
-          {referralCode && (
+          {(fieldMarketerCode || referralCode) && (
             <div className="p-3 bg-success/5 rounded-lg border border-success/20 text-sm text-success flex items-center gap-2">
               <Gift className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
-              Referral code <strong>{referralCode}</strong> applied
+              {fieldMarketerCode ? 'Field-marketer code' : 'Referral code'}{' '}
+              <strong>{fieldMarketerCode || referralCode}</strong> applied
             </div>
           )}
 

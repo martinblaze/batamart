@@ -243,9 +243,17 @@ export default function FieldMarketersPage() {
               <p className="ui-eyebrow mb-1">Leaderboard</p>
               <h2 className="text-xl text-ink">Top marketers</h2>
             </div>
-            <p className="flex items-center gap-1.5 text-xs text-ink-secondary">
-              <Gift className="h-4 w-4" /> Top 3 win gifts
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="flex items-center gap-1.5 text-xs text-ink-secondary">
+                <Gift className="h-4 w-4" /> Top 3 win gifts
+              </p>
+              <Link
+                href="/referrals/leaderboard"
+                className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Trophy className="h-4 w-4" /> Referral Top 10
+              </Link>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-px border border-border bg-border">

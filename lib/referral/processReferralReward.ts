@@ -10,6 +10,7 @@
 //     after it in confirm-delivery), and only if the order had a rider.
 //   - No cap on how much a referrer can earn.
 //   - ReferralReward.orderId is unique, so each order can only ever pay once.
+//   - Attribution can be a regular referral code or a field-marketer signup link.
 
 import { Prisma } from '@prisma/client'
 
@@ -51,18 +52,25 @@ export async function processReferralReward(
 
   const buyer = await tx.user.findUnique({
     where: { id: buyerId },
-    select: { referredById: true, email: true },
+    select: {
+      referredById: true,
+      email: true,
+      fieldMarketerSignup: {
+        select: { marketer: { select: { userId: true } } },
+      },
+    },
   })
-  if (!buyer?.referredById) return
+  const referrerId = buyer?.fieldMarketerSignup?.marketer.userId ?? buyer?.referredById
+  if (!buyer || !referrerId) return
 
   // Safety check: buyer cannot be their own referrer
-  if (buyer.referredById === buyerId) {
-    console.warn(`[FRAUD] Buyer ${buyerId} (${buyer.email}) has referredById pointing to themselves!`)
+  if (referrerId === buyerId) {
+    console.warn(`[FRAUD] Buyer ${buyerId} (${buyer.email}) has a referral source pointing to themselves!`)
     return
   }
 
   const referrer = await tx.user.findUnique({
-    where: { id: buyer.referredById },
+    where: { id: referrerId },
     select: { id: true, availableBalance: true, email: true },
   })
   if (!referrer) return

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const [referrals, rewards] = await Promise.all([
+    const [directReferrals, marketerReferrals, rewards] = await Promise.all([
       prisma.user.findMany({
         where: { referredById: fullUser.id },
         select: {
@@ -37,6 +37,24 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       }),
 
+      prisma.fieldMarketerSignup.findMany({
+        where: { marketer: { userId: fullUser.id } },
+        select: {
+          referredUser: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+              orders: {
+                where: { status: 'COMPLETED' },
+                select: { id: true },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+
       prisma.referralReward.findMany({
         where:   { referrerId: fullUser.id },
         orderBy: { createdAt: 'desc' },
@@ -46,9 +64,38 @@ export async function GET(request: NextRequest) {
       }),
     ])
 
+    const referralsById = new Map<string, {
+      id: string
+      name: string
+      joinedAt: Date
+      completedOrders: number
+      source: 'REFERRAL_CODE' | 'FIELD_MARKETER'
+    }>()
+    for (const referral of directReferrals) {
+      referralsById.set(referral.id, {
+        id: referral.id,
+        name: referral.name,
+        joinedAt: referral.createdAt,
+        completedOrders: referral.orders.length,
+        source: 'REFERRAL_CODE',
+      })
+    }
+    for (const signup of marketerReferrals) {
+      const referral = signup.referredUser
+      referralsById.set(referral.id, {
+        id: referral.id,
+        name: referral.name,
+        joinedAt: referral.createdAt,
+        completedOrders: referral.orders.length,
+        source: 'FIELD_MARKETER' as const,
+      })
+    }
+
+    const referrals = Array.from(referralsById.values())
+      .sort((a, b) => b.joinedAt.getTime() - a.joinedAt.getTime())
     const totalEarnings       = rewards.reduce((sum, r) => sum + r.amount, 0)
     const totalReferrals      = referrals.length
-    const totalReferralOrders = referrals.reduce((sum, u) => sum + u.orders.length, 0)
+    const totalReferralOrders = referrals.reduce((sum, referral) => sum + referral.completedOrders, 0)
 
     // Use NEXT_PUBLIC_APP_URL so the link works on any domain (custom domain,
     // preview deployments, etc.) — never hardcode bata-mart.vercel.app here.
@@ -64,8 +111,9 @@ export async function GET(request: NextRequest) {
       referrals: referrals.map(r => ({
         id:              r.id,
         name:            r.name,
-        joinedAt:        r.createdAt,
-        completedOrders: r.orders.length,
+        joinedAt:        r.joinedAt,
+        completedOrders: r.completedOrders,
+        source:          r.source,
       })),
       recentRewards: rewards.slice(0, 20).map(r => ({
         id:          r.id,

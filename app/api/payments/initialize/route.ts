@@ -10,6 +10,7 @@ import { getDeliveryFee } from '@/lib/delivery/pricing'
 import { RIDER_SHARE_PERCENT, PLATFORM_SHARE_PERCENT } from '@/lib/delivery/commission'
 import { isValidCampaignKey } from '@/lib/campaigns'
 import { resolveCheckoutItems } from '@/lib/checkout/resolve-items'
+import { getReferralLeaderboard, syncReferralLeaderboardNotifications } from '@/lib/referral/leaderboard'
 
 export const dynamic = 'force-dynamic'
 
@@ -505,6 +506,22 @@ export async function createOrders(
         notifySellerOutOfStock(alert.sellerId, alert.productId, alert.productName)
       )
     ).catch(() => { })
+  }
+
+  const buyerAttribution = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      referredById: true,
+      fieldMarketerSignup: { select: { id: true } },
+    },
+  })
+  if (buyerAttribution?.referredById || buyerAttribution?.fieldMarketerSignup) {
+    try {
+      const leaderboard = await getReferralLeaderboard()
+      await syncReferralLeaderboardNotifications(leaderboard.entries)
+    } catch (error) {
+      console.error('[REFERRAL-LEADERBOARD] Paid order rank refresh failed:', error)
+    }
   }
 
   console.log('🎉 All orders created:', createdOrders.length, '| Batch:', batchNumber)

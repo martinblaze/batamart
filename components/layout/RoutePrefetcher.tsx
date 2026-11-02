@@ -11,6 +11,7 @@ const ROUTES_TO_PREFETCH = [
   '/sell',
   '/wallet',
   '/referrals',
+  '/referrals/leaderboard',
   '/myprofile',
   '/dispute/select-order',
   '/most-bought',

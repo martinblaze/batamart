@@ -9,6 +9,7 @@ import { verifyOtpSessionToken } from '@/app/api/auth/verify-otp/route'
 import { verifyGoogleSignupToken } from '@/lib/auth/google-signup-token'
 import { normalizeUsername, validateUsername } from '@/lib/username'
 import { FIELD_MARKETER_PAY_PER_SIGNUP } from '@/lib/field-marketer/config'
+import { getReferralLeaderboard, syncReferralLeaderboardNotifications } from '@/lib/referral/leaderboard'
 import { checkRateLimitDistributed, getIpKey, incrementRateLimit } from '@/lib/security/rate-limit'
 
 const SIGNUP_WINDOW_MS = 60 * 60 * 1000
@@ -138,10 +139,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ── Resolve referral code ──────────────────────────────────────────────
+    // A signup has one referral source. A field-marketer link takes priority
+    // so stale regular referral codes cannot override its ?fm= attribution.
     let referredById: string | undefined = undefined
+    let marketerForSignup: { id: string; userId: string } | null = null
 
-    if (referralCode && typeof referralCode === 'string') {
+    const normalizedFieldMarketerCode =
+      typeof fieldMarketerCode === 'string' ? fieldMarketerCode.trim().toUpperCase() : ''
+    if (normalizedFieldMarketerCode) {
+      marketerForSignup = await prisma.fieldMarketer.findUnique({
+        where: { code: normalizedFieldMarketerCode },
+        select: { id: true, userId: true },
+      })
+      if (!marketerForSignup) {
+        return NextResponse.json({ error: 'This field-marketer signup link is invalid or expired' }, { status: 400 })
+      }
+    } else if (referralCode && typeof referralCode === 'string') {
       const referrer = await prisma.user.findUnique({
         where:  { referralCode: referralCode.trim().toUpperCase() },
         select: { id: true },
@@ -154,61 +167,50 @@ export async function POST(request: NextRequest) {
     const hashedPassword  = await hashPassword(password)
     const newReferralCode = await generateUniqueReferralCode()
 
-    // ── Always create as BUYER ─────────────────────────────────────────────
-    // Sellers are created exclusively via POST /api/auth/become-seller.
-    // This prevents confusion where buyers accidentally got seller accounts.
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name:         name.trim(),
-        phone,
-        password:     hashedPassword,
-        role:         'BUYER',
-        referralCode: newReferralCode,
-        ...(username ? { username } : {}),
-        universityId: university.id,
-        // ── Delivery location ────────────────────────────────────────────
-        hostelName:   String(hostelName).trim(),
-        roomNumber:   String(roomNumber).trim(),
-        landmark:     String(landmark).trim(),
-        ...(referredById ? { referredById } : {}),
-      },
-    })
+    const { user, marketerNotice } = await prisma.$transaction(async tx => {
+      // Sellers are created exclusively via POST /api/auth/become-seller.
+      const createdUser = await tx.user.create({
+        data: {
+          email,
+          name: name.trim(),
+          phone,
+          password: hashedPassword,
+          role: 'BUYER',
+          referralCode: newReferralCode,
+          ...(username ? { username } : {}),
+          universityId: university.id,
+          hostelName: String(hostelName).trim(),
+          roomNumber: String(roomNumber).trim(),
+          landmark: String(landmark).trim(),
+          ...(marketerForSignup ? {} : referredById ? { referredById } : {}),
+        },
+      })
 
-    // ── Field marketer payout ──────────────────────────────────────────────
-    // Best-effort: a failed credit must never fail the signup itself.
-    let marketerNotice: { userId: string; total: number } | null = null
-    if (fieldMarketerCode && typeof fieldMarketerCode === 'string') {
-      try {
-        const marketer = await prisma.fieldMarketer.findUnique({
-          where:  { code: fieldMarketerCode.trim().toUpperCase() },
-          select: { id: true, userId: true },
-        })
-        if (marketer && marketer.userId !== user.id) {
-          const [, updatedMarketer] = await prisma.$transaction([
-            prisma.fieldMarketerSignup.create({
-              data: {
-                marketerId:     marketer.id,
-                referredUserId: user.id,
-                amount:         FIELD_MARKETER_PAY_PER_SIGNUP,
-              },
-            }),
-            // Paid into the separate marketing wallet, not User.availableBalance.
-            prisma.fieldMarketer.update({
-              where: { id: marketer.id },
-              data: {
-                totalSignups: { increment: 1 },
-                totalEarned:  { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
-                balance:      { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
-              },
-            }),
-          ])
-          marketerNotice = { userId: marketer.userId, total: updatedMarketer.totalSignups }
-        }
-      } catch (err) {
-        console.error('Field marketer credit failed for new user', user.id, err)
+      if (!marketerForSignup || marketerForSignup.userId === createdUser.id) {
+        return { user: createdUser, marketerNotice: null }
       }
-    }
+
+      await tx.fieldMarketerSignup.create({
+        data: {
+          marketerId: marketerForSignup.id,
+          referredUserId: createdUser.id,
+          amount: FIELD_MARKETER_PAY_PER_SIGNUP,
+        },
+      })
+      const updatedMarketer = await tx.fieldMarketer.update({
+        where: { id: marketerForSignup.id },
+        data: {
+          totalSignups: { increment: 1 },
+          totalEarned: { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
+          balance: { increment: FIELD_MARKETER_PAY_PER_SIGNUP },
+        },
+      })
+
+      return {
+        user: createdUser,
+        marketerNotice: { userId: marketerForSignup.userId, total: updatedMarketer.totalSignups },
+      }
+    })
 
     // Notifications: awaited so a serverless function isn't frozen mid-send.
     await Promise.allSettled([
@@ -216,6 +218,13 @@ export async function POST(request: NextRequest) {
       ...(referredById ? [notifyReferralJoined(referredById, user.name)] : []),
       ...(marketerNotice ? [notifyMarketerSignup(marketerNotice.userId, FIELD_MARKETER_PAY_PER_SIGNUP, marketerNotice.total)] : []),
     ])
+
+    try {
+      const leaderboard = await getReferralLeaderboard()
+      await syncReferralLeaderboardNotifications(leaderboard.entries)
+    } catch (error) {
+      console.error('[REFERRAL-LEADERBOARD] Signup rank refresh failed:', error)
+    }
 
     const token = generateToken(user.id, user.phone)
 

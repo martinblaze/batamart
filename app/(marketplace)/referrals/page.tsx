@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Gift, Copy, Check, Users, TrendingUp, Award,
-  Share2, ChevronRight, Loader2, AlertTriangle,
+  Share2, ChevronRight, Loader2, AlertTriangle, Trophy,
 } from 'lucide-react'
 
 interface ReferralStats {
@@ -15,7 +15,13 @@ interface ReferralStats {
   totalReferrals: number
   totalEarnings: number
   totalReferralOrders: number
-  referrals: { id: string; name: string; joinedAt: string; completedOrders: number }[]
+  referrals: {
+    id: string
+    name: string
+    joinedAt: string
+    completedOrders: number
+    source: 'REFERRAL_CODE' | 'FIELD_MARKETER'
+  }[]
   recentRewards: {
     id: string
     amount: number
@@ -147,6 +153,16 @@ export default function ReferralsPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 -mt-6 space-y-5">
+        <Link
+          href="/referrals/leaderboard"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-primary transition-colors hover:bg-primary/10"
+        >
+          <span>
+            <span className="block font-semibold">Referral leaderboard</span>
+            <span className="mt-1 block text-xs text-ink-secondary">See the Top 10 and Mega Top Ambassadors</span>
+          </span>
+          <Trophy className="h-5 w-5 shrink-0" />
+        </Link>
 
         {/* Referral Code Card */}
         <div className="bg-card rounded-2xl shadow-soft border border-border p-5">
@@ -274,6 +290,9 @@ export default function ReferralsPage() {
                   <div>
                     <p className="text-sm font-semibold text-ink">{ref.name}</p>
                     <p className="text-xs text-ink-muted">Joined {fmtDate(ref.joinedAt)}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-wide text-ink-muted">
+                      {ref.source === 'FIELD_MARKETER' ? 'Field-marketer link' : 'Referral code'}
+                    </p>
                   </div>
                   <span className="text-xs font-medium text-ink-secondary bg-surface rounded-full px-3 py-1">
                     {ref.completedOrders} order{ref.completedOrders !== 1 ? 's' : ''}
