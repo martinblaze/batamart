@@ -152,7 +152,7 @@ export default function ReferralsPage() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 -mt-6 space-y-5">
+      <div className="max-w-3xl mx-auto px-4 mt-4 space-y-5">
         <Link
           href="/referrals/leaderboard"
           className="flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-primary transition-colors hover:bg-primary/10"
