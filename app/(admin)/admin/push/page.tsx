@@ -127,6 +127,82 @@ function GirlfriendsDayAnnounceCard() {
   )
 }
 
+type SellerRemindersResult = {
+  success: boolean
+  message: string
+  audience: number
+  remaining: number
+  failed: number
+  runId: string
+}
+
+function SellerProductRemindersCard() {
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<SellerRemindersResult | null>(null)
+  const [error, setError] = useState('')
+  const [runId, setRunId] = useState<string | null>(null)
+
+  const handleSend = async () => {
+    if (!confirm('Send both personalized product reminders to every active seller with products? This sends in-app, push and email notifications where the seller has enabled them.')) return
+    setLoading(true)
+    setError('')
+    setResult(null)
+    try {
+      const id = runId ?? crypto.randomUUID()
+      setRunId(id)
+      const res = await adminFetch('/api/admin/push/seller-product-reminders', {
+        method: 'POST',
+        body: JSON.stringify({ runId: id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to send seller reminders.')
+        return
+      }
+      setResult(data)
+      setRunId(data.remaining > 0 || data.failed > 0 ? data.runId : null)
+    } catch {
+      setError('Unexpected error sending seller reminders.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <section className="border border-border bg-card">
+      <div className="flex items-start gap-4 border-b border-border p-5 sm:p-6">
+        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center border border-primary/25 bg-primary/5">
+          <Users className="h-4 w-4 text-primary" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <p className="ui-eyebrow mb-3">Seller campaign</p>
+          <h2 className="text-lg text-ink">Monthly product reminders</h2>
+          <p className="mt-2 max-w-[66ch] text-sm leading-relaxed text-ink-secondary">
+            Send two personalized reminders to every active seller with products: refresh most listings and confirm physical stock. Each seller&apos;s first name appears in the notification and email. Email uses the configured general email route, not Resend.
+          </p>
+        </div>
+      </div>
+      <div className="space-y-5 p-5 sm:p-6">
+        <div className="grid gap-3 text-sm text-ink-secondary sm:grid-cols-2">
+          <p className="border border-border p-4"><strong className="text-ink">Refresh listings:</strong> make a small update to most products.</p>
+          <p className="border border-border p-4"><strong className="text-ink">Check stock:</strong> update quantities and pause or remove unavailable products.</p>
+        </div>
+        <div className="flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-ink-secondary">
+            Includes in-app, opted-in push, and opted-in email. Sellers without an email address cannot receive email.
+          </p>
+          <AdminButton onClick={handleSend} disabled={loading} tone="ink" className="h-11 flex-shrink-0 px-6">
+            {loading ? 'Sending…' : runId ? 'Continue sending' : 'Send to sellers'}
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" strokeWidth={2} />}
+          </AdminButton>
+        </div>
+        {error && <StatusBanner kind="error">{error}</StatusBanner>}
+        {result && <StatusBanner kind={result.success ? 'success' : 'warning'}>{result.message}</StatusBanner>}
+      </div>
+    </section>
+  )
+}
+
 type AdminPushResult = {
   success: boolean
   message: string
@@ -268,6 +344,7 @@ This cannot be undone.`)
         description="Send a push to everyone, or to a single account, to verify delivery end to end."
       />
 
+      <SellerProductRemindersCard />
       <GirlfriendsDayAnnounceCard />
 
       <AdminPanel title="Send a push">
