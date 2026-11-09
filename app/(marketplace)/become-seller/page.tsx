@@ -8,17 +8,33 @@ import {
   ShoppingBag, PartyPopper,
 } from 'lucide-react'
 
+/** Same-site relative paths only ("/x", never "//x" or "/\x"), so `next` cannot be an open redirect. */
+function safeNext(raw: string | null): string | null {
+  if (!raw || raw.length > 500) return null
+  if (!raw.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return null
+  if (/[\u0000-\u001f]/.test(raw)) return null
+  try {
+    const u = new URL(raw, window.location.origin)
+    if (u.origin !== window.location.origin) return null
+  } catch {
+    return null
+  }
+  return raw
+}
+
 export default function BecomeSellerPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [done, setDone] = useState(false)
+  const [next, setNext] = useState<string | null>(null)
 
   useEffect(() => {
+    setNext(safeNext(new URLSearchParams(window.location.search).get('next')))
     const token = localStorage.getItem('token')
     if (!token) {
-      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)
     } else {
       setCheckingAuth(false)
     }
@@ -74,9 +90,19 @@ export default function BecomeSellerPage() {
             You can now list products. Set a withdrawal PIN in your wallet to enable payouts.
           </p>
           <div className="space-y-3">
+            {next && (
+              <button
+                onClick={() => router.push(next)}
+                className="w-full bg-primary text-white h-11 rounded-lg font-medium hover:brightness-95 transition-all"
+              >
+                Continue
+              </button>
+            )}
             <button
               onClick={() => router.push('/sell')}
-              className="w-full bg-primary text-white h-11 rounded-lg font-medium hover:brightness-95 transition-all"
+              className={next
+                ? 'w-full border border-border text-ink-secondary h-11 rounded-lg font-medium hover:bg-surface transition'
+                : 'w-full bg-primary text-white h-11 rounded-lg font-medium hover:brightness-95 transition-all'}
             >
               List my first product
             </button>

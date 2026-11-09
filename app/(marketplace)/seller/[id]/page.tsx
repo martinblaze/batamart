@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Product } from '@prisma/client'
 import { Shell } from '@/components/ui/Shell'
 import { Badge } from '@/components/ui/Badge'
+import SellerTicketsSection from '@/components/tickets/SellerTicketsSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -175,6 +176,7 @@ export default async function SellerProfilePage({ params }: { params: Promise<{ 
 
       {/* ── Catalogue + reviews ───────────────────────────────────────── */}
       <Shell className="pt-12 sm:pt-16">
+        <SellerTicketsSection sellerId={id} />
         <div className="grid gap-12 lg:grid-cols-3 lg:gap-10">
           <section className="lg:col-span-2">
             <div className="flex items-end justify-between gap-6 border-b border-border pb-5">

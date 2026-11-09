@@ -671,6 +671,14 @@ export async function stuckOrderAlerts(ctx: JobContext): Promise<JobResult> {
   return { stuck: stuck.length, alerted: r.sent }
 }
 
+// ── Ticketing ───────────────────────────────────────────────────────────────
+
+export async function ticketReminders(ctx: JobContext): Promise<JobResult> {
+  const { runTicketReminders } = await import('@/lib/tickets/reminders')
+  const r = await runTicketReminders(new Date(), { deadline: ctx.deadline })
+  return { ...r }
+}
+
 // ── The two daily bundles ───────────────────────────────────────────────────
 
 async function runAll(tasks: [string, () => Promise<JobResult>][], ctx: JobContext) {
@@ -696,6 +704,9 @@ export function runMorning(ctx: JobContext) {
   return runAll(
     [
       ['deliveryToday', () => deliveryReminders('today', ctx)],
+      // Fault-isolated by runAll: a failure here (or a missing ticketing
+      // migration) cannot break the other jobs. Early so deals cannot starve it.
+      ['ticketReminders', () => ticketReminders(ctx)],
       ['escrowReleases', () => escrowReleases(ctx)],
       ['sellerAcceptReminders', () => sellerAcceptReminders(ctx)],
       ['deliveryConfirmReminders', () => deliveryConfirmReminders(ctx)],

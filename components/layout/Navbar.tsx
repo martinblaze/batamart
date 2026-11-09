@@ -8,7 +8,7 @@ import NotificationBell from '@/components/layout/NotificationBell'
 import {
   ChevronDown, ChevronRight, User, Users, LogOut, Store, ShoppingBag, Wallet,
   Package, AlertTriangle, PlusCircle, Globe, Plus, Bike, Gift, Pencil,
-  ClipboardList, TrendingUp,
+  ClipboardList, TrendingUp, Ticket as TicketIcon,
   LayoutGrid, Bell as BellIcon, Menu, X, Search, MapPin,
   type LucideIcon,
 } from 'lucide-react'
@@ -1011,6 +1011,11 @@ export function Navbar() {
                 Deliver to <span className="text-ink">{universityShortName}</span>
               </span>
             )}
+            {userRole !== 'RIDER' && (
+              <Link href="/events" className={`mr-1 flex items-center gap-1.5 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.14em] transition-colors duration-300 hover:text-ink ${isActive('/events') || isActive('/tickets') ? 'text-ink' : 'text-ink-secondary'}`}>
+                <TicketIcon className="h-4 w-4" strokeWidth={1.75} /> Events &amp; tickets
+              </Link>
+            )}
             {isLoggedIn && (
               <Link href="/cart" className="relative p-2 text-ink-secondary hover:text-primary hover:bg-surface rounded-full transition-all">
                 <ShoppingBag className="w-6 h-6" strokeWidth={1.75} />
@@ -1111,6 +1116,9 @@ export function Navbar() {
                         <div className="my-1 border-t border-border" />
                         <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/orders'))}>
                           <Package className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
+                        </Link>
+                        <Link href="/tickets" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/tickets'))}>
+                          <TicketIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>My tickets</span>
                         </Link>
                         <Link href="/wallet" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/wallet'))}>
                           <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
@@ -1241,6 +1249,12 @@ export function Navbar() {
                     <Link href="/orders" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/orders'))}>
                       <Package className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
                     </Link>
+                    <Link href="/events" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/events'))}>
+                      <TicketIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Events &amp; tickets</span>
+                    </Link>
+                    <Link href="/tickets" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/tickets'))}>
+                      <TicketIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>My tickets</span>
+                    </Link>
                     <Link href="/wallet" onClick={() => setIsMenuOpen(false)} className={menuRow(isActive('/wallet'))}>
                       <Wallet className="w-4 h-4 text-ink-muted" strokeWidth={1.75} />
                       <div className="flex flex-1 items-center justify-between">
@@ -1279,6 +1293,9 @@ export function Navbar() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
+                <Link href="/events" onClick={() => setIsMenuOpen(false)} className="col-span-2 flex h-11 items-center justify-center gap-2 border border-border font-mono text-[11px] uppercase tracking-[0.14em] text-ink-secondary transition-colors hover:text-ink">
+                  <TicketIcon className="h-4 w-4" strokeWidth={1.75} /> Events &amp; tickets
+                </Link>
                 <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex h-11 items-center justify-center border border-ink font-mono text-[11px] uppercase tracking-[0.14em] text-ink transition-colors hover:bg-ink hover:text-background">Login</Link>
                 <Link href="/signup" onClick={() => setIsMenuOpen(false)} className="flex h-11 items-center justify-center bg-ink font-mono text-[11px] uppercase tracking-[0.14em] text-background transition-colors hover:bg-ink/85">Sign up</Link>
               </div>

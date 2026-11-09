@@ -56,6 +56,8 @@ dependencies:
   flutter_animate: ^4.5.2
   flutter_map: ^8.3.2
   latlong2: ^0.10.1
+  qr_flutter: ^4.1.0
+  crypto: ^3.0.8
 # google_sign_in ^7.2.0 endorses google_sign_in_android 7.2.17, which applies
 # only `com.android.library` and then configures a bare `kotlin { }` block —
 # it relies on AGP's built-in Kotlin to compile its src/main/kotlin. This app

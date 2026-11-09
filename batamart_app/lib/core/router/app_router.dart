@@ -22,6 +22,10 @@ import '../../features/disputes/presentation/dispute_detail_screen.dart';
 import '../../features/disputes/presentation/dispute_select_order_screen.dart';
 import '../../features/disputes/presentation/file_dispute_screen.dart';
 import '../../features/disputes/presentation/report_screen.dart';
+import '../../features/tickets/presentation/event_detail_screen.dart';
+import '../../features/tickets/presentation/events_screen.dart';
+import '../../features/tickets/presentation/my_tickets_screen.dart';
+import '../../features/tickets/presentation/ticket_screen.dart';
 import '../../features/home/presentation/buyer_seller_home_shell.dart';
 import '../widgets/nav/buyer_seller_nav_shell.dart';
 import '../../features/home/presentation/rider_home_shell.dart';
@@ -39,6 +43,10 @@ import '../../features/orders/presentation/order_detail_screen.dart';
 import '../../features/orders/presentation/review_product_screen.dart';
 import '../../features/orders/presentation/review_seller_screen.dart';
 import '../../features/seller/presentation/my_shop_screen.dart';
+import '../../features/tickets_host/presentation/create_event_screen.dart';
+import '../../features/tickets_host/presentation/host_events_screen.dart';
+import '../../features/tickets_host/presentation/manage_event_screen.dart';
+import '../../features/tickets_host/presentation/my_listings_screen.dart';
 import '../../features/seller/presentation/sales_screen.dart';
 import '../../features/seller/presentation/sell_product_screen.dart';
 import '../../features/seller/presentation/seller_products_list_screen.dart';
@@ -87,6 +95,11 @@ class AppRoutes {
   static const reviewSeller = '/orders/:id/review-seller';
   static const myShop = '/my-shop';
   static const myShopProducts = '/my-shop/products';
+  static const myShopEvents = '/my-shop/events';
+  static const myShopEventNew = '/my-shop/events/new';
+  static const myShopEvent = '/my-shop/events/:id';
+  static const myShopTickets = '/my-shop/tickets';
+  static String myShopEventPath(String id) => '/my-shop/events/$id';
   static const editProduct = '/my-shop/products/:id/edit';
   static const sellProduct = '/sell';
   static const sales = '/sales';
@@ -99,6 +112,15 @@ class AppRoutes {
   static const fileDispute = '/disputes/file/:orderId';
   static const disputeDetail = '/disputes/:id';
   static const report = '/report';
+
+  // Buyer ticketing.
+  static const events = '/events';
+  static const eventDetail = '/events/:id';
+  static const myTickets = '/tickets';
+  static const ticket = '/tickets/:id';
+  static String eventDetailPath(String id, {String? ref}) =>
+      ref == null ? '/events/$id' : '/events/$id?ref=$ref';
+  static String ticketPath(String id) => '/tickets/$id';
 
   static String productDetailPath(String id) => '/product/$id';
   static String editProductPath(String id) => '/my-shop/products/$id/edit';
@@ -307,6 +329,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SellerProductsListScreen(),
       ),
       GoRoute(
+        path: AppRoutes.myShopEvents,
+        builder: (context, state) => const HostEventsScreen(),
+      ),
+      // `new` must come before `:id` so it is not read as an event id.
+      GoRoute(
+        path: AppRoutes.myShopEventNew,
+        builder: (context, state) => const CreateEventScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myShopEvent,
+        builder: (context, state) =>
+            ManageEventScreen(eventId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.myShopTickets,
+        builder: (context, state) => const MyTicketListingsScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.editProduct,
         builder: (context, state) =>
             EditProductScreen(productId: state.pathParameters['id']!),
@@ -352,6 +392,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.disputeDetail,
         builder: (context, state) =>
             DisputeDetailScreen(disputeId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.events,
+        builder: (context, state) => const EventsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.eventDetail,
+        builder: (context, state) => EventDetailScreen(
+          eventId: state.pathParameters['id']!,
+          resellerRef: state.uri.queryParameters['ref'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.myTickets,
+        builder: (context, state) => MyTicketsScreen(
+          justPaid: state.uri.queryParameters['paid'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.ticket,
+        builder: (context, state) =>
+            TicketScreen(ticketId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.report,

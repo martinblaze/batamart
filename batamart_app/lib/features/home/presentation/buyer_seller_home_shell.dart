@@ -247,6 +247,8 @@ class _ProfilePlaceholder extends ConsumerWidget {
           rows: [
             _Row(LucideIcons.trendingUp, 'Most bought', AppRoutes.mostBought),
             _Row(LucideIcons.users, 'Sellers', AppRoutes.sellerDirectory),
+            _Row(LucideIcons.ticket, 'Events & tickets', AppRoutes.events),
+            _Row(LucideIcons.qrCode, 'My tickets', AppRoutes.myTickets),
           ],
         ),
 

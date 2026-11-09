@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -65,6 +66,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
     return Column(
       children: [
+        // Entry to the Tickets section (event tickets live outside orders).
+        ListTile(
+          dense: true,
+          leading: const Icon(LucideIcons.ticket, size: 18),
+          title: const Text('Event tickets'),
+          trailing: const Icon(LucideIcons.chevronRight, size: 16),
+          onTap: () => context.push(AppRoutes.myTickets),
+        ),
         SizedBox(
           height: 44,
           child: ListView.separated(

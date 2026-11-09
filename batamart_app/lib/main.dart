@@ -13,6 +13,7 @@ import 'core/theme/app_theme.dart';
 import 'features/notifications/data/notification_models.dart';
 import 'features/notifications/state/notifications_providers.dart';
 import 'features/notifications/presentation/notification_router.dart';
+import 'features/tickets/presentation/ticket_links.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,7 @@ Future<void> main() async {
       onNotificationTap: (data) {
         final type = data['type'] as String?;
         final context = rootNavigatorKey.currentContext;
+        if (context != null && routeTicketPush(context, data)) return;
         if (type == null || context == null) return;
         routeNotification(
           context,

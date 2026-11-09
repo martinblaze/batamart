@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../tickets/presentation/ticket_links.dart';
 import '../data/notification_models.dart';
 
 const _orderTypes = {
@@ -33,6 +34,10 @@ const _disputeTypes = {'DISPUTE_OPENED', 'DISPUTE_MESSAGE', 'DISPUTE_RESOLVED'};
 /// account-status screen exists yet.
 void routeNotification(BuildContext context, AppNotification notification) {
   final type = notification.type;
+
+  // Ticket notifications carry their link in metadata.orderUrl.
+  final url = notification.url;
+  if (url != null && routeTicketPush(context, {'url': url})) return;
 
   if (_orderTypes.contains(type) && notification.orderId != null) {
     context.push(AppRoutes.orderDetailPath(notification.orderId!));

@@ -11,6 +11,7 @@ class AppNotification {
     this.orderId,
     this.disputeId,
     this.productId,
+    this.url,
   });
 
   final String id;
@@ -21,6 +22,9 @@ class AppNotification {
   final String? orderId;
   final String? disputeId;
   final String? productId;
+
+  /// In-app link the backend stored in `metadata.orderUrl` (ticket links).
+  final String? url;
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
@@ -34,6 +38,9 @@ class AppNotification {
       orderId: json['orderId'] as String?,
       disputeId: json['disputeId'] as String?,
       productId: json['productId'] as String?,
+      url: json['metadata'] is Map
+          ? (json['metadata'] as Map)['orderUrl'] as String?
+          : null,
     );
   }
 }

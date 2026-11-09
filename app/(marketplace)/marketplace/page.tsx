@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { isSplashPending } from '@/components/SplashScreen'
 import GirlfriendsDayBanner from '@/components/marketplace/GirlfriendsDayBanner'
+import EventsShelf from '@/components/marketplace/EventsShelf'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
@@ -2114,6 +2115,9 @@ export default function MarketplacePage() {
                 onCategorySelect={handleCategorySelect}
               />
             )}
+
+            {/* ── Events & tickets ── */}
+            <EventsShelf />
 
             {/* ── Picked for You ── */}
             {forYouProducts.length > 0 && (

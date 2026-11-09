@@ -148,6 +148,13 @@ model User {
   deviceTokens             DeviceToken[]
   notificationPreference   NotificationPreference?
 
+  hostedEvents             TicketEvent[]       @relation("HostedEvents")
+  eventSellerRoles         EventSeller[]       @relation("EventSellers")
+  ticketListings           TicketListing[]     @relation("TicketListings")
+  ticketPurchases          TicketPurchase[]    @relation("TicketBuyer")
+  ticketResales            TicketPurchase[]    @relation("TicketReseller")
+  ticketsOwned             Ticket[]            @relation("TicketOwner")
+
   @@index([role])
   @@index([trustLevel])
   @@index([isSuspended])
@@ -1246,5 +1253,264 @@ model NotificationLog {
 
   @@unique([userId, key])
   @@index([createdAt])
+  @@schema("public")
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Online ticketing. A host lists an event with one or more tiers (Regular, VIP…).
+// Anyone with a real email can buy (guests included). Each Ticket has its own
+// secret: the QR on screen is an HMAC that rotates every 30 seconds and the
+// secret rotates again whenever the ticket changes hands. Money is settled in
+// full at payment time (no escrow, no refunds): 10% to BataMart, an optional
+// commission to a reseller, the rest to the host's availableBalance.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TicketEventStatus {
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  PAUSED
+  CANCELLED
+
+  @@schema("public")
+}
+
+enum TicketStatus {
+  VALID
+  CHECKED_IN
+  VOID
+
+  @@schema("public")
+}
+
+enum TicketPurchaseStatus {
+  PENDING
+  PAID
+  FAILED
+
+  @@schema("public")
+}
+
+// DIRECT = bought from the host's own listing, RANDOM = resold by any seller,
+// UNIQUE = resold by a seller the host named for this event.
+enum TicketSellerKind {
+  DIRECT
+  RANDOM
+  UNIQUE
+
+  @@schema("public")
+}
+
+model TicketEvent {
+  id            String            @id @default(cuid())
+  hostId        String
+  name          String
+  description   String?
+  venue         String
+  address       String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  flyerUrl      String?
+  status        TicketEventStatus @default(PENDING_REVIEW)
+  allowResale   Boolean           @default(true)
+  reviewNote    String?
+  reviewedAt    DateTime?
+  reviewedById  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  host          User              @relation("HostedEvents", fields: [hostId], references: [id], onDelete: Cascade)
+  tiers         TicketTier[]
+  checkers      EventChecker[]
+  sellers       EventSeller[]
+  listings      TicketListing[]
+  purchases     TicketPurchase[]
+  tickets       Ticket[]
+  scans         TicketScan[]
+
+  @@index([status, startsAt])
+  @@index([hostId])
+  @@schema("public")
+}
+
+model TicketTier {
+  id                  String           @id @default(cuid())
+  eventId             String
+  name                String
+  description         String?
+  imageUrl            String?
+  price               Int
+  capacity            Int
+  sold                Int              @default(0)
+  // Percent of the ticket price paid to whoever resells it, set by the host.
+  randomCommissionPct Int              @default(0)
+  uniqueCommissionPct Int              @default(0)
+  saleStartsAt        DateTime?
+  saleEndsAt          DateTime?
+  isActive            Boolean          @default(true)
+  sortOrder           Int              @default(0)
+  createdAt           DateTime         @default(now())
+  event               TicketEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  purchases           TicketPurchase[]
+  tickets             Ticket[]
+
+  @@unique([eventId, name])
+  @@index([eventId])
+  @@schema("public")
+}
+
+// A person the host invites to scan tickets at the door. They sign in with the
+// emailed link (tokenHash is the sha256 of the token in that link).
+model EventChecker {
+  id             String       @id @default(cuid())
+  eventId        String
+  email          String
+  name           String?
+  tokenHash      String       @unique
+  sessionVersion Int          @default(1)
+  isActive       Boolean      @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime     @default(now())
+  event          TicketEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  scans          TicketScan[]
+  checkedIn      Ticket[]     @relation("TicketCheckedInBy")
+
+  @@unique([eventId, email])
+  @@index([eventId])
+  @@schema("public")
+}
+
+// A "unique seller": a user the host named for this event so their sales can
+// be tracked, and who may earn a different commission.
+model EventSeller {
+  id        String      @id @default(cuid())
+  eventId   String
+  userId    String
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  event     TicketEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User        @relation("EventSellers", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@schema("public")
+}
+
+// A seller has put an event's tickets in their shop to resell at the host's price.
+model TicketListing {
+  id        String      @id @default(cuid())
+  eventId   String
+  sellerId  String
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  event     TicketEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  seller    User        @relation("TicketListings", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, sellerId])
+  @@index([sellerId])
+  @@schema("public")
+}
+
+model TicketPurchase {
+  id               String               @id @default(cuid())
+  reference        String               @unique
+  eventId          String
+  tierId           String
+  buyerUserId      String?
+  buyerEmail       String
+  quantity         Int
+  unitPrice        Int
+  subtotal         Int
+  platformFee      Int
+  commission       Int                  @default(0)
+  hostAmount       Int
+  resellerId       String?
+  sellerKind       TicketSellerKind     @default(DIRECT)
+  status           TicketPurchaseStatus @default(PENDING)
+  paymentMethod    String               @default("CARD")
+  gatewayTxId      String?
+  // Random, unguessable. The link in the receipt email carries it so guests can
+  // open their tickets without an account.
+  accessToken      String               @unique
+  overbooked       Boolean              @default(false)
+  paidAt           DateTime?
+  createdAt        DateTime             @default(now())
+  event            TicketEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tier             TicketTier           @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  buyer            User?                @relation("TicketBuyer", fields: [buyerUserId], references: [id], onDelete: SetNull)
+  reseller         User?                @relation("TicketReseller", fields: [resellerId], references: [id], onDelete: SetNull)
+  tickets          Ticket[]
+
+  @@index([eventId, status])
+  @@index([buyerUserId])
+  @@index([buyerEmail])
+  @@index([resellerId])
+  @@schema("public")
+}
+
+model Ticket {
+  id              String       @id @default(cuid())
+  purchaseId      String
+  eventId         String
+  tierId          String
+  // Short human-readable id, also the first part of the QR text.
+  code            String       @unique
+  // HMAC key for the rotating QR. Changed on every transfer.
+  secret          String
+  secretVersion   Int          @default(1)
+  ownerUserId     String?
+  ownerEmail      String
+  status          TicketStatus @default(VALID)
+  checkedInAt     DateTime?
+  checkedInById   String?
+  createdAt       DateTime     @default(now())
+  purchase        TicketPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  event           TicketEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tier            TicketTier   @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  owner           User?        @relation("TicketOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  checkedInBy     EventChecker? @relation("TicketCheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
+  transfers       TicketTransfer[]
+  scans           TicketScan[]
+
+  @@index([ownerUserId])
+  @@index([ownerEmail])
+  @@index([eventId, status])
+  @@index([purchaseId])
+  @@schema("public")
+}
+
+model TicketTransfer {
+  id         String   @id @default(cuid())
+  ticketId   String
+  fromUserId String?
+  fromEmail  String
+  toUserId   String
+  createdAt  DateTime @default(now())
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@schema("public")
+}
+
+// Every scan attempt, good or bad, so the host can audit the door.
+model TicketScan {
+  id         String        @id @default(cuid())
+  eventId    String
+  checkerId  String
+  ticketId   String?
+  // OK | ALREADY_USED | INVALID | WRONG_EVENT | STALE | VOID
+  result     String
+  // Snapshot so the log still reads correctly if the account changes later.
+  holderName String?
+  tierName   String?
+  createdAt  DateTime      @default(now())
+  event      TicketEvent   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  checker    EventChecker  @relation(fields: [checkerId], references: [id], onDelete: Cascade)
+  ticket     Ticket?       @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@index([eventId, createdAt])
+  @@index([checkerId])
   @@schema("public")
 }

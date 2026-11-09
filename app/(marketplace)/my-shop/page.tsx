@@ -9,7 +9,7 @@ import {
   CheckCircle, XCircle, Plus, Trash2, BarChart3,
   Grid, List, Search, ArrowRight, X, AlertTriangle,
   Crown, Zap, RefreshCw, Star, Loader2, ChevronRight,
-  BadgeCheck, Timer,
+  BadgeCheck, Timer, Ticket,
 } from 'lucide-react'
 import { authFetch } from '@/lib/auth-client'
 import { decodeProductData, getCategoryDisplayInfo } from '@/lib/variants'
@@ -347,6 +347,19 @@ export default function MyShopPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-4">
         {isSellerMode ? (
           <>
+            {/* ── Events & tickets ── */}
+            <Link href="/my-shop/events"
+              className="flex items-center gap-3 bg-card rounded-2xl border border-border shadow-soft p-4 transition-colors hover:border-primary">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Ticket className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-ink text-sm">Events &amp; tickets</p>
+                <p className="text-xs text-ink-muted">Host an event, sell tickets and run the door.</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-ink-muted flex-shrink-0" />
+            </Link>
+
             {/* ── Stats row ── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[

@@ -31,6 +31,7 @@ function NavbarContent() {
   const hideNav =
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/admin-login') ||
+    pathname?.startsWith('/checkin') ||
     pathname === '/' ||
     MARKETING_ROUTES.some((route) => pathname?.startsWith(route))
 
