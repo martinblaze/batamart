@@ -26,7 +26,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         event: { select: { id: true, name: true, venue: true, address: true, startsAt: true, endsAt: true, flyerUrl: true, status: true } },
       },
     })
-    if (!t || t.purchase.status !== 'PAID') return json({ error: 'Ticket not found' }, 404)
+    if (!t || t.purchase.status !== 'PAID') {
+      // A guest link may point at a ticket that was deleted after its event ended.
+      const token = new URL(request.url).searchParams.get('token') ?? ''
+      if (!t && /^[A-Za-z0-9_-]{20,64}$/.test(token)) {
+        const p = await prisma.ticketPurchase.findUnique({
+          where: { accessToken: token },
+          select: { status: true, event: { select: { id: true, name: true, startsAt: true, endsAt: true } }, _count: { select: { tickets: true } } },
+        })
+        if (p && p.status === 'PAID' && p._count.tickets === 0 && isEventOver(p.event)) {
+          return json({ error: 'This event has ended and the tickets were removed.', code: 'EVENT_ENDED', event: { id: p.event.id, name: p.event.name } }, 410)
+        }
+      }
+      return json({ error: 'Ticket not found. If the event has ended, its tickets have been removed.', code: 'TICKET_NOT_FOUND' }, 404)
+    }
 
     let allowed = false
     let isOwner = false

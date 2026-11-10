@@ -19,6 +19,7 @@ import '../state/products_providers.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/buttons/app_buttons.dart';
 import '../../../core/widgets/chrome/app_bottom_sheet.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// Deals.
 ///
@@ -138,6 +139,7 @@ class DealsScreen extends ConsumerWidget {
                           return ProductCard(
                             imageUrl: product.thumbnail,
                             name: product.name,
+                            favorite: WishlistHeart(productId: product.id),
                             price: naira(product.price),
                             isHot: product.isHot,
                             percentOff: product.hasDiscount

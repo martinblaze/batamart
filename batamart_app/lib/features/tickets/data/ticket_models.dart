@@ -182,6 +182,22 @@ class MyTicket {
   final String tierName;
   final TicketEventRef event;
 
+  /// A paid purchase whose tickets were removed after the event (no ticket to open).
+  bool get isEnded => status == 'ENDED';
+
+  /// Built from `endedPurchases[]` in GET /api/tickets/mine.
+  factory MyTicket.fromEndedPurchase(Map<String, dynamic> j) {
+    final qty = j['quantity'] is num ? (j['quantity'] as num).toInt() : 1;
+    return MyTicket(
+      id: 'ended:${j['purchaseId']}',
+      code: '',
+      status: 'ENDED',
+      checkedInAt: null,
+      tierName: '$qty x ${j['tierName'] ?? ''}',
+      event: TicketEventRef.fromJson(_map(j['event'])),
+    );
+  }
+
   bool get isCheckedIn => status == 'CHECKED_IN';
   bool get isValid => status == 'VALID';
 

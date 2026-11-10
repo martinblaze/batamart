@@ -10,8 +10,9 @@ import {
 } from '@/components/admin/AdminUI'
 import { Badge, type BadgeStatus } from '@/components/ui/Badge'
 
-type Status = 'PENDING_REVIEW' | 'ACTIVE' | 'PAUSED' | 'REJECTED' | 'CANCELLED'
-type Action = 'approve' | 'reject' | 'pause' | 'resume'
+type EventStatus = 'PENDING_REVIEW' | 'ACTIVE' | 'PAUSED' | 'REJECTED' | 'CANCELLED'
+type Status = EventStatus | 'PENDING_CHANGES'
+type Action = 'approve' | 'reject' | 'pause' | 'resume' | 'approve_change' | 'reject_change'
 
 interface Tier {
   id: string
@@ -32,7 +33,10 @@ interface EventRow {
   startsAt: string
   endsAt: string | null
   flyerUrl: string | null
-  status: Status
+  status: EventStatus
+  pendingFlyerUrl: string | null
+  pendingDescription: string | null
+  pendingChangeAt: string | null
   reviewNote: string | null
   createdAt: string
   host: { id: string; name: string; username: string | null; email: string | null }
@@ -40,7 +44,7 @@ interface EventRow {
 }
 interface Stats {
   sales: { purchases: number; ticketsSold: number; grossSales: number; platformFee: number; commissionPaid: number; hostEarnings: number }
-  tickets: { valid: number; checkedIn: number; void: number }
+  tickets: { valid: number; checkedIn: number; void: number; purged?: boolean }
   scans: Record<string, number>
   activeCheckers: number
   tiers: { id: string; name: string; price: number; capacity: number; sold: number }[]
@@ -53,13 +57,14 @@ interface Stats {
 
 const TABS: { value: Status; label: string }[] = [
   { value: 'PENDING_REVIEW', label: 'Pending' },
+  { value: 'PENDING_CHANGES', label: 'Pending changes' },
   { value: 'ACTIVE', label: 'Active' },
   { value: 'PAUSED', label: 'Paused' },
   { value: 'REJECTED', label: 'Rejected' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ]
 
-const tone = (s: Status): BadgeStatus =>
+const tone = (s: EventStatus): BadgeStatus =>
   s === 'ACTIVE' ? 'success' : s === 'PENDING_REVIEW' ? 'warning' : s === 'CANCELLED' || s === 'REJECTED' ? 'danger' : 'neutral'
 
 const naira = (n: number) => `₦${Math.round(n).toLocaleString('en-NG')}`
@@ -79,7 +84,7 @@ export default function AdminEventsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [dialog, setDialog] = useState<{ event: EventRow; action: 'reject' | 'pause' } | null>(null)
+  const [dialog, setDialog] = useState<{ event: EventRow; action: 'reject' | 'pause' | 'reject_change' } | null>(null)
   const [note, setNote] = useState('')
   const [drawer, setDrawer] = useState<EventRow | null>(null)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -232,6 +237,41 @@ export default function AdminEventsPage() {
                 )}
               </div>
 
+              {ev.pendingChangeAt && (
+                <div className="border-t border-warning/30 bg-warning/5 p-4">
+                  <p className="ui-eyebrow">Pending change · requested {when(ev.pendingChangeAt)}</p>
+                  <p className="mt-1 text-xs text-ink-secondary">The live event keeps showing the current version until you approve.</p>
+                  {ev.pendingFlyerUrl && (
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="ui-mono ui-mono-sm mb-1 text-ink-muted">Current flyer</p>
+                        {ev.flyerUrl ? <img src={ev.flyerUrl} alt="Current flyer" className="aspect-[3/4] w-full bg-surface object-cover" /> : <p className="text-xs text-ink-muted">None</p>}
+                      </div>
+                      <div>
+                        <p className="ui-mono ui-mono-sm mb-1 text-ink-muted">New flyer</p>
+                        <img src={ev.pendingFlyerUrl} alt="New flyer" className="aspect-[3/4] w-full bg-surface object-cover" />
+                      </div>
+                    </div>
+                  )}
+                  {ev.pendingDescription !== null && (
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="ui-mono ui-mono-sm mb-1 text-ink-muted">Current description</p>
+                        <p className="whitespace-pre-line border border-border bg-card p-2.5 text-xs text-ink-secondary">{ev.description || '(none)'}</p>
+                      </div>
+                      <div>
+                        <p className="ui-mono ui-mono-sm mb-1 text-ink-muted">New description</p>
+                        <p className="whitespace-pre-line border border-border bg-card p-2.5 text-xs text-ink">{ev.pendingDescription || '(removed)'}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <AdminButton tone="success" disabled={busyId === ev.id} icon={busyId === ev.id ? Loader2 : CheckCircle} onClick={() => act(ev, 'approve_change')} className="flex-1">Approve change</AdminButton>
+                    <AdminButton disabled={busyId === ev.id} icon={XCircle} onClick={() => { setNote(''); setDialog({ event: ev, action: 'reject_change' }) }} className="flex-1">Reject change</AdminButton>
+                  </div>
+                </div>
+              )}
+
               {buttons(ev) && <div className="flex gap-2 border-t border-border p-4">{buttons(ev)}</div>}
             </div>
           ))}
@@ -242,29 +282,29 @@ export default function AdminEventsPage() {
       {dialog && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/50 p-4" onClick={() => setDialog(null)}>
           <div className="w-full max-w-md border border-border bg-card p-5" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <p className="ui-eyebrow">{dialog.action === 'reject' ? 'Reject event' : 'Pause event'}</p>
+            <p className="ui-eyebrow">{dialog.action === 'reject' ? 'Reject event' : dialog.action === 'reject_change' ? 'Reject change' : 'Pause event'}</p>
             <h2 className="mt-2 text-base text-ink">{dialog.event.name}</h2>
             <p className="mt-2 text-sm text-ink-secondary">
-              {dialog.action === 'reject' ? 'Tell the host what to fix. They see this note.' : 'Ticket sales stop until you resume. Add a note for the host if useful.'}
+              {dialog.action === 'reject' || dialog.action === 'reject_change' ? 'Tell the host what to fix. They see this note.' : 'Ticket sales stop until you resume. Add a note for the host if useful.'}
             </p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={500}
               rows={4}
-              placeholder={dialog.action === 'reject' ? 'Why is this being rejected?' : 'Optional note'}
+              placeholder={dialog.action !== 'pause' ? 'Why is this being rejected?' : 'Optional note'}
               className="mt-3 w-full resize-none border border-border bg-card px-3 py-2.5 text-sm leading-relaxed text-ink placeholder:text-ink-muted/80 focus:border-ink focus:outline-none"
             />
             <div className="mt-4 flex gap-2">
               <AdminButton onClick={() => setDialog(null)} className="flex-1">Cancel</AdminButton>
               <AdminButton
-                tone={dialog.action === 'reject' ? 'danger' : 'warning'}
-                disabled={busyId === dialog.event.id || (dialog.action === 'reject' && !note.trim())}
+                tone={dialog.action !== 'pause' ? 'danger' : 'warning'}
+                disabled={busyId === dialog.event.id || (dialog.action !== 'pause' && !note.trim())}
                 icon={busyId === dialog.event.id ? Loader2 : undefined}
                 onClick={() => act(dialog.event, dialog.action, note.trim() || undefined)}
                 className="flex-1"
               >
-                {dialog.action === 'reject' ? 'Confirm rejection' : 'Confirm pause'}
+                {dialog.action !== 'pause' ? 'Confirm rejection' : 'Confirm pause'}
               </AdminButton>
             </div>
           </div>
@@ -299,7 +339,7 @@ export default function AdminEventsPage() {
                   stats={[
                     { label: 'Tickets sold', value: stats.sales.ticketsSold },
                     { label: 'Gross sales', value: naira(stats.sales.grossSales) },
-                    { label: 'Checked in', value: stats.tickets.checkedIn, note: `${stats.tickets.valid} still valid` },
+                    { label: 'Checked in', value: stats.tickets.checkedIn, note: stats.tickets.purged ? 'tickets removed after event' : `${stats.tickets.valid} still valid` },
                     { label: 'Checkers', value: stats.activeCheckers },
                   ]}
                 />

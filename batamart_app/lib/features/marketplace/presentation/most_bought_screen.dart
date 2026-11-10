@@ -10,6 +10,7 @@ import '../../../core/widgets/states/empty_state.dart';
 import '../../../core/widgets/states/error_state.dart';
 import '../state/products_providers.dart';
 import '../../../core/utils/money.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// `GET /api/products/people-like-you?mode=daily` (BACKEND_REFERENCE.md
 /// §3.3). The web groups results by `dateKey` with infinite scroll; this
@@ -49,6 +50,7 @@ class MostBoughtScreen extends ConsumerWidget {
                 return ProductCard(
                   imageUrl: product.thumbnail,
                   name: product.name,
+                  favorite: WishlistHeart(productId: product.id),
                   price: naira(product.price),
                   rating: product.avgRating > 0 ? product.avgRating : null,
                   reviewCount: product.totalReviews,

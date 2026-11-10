@@ -24,7 +24,7 @@ export async function issueCheckerSession(checker: { id: string; eventId: string
 
 export interface CheckerContext {
   checker: { id: string; eventId: string; email: string; name: string | null }
-  event: { id: string; name: string; venue: string; startsAt: Date; status: string }
+  event: { id: string; name: string; venue: string; startsAt: Date; endsAt: Date | null; status: string }
 }
 
 /** Reads the checker token from `Authorization: Bearer` or the `checkerToken` cookie. */
@@ -52,7 +52,7 @@ export async function getCheckerFromRequest(request: Request): Promise<CheckerCo
     where: { id: payload.checkerId },
     select: {
       id: true, eventId: true, email: true, name: true, isActive: true, sessionVersion: true,
-      event: { select: { id: true, name: true, venue: true, startsAt: true, status: true } },
+      event: { select: { id: true, name: true, venue: true, startsAt: true, endsAt: true, status: true } },
     },
   })
   if (!row || !row.isActive || row.sessionVersion !== payload.v || row.eventId !== payload.eventId) return null

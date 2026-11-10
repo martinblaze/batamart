@@ -12,23 +12,29 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status') || 'PENDING_REVIEW'
-    if (status !== 'all' && !(STATUSES as readonly string[]).includes(status)) {
+    if (status !== 'all' && status !== 'PENDING_CHANGES' && !(STATUSES as readonly string[]).includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1') || 1)
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') ?? '50') || 50))
-    const where = status === 'all' ? {} : { status: status as (typeof STATUSES)[number] }
+    // PENDING_CHANGES: live events whose host asked to change the flyer/description (oldest request first).
+    const where = status === 'all'
+      ? {}
+      : status === 'PENDING_CHANGES'
+        ? { pendingChangeAt: { not: null } }
+        : { status: status as (typeof STATUSES)[number] }
 
-    const [events, grouped, total] = await Promise.all([
+    const [events, grouped, total, pendingChanges] = await Promise.all([
       prisma.ticketEvent.findMany({
         where,
-        orderBy: { createdAt: status === 'PENDING_REVIEW' ? 'asc' : 'desc' },
+        orderBy: status === 'PENDING_CHANGES' ? { pendingChangeAt: 'asc' } : { createdAt: status === 'PENDING_REVIEW' ? 'asc' : 'desc' },
         skip: (page - 1) * limit,
         take: limit,
         select: {
           id: true, name: true, description: true, venue: true, address: true,
           startsAt: true, endsAt: true, flyerUrl: true, status: true, allowResale: true,
           reviewNote: true, reviewedAt: true, createdAt: true,
+          pendingFlyerUrl: true, pendingDescription: true, pendingChangeAt: true,
           host: { select: { id: true, name: true, username: true, email: true } },
           tiers: {
             orderBy: { sortOrder: 'asc' },
@@ -41,12 +47,14 @@ export async function GET(req: NextRequest) {
       }),
       prisma.ticketEvent.groupBy({ by: ['status'], _count: { _all: true } }),
       prisma.ticketEvent.count({ where }),
+      prisma.ticketEvent.count({ where: { pendingChangeAt: { not: null } } }),
     ])
 
     const counts: Record<string, number> = { PENDING_REVIEW: 0, ACTIVE: 0, REJECTED: 0, PAUSED: 0, CANCELLED: 0 }
     for (const g of grouped) counts[g.status] = g._count._all
+    counts.PENDING_CHANGES = pendingChanges
 
-    return NextResponse.json({ events, counts, total, page, limit })
+    return NextResponse.json({ events: events.map(e => ({ ...e, hasPendingChange: !!e.pendingChangeAt })), counts, total, page, limit })
   } catch (error) {
     console.error('Admin ticket events list error:', error)
     return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })

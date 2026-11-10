@@ -13,7 +13,33 @@ import 'core/theme/app_theme.dart';
 import 'features/notifications/data/notification_models.dart';
 import 'features/notifications/state/notifications_providers.dart';
 import 'features/notifications/presentation/notification_router.dart';
+import 'core/widgets/images/app_network_image.dart';
+import 'features/promos/presentation/promo_links.dart';
 import 'features/tickets/presentation/ticket_links.dart';
+
+/// Routes a tapped push (or the snackbar's View action). A `url` that maps to a
+/// known screen wins; otherwise the notification `type` decides.
+void _handlePushTap(Map<String, dynamic> data) {
+  final context = rootNavigatorKey.currentContext;
+  if (context == null) return;
+  if (routeTicketPush(context, data)) return;
+  final url = data['url'];
+  if (url is String && openPromoUrlIfKnown(context, url)) return;
+  final type = data['type'] as String?;
+  if (type == null) return;
+  routeNotification(
+    context,
+    AppNotification(
+      id: '',
+      type: type,
+      message: '',
+      isRead: true,
+      orderId: data['orderId'] as String?,
+      disputeId: data['disputeId'] as String?,
+      productId: data['productId'] as String?,
+    ),
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,31 +61,39 @@ Future<void> main() async {
         if (context == null || (title == null && body == null)) return;
         // Refresh the notifications list and the unread badge right away.
         ProviderScope.containerOf(context).invalidate(notificationsProvider);
+        final image = data['imageUrl'];
+        final hasTarget = data['url'] is String || data['type'] is String;
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
           SnackBar(
-            content: Text([title, body].whereType<String>().join('\n')),
             duration: const Duration(seconds: 5),
+            content: Row(
+              children: [
+                if (image is String && image.isNotEmpty) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: AppNetworkImage(image, width: 44, height: 44),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Text(
+                    [title, body].whereType<String>().join('\n'),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            action: hasTarget
+                ? SnackBarAction(
+                    label: 'View',
+                    onPressed: () => _handlePushTap(data),
+                  )
+                : null,
           ),
         );
       },
-      onNotificationTap: (data) {
-        final type = data['type'] as String?;
-        final context = rootNavigatorKey.currentContext;
-        if (context != null && routeTicketPush(context, data)) return;
-        if (type == null || context == null) return;
-        routeNotification(
-          context,
-          AppNotification(
-            id: '',
-            type: type,
-            message: '',
-            isRead: true,
-            orderId: data['orderId'] as String?,
-            disputeId: data['disputeId'] as String?,
-            productId: data['productId'] as String?,
-          ),
-        );
-      },
+      onNotificationTap: _handlePushTap,
     ).initialize(),
   );
 

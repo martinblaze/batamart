@@ -48,3 +48,31 @@ export default function TicketRow({ ticket }: { ticket: MyTicket }) {
     </Link>
   )
 }
+
+export interface EndedPurchase {
+  purchaseId: string
+  quantity: number
+  tierName: string
+  event: { id: string; name: string; venue: string; startsAt: string; endsAt: string | null; flyerUrl: string | null; status: string }
+}
+
+/** A paid purchase whose tickets were deleted after the event. Not clickable: there is nothing left to open. */
+export function EndedPurchaseRow({ purchase }: { purchase: EndedPurchase }) {
+  return (
+    <div className="flex items-center gap-4 border border-border bg-card p-3 opacity-80">
+      <div className="h-20 w-16 flex-shrink-0 overflow-hidden bg-surface">
+        {purchase.event.flyerUrl
+          ? <img src={purchase.event.flyerUrl} alt="" className="h-full w-full object-cover" />
+          : <div className="flex h-full w-full items-center justify-center"><TicketIcon className="h-6 w-6 text-ink-muted" strokeWidth={1.25} /></div>}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-1 font-semibold text-ink">{purchase.event.name}</p>
+        <p className="mt-0.5 text-xs text-ink-secondary">{purchase.quantity} x {purchase.tierName}</p>
+        <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-muted"><CalendarDays className="h-3.5 w-3.5 flex-shrink-0" />{formatWhen(purchase.event.startsAt)}</p>
+        <div className="mt-2">
+          <span className="inline-flex items-center gap-1 border border-border bg-surface px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-muted">Event ended</span>
+        </div>
+      </div>
+    </div>
+  )
+}

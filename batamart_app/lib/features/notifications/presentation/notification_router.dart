@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
+import '../../promos/presentation/promo_links.dart';
 import '../../tickets/presentation/ticket_links.dart';
 import '../data/notification_models.dart';
 
@@ -38,6 +39,7 @@ void routeNotification(BuildContext context, AppNotification notification) {
   // Ticket notifications carry their link in metadata.orderUrl.
   final url = notification.url;
   if (url != null && routeTicketPush(context, {'url': url})) return;
+  if (openPromoUrlIfKnown(context, url)) return;
 
   if (_orderTypes.contains(type) && notification.orderId != null) {
     context.push(AppRoutes.orderDetailPath(notification.orderId!));

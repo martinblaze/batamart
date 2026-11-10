@@ -3,6 +3,7 @@
 import LoadedImage from '@/components/LoadedImage'
 import { BadgeCheck, Flame, Heart, MapPin, Star, Truck } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import WishlistHeart from '@/components/WishlistHeart'
 import { CAMPAIGNS, isCampaignActive } from '@/lib/campaigns'
 
 type ProductCardProduct = {
@@ -94,10 +95,14 @@ export default function ProductCard({
         {product.isDeal && discount === 0 && <Badge status="success">Deal</Badge>}
       </div>
       {discount > 0 && (
-        <div className="absolute right-[0.6rem] top-[0.6rem] z-[2]">
+        <div className="absolute bottom-[0.6rem] left-[0.6rem] z-[2]">
           <Badge status="danger">{discount}% off</Badge>
         </div>
       )}
+      <WishlistHeart
+        productId={product.id}
+        className="absolute right-[0.6rem] top-[0.6rem] z-[3] grid h-8 w-8 place-items-center rounded-full bg-card/90 text-ink-secondary shadow-sm backdrop-blur-sm transition-colors hover:text-ink"
+      />
     </>
   )
 

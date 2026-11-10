@@ -82,8 +82,11 @@ export default function ManageEventPage() {
     setPurchases(j.purchases)
     setPCursor(j.purchasesNextCursor)
     setD({
-      name: j.event.name, venue: j.event.venue, address: j.event.address ?? '', description: j.event.description ?? '',
-      startsAt: toLocalInput(j.event.startsAt), endsAt: toLocalInput(j.event.endsAt), flyerUrl: j.event.flyerUrl ?? '',
+      // While a change awaits approval the form shows the pending values, so saving other details never cancels it.
+      name: j.event.name, venue: j.event.venue, address: j.event.address ?? '',
+      description: j.event.pendingChange?.description ?? j.event.description ?? '',
+      startsAt: toLocalInput(j.event.startsAt), endsAt: toLocalInput(j.event.endsAt),
+      flyerUrl: j.event.pendingChange?.flyerUrl ?? j.event.flyerUrl ?? '',
       allowResale: j.event.allowResale,
     })
     setTiers(j.tiers.map(toDraft))
@@ -153,7 +156,9 @@ export default function ManageEventPage() {
     }
     if (d.startsAt !== toLocalInput(data.event.startsAt)) body.startsAt = fromLocalInput(d.startsAt)
     if (d.endsAt !== toLocalInput(data.event.endsAt)) body.endsAt = fromLocalInput(d.endsAt)
-    act('details', base, { method: 'PATCH', body: JSON.stringify(body) }, 'Event details saved.')
+    const live = status === 'ACTIVE' || status === 'PAUSED'
+    act('details', base, { method: 'PATCH', body: JSON.stringify(body) },
+      live ? 'Saved. A new flyer or description needs BataMart approval; the current one stays public until then.' : 'Event details saved.')
   }
 
   const saveTiers = () => {
@@ -173,6 +178,8 @@ export default function ManageEventPage() {
     const ok = await act('seller-add', `${base}/sellers`, post({ username: sellerName.trim() }), 'Unique seller added.')
     if (ok) setSellerName('')
   }
+
+  const cancelPendingChange = () => act('pending-cancel', `${base}/pending-change`, { method: 'DELETE' }, 'The pending change was cancelled.')
 
   const cancelEvent = async () => {
     const ok = await act('cancel', `${base}/cancel`, post({ confirm: true }), 'The event is cancelled and ticket holders were told.')
@@ -251,6 +258,24 @@ export default function ManageEventPage() {
           </p>
         )}
         {status === 'PAUSED' && <p className="border border-warning/25 bg-warning/5 px-3 py-2 text-sm text-warning">BataMart paused this event. It is hidden and sales are stopped until it is resumed.</p>}
+        {ev.pendingChange && (
+          <div className="border border-warning/25 bg-warning/5 p-4 text-sm">
+            <p className="flex items-center gap-2 font-semibold text-warning"><Info className="h-4 w-4" /> Awaiting approval: new {[ev.pendingChange.flyerUrl && 'flyer', ev.pendingChange.description !== null && 'description'].filter(Boolean).join(' and ')}</p>
+            <p className="mt-1 text-ink-secondary">Your event stays live with the current {ev.pendingChange.flyerUrl ? 'flyer' : ''}{ev.pendingChange.flyerUrl && ev.pendingChange.description !== null ? ' and ' : ''}{ev.pendingChange.description !== null ? 'description' : ''} until BataMart approves this.</p>
+            {ev.pendingChange.flyerUrl && (
+              <div className="mt-3 flex gap-3">
+                <div><p className="ui-mono ui-mono-sm mb-1 text-ink-muted">Live</p>{ev.flyerUrl ? <img src={ev.flyerUrl} alt="Live flyer" className="h-32 w-24 object-cover" /> : null}</div>
+                <div><p className="ui-mono ui-mono-sm mb-1 text-ink-muted">New</p><img src={ev.pendingChange.flyerUrl} alt="New flyer" className="h-32 w-24 object-cover" /></div>
+              </div>
+            )}
+            {ev.pendingChange.description !== null && (
+              <p className="mt-3 whitespace-pre-line border border-border bg-card p-2.5 text-ink">{ev.pendingChange.description || '(description removed)'}</p>
+            )}
+            <button onClick={cancelPendingChange} disabled={busy === 'pending-cancel'} className={`${btnGhost} mt-3`}>
+              {busy === 'pending-cancel' ? 'Cancelling...' : 'Cancel this change'}
+            </button>
+          </div>
+        )}
         {cancelled && <p className="border border-danger/25 bg-danger/5 px-3 py-2 text-sm text-danger">This event is cancelled. No refunds are issued.</p>}
 
         {/* Overview */}

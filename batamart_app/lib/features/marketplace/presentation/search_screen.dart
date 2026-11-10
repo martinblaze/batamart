@@ -22,6 +22,7 @@ import '../state/products_providers.dart';
 import '../state/recent_searches.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/utils/money.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// Matches WEB_PAGES_REFERENCE.md's "Search" page. Backed by
 /// `GET /api/products` (BACKEND_REFERENCE.md §3.3): category, zone
@@ -224,6 +225,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       return ProductCard(
                         imageUrl: product.thumbnail,
                         name: product.name,
+                        favorite: WishlistHeart(productId: product.id),
                         price: naira(product.price),
                         isHot: product.isHot,
                         percentOff: product.hasDiscount

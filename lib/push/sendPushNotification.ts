@@ -49,6 +49,8 @@ interface PushPayload {
   message: string
   url?: string
   tag?: string
+  /** Public https image shown large in the notification. */
+  image?: string
   requireInteraction?: boolean
 }
 
@@ -83,6 +85,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
               body: payload.message,
               url: payload.url || '/',
               tag: payload.tag,
+              ...(payload.image ? { image: payload.image } : {}),
               requireInteraction: payload.requireInteraction ?? false,
               icon: '/icon-192x192.png',
               badge: '/badge-72x72.png',

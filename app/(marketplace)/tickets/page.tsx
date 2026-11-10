@@ -7,11 +7,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Loader2, Ticket } from 'lucide-react'
 import { PageHeader } from '@/components/marketplace/DetailChrome'
-import TicketRow, { MyTicket, ticketIsUpcoming } from '@/components/tickets/TicketRow'
+import TicketRow, { EndedPurchaseRow, EndedPurchase, MyTicket, ticketIsUpcoming } from '@/components/tickets/TicketRow'
 
 export default function MyTicketsPage() {
   const router = useRouter()
   const [tickets, setTickets] = useState<MyTicket[]>([])
+  const [ended, setEnded] = useState<EndedPurchase[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [justPaid, setJustPaid] = useState(false)
@@ -36,7 +37,7 @@ export default function MyTicketsPage() {
         }
         const data = await res.json()
         if (!res.ok) setError(data.error || 'Could not load your tickets')
-        else setTickets(data.tickets)
+        else { setTickets(data.tickets); setEnded(Array.isArray(data.endedPurchases) ? data.endedPurchases : []) }
       })
       .catch(() => setError('Could not load your tickets. Check your connection.'))
       .finally(() => setLoading(false))
@@ -83,10 +84,10 @@ export default function MyTicketsPage() {
                 <div className="space-y-3">{upcoming.map(t => <TicketRow key={t.id} ticket={t} />)}</div>
               </section>
             )}
-            {past.length > 0 && (
+            {(past.length > 0 || ended.length > 0) && (
               <section>
                 <p className="ui-eyebrow mb-3">Past and used</p>
-                <div className="space-y-3">{past.map(t => <TicketRow key={t.id} ticket={t} />)}</div>
+                <div className="space-y-3">{past.map(t => <TicketRow key={t.id} ticket={t} />)}{ended.map(p => <EndedPurchaseRow key={p.purchaseId} purchase={p} />)}</div>
               </section>
             )}
           </>

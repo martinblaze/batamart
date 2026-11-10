@@ -251,6 +251,8 @@ class HostEventDetail {
     required this.status,
     required this.allowResale,
     required this.reviewNote,
+    this.pendingFlyerUrl,
+    this.pendingDescription,
     required this.tiers,
     required this.totals,
     required this.sellers,
@@ -270,6 +272,15 @@ class HostEventDetail {
   final String status;
   final bool allowResale;
   final String? reviewNote;
+
+  /// New flyer/description waiting for admin approval (the live ones above keep showing publicly).
+  /// [pendingDescription] is null when no description change is pending, '' when it is being cleared.
+  final String? pendingFlyerUrl;
+  final String? pendingDescription;
+  bool get hasPendingChange => pendingFlyerUrl != null || pendingDescription != null;
+
+  /// What the host last asked for: the pending description if there is one, else the live one.
+  String get effectiveDescription => pendingDescription ?? description;
   final List<HostTier> tiers;
   final HostTotals totals;
   final List<HostSeller> sellers;
@@ -297,6 +308,8 @@ class HostEventDetail {
       status: e['status'] as String? ?? 'PENDING_REVIEW',
       allowResale: e['allowResale'] as bool? ?? false,
       reviewNote: _str(e['reviewNote']),
+      pendingFlyerUrl: _str((e['pendingChange'] as Map?)?['flyerUrl']),
+      pendingDescription: (e['pendingChange'] as Map?)?['description'] as String?,
       tiers: _maps(json['tiers']).map(HostTier.fromJson).toList(),
       totals: HostTotals.fromJson(
         (json['totals'] as Map?)?.cast<String, dynamic>() ?? const {},

@@ -25,6 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       select: {
         id: true, name: true, description: true, venue: true, address: true, startsAt: true, endsAt: true,
         flyerUrl: true, status: true, allowResale: true, reviewNote: true, createdAt: true,
+        pendingFlyerUrl: true, pendingDescription: true, pendingChangeAt: true,
         tiers: { orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] },
       },
     })
@@ -35,12 +36,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const pcursor = new URL(request.url).searchParams.get('pcursor')
     const holdSince = new Date(Date.now() - PENDING_HOLD_MINUTES * 60_000)
 
-    const [totals, checkedIn, bySeller, eventSellers, checkers, scanGroups, purchases, recentScans, held] = await Promise.all([
+    const [totals, ticketCheckedIn, scanOk, bySeller, eventSellers, checkers, scanGroups, purchases, recentScans, held] = await Promise.all([
       prisma.ticketPurchase.aggregate({
         where: paid,
         _sum: { quantity: true, subtotal: true, platformFee: true, commission: true, hostAmount: true },
       }),
       prisma.ticket.count({ where: { eventId, status: 'CHECKED_IN' } }),
+      prisma.ticketScan.count({ where: { eventId, result: 'OK' } }),
       prisma.ticketPurchase.groupBy({
         by: ['sellerKind', 'resellerId'],
         where: paid,
@@ -127,11 +129,18 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const page = hasMore ? purchases.slice(0, PURCHASE_PAGE) : purchases
 
     const ticketsSold = totals._sum.quantity ?? 0
+    // Ticket rows are deleted after the event; the scan log is kept, so the count survives.
+    const checkedIn = Math.max(ticketCheckedIn, scanOk)
     return NextResponse.json({
       event: {
         id: event.id, name: event.name, description: event.description, venue: event.venue, address: event.address,
         startsAt: event.startsAt, endsAt: event.endsAt, flyerUrl: event.flyerUrl, status: event.status,
         allowResale: event.allowResale, reviewNote: event.reviewNote, hasPaidTickets: ticketsSold > 0,
+        // Awaiting admin approval; the live flyer/description above keep showing publicly until then.
+        hasPendingChange: !!event.pendingChangeAt,
+        pendingChange: event.pendingChangeAt
+          ? { flyerUrl: event.pendingFlyerUrl, description: event.pendingDescription, requestedAt: event.pendingChangeAt }
+          : null,
       },
       tiers: event.tiers.map(t => ({
         id: t.id, name: t.name, description: t.description, imageUrl: t.imageUrl, price: t.price, capacity: t.capacity,
@@ -265,9 +274,46 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       if (setField('endsAt', nextEnd, event.endsAt)) material = true
     }
     if (nextEnd && nextEnd <= nextStart) return fail('The end time must be after the start time.')
-    if (d.description !== undefined) setField('description', d.description || null, event.description)
     if (d.address !== undefined) setField('address', d.address || null, event.address)
-    if (d.flyerUrl !== undefined) setField('flyerUrl', d.flyerUrl, event.flyerUrl)
+
+    // Flyer and description of a LIVE (ACTIVE/PAUSED) event wait for admin approval in the pending* columns:
+    // the event stays public and the door scanner keeps working. Not-yet-public events (and edits that send
+    // the event back to review anyway) apply directly.
+    const live = event.status === 'ACTIVE' || event.status === 'PAUSED'
+    const goesToReview = event.status === 'REJECTED' || (material && !hasPaid && live)
+    const usePending = live && !goesToReview
+    let pendingChanged = false
+    const pendOld: Record<string, unknown> = {}
+    const pendNew: Record<string, unknown> = {}
+    if (usePending) {
+      let pf = event.pendingFlyerUrl
+      let pd = event.pendingDescription
+      if (d.flyerUrl !== undefined) pf = d.flyerUrl === event.flyerUrl ? null : d.flyerUrl
+      // '' means "clear the description"; null means "no description change pending".
+      if (d.description !== undefined) {
+        const want = d.description || null
+        pd = want === (event.description || null) ? null : want ?? ''
+      }
+      if (pf !== event.pendingFlyerUrl || pd !== event.pendingDescription) {
+        pendingChanged = true
+        data.pendingFlyerUrl = pf
+        data.pendingDescription = pd
+        data.pendingChangeAt = pf === null && pd === null ? null : new Date()
+        pendOld.flyerUrl = event.flyerUrl
+        pendOld.description = event.description
+        pendNew.flyerUrl = pf
+        pendNew.description = pd
+      }
+    } else {
+      if (d.description !== undefined) setField('description', d.description || null, event.description)
+      if (d.flyerUrl !== undefined) setField('flyerUrl', d.flyerUrl, event.flyerUrl)
+      // Anything still waiting is superseded when the event goes back to review.
+      if (event.pendingChangeAt && goesToReview) {
+        data.pendingFlyerUrl = null
+        data.pendingDescription = null
+        data.pendingChangeAt = null
+      }
+    }
     if (d.allowResale !== undefined) setField('allowResale', d.allowResale, event.allowResale)
 
     // ── Tier validation (against the event's own tiers only) ──
@@ -322,11 +368,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     let nextStatus = event.status
     const anyChange =
-      Object.keys(data).length > 0 || existingPatches.length > 0 || newTiers.length > 0 || removeIds.length > 0
+      Object.keys(data).length > 0 || pendingChanged || existingPatches.length > 0 || newTiers.length > 0 || removeIds.length > 0
     if (!anyChange) return NextResponse.json({ ok: true, status: event.status, changed: false })
 
-    if (event.status === 'REJECTED') nextStatus = 'PENDING_REVIEW'
-    else if (material && !hasPaid && (event.status === 'ACTIVE' || event.status === 'PAUSED')) nextStatus = 'PENDING_REVIEW'
+    if (goesToReview) nextStatus = 'PENDING_REVIEW'
     if (nextStatus !== event.status) data.status = nextStatus
 
     await prisma.$transaction(async tx => {
@@ -397,9 +442,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         if (res.count !== 1) throw new EditError('Event not found', 404)
       }
 
-      await writeAudit(tx, host.userId, 'TICKET_EVENT_EDITED', event.id,
-        { ...oldVals, status: event.status },
-        { ...newVals, status: nextStatus, tiers: tierChanges, hadPaidTickets: hasPaid })
+      if (pendingChanged) {
+        await writeAudit(tx, host.userId, 'TICKET_EVENT_CHANGE_REQUESTED', event.id, pendOld, pendNew)
+      }
+      if (Object.keys(oldVals).length > 0 || tierChanges.length > 0 || nextStatus !== event.status) {
+        await writeAudit(tx, host.userId, 'TICKET_EVENT_EDITED', event.id,
+          { ...oldVals, status: event.status },
+          { ...newVals, status: nextStatus, tiers: tierChanges, hadPaidTickets: hasPaid })
+      }
     })
 
     // After commit: tell holders and admins when a material change goes live over existing sales.
@@ -444,7 +494,27 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       }
     }
 
-    return NextResponse.json({ ok: true, status: nextStatus, changed: true })
+    if (pendingChanged && data.pendingChangeAt) {
+      try {
+        const admins = await adminIds()
+        await notifyMany(admins, () => ({
+          category: 'transactional',
+          type: 'ORDER_UPDATE',
+          title: 'Live event: flyer/description change to approve',
+          message: `${host.name} wants to change the flyer or description of live event "${event.name}". It stays as is until you approve.`,
+          url: '/admin/events',
+          dedupeKey: `ticket-event-change-admin:${event.id}:${Date.now()}`,
+          bypassLimits: true,
+        }))
+      } catch {
+        console.error('notify admins (pending change) failed')
+      }
+    }
+
+    return NextResponse.json({
+      ok: true, status: nextStatus, changed: true,
+      pendingApproval: pendingChanged ? !!data.pendingChangeAt : !!event.pendingChangeAt && !goesToReview,
+    })
   } catch (error: any) {
     if (error instanceof EditError) return fail(error.message, error.status, error.code)
     if (error?.code === 'P2002') return fail('Two ticket types have the same name.', 409)

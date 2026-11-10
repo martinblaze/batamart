@@ -11,11 +11,16 @@ export async function GET(request: NextRequest) {
     if (!ctx) return NextResponse.json({ error: 'Please sign in again.', code: 'UNAUTHENTICATED' }, { status: 401 })
     const eventId = ctx.checker.eventId
 
-    const [checkedIn, total, myScans] = await Promise.all([
+    // Ticket rows are deleted after the event, so fall back to the kept records (scan log, paid purchases).
+    const [tCheckedIn, tTotal, myScans, scanOk, paid] = await Promise.all([
       prisma.ticket.count({ where: { eventId, status: 'CHECKED_IN' } }),
       prisma.ticket.count({ where: { eventId, status: { in: ['VALID', 'CHECKED_IN'] } } }),
       prisma.ticketScan.count({ where: { eventId, checkerId: ctx.checker.id, result: 'OK' } }),
+      prisma.ticketScan.count({ where: { eventId, result: 'OK' } }),
+      prisma.ticketPurchase.aggregate({ where: { eventId, status: 'PAID' }, _sum: { quantity: true } }),
     ])
+    const checkedIn = Math.max(tCheckedIn, scanOk)
+    const total = tTotal > 0 ? tTotal : paid._sum.quantity ?? 0
 
     return NextResponse.json({
       checker: { email: ctx.checker.email, name: ctx.checker.name },

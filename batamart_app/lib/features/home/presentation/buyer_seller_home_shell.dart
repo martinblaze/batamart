@@ -19,6 +19,7 @@ import '../../marketplace/presentation/deals_screen.dart';
 import '../../marketplace/presentation/marketplace_home_screen.dart';
 import '../../marketplace/state/products_providers.dart';
 import '../../orders/presentation/orders_screen.dart';
+import '../../promos/presentation/promo_sheet.dart';
 import '../../notifications/state/notifications_providers.dart';
 import '../../../core/motion/motion.dart';
 
@@ -102,7 +103,8 @@ class _BuyerSellerHomeShellState extends ConsumerState<BuyerSellerHomeShell> {
   Widget _buildBody() {
     switch (_tab) {
       case BuyerSellerNavTab.home:
-        return Consumer(
+        return PromoSheetHost(
+          child: Consumer(
           builder: (context, ref, _) => MarketplaceHomeScreen(
             onSeeAllDeals: () => setState(() => _tab = BuyerSellerNavTab.deals),
             onCategorySelected: (category) {
@@ -115,6 +117,7 @@ class _BuyerSellerHomeShellState extends ConsumerState<BuyerSellerHomeShell> {
                   );
               setState(() => _tab = BuyerSellerNavTab.deals);
             },
+          ),
           ),
         );
       case BuyerSellerNavTab.deals:
@@ -245,6 +248,7 @@ class _ProfilePlaceholder extends ConsumerWidget {
         const _ProfileGroup(
           heading: 'Discover',
           rows: [
+            _Row(LucideIcons.heart, 'Wishlist', AppRoutes.wishlist),
             _Row(LucideIcons.trendingUp, 'Most bought', AppRoutes.mostBought),
             _Row(LucideIcons.users, 'Sellers', AppRoutes.sellerDirectory),
             _Row(LucideIcons.ticket, 'Events & tickets', AppRoutes.events),

@@ -58,6 +58,11 @@ class TicketHostRepository {
     return _api.patch('/api/tickets/host/events/$id', data: fields);
   }
 
+  /// Withdraw a flyer/description change that is still waiting for admin approval.
+  Future<void> cancelPendingChange(String eventId) {
+    return _api.delete('/api/tickets/host/events/$eventId/pending-change');
+  }
+
   Future<void> updateTier(
     String eventId,
     String tierId, {

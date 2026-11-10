@@ -37,6 +37,8 @@ export interface FcmPayload {
   title: string
   body: string
   url?: string
+  /** Public https image shown large in the notification. */
+  image?: string
   /** Extra string data the app uses to deep-link (type, orderId, productId...). */
   data?: Record<string, string>
 }
@@ -52,10 +54,17 @@ export async function sendFcmToUser(userId: string, payload: FcmPayload): Promis
 
     const response = await messaging.sendEachForMulticast({
       tokens: devices.map(d => d.token),
-      notification: { title: payload.title, body: payload.body },
-      data: { url: payload.url ?? '/', ...(payload.data ?? {}) },
-      android: { priority: 'high', notification: { channelId: 'batamart_default' } },
-      apns: { payload: { aps: { sound: 'default' } } },
+      notification: { title: payload.title, body: payload.body, ...(payload.image ? { imageUrl: payload.image } : {}) },
+      data: { url: payload.url ?? '/', ...(payload.image ? { image: payload.image } : {}), ...(payload.data ?? {}) },
+      android: {
+        priority: 'high',
+        // The Admin SDK calls the Android field imageUrl (the REST name is "image").
+        notification: { channelId: 'batamart_default', ...(payload.image ? { imageUrl: payload.image } : {}) },
+      },
+      apns: {
+        payload: { aps: { sound: 'default', ...(payload.image ? { 'mutable-content': 1 } : {}) } },
+        ...(payload.image ? { fcmOptions: { imageUrl: payload.image } } : {}),
+      },
     })
 
     // Drop tokens Firebase says are dead (app uninstalled, token rotated).

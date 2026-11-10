@@ -82,7 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       })
       if (res.count !== 1) return false
       await tx.ticketTransfer.create({
-        data: { ticketId: ticket.id, fromUserId: me.id, fromEmail: ticket.ownerEmail, toUserId: friend.id },
+        data: { ticketId: ticket.id, eventId: ticket.event.id, ticketCode: ticket.code, fromUserId: me.id, fromEmail: ticket.ownerEmail, toUserId: friend.id },
       })
       await tx.auditLog.create({
         data: {

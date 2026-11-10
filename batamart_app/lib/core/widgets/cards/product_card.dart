@@ -37,6 +37,8 @@ class ProductCard extends StatelessWidget {
     this.isFavorite = false,
     this.onTap,
     this.onFavoriteTap,
+    this.favorite,
+    this.flag,
   });
 
   final String imageUrl;
@@ -68,6 +70,13 @@ class ProductCard extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
+
+  /// A ready-made favourite control (the wishlist heart). Wins over
+  /// [onFavoriteTap]/[isFavorite] when given.
+  final Widget? favorite;
+
+  /// Extra flag on the photograph's left edge, e.g. "Price dropped".
+  final String? flag;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +117,7 @@ class ProductCard extends StatelessWidget {
                     runSpacing: 4,
                     children: [
                       if (isHot) _Flag(label: 'Hot', background: p.slab, foreground: p.slabFg),
+                      if (flag != null) _Flag(label: flag!, background: p.slab, foreground: p.slabFg),
                       if (campaignTag != null) CampaignBadge(tag: campaignTag!),
                     ],
                   ),
@@ -121,7 +131,10 @@ class ProductCard extends StatelessWidget {
                     children: [
                       if (percentOff != null && percentOff! > 0)
                         _Flag(label: '$percentOff% off', background: AppColors.danger, foreground: Colors.white),
-                      if (onFavoriteTap != null) ...[
+                      if (favorite != null) ...[
+                        if (percentOff != null && percentOff! > 0) const SizedBox(height: 4),
+                        favorite!,
+                      ] else if (onFavoriteTap != null) ...[
                         if (percentOff != null && percentOff! > 0) const SizedBox(height: 4),
                         _IconPill(
                           icon: LucideIcons.heart,

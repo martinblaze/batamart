@@ -12,6 +12,10 @@ import { sendPushToUser } from '@/lib/push/sendPushNotification'
 import { sendFcmToUser } from '@/lib/notify/fcm'
 import { renderEmail, type EmailContent } from '@/lib/notify/email'
 import { sendEmail } from '@/lib/email/sendEmail'
+import { pushImageUrl } from '@/lib/notify/image'
+import { unsubscribeHeaders, buildUnsubscribeUrl } from '@/lib/notify/unsubscribe'
+import { activityTier, dailyCapFor, nonCampaignLimit, normalizeFrequency, MAX_DAILY } from '@/lib/notify/campaigns/logic'
+import { getLagosToday, lagosDayKey } from '@/lib/delivery/schedule'
 
 export type NotifyCategory = 'transactional' | 'security' | 'reminder' | 'deals' | 'marketing'
 
@@ -39,11 +43,21 @@ export interface NotifyOptions {
   inApp?: boolean
   /** Skip the promotional daily cap and quiet hours (opt-outs still apply). For admin-triggered sends. */
   bypassLimits?: boolean
+  /** Picture shown large on the push (and the app notification). Resized and https-only. */
+  image?: string
+  /**
+   * Sent by the daily campaign engine. Campaign sends use the unified daily cap
+   * first, and when the push is blocked (cap or quiet hours) nothing is created
+   * at all, so the next slot can try again with something else.
+   */
+  campaign?: boolean
+  /** Precomputed daily cap for this person (campaign engine batches this). */
+  dailyCap?: number
 }
 
 export interface NotifyResult {
   sent: boolean
-  skipped?: 'duplicate' | 'preference' | 'no-user'
+  skipped?: 'duplicate' | 'preference' | 'no-user' | 'cap' | 'quiet' | 'frequency'
   channels: { inApp: boolean; webPush: boolean; appPush: boolean; email: boolean }
 }
 
@@ -56,7 +70,17 @@ const DEFAULT_TYPE: Record<NotifyCategory, NotificationTypeName> = {
 }
 
 const PROMOTIONAL_TYPES = ['DEAL_ALERT', 'PROMO', 'REMINDER', 'DIGEST'] as const
-const DAILY_PROMO_CAP = 4
+
+/** Most recent sign of life: a session event or an order. Null if neither exists. */
+async function lastActivityOf(userId: string): Promise<Date | null> {
+  const [ev, ord, u] = await Promise.all([
+    prisma.userSessionEvent.findFirst({ where: { userId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }).catch(() => null),
+    prisma.order.findFirst({ where: { buyerId: userId }, orderBy: { createdAt: 'desc' }, select: { createdAt: true } }).catch(() => null),
+    prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }).catch(() => null),
+  ])
+  const times = [ev?.createdAt, ord?.createdAt, u?.createdAt].filter(Boolean) as Date[]
+  return times.length ? new Date(Math.max(...times.map(t => t.getTime()))) : null
+}
 
 function lagosHour(now = new Date()) {
   return (now.getUTCHours() + 1) % 24
@@ -70,22 +94,24 @@ const isQuietHours = () => {
 export async function notifyUser(userId: string, opts: NotifyOptions): Promise<NotifyResult> {
   const result: NotifyResult = { sent: false, channels: { inApp: false, webPush: false, appPush: false, email: false } }
   try {
-    let user: { id: string; email: string | null; notificationPreference?: any } | null
+    let user: { id: string; email: string | null; isSuspended?: boolean; isDeleted?: boolean; notificationPreference?: any } | null
     try {
       user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, email: true, notificationPreference: true },
+        select: { id: true, email: true, isSuspended: true, isDeleted: true, notificationPreference: true },
       })
     } catch (error: any) {
       // The preferences table is missing (migration not applied yet): carry on
       // with everyone's defaults instead of failing every message.
-      if (error?.code !== 'P2021') throw error
-      user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true } })
+      if (error?.code !== 'P2021' && error?.code !== 'P2022') throw error
+      user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, isSuspended: true, isDeleted: true } })
     }
     if (!user) return { ...result, skipped: 'no-user' }
 
     const prefs = user.notificationPreference ?? null
     const alwaysOn = opts.category === 'transactional' || opts.category === 'security'
+    // Never send promotions to suspended or deleted accounts.
+    if (!alwaysOn && (user.isSuspended || user.isDeleted)) return { ...result, skipped: 'preference' }
 
     if (!alwaysOn) {
       const blocked =
@@ -94,6 +120,45 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
         (opts.category === 'marketing' && prefs?.marketing === false)
       if (blocked) return { ...result, skipped: 'preference' }
     }
+
+    const promotional = !alwaysOn && (opts.campaign || opts.category === 'deals' || opts.category === 'marketing')
+    const frequency = normalizeFrequency(prefs?.notifyFrequency)
+    if (promotional && frequency === 'ORDERS_ONLY' && !opts.bypassLimits) return { ...result, skipped: 'frequency' }
+
+    // Promotional pushes: ONE daily cap shared by every job, scaled by how
+    // recently the person was active and by their "How often" choice. Campaign
+    // slots get the whole cap; older jobs only what the slots leave free.
+    // Quiet hours (22:00 to 07:00 Lagos) silence them overnight.
+    let allowPush = opts.push !== false && (alwaysOn || prefs?.pushEnabled !== false)
+    let pushBlocked: 'cap' | 'quiet' | null = null
+    if (allowPush && !alwaysOn && !opts.bypassLimits) {
+      if (isQuietHours()) pushBlocked = 'quiet'
+      else {
+        let limit = MAX_DAILY
+        if (promotional) {
+          let cap = opts.dailyCap
+          if (cap === undefined) {
+            const last = await lastActivityOf(userId)
+            cap = dailyCapFor(activityTier(last), frequency)
+          }
+          limit = opts.campaign ? cap : nonCampaignLimit(cap)
+        }
+        const recent = await prisma.notification.count({
+          where: {
+            userId,
+            type: { in: [...PROMOTIONAL_TYPES] as any },
+            createdAt: { gte: getLagosToday() },
+          },
+        })
+        if (recent >= limit) pushBlocked = 'cap'
+      }
+      if (pushBlocked) allowPush = false
+    }
+    const wantsEmail = !!(opts.email && user.email && (alwaysOn || prefs?.emailEnabled !== false))
+    // A promotion that hit the daily cap leaves NO trace (no bell entry either): bell entries of
+    // promotional type count toward the cap, so silent ones from older jobs would starve the campaign slots.
+    const dropInApp = !!pushBlocked && (opts.campaign || (promotional && pushBlocked === 'cap'))
+    if (dropInApp && !wantsEmail) return { ...result, skipped: pushBlocked! }
 
     if (opts.dedupeKey) {
       try {
@@ -105,26 +170,9 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
       }
     }
 
-    // Promotional pushes: capped per day and silent overnight. They still land
-    // in the bell so nothing is lost.
-    let allowPush = opts.push !== false && (alwaysOn || prefs?.pushEnabled !== false)
-    if (allowPush && !alwaysOn && !opts.bypassLimits) {
-      if (isQuietHours()) allowPush = false
-      else {
-        const recent = await prisma.notification.count({
-          where: {
-            userId,
-            type: { in: [...PROMOTIONAL_TYPES] as any },
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-          },
-        })
-        if (recent >= DAILY_PROMO_CAP) allowPush = false
-      }
-    }
-
     const tasks: Promise<void>[] = []
 
-    if (opts.inApp !== false) {
+    if (opts.inApp !== false && !dropInApp) {
       tasks.push(
         prisma.notification
           .create({
@@ -144,29 +192,49 @@ export async function notifyUser(userId: string, opts: NotifyOptions): Promise<N
     }
 
     if (allowPush) {
+      const image = pushImageUrl(opts.image)
       const data: Record<string, string> = { type: opts.type ?? DEFAULT_TYPE[opts.category] }
       if (opts.orderId) data.orderId = opts.orderId
       if (opts.productId) data.productId = opts.productId
       tasks.push(
-        sendPushToUser(userId, { title: opts.title, message: opts.message, url: opts.url, tag: opts.dedupeKey })
+        sendPushToUser(userId, { title: opts.title, message: opts.message, url: opts.url, tag: opts.dedupeKey, image })
           .then(ok => { result.channels.webPush = ok })
           .catch(() => {}),
-        sendFcmToUser(userId, { title: opts.title, body: opts.message, url: opts.url, data })
+        sendFcmToUser(userId, { title: opts.title, body: opts.message, url: opts.url, image, data })
           .then(ok => { result.channels.appPush = ok })
           .catch(() => {}),
       )
     }
 
-    const emailAllowed = opts.email && user.email && (alwaysOn || prefs?.emailEnabled !== false)
-    if (emailAllowed && opts.email) {
+    // At most ONE marketing email per person per day, whichever job sends it.
+    let emailDayKey: string | null = null
+    let sendMail = wantsEmail && !!opts.email
+    if (sendMail && !alwaysOn && !opts.bypassLimits) {
+      emailDayKey = `cemail:${lagosDayKey(new Date())}`
+      try {
+        await prisma.notificationLog.create({ data: { userId, key: emailDayKey } })
+      } catch (error: any) {
+        if (error?.code === 'P2002') sendMail = false
+        else emailDayKey = null
+      }
+    }
+    if (sendMail && opts.email) {
       const { subject, ...content } = opts.email
       tasks.push(
         sendEmail({
           to: user.email!,
           subject: subject ?? opts.title,
-          html: renderEmail({ ...content, showPreferences: !alwaysOn }),
+          html: renderEmail({
+            ...content,
+            showPreferences: !alwaysOn,
+            unsubscribeUrl: alwaysOn ? undefined : buildUnsubscribeUrl(userId) ?? undefined,
+          }),
+          headers: alwaysOn ? undefined : unsubscribeHeaders(userId),
         })
-          .then(ok => { result.channels.email = ok === true })
+          .then(async ok => {
+            result.channels.email = ok === true
+            if (!ok && emailDayKey) await prisma.notificationLog.deleteMany({ where: { userId, key: emailDayKey } }).catch(() => {})
+          })
           .catch(err => console.error('[notify] email failed:', err)),
       )
     }

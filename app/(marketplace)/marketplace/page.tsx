@@ -25,6 +25,8 @@ import {
 import { isSplashPending } from '@/components/SplashScreen'
 import GirlfriendsDayBanner from '@/components/marketplace/GirlfriendsDayBanner'
 import EventsShelf from '@/components/marketplace/EventsShelf'
+import HomePopups from '@/components/marketplace/HomePopups'
+import { LiveTopStrips, LiveShelves } from '@/components/marketplace/live/LiveStrips'
 
 import { decodeProductData, getCategoryDisplayInfo, getCategoryList, matchesCategoryFilter, resolveCategoryKey } from '@/lib/variants'
 import { getClientCache, setClientCache } from '@/lib/client-cache'
@@ -865,11 +867,6 @@ function LiveStatsBar({ count }: { count: number }) {
         <span className="w-1.5 h-1.5 bg-success rounded-full inline-block" />
         <span className="font-semibold text-ink-secondary">{count}</span> products live
       </span>
-      <span className="w-px h-3 bg-border" />
-      <span className="flex items-center gap-1">
-        <Users className="w-3 h-3 text-primary" strokeWidth={1.75} />
-        Students buying now
-      </span>
     </div>
   )
 }
@@ -1316,14 +1313,14 @@ function LiveActivityMarquee({ products }: { products: any[] }) {
   if (recent.length === 0) return null
 
   return (
-    <div className="bg-surface border border-border rounded-xl py-2.5 px-4">
+    <div className="bg-surface border border-border rounded-xl py-2.5 px-4 overflow-hidden">
       <div className="flex items-center gap-2 flex-wrap text-[11px] text-ink-secondary">
         <span className="inline-flex items-center gap-1.5 font-medium text-ink flex-shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-success" />
           Just listed
         </span>
         {recent.map((p, i) => (
-          <span key={p.id} className="flex-shrink-0">
+          <span key={p.id} className="min-w-0 max-w-full break-words">
             {p.seller?.name || 'A student'} listed &ldquo;{p.name}&rdquo; for ₦{p.price?.toLocaleString()}
             {i < recent.length - 1 && <span className="mx-2 text-ink-muted">·</span>}
           </span>
@@ -1865,6 +1862,7 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-surface marketplace-shell">
+      <HomePopups />
       {/* ── Referral Popup Modal ── */}
       {showReferralPopup && mounted && createPortal(
         <div
@@ -1872,7 +1870,7 @@ export default function MarketplacePage() {
           onClick={() => setShowReferralPopup(false)}
         >
           <div
-            className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-card shadow-soft"
+            className="relative w-full max-w-sm max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl bg-card shadow-soft"
             onClick={e => e.stopPropagation()}
           >
             {/* Close btn */}
@@ -2072,6 +2070,9 @@ export default function MarketplacePage() {
           /* ══ PERSONALISED FEED ══ */
           <div className="space-y-4">
 
+            {/* Real, live strips: delivery cutoff, just ordered, stats */}
+            <LiveTopStrips />
+
             {allProducts.length > 0 && (
               <div className="bg-card border border-border px-4 py-3">
                 <LiveStatsBar count={allProducts.length} />
@@ -2115,6 +2116,9 @@ export default function MarketplacePage() {
                 onCategorySelect={handleCategorySelect}
               />
             )}
+
+            {/* ── Trending / price drops / new today (real data, hidden when empty) ── */}
+            <LiveShelves />
 
             {/* ── Events & tickets ── */}
             <EventsShelf />

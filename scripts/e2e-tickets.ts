@@ -760,6 +760,156 @@ async function main() {
   check('cancelled: not buyable', (await rejects(() => P.prepareSale({ eventId: lifeEv.id, tierId: lifeEv.tiers[0].id, quantity: 1 }))) === 'EVENT_NOT_ON_SALE')
   check('cancelled: admin cannot resume it (409)', (await act(lifeEv.id, 'resume')).status === 409)
 
+  // ═══ 12. Pending flyer/description changes on live events ══════════════════════
+  section('12. Pending changes on a live event')
+  const hostEventId = await import('@/app/api/tickets/host/events/[id]/route')
+  const pendingRoute = await import('@/app/api/tickets/host/events/[id]/pending-change/route')
+  const adminList = await import('@/app/api/admin/tickets/events/route')
+  const adminStats = await import('@/app/api/admin/tickets/events/[id]/stats/route')
+  const checkerMe = await import('@/app/api/tickets/checker/me/route')
+  const auditRouteMod = await import('@/app/api/tickets/host/events/[id]/audit/route')
+  const { purgeEndedEventTickets } = await import('@/lib/tickets/purge')
+  const FLY_OLD = 'https://res.cloudinary.com/x/f.jpg'
+  const FLY_NEW = 'https://res.cloudinary.com/x/new.jpg'
+  const FLY_NEWER = 'https://res.cloudinary.com/x/newer.jpg'
+  const liveEv = await mkEvent(host.id, { tiers: [{ name: 'Live', price: 1000, capacity: 30 }], name: `Live Edit ${RUN}` })
+  await prisma.ticketEvent.update({ where: { id: liveEv.id }, data: { description: 'Original description' } })
+  const liveP = await buyPaid(liveEv.tiers[0].id, 2, { email: `live.${RUN}@gmail.com` })
+  const [lv1, lv2] = await tickets(liveP.id)
+  const evPatch = (id: string, body: unknown, t = hostTok) => call(hostEventId.PATCH, { method: 'PATCH', token: t, body, params: { id }, url: `http://localhost:3000/api/tickets/host/events/${id}` })
+  const evState = (id: string) => prisma.ticketEvent.findUnique({ where: { id } })
+  const liveCk = await call(hostCheckers.POST, { method: 'POST', token: hostTok, body: { email: 'livedoor@gmail.com' }, params: { id: liveEv.id } })
+  const liveSess = (await login(tokenFromEmail('livedoor@gmail.com'), 'livedoor@gmail.com')).json?.sessionToken as string
+  check('live-event checker can sign in', !!liveSess && liveCk.status === 200)
+
+  const p1 = await evPatch(liveEv.id, { flyerUrl: FLY_NEW, description: 'New description' })
+  const s1e = (await evState(liveEv.id))!
+  check('live event: PATCH flyer+description accepted, reports pendingApproval', p1.status === 200 && p1.json?.pendingApproval === true && p1.json?.status === 'ACTIVE', p1.json)
+  check('live values unchanged, status still ACTIVE', s1e.flyerUrl === FLY_OLD && s1e.description === 'Original description' && s1e.status === 'ACTIVE')
+  check('pending values stored with a timestamp', s1e.pendingFlyerUrl === FLY_NEW && s1e.pendingDescription === 'New description' && !!s1e.pendingChangeAt)
+  check('audit TICKET_EVENT_CHANGE_REQUESTED written', (await prisma.auditLog.count({ where: { entityId: liveEv.id, action: 'TICKET_EVENT_CHANGE_REQUESTED' } })) === 1)
+  const pubLive = await call(publicEvent.GET, { url: 'http://localhost:3000/x', params: { id: liveEv.id } })
+  check('public page still shows the live flyer and description', pubLive.status === 200 && pubLive.json?.event?.flyerUrl === FLY_OLD && pubLive.json?.event?.description === 'Original description', pubLive.json?.event)
+  const hostView = await call(hostEventId.GET, { token: hostTok, url: `http://localhost:3000/api/tickets/host/events/${liveEv.id}`, params: { id: liveEv.id } })
+  check('host dashboard exposes the pending change', hostView.json?.event?.hasPendingChange === true && hostView.json?.event?.pendingChange?.flyerUrl === FLY_NEW && hostView.json?.event?.flyerUrl === FLY_OLD, hostView.json?.event)
+  const doorOk = await scan(liveSess, null, await qrFor(lv1))
+  check('door scanner still works while a change is pending', doorOk.json?.result === 'OK', doorOk.json)
+
+  const pe2 = await evPatch(liveEv.id, { description: 'Newer description' })
+  const s2e = (await evState(liveEv.id))!
+  check('second edit overwrites the pending description, keeps the pending flyer', pe2.status === 200 && s2e.pendingDescription === 'Newer description' && s2e.pendingFlyerUrl === FLY_NEW)
+  const lst = await call(adminList.GET, { token: adminTok, url: 'http://localhost:3000/api/admin/tickets/events?status=PENDING_CHANGES' })
+  check('admin Pending changes tab lists it with count', lst.status === 200 && (lst.json.events as any[]).some(e => e.id === liveEv.id && e.hasPendingChange) && lst.json.counts.PENDING_CHANGES >= 1, lst.json?.counts)
+  const adminChange = (id: string, action: string, note?: string) => call(adminEvent.POST, { method: 'POST', token: adminTok, body: { action, note }, params: { id } })
+  const approveCh = await adminChange(liveEv.id, 'approve_change')
+  const s3e = (await evState(liveEv.id))!
+  check('admin approve_change copies pending onto live and clears pending', approveCh.status === 200 && s3e.flyerUrl === FLY_NEW && s3e.description === 'Newer description' && !s3e.pendingChangeAt && !s3e.pendingFlyerUrl && !s3e.pendingDescription && s3e.status === 'ACTIVE', s3e)
+  check('audit TICKET_EVENT_CHANGE_APPROVED written', (await prisma.auditLog.count({ where: { entityId: liveEv.id, action: 'TICKET_EVENT_CHANGE_APPROVED' } })) === 1)
+  check('approve_change with nothing pending -> 409', (await adminChange(liveEv.id, 'approve_change')).status === 409)
+
+  await evPatch(liveEv.id, { flyerUrl: FLY_NEWER, description: 'Rejected text' })
+  const rejNo = await adminChange(liveEv.id, 'reject_change')
+  check('reject_change without a note -> 400', rejNo.status === 400)
+  const rej = await adminChange(liveEv.id, 'reject_change', 'Flyer shows another event')
+  const s4e = (await evState(liveEv.id))!
+  check('reject_change clears pending and leaves live values', rej.status === 200 && !s4e.pendingChangeAt && s4e.flyerUrl === FLY_NEW && s4e.description === 'Newer description')
+  const rejAudit = await prisma.auditLog.findFirst({ where: { entityId: liveEv.id, action: 'TICKET_EVENT_CHANGE_REJECTED' } })
+  check('audit TICKET_EVENT_CHANGE_REJECTED carries the note', (rejAudit?.newValue as any)?.note === 'Flyer shows another event')
+
+  await evPatch(liveEv.id, { description: 'Will be withdrawn' })
+  const cancelPend = await call(pendingRoute.DELETE, { method: 'DELETE', token: hostTok, params: { id: liveEv.id }, url: `http://localhost:3000/api/tickets/host/events/${liveEv.id}/pending-change` })
+  check('host can cancel the pending change', cancelPend.status === 200 && !(await evState(liveEv.id))!.pendingChangeAt)
+  const cancelOther2 = await call(pendingRoute.DELETE, { method: 'DELETE', token: tok(intruder, 'SELLER'), params: { id: liveEv.id }, url: 'http://localhost:3000/x' })
+  check('another host cannot touch it (404)', cancelOther2.status === 404)
+  await evPatch(liveEv.id, { description: 'Temp' })
+  await evPatch(liveEv.id, { description: 'Newer description' })
+  check('editing back to the live value clears the pending change', !(await evState(liveEv.id))!.pendingChangeAt)
+
+  const draftEv = await mkEvent(host.id, { tiers: [{ name: 'D', price: 1000, capacity: 5 }], status: 'PENDING_REVIEW' })
+  const pd = await evPatch(draftEv.id, { flyerUrl: FLY_NEW, description: 'Direct apply' })
+  const sd = (await evState(draftEv.id))!
+  check('not-yet-approved event: flyer/description apply directly', pd.status === 200 && sd.flyerUrl === FLY_NEW && sd.description === 'Direct apply' && !sd.pendingChangeAt)
+
+  // ═══ 13. Ticket purge after the event ═════════════════════════════════════════
+  section('13. Purge of tickets after the event')
+  const HOUR = 3_600_000
+  const dayEv = await mkEvent(host.id, { tiers: [{ name: 'Gen', price: 2000, capacity: 40 }], name: `Purge Me ${RUN}` })
+  const owner13 = await mkUser()
+  const pu13 = await buyPaid(dayEv.tiers[0].id, 4, { userId: owner13.id, email: owner13.email! })
+  const [pt1, pt2, pt3] = await tickets(pu13.id)
+  const guestPu = await buyPaid(dayEv.tiers[0].id, 1, { email: `purge.guest.${RUN}@gmail.com` })
+  await call(hostCheckers.POST, { method: 'POST', token: hostTok, body: { email: 'purgedoor@gmail.com' }, params: { id: dayEv.id } })
+  const sess13 = (await login(tokenFromEmail('purgedoor@gmail.com'), 'purgedoor@gmail.com')).json?.sessionToken as string
+  const scan13 = await scan(sess13, null, await qrFor(pt1))
+  check('13: scan before purge OK and snapshots the ticket code', scan13.json?.result === 'OK' && (await prisma.ticketScan.findFirst({ where: { eventId: dayEv.id, result: 'OK' } }))?.ticketCode === pt1.code)
+  const tr13 = await doTransfer(pt2.id, tok(owner13, 'BUYER'), friend.username!)
+  const tRow = await prisma.ticketTransfer.findFirst({ where: { ticketId: pt2.id } })
+  check('13: transfer snapshots eventId and ticketCode', tr13.status === 200 && tRow?.eventId === dayEv.id && tRow?.ticketCode === pt2.code)
+  const dashFor = async (id: string) => (await call(hostEventId.GET, { token: hostTok, url: `http://localhost:3000/api/tickets/host/events/${id}`, params: { id } })).json
+  const dashBefore = await dashFor(dayEv.id)
+  const listBefore = ((await call(hostEvents.GET, { token: hostTok, url: 'http://localhost:3000/api/tickets/host/events' })).json.events as any[]).find(e => e.id === dayEv.id)
+  const nTickets = await prisma.ticket.count({ where: { eventId: dayEv.id } })
+
+  // Events that must NOT be purged
+  const youngEv = await mkEvent(host.id, { tiers: [{ name: 'Y', price: 1000, capacity: 5 }] })
+  await buyPaid(youngEv.tiers[0].id, 1, { email: `young.${RUN}@gmail.com` })
+  await prisma.ticketEvent.update({ where: { id: youngEv.id }, data: { startsAt: new Date(Date.now() - 30 * HOUR), endsAt: new Date(Date.now() - 10 * HOUR) } })
+  const noEndEv = await mkEvent(host.id, { tiers: [{ name: 'N', price: 1000, capacity: 5 }] })
+  await buyPaid(noEndEv.tiers[0].id, 1, { email: `noend.${RUN}@gmail.com` })
+  await prisma.ticketEvent.update({ where: { id: noEndEv.id }, data: { startsAt: new Date(Date.now() - 30 * HOUR) } })
+  const futureTickets = await prisma.ticket.count({ where: { eventId: liveEv.id } })
+  // Old events: a cancelled one with an end time, and dayEv (no end time, started 3 days ago)
+  const cancEv = await mkEvent(host.id, { tiers: [{ name: 'C', price: 1000, capacity: 5 }] })
+  await buyPaid(cancEv.tiers[0].id, 2, { email: `canc.${RUN}@gmail.com` })
+  await prisma.ticketEvent.update({ where: { id: cancEv.id }, data: { status: 'CANCELLED', startsAt: new Date(Date.now() - 4 * DAY), endsAt: new Date(Date.now() - 3 * DAY) } })
+  await prisma.ticketEvent.update({ where: { id: dayEv.id }, data: { startsAt: new Date(Date.now() - 3 * DAY) } })
+
+  const hostBalBefore = await bal(host.id)
+  const run1 = await purgeEndedEventTickets(new Date())
+  check('purge: ended events processed, counts returned', run1.events >= 2 && run1.tickets >= nTickets + 2, run1)
+  check('purge: ended event has no ticket rows left', (await prisma.ticket.count({ where: { eventId: dayEv.id } })) === 0)
+  check('purge: cancelled ended event purged too', (await prisma.ticket.count({ where: { eventId: cancEv.id } })) === 0)
+  check('purge: event over for only 10 h keeps its tickets', (await prisma.ticket.count({ where: { eventId: youngEv.id } })) === 1)
+  check('purge: no-end event over for 18 h keeps its tickets', (await prisma.ticket.count({ where: { eventId: noEndEv.id } })) === 1)
+  check('purge: live (future) event keeps its tickets', (await prisma.ticket.count({ where: { eventId: liveEv.id } })) === futureTickets && futureTickets > 0)
+  const pAudit = await prisma.auditLog.findMany({ where: { entityId: dayEv.id, action: 'TICKET_EVENT_TICKETS_PURGED' } })
+  const pv13 = pAudit[0]?.newValue as any
+  check('purge: one audit log per event with counts', pAudit.length === 1 && pv13?.tickets === nTickets && pv13?.checkedIn === 1 && pv13?.unused === nTickets - 1, pv13)
+  check('purge: purchases kept', (await prisma.ticketPurchase.count({ where: { eventId: dayEv.id, status: 'PAID' } })) === 2)
+  const scansAfter = await prisma.ticketScan.findMany({ where: { eventId: dayEv.id } })
+  check('purge: scan log kept, ticketId nulled, code and holder snapshot intact', scansAfter.length >= 1 && scansAfter.every(s => s.ticketId === null) && scansAfter.some(s => s.ticketCode === pt1.code && !!s.holderName))
+  const trAfter = await prisma.ticketTransfer.findMany({ where: { eventId: dayEv.id } })
+  check('purge: transfer history kept with code snapshot', trAfter.length === 1 && trAfter[0].ticketId === null && trAfter[0].ticketCode === pt2.code)
+  check('purge: host balance unchanged', (await bal(host.id)) === hostBalBefore)
+  const dashAfter = await dashFor(dayEv.id)
+  check('purge: host dashboard totals unchanged (checkedIn from scan log)', JSON.stringify(dashAfter.totals) === JSON.stringify(dashBefore.totals) && dashAfter.totals.checkedIn === 1, { b: dashBefore.totals, a: dashAfter.totals })
+  const listAfter = ((await call(hostEvents.GET, { token: hostTok, url: 'http://localhost:3000/api/tickets/host/events' })).json.events as any[]).find(e => e.id === dayEv.id)
+  check('purge: host list ticketsSold/capacity/revenue unchanged', listAfter.ticketsSold === listBefore.ticketsSold && listAfter.capacity === listBefore.capacity && listAfter.revenue === listBefore.revenue)
+  check('purge: tier sold column unchanged', (await prisma.ticketTier.findUnique({ where: { id: dayEv.tiers[0].id } }))!.sold === 5)
+
+  const run2 = await purgeEndedEventTickets(new Date())
+  check('purge: idempotent (second run deletes nothing, no new audit)', run2.tickets === 0 && run2.events === 0 && (await prisma.auditLog.count({ where: { entityId: dayEv.id, action: 'TICKET_EVENT_TICKETS_PURGED' } })) === 1, run2)
+
+  const gone = await call(guestRoute.GET, { url: 'http://localhost:3000/x', params: { token: guestPu.accessToken } })
+  check('guest link after purge: 410 EVENT_ENDED with friendly message', gone.status === 410 && gone.json?.code === 'EVENT_ENDED' && /ended/i.test(gone.json?.error ?? ''), gone.json)
+  const goneT = await call(ticketRoute.GET, { url: `http://localhost:3000/api/tickets/ticket/${pt3.id}?token=${pu13.accessToken}`, params: { id: pt3.id } })
+  check('ticket route with token after purge: 410 EVENT_ENDED', goneT.status === 410 && goneT.json?.code === 'EVENT_ENDED', goneT.json)
+  const goneO = await call(ticketRoute.GET, { token: tok(owner13, 'BUYER'), url: `http://localhost:3000/api/tickets/ticket/${pt3.id}`, params: { id: pt3.id } })
+  check('ticket route as owner after purge: clean 404 with explanation', goneO.status === 404 && /ended/i.test(goneO.json?.error ?? ''), goneO.json)
+  const mineAfter = await mine(owner13)
+  check('/mine after purge: 200, no tickets, purchase listed as ENDED', mineAfter.status === 200 && mineAfter.json.tickets.length === 0 && mineAfter.json.endedPurchases?.length === 1 && mineAfter.json.endedPurchases[0].status === 'ENDED' && mineAfter.json.endedPurchases[0].quantity === 4, mineAfter.json)
+  const mineFriend = await mine(friend)
+  check('/mine for a transfer recipient after purge responds 200', mineFriend.status === 200)
+  const me13 = await call(checkerMe.GET, { token: sess13, url: 'http://localhost:3000/api/tickets/checker/me' })
+  check('checker /me after purge: checkedIn from scan log, total from purchases', me13.status === 200 && me13.json.stats.checkedIn === 1 && me13.json.stats.total === 5, me13.json)
+  const scanLate = await scan(sess13, null, await qrFor(pt3))
+  check('scanning long after the event is refused (403 EVENT_ENDED)', scanLate.status === 403 && scanLate.json?.code === 'EVENT_ENDED', scanLate.json)
+  const st13 = await call(adminStats.GET, { token: adminTok, url: 'http://localhost:3000/x', params: { id: dayEv.id } })
+  check('admin stats after purge: checkedIn from scan log, purged flag', st13.status === 200 && st13.json.tickets.checkedIn === 1 && st13.json.tickets.purged === true && st13.json.sales.ticketsSold === 5, st13.json)
+  const aud13 = await call(auditRouteMod.GET, { token: hostTok, url: `http://localhost:3000/api/tickets/host/events/${dayEv.id}/audit`, params: { id: dayEv.id } })
+  const audTexts = (aud13.json?.items ?? []).map((i: any) => i.text as string)
+  check('host timeline after purge: transfer, scan and purge entries', audTexts.some((t: string) => t.includes(pt2.code)) && audTexts.some((t: string) => /scanned/.test(t)) && audTexts.some((t: string) => /Tickets removed/.test(t)), audTexts)
+
   // ── summary ───────────────────────────────────────────────────────────────
   console.log(`\n==== ${pass} passed, ${fail} failed ====`)
   if (fail) { console.log('FAILED:\n - ' + failures.join('\n - ')) }

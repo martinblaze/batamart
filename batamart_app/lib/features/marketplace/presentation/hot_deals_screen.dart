@@ -16,6 +16,7 @@ import '../../../core/widgets/states/error_state.dart';
 import '../../../core/widgets/states/loading_skeleton.dart';
 import '../data/product_models.dart';
 import '../state/products_providers.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// Hot deals — the discount surface, mirroring the web app's
 /// `/marketplace/deals` page.
@@ -188,6 +189,7 @@ class HotDealsScreen extends ConsumerWidget {
                         return ProductCard(
                           imageUrl: product.thumbnail,
                           name: product.name,
+                          favorite: WishlistHeart(productId: product.id),
                           price: naira(product.price),
                           isHot: product.isHot,
                           percentOff: product.discountPercent,
@@ -310,6 +312,7 @@ class FlashPicks extends ConsumerWidget {
                     child: ProductCard(
                       imageUrl: product.thumbnail,
                       name: product.name,
+                      favorite: WishlistHeart(productId: product.id),
                       price: naira(product.price),
                       isHot: product.isHot,
                       percentOff: product.discountPercent,

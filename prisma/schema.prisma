@@ -124,6 +124,7 @@ model User {
   penaltiesReceived        Penalty[]           @relation("UserPenalties")
   products                 Product[]
   productReports           ProductReport[]
+  wishlistItems            WishlistItem[]
   productReviewsGiven      ProductReview[]     @relation("ProductReviewsGiven")
   pushSubscriptions        PushSubscription[]
   referralRewardsGenerated ReferralReward[]    @relation("ReferredUserRewards")
@@ -245,6 +246,7 @@ model Product {
   reviews                  ProductReview[]
   reports                  Report[]
   productReports           ProductReport[]
+  wishlistItems            WishlistItem[]
 
   @@index([sellerId])
   @@index([category])
@@ -1236,6 +1238,8 @@ model NotificationPreference {
   reminders    Boolean  @default(true)
   deals        Boolean  @default(true)
   marketing    Boolean  @default(true)
+  // NORMAL (up to 6 a day) | FEWER (2 a day) | ORDERS_ONLY
+  notifyFrequency String @default("NORMAL")
   updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1312,6 +1316,11 @@ model TicketEvent {
   startsAt      DateTime
   endsAt        DateTime?
   flyerUrl      String?
+  // A host edit to the flyer/description of a live event waits here for admin
+  // approval; the live fields above keep showing until then.
+  pendingFlyerUrl    String?
+  pendingDescription String?
+  pendingChangeAt    DateTime?
   status        TicketEventStatus @default(PENDING_REVIEW)
   allowResale   Boolean           @default(true)
   reviewNote    String?
@@ -1481,14 +1490,18 @@ model Ticket {
 
 model TicketTransfer {
   id         String   @id @default(cuid())
-  ticketId   String
+  // Null once the ticket is purged after the event; eventId/ticketCode keep the history readable.
+  ticketId   String?
+  eventId    String
+  ticketCode String
   fromUserId String?
   fromEmail  String
   toUserId   String
   createdAt  DateTime @default(now())
-  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket     Ticket?  @relation(fields: [ticketId], references: [id], onDelete: SetNull)
 
   @@index([ticketId])
+  @@index([eventId])
   @@index([fromUserId])
   @@index([toUserId])
   @@schema("public")
@@ -1500,6 +1513,8 @@ model TicketScan {
   eventId    String
   checkerId  String
   ticketId   String?
+  // Snapshot of the ticket code (the ticket row is deleted after the event).
+  ticketCode String?
   // OK | ALREADY_USED | INVALID | WRONG_EVENT | STALE | VOID
   result     String
   // Snapshot so the log still reads correctly if the account changes later.
@@ -1512,5 +1527,23 @@ model TicketScan {
 
   @@index([eventId, createdAt])
   @@index([checkerId])
+  @@schema("public")
+}
+
+// Saved items. priceWhenSaved is the price the buyer saw; lastNotifiedPrice is
+// the price we last alerted them about, so a drop is only announced once.
+model WishlistItem {
+  id                String   @id @default(cuid())
+  userId            String
+  productId         String
+  priceWhenSaved    Float
+  lastNotifiedPrice Float?
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+  @@index([productId])
   @@schema("public")
 }

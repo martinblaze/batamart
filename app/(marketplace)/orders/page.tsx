@@ -18,7 +18,7 @@ import { OrderNotificationBanner } from '@/components/layout/OrderNotificationBa
 import { getVariantChips, parseVariantNote } from '@/lib/order-notes'
 import { CAMPAIGNS, isValidCampaignKey } from '@/lib/campaigns'
 import GirlfriendsDayCelebration from '@/components/marketplace/GirlfriendsDayCelebration'
-import TicketRow, { MyTicket, ticketIsUpcoming } from '@/components/tickets/TicketRow'
+import TicketRow, { EndedPurchaseRow, EndedPurchase, MyTicket, ticketIsUpcoming } from '@/components/tickets/TicketRow'
 
 interface ProductReview { id: string; rating: number; comment: string; createdAt: string }
 interface Review { id: string; type: string; rating: number; comment: string | null; createdAt: string }
@@ -110,6 +110,7 @@ export default function OrdersPage() {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
   const [peopleLikeYouBought, setPeopleLikeYouBought] = useState<PeopleLikeYouItem[]>([])
   const [myTickets, setMyTickets] = useState<MyTicket[]>([])
+  const [endedTickets, setEndedTickets] = useState<EndedPurchase[]>([])
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search)
@@ -162,6 +163,7 @@ export default function OrdersPage() {
       if (!response.ok) return
       const data = await response.json()
       setMyTickets(Array.isArray(data.tickets) ? data.tickets : [])
+      setEndedTickets(Array.isArray(data.endedPurchases) ? data.endedPurchases : [])
     } catch {}
   }
 
@@ -340,7 +342,7 @@ export default function OrdersPage() {
         )}
 
         {/* ── Tickets ───────────────────────────────────────────────────── */}
-        {myTickets.length > 0 && (
+        {(myTickets.length > 0 || endedTickets.length > 0) && (
           <Reveal className="mb-8">
             <div className="mb-4 flex items-end justify-between gap-6">
               <div className="min-w-0">
@@ -353,13 +355,16 @@ export default function OrdersPage() {
                 href="/tickets"
                 className="group flex flex-shrink-0 items-center gap-1.5 pb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-primary"
               >
-                {myTickets.length > 3 ? `See all ${myTickets.length}` : 'Open'}
+                {myTickets.length + endedTickets.length > 3 ? `See all ${myTickets.length + endedTickets.length}` : 'Open'}
                 <ChevronRight className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5" />
               </Link>
             </div>
             <div className="space-y-3">
               {[...myTickets.filter(ticketIsUpcoming), ...myTickets.filter(t => !ticketIsUpcoming(t))].slice(0, 3).map(t => (
                 <TicketRow key={t.id} ticket={t} />
+              ))}
+              {endedTickets.slice(0, Math.max(0, 3 - myTickets.length)).map(p => (
+                <EndedPurchaseRow key={p.purchaseId} purchase={p} />
               ))}
             </div>
           </Reveal>

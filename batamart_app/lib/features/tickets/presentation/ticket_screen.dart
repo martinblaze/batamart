@@ -35,6 +35,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   Object? _loadError;
   bool _gone = false;
 
+  /// The ticket row no longer exists (deleted after the event ended) or the event ended.
+  bool _removed = false;
+
   /// serverTime - deviceTime at the moment of the last fetch.
   int _clockOffsetMs = 0;
 
@@ -77,6 +80,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       if (_ticket != null && e.statusCode == 404) {
         setState(() => _gone = true);
         _poll?.cancel();
+      } else if (_ticket == null && (e.statusCode == 404 || e.statusCode == 410)) {
+        setState(() => _removed = true);
+        _poll?.cancel();
       } else if (_ticket == null) {
         setState(() => _loadError = e);
       }
@@ -100,7 +106,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final t = _ticket;
     return Scaffold(
       appBar: const BataAppBar(title: 'Ticket', showBack: true),
-      body: t == null
+      body: _removed && t == null
+          ? const _GoneState(
+              title: 'This ticket is no longer available',
+              message:
+                  'If the event has ended, its tickets were removed afterwards. Your payment record is kept.',
+              icon: LucideIcons.calendarX,
+            )
+          : t == null
           ? (_loadError != null
                 ? ErrorState(
                     message: 'Could not load this ticket.\n$_loadError',
@@ -261,7 +274,15 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 }
 
 class _GoneState extends StatelessWidget {
-  const _GoneState();
+  const _GoneState({
+    this.title = 'This ticket is no longer yours',
+    this.message = 'It was sent to someone else, so it no longer works for you.',
+    this.icon = LucideIcons.send,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -272,15 +293,15 @@ class _GoneState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.send, size: 40, color: p.inkMuted),
+            Icon(icon, size: 40, color: p.inkMuted),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'This ticket is no longer yours',
+              title,
               style: AppTypography.display(size: 18),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'It was sent to someone else, so it no longer works for you.',
+              message,
               textAlign: TextAlign.center,
               style: TextStyle(color: p.inkSecondary),
             ),

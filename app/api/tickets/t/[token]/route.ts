@@ -3,7 +3,7 @@
 // receipt email, so it is rate limited by IP and never logged.
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { json, fail, hit, clientIp, maskEmail } from '@/lib/tickets/buyer'
+import { json, fail, hit, clientIp, maskEmail, isEventOver } from '@/lib/tickets/buyer'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +30,14 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
       },
     })
     if (!purchase || purchase.status !== 'PAID') return json({ error: 'Link not found' }, 404)
+
+    if (purchase.tickets.length === 0 && isEventOver(purchase.event)) {
+      return json({
+        error: 'This event has ended and the tickets were removed.',
+        code: 'EVENT_ENDED',
+        event: { id: purchase.event.id, name: purchase.event.name, venue: purchase.event.venue, startsAt: purchase.event.startsAt.toISOString() },
+      }, 410)
+    }
 
     // Only tickets still held by the purchase's buyer email: a ticket sent to a
     // friend must not stay reachable through the old link.

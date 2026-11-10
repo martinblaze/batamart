@@ -1,0 +1,11 @@
+[Unit]
+Description=BataMart notification slot 4 at 16:00 Lagos
+
+[Timer]
+OnCalendar=*-*-* 16:00:00 Africa/Lagos
+Persistent=false
+RandomizedDelaySec=20
+Unit=batamart-notify-slot@4.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=BataMart notification slot %i
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/batamart-notify/notify-slot.sh %i
+# Run as an unprivileged user that can read /etc/batamart/notify-scheduler.env
+User=batamart-notify
+TimeoutStartSec=900
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true

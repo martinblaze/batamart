@@ -1,0 +1,8 @@
+# Alternative to systemd: plain cron. Set the server clock to UTC (Lagos = UTC+1, no DST),
+# so 07:45 Lagos is 06:45 UTC. Install with: crontab -u batamart-notify crontab.example
+45 6  * * * /opt/batamart-notify/notify-slot.sh 1 >> /var/log/batamart-notify.log 2>&1
+30 9  * * * /opt/batamart-notify/notify-slot.sh 2 >> /var/log/batamart-notify.log 2>&1
+0  12 * * * /opt/batamart-notify/notify-slot.sh 3 >> /var/log/batamart-notify.log 2>&1
+0  15 * * * /opt/batamart-notify/notify-slot.sh 4 >> /var/log/batamart-notify.log 2>&1
+0  18 * * * /opt/batamart-notify/notify-slot.sh 5 >> /var/log/batamart-notify.log 2>&1
+0  20 * * * /opt/batamart-notify/notify-slot.sh 6 >> /var/log/batamart-notify.log 2>&1

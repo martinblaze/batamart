@@ -8,7 +8,7 @@ import NotificationBell from '@/components/layout/NotificationBell'
 import {
   ChevronDown, ChevronRight, User, Users, LogOut, Store, ShoppingBag, Wallet,
   Package, AlertTriangle, PlusCircle, Globe, Plus, Bike, Gift, Pencil,
-  ClipboardList, TrendingUp, Ticket as TicketIcon,
+  ClipboardList, TrendingUp, Ticket as TicketIcon, Heart,
   LayoutGrid, Bell as BellIcon, Menu, X, Search, MapPin,
   type LucideIcon,
 } from 'lucide-react'
@@ -1116,6 +1116,9 @@ export function Navbar() {
                         <div className="my-1 border-t border-border" />
                         <Link href="/orders" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/orders'))}>
                           <Package className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Orders</span>
+                        </Link>
+                        <Link href="/wishlist" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/wishlist'))}>
+                          <Heart className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>Wishlist</span>
                         </Link>
                         <Link href="/tickets" onClick={() => setIsUserDropdownOpen(false)} role="menuitem" className={dropRow(isActive('/tickets'))}>
                           <TicketIcon className="w-4 h-4 text-ink-muted" strokeWidth={1.75} /><span>My tickets</span>

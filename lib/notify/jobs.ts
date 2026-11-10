@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { notifyUser, notifyMany, adminIds, type NotifyOptions } from '@/lib/notify/dispatch'
 import { releaseMaturedSellerEscrowForUser } from '@/lib/escrow'
 import { getEffectiveDeliveryDate, getLagosToday, lagosDayKey, parseReadyDays } from '@/lib/delivery/schedule'
+import { wishlistPriceDrops } from '@/lib/notify/wishlist'
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
@@ -679,6 +680,12 @@ export async function ticketReminders(ctx: JobContext): Promise<JobResult> {
   return { ...r }
 }
 
+export async function ticketPurge(ctx: JobContext): Promise<JobResult> {
+  const { purgeEndedEventTickets } = await import('@/lib/tickets/purge')
+  const r = await purgeEndedEventTickets(new Date(), { deadline: ctx.deadline })
+  return { ...r }
+}
+
 // ── The two daily bundles ───────────────────────────────────────────────────
 
 async function runAll(tasks: [string, () => Promise<JobResult>][], ctx: JobContext) {
@@ -707,10 +714,13 @@ export function runMorning(ctx: JobContext) {
       // Fault-isolated by runAll: a failure here (or a missing ticketing
       // migration) cannot break the other jobs. Early so deals cannot starve it.
       ['ticketReminders', () => ticketReminders(ctx)],
+      ['ticketPurge', () => ticketPurge(ctx)],
       ['escrowReleases', () => escrowReleases(ctx)],
       ['sellerAcceptReminders', () => sellerAcceptReminders(ctx)],
       ['deliveryConfirmReminders', () => deliveryConfirmReminders(ctx)],
       ['reviewRequests', () => reviewRequests(ctx)],
+      // Saved items that got cheaper or are nearly gone. Before deals so it keeps its place under the daily cap.
+      ['wishlistPriceDrops', () => wishlistPriceDrops(ctx)],
       ['dealAlerts', () => dealAlerts(ctx)],
       ['viewedNotBought', () => viewedNotBought(ctx)],
       ['lowStockAlerts', () => lowStockAlerts(ctx)],

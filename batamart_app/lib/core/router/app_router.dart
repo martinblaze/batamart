@@ -55,6 +55,7 @@ import '../../features/referrals/presentation/referrals_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/seller/presentation/edit_product_screen.dart';
 import '../../features/wallet/presentation/wallet_screen.dart';
+import '../../features/wishlist/presentation/wishlist_screen.dart';
 import '../../features/wallet/presentation/wallet_transactions_screen.dart';
 import '../api/api_client.dart';
 import '../haptics/haptics.dart';
@@ -106,6 +107,7 @@ class AppRoutes {
   static const wallet = '/wallet';
   static const walletTransactions = '/wallet/transactions';
   static const referrals = '/referrals';
+  static const wishlist = '/wishlist';
   static const notifications = '/notifications';
   static const settings = '/settings';
   static const disputes = '/disputes';
@@ -370,6 +372,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.referrals,
         builder: (context, state) => const ReferralsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.wishlist,
+        builder: (context, state) => const WishlistScreen(),
       ),
       GoRoute(
         path: AppRoutes.notifications,

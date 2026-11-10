@@ -28,6 +28,7 @@ import '../data/product_description.dart';
 import '../data/product_models.dart';
 import '../state/products_providers.dart';
 import '../../../core/utils/money.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// Matches the collage's "Product Detail" frame (Canvas Sneakers), extended
 /// with the richer gallery/variant behavior confirmed against the web app's
@@ -784,6 +785,13 @@ class _ProductHeroBar extends StatelessWidget {
         onTap: () => Navigator.of(context).maybePop(),
       ),
       actions: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs,
+            vertical: AppSpacing.sm,
+          ),
+          child: WishlistHeart(productId: product.id, onDark: true),
+        ),
         _HeroAction(icon: LucideIcons.share2, tooltip: 'Share', onTap: onShare),
         _HeroAction(
           icon: LucideIcons.flag,
@@ -1446,6 +1454,7 @@ class _RelatedSection extends StatelessWidget {
                   child: ProductCard(
                     imageUrl: images.isNotEmpty ? images.first.toString() : '',
                     name: p['name']?.toString() ?? '',
+                    favorite: WishlistHeart(productId: p['id'].toString()),
                     price: naira((p['price'] as num? ?? 0)),
                     rating: (p['avgRating'] as num?)?.toDouble(),
                     location: p['landmark']?.toString(),

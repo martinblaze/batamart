@@ -27,6 +27,11 @@ const ACTION_TEXT: Record<string, string> = {
   TICKET_EVENT_REJECTED: 'Rejected by BataMart',
   TICKET_EVENT_PAUSED: 'Paused by BataMart',
   TICKET_EVENT_RESUMED: 'Resumed by BataMart',
+  TICKET_EVENT_CHANGE_REQUESTED: 'New flyer/description sent for approval',
+  TICKET_EVENT_CHANGE_APPROVED: 'New flyer/description approved by BataMart',
+  TICKET_EVENT_CHANGE_REJECTED: 'New flyer/description not approved by BataMart',
+  TICKET_EVENT_CHANGE_CANCELLED: 'You cancelled the pending flyer/description change',
+  TICKET_EVENT_TICKETS_PURGED: 'Tickets removed after the event (payments and logs kept)',
 }
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -52,10 +57,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         },
       }),
       prisma.ticketTransfer.findMany({
-        where: { ticket: { eventId: event.id }, createdAt: lt },
+        where: { eventId: event.id, createdAt: lt },
         orderBy: { createdAt: 'desc' },
         take: PAGE,
-        select: { createdAt: true, fromUserId: true, fromEmail: true, toUserId: true, ticket: { select: { code: true } } },
+        select: { createdAt: true, fromUserId: true, fromEmail: true, toUserId: true, ticketCode: true },
       }),
       prisma.ticketScan.findMany({
         where: { eventId: event.id, createdAt: lt },
@@ -88,7 +93,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       ...transfers.map<Item>(t => ({
         at: t.createdAt,
         type: 'TRANSFER',
-        text: `Ticket ${t.ticket.code} sent from ${t.fromUserId ? uname.get(t.fromUserId) ?? 'a user' : t.fromEmail} to ${uname.get(t.toUserId) ?? 'a user'}`,
+        text: `Ticket ${t.ticketCode} sent from ${t.fromUserId ? uname.get(t.fromUserId) ?? 'a user' : t.fromEmail} to ${uname.get(t.toUserId) ?? 'a user'}`,
       })),
       ...scans.map<Item>(s => ({
         at: s.createdAt,

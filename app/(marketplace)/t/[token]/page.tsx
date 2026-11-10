@@ -21,9 +21,10 @@ export default function GuestTicketsPage() {
   const params = useParams<{ token: string }>()
   const token = params.token
   const [data, setData] = useState<GuestData | null>(null)
-  const [state, setState] = useState<'loading' | 'ready' | 'missing' | 'error'>('loading')
+  const [state, setState] = useState<'loading' | 'ready' | 'missing' | 'ended' | 'error'>('loading')
   const [paid, setPaid] = useState(false)
   const [selected, setSelected] = useState(0)
+  const [endedName, setEndedName] = useState('')
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
@@ -34,6 +35,7 @@ export default function GuestTicketsPage() {
         if (cancelled) return
         if (res.status === 404) { setState('missing'); return }
         const body = await res.json()
+        if (res.status === 410 || body?.code === 'EVENT_ENDED') { setEndedName(body?.event?.name ?? ''); setState('ended'); return }
         if (!res.ok) { setState('error'); return }
         setData(body)
         setState('ready')
@@ -50,9 +52,13 @@ export default function GuestTicketsPage() {
       <div className="flex min-h-screen items-center justify-center bg-surface px-4">
         <div className="max-w-sm border border-border bg-card p-8 text-center">
           <Ticket className="mx-auto h-9 w-9 text-ink-muted" strokeWidth={1.25} />
-          <p className="mt-3 font-semibold text-ink">{state === 'missing' ? 'This ticket link is not valid' : 'Could not load your tickets'}</p>
+          <p className="mt-3 font-semibold text-ink">
+            {state === 'ended' ? 'This event has ended' : state === 'missing' ? 'This ticket link is not valid' : 'Could not load your tickets'}
+          </p>
           <p className="mt-1 text-sm text-ink-secondary">
-            {state === 'missing' ? 'Check that you opened the full link from your email.' : 'Check your connection and try again.'}
+            {state === 'ended'
+              ? `${endedName ? endedName + ' is over. ' : ''}The tickets were removed after the event. Your payment record is kept.`
+              : state === 'missing' ? 'Check that you opened the full link from your email.' : 'Check your connection and try again.'}
           </p>
         </div>
       </div>

@@ -159,7 +159,7 @@ class _TicketRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return Pressable(
-      onTap: () => context.push(AppRoutes.ticketPath(ticket.id)),
+      onTap: ticket.isEnded ? null : () => context.push(AppRoutes.ticketPath(ticket.id)),
       child: Container(
         decoration: BoxDecoration(
           color: p.card,

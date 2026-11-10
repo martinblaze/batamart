@@ -85,6 +85,8 @@ Color ticketStatusColor(String status) {
       return AppColors.success;
     case 'CHECKED_IN':
       return AppColors.primary;
+    case 'ENDED':
+      return AppColors.warning;
     default:
       return AppColors.danger;
   }
@@ -99,6 +101,8 @@ String ticketStatusLabel(String status) {
     case 'VOID':
     case 'CANCELLED':
       return 'Void';
+    case 'ENDED':
+      return 'Event ended';
     default:
       return status.replaceAll('_', ' ');
   }

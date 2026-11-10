@@ -173,6 +173,55 @@ class _OverviewTab extends ConsumerWidget {
               style: TextStyle(color: AppColors.warning, fontSize: 13),
             ),
           ],
+          if (event.hasPendingChange) ...[
+            const SizedBox(height: AppSpacing.md),
+            PanelCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Awaiting approval: new ${[
+                      if (event.pendingFlyerUrl != null) 'flyer',
+                      if (event.pendingDescription != null) 'description',
+                    ].join(' and ')}',
+                    style: const TextStyle(color: AppColors.warning, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Your event stays live with the current version until BataMart approves this.',
+                    style: TextStyle(color: p.inkSecondary, fontSize: 13),
+                  ),
+                  if (event.pendingFlyerUrl != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadii.md),
+                      child: AppNetworkImage(event.pendingFlyerUrl!, height: 140, width: double.infinity),
+                    ),
+                  ],
+                  if (event.pendingDescription != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      event.pendingDescription!.isEmpty ? '(description removed)' : event.pendingDescription!,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
+                  SecondaryButton(
+                    label: 'Cancel this change',
+                    icon: LucideIcons.x,
+                    onPressed: () async {
+                      final ok = await runHostAction(
+                        context,
+                        () => ref.read(ticketHostRepositoryProvider).cancelPendingChange(event.id),
+                        success: 'The pending change was cancelled.',
+                      );
+                      if (ok) onChanged();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (event.status == 'PAUSED') ...[
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -300,7 +349,7 @@ class _EditDetailsForm extends ConsumerStatefulWidget {
 
 class _EditDetailsFormState extends ConsumerState<_EditDetailsForm> {
   late final _name = TextEditingController(text: widget.event.name);
-  late final _description = TextEditingController(text: widget.event.description);
+  late final _description = TextEditingController(text: widget.event.effectiveDescription);
   late final _venue = TextEditingController(text: widget.event.venue);
   late final _address = TextEditingController(text: widget.event.address);
   late DateTime? _startsAt = widget.event.startsAt;
@@ -320,7 +369,7 @@ class _EditDetailsFormState extends ConsumerState<_EditDetailsForm> {
     final e = widget.event;
     final fields = <String, dynamic>{};
     if (_name.text.trim() != e.name) fields['name'] = _name.text.trim();
-    if (_description.text.trim() != e.description) fields['description'] = _description.text.trim();
+    if (_description.text.trim() != e.effectiveDescription) fields['description'] = _description.text.trim();
     if (_venue.text.trim() != e.venue) fields['venue'] = _venue.text.trim();
     if (_address.text.trim() != e.address) fields['address'] = _address.text.trim();
     if (_startsAt != e.startsAt && _startsAt != null) {

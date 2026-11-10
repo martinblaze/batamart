@@ -53,10 +53,16 @@ class TicketsRepository {
 
   Future<List<MyTicket>> fetchMine() async {
     final r = await _api.get('/api/tickets/mine');
-    return (r['tickets'] as List? ?? const [])
+    final live = (r['tickets'] as List? ?? const [])
         .whereType<Map>()
         .map((e) => MyTicket.fromJson(e.cast<String, dynamic>()))
         .toList();
+    // Paid purchases whose tickets were deleted after the event: shown as "Event ended".
+    final ended = (r['endedPurchases'] as List? ?? const [])
+        .whereType<Map>()
+        .map((e) => MyTicket.fromEndedPurchase(e.cast<String, dynamic>()))
+        .toList();
+    return [...live, ...ended];
   }
 
   Future<TicketDetail> fetchTicket(String id) async {

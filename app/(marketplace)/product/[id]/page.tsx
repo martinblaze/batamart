@@ -18,6 +18,7 @@ import { useCartStore } from '@/lib/cart-store'
 import { useScrolledPast } from '@/components/marketplace/DetailChrome'
 import { decodeProductData, getCategoryDisplayInfo } from '@/lib/variants'
 import { useToast } from '@/components/ui/Toast'
+import WishlistHeart from '@/components/WishlistHeart'
 import RelatedProductCard from '@/components/marketplace/RelatedProductCard'
 
 // ─────────────────────────────────────────────────────────
@@ -1024,6 +1025,14 @@ export default function ProductDetailPage() {
           </p>
 
           <div className="flex items-center gap-1.5">
+            <WishlistHeart
+              productId={productId}
+              className={`flex items-center justify-center transition-colors ${
+                pastHero
+                  ? 'w-8 h-8 rounded-lg text-ink-secondary hover:bg-surface'
+                  : 'h-9 w-9 rounded-full bg-black/45 text-white backdrop-blur-sm sm:bg-transparent sm:text-ink-secondary sm:backdrop-blur-none'
+              }`}
+            />
             <button
               onClick={() => {
                 if (navigator.share) {

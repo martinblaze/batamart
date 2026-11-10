@@ -90,10 +90,19 @@ class PushNotificationService {
   }
 
   void _onForegroundMessage(RemoteMessage message) {
+    // A product image can arrive as a data field or as the platform's own
+    // notification image; normalise it to `imageUrl` for the foreground UI.
+    final data = Map<String, dynamic>.from(message.data);
+    final image =
+        data['imageUrl'] ??
+        data['image'] ??
+        message.notification?.android?.imageUrl ??
+        message.notification?.apple?.imageUrl;
+    if (image is String && image.isNotEmpty) data['imageUrl'] = image;
     onForegroundMessage?.call(
       message.notification?.title,
       message.notification?.body,
-      message.data,
+      data,
     );
   }
 

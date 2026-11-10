@@ -140,6 +140,7 @@ self.addEventListener('push', (event) => {
         body: parsed.body || parsed.message || data.body,
         url: parsed.url || data.url,
         tag: parsed.tag || data.tag,
+        image: typeof parsed.image === 'string' && /^https:\/\//i.test(parsed.image) ? parsed.image : undefined,
         requireInteraction: parsed.requireInteraction ?? data.requireInteraction,
       }
     } catch (err) {
@@ -156,6 +157,7 @@ self.addEventListener('push', (event) => {
     icon: '/icon-192x192.png',
     badge: '/badge-72x72.png',
     tag: data.tag,
+    ...(data.image ? { image: data.image } : {}),
     requireInteraction: data.requireInteraction,
     renotify: true, // Always show even if same tag
     data: { url: data.url },
@@ -188,7 +190,12 @@ self.addEventListener('notificationclick', (event) => {
   if (event.action === 'dismiss') return
 
   const targetUrl = event.notification.data?.url || '/'
-  const fullUrl = new URL(targetUrl, self.location.origin).href
+  // Only ever open pages on our own origin (no javascript:, no other sites).
+  let fullUrl = self.location.origin + '/'
+  try {
+    const u = new URL(targetUrl, self.location.origin)
+    if (u.origin === self.location.origin) fullUrl = u.href
+  } catch {}
 
   event.waitUntil(
     clients

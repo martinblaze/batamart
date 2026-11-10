@@ -17,9 +17,12 @@ import '../../../core/widgets/states/loading_skeleton.dart';
 import '../data/product_models.dart';
 import '../state/recently_viewed.dart';
 import '../state/products_providers.dart';
+import '../../promos/data/promos_repository.dart';
+import '../../promos/presentation/live_strips.dart';
 import 'widgets/home_sections.dart';
 import 'hot_deals_screen.dart';
 import '../../../core/utils/money.dart';
+import '../../wishlist/presentation/wishlist_heart.dart';
 
 /// A representative subset of the full 12-category tree for the compact
 /// home-page icon row (matches the mockup's 5-icon layout) — the full list
@@ -109,11 +112,18 @@ class MarketplaceHomeScreen extends ConsumerWidget {
     final feedAsync = ref.watch(productFeedProvider);
 
     return RefreshIndicator(
-      onRefresh: () => ref.refresh(productFeedProvider.future),
+      onRefresh: () async {
+        ref.invalidate(promosHomeProvider);
+        await Future.wait([
+          ref.refresh(productFeedProvider.future),
+          ref.read(promosHomeProvider.future),
+        ]);
+      },
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           _SearchBar(onTap: () => context.push(AppRoutes.search)),
+          const LiveTopStrip(),
           const SizedBox(height: AppSpacing.lg),
 
           // What the platform actually promises, before any merchandising.
@@ -151,10 +161,12 @@ class MarketplaceHomeScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.section),
           const _CampaignBanner().enter(),
           const SizedBox(height: AppSpacing.section),
+          const LiveRails(),
           const FlashPicks(),
           const SizedBox(height: AppSpacing.section),
           const _TrustStrip(),
           const SizedBox(height: AppSpacing.section),
+          const LiveStatsLine(),
           feedAsync.when(
             data: (feed) => Column(
               children: [
@@ -443,6 +455,7 @@ class _RecentlyViewedRow extends ConsumerWidget {
                 child: ProductCard(
                   imageUrl: item.image,
                   name: item.name,
+                  favorite: WishlistHeart(productId: item.id),
                   price: naira(item.price),
                   location: item.landmark,
                   onTap: () => context.push(AppRoutes.productDetailPath(item.id)),
@@ -633,6 +646,7 @@ class _ProductRow extends StatelessWidget {
                 child: ProductCard(
                   imageUrl: product.thumbnail,
                   name: product.name,
+                  favorite: WishlistHeart(productId: product.id),
                   price: naira(product.price),
                   isHot: product.isHot,
                   percentOff: product.hasDiscount

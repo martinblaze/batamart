@@ -49,7 +49,7 @@ function writeCache(id: string, value: { ticket: TicketData; offset: number } | 
 
 export default function LiveTicket({ ticketId, token, index, total }: { ticketId: string; token?: string; index?: number; total?: number }) {
   const [ticket, setTicket] = useState<TicketData | null>(null)
-  const [state, setState] = useState<'loading' | 'ready' | 'gone' | 'error'>('loading')
+  const [state, setState] = useState<'loading' | 'ready' | 'gone' | 'ended' | 'error'>('loading')
   const [offline, setOffline] = useState(false)
   const [qrText, setQrText] = useState('')
   const [remaining, setRemaining] = useState(1)
@@ -67,6 +67,7 @@ export default function LiveTicket({ ticketId, token, index, total }: { ticketId
       if (auth) headers.Authorization = `Bearer ${auth}`
       const url = `/api/tickets/ticket/${encodeURIComponent(ticketId)}${token ? `?token=${encodeURIComponent(token)}` : ''}`
       const res = await fetch(url, { headers, cache: 'no-store' })
+      if (res.status === 410) { writeCache(ticketId, null); setState('ended'); return }
       if (res.status === 404) { writeCache(ticketId, null); setState('gone'); return }
       if (!res.ok) throw new Error(String(res.status))
       const data = await res.json()
@@ -136,13 +137,22 @@ export default function LiveTicket({ ticketId, token, index, total }: { ticketId
   if (state === 'loading') {
     return <div className="flex items-center justify-center border border-border bg-card py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
   }
+  if (state === 'ended') {
+    return (
+      <div className="border border-border bg-card p-6 text-center">
+        <Ban className="mx-auto h-8 w-8 text-ink-muted" strokeWidth={1.5} />
+        <p className="mt-3 font-semibold text-ink">This event has ended</p>
+        <p className="mt-1 text-sm text-ink-secondary">The tickets were removed after the event. Your payment record is kept.</p>
+      </div>
+    )
+  }
   if (state === 'gone') {
     if (sentTo) return <SentNotice toUsername={sentTo} />
     return (
       <div className="border border-border bg-card p-6 text-center">
         <Ban className="mx-auto h-8 w-8 text-ink-muted" strokeWidth={1.5} />
         <p className="mt-3 font-semibold text-ink">This ticket is no longer here</p>
-        <p className="mt-1 text-sm text-ink-secondary">It may have been sent to someone else, or the link is not valid.</p>
+        <p className="mt-1 text-sm text-ink-secondary">It may have been sent to someone else, the event may have ended (tickets are removed afterwards), or the link is not valid.</p>
       </div>
     )
   }

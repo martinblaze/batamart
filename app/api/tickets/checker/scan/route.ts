@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCheckerFromRequest } from '@/lib/tickets/checker-session'
 import { parseQrText, verifyQr } from '@/lib/tickets/qr'
+import { eventEndMs } from '@/lib/tickets/buyer'
+import { TICKET_PURGE_AFTER_HOURS } from '@/lib/tickets/config'
 import { checkRateLimitDistributed, incrementRateLimit } from '@/lib/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
@@ -46,15 +48,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Past the purge point the tickets are being deleted; do not race the purge.
+    if (Date.now() > eventEndMs(ctx.event) + TICKET_PURGE_AFTER_HOURS * 3_600_000) {
+      return NextResponse.json({ error: 'This event has ended.', code: 'EVENT_ENDED' }, { status: 403 })
+    }
+
     let body: any = null
     try { body = await request.json() } catch { /* treated as garbage below */ }
     const qr = typeof body?.qr === 'string' ? body.qr.slice(0, 200) : ''
 
-    const log = (result: ScanResult, extra: { ticketId?: string | null; holderName?: string | null; tierName?: string | null } = {}) =>
+    const log = (result: ScanResult, extra: { ticketId?: string | null; ticketCode?: string | null; holderName?: string | null; tierName?: string | null } = {}) =>
       prisma.ticketScan.create({
         data: {
           eventId, checkerId, result,
           ticketId: extra.ticketId ?? null,
+          ticketCode: extra.ticketCode ?? null,
           holderName: extra.holderName ?? null,
           tierName: extra.tierName ?? null,
         },
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     const holder = ticket.owner?.username?.trim() || maskEmailLocal(ticket.ownerEmail)
     const tierName = ticket.tier.name
-    const base = { ticketId: ticket.id, holderName: holder, tierName }
+    const base = { ticketId: ticket.id, ticketCode: ticket.code, holderName: holder, tierName }
 
     const check = await verifyQr(ticket.secret, parsed, Date.now())
     if (check !== 'OK') {

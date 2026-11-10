@@ -6,9 +6,17 @@ import { Loader2 } from 'lucide-react'
 import { Shell, PageHeader } from '@/components/ui/Shell'
 import { authFetch } from '@/lib/auth-client'
 
-type Prefs = { pushEnabled: boolean; emailEnabled: boolean; reminders: boolean; deals: boolean; marketing: boolean }
+type Frequency = 'NORMAL' | 'FEWER' | 'ORDERS_ONLY'
+type Prefs = { pushEnabled: boolean; emailEnabled: boolean; reminders: boolean; deals: boolean; marketing: boolean; notifyFrequency: Frequency }
+type ToggleKey = Exclude<keyof Prefs, 'notifyFrequency'>
 
-const ROWS: { key: keyof Prefs; title: string; hint: string }[] = [
+const FREQUENCY_OPTIONS: { value: Frequency; title: string; hint: string }[] = [
+  { value: 'NORMAL', title: 'Normal', hint: 'Up to 6 a day: picks for you, deals and reminders.' },
+  { value: 'FEWER', title: 'Fewer', hint: 'Up to 2 a day.' },
+  { value: 'ORDERS_ONLY', title: 'Only orders', hint: 'Order, payment and delivery updates only. No deals or offers.' },
+]
+
+const ROWS: { key: ToggleKey; title: string; hint: string }[] = [
   { key: 'pushEnabled', title: 'Push notifications', hint: 'Alerts on your phone and browser.' },
   { key: 'emailEnabled', title: 'Emails', hint: 'Summaries and updates sent to your inbox.' },
   { key: 'reminders', title: 'Reminders', hint: 'Delivery day, handover and review reminders.' },
@@ -33,7 +41,27 @@ export default function NotificationSettingsPage() {
       .catch(() => setError('Could not load your settings.'))
   }, [router])
 
-  const toggle = async (key: keyof Prefs) => {
+  const setFrequency = async (value: Frequency) => {
+    if (!prefs || prefs.notifyFrequency === value) return
+    const before = prefs
+    setPrefs({ ...prefs, notifyFrequency: value })
+    setSaving('notifyFrequency')
+    setError('')
+    try {
+      const res = await authFetch('/api/notifications/preferences', {
+        method: 'PUT',
+        body: JSON.stringify({ notifyFrequency: value }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setPrefs(before)
+      setError('Could not save that change. Try again.')
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  const toggle = async (key: ToggleKey) => {
     if (!prefs) return
     const next = { ...prefs, [key]: !prefs[key] }
     setPrefs(next)
@@ -65,7 +93,33 @@ export default function NotificationSettingsPage() {
         {!prefs ? (
           <div className="flex justify-center py-16"><Loader2 className="h-5 w-5 animate-spin text-ink-muted" /></div>
         ) : (
-          <div className="ui-panel mt-8 divide-y divide-border p-0">
+          <>
+          <div className="ui-panel mt-8 p-5">
+            <p className="text-sm font-medium text-ink">How often</p>
+            <p className="mt-0.5 text-xs text-ink-secondary">How many deal and pick-for-you alerts you get each day.</p>
+            <div className="mt-3 grid gap-2" role="radiogroup" aria-label="How often">
+              {FREQUENCY_OPTIONS.map(opt => {
+                const on = prefs.notifyFrequency === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    role="radio"
+                    aria-checked={on}
+                    disabled={saving === 'notifyFrequency'}
+                    onClick={() => setFrequency(opt.value)}
+                    className={`flex items-start gap-3 border px-4 py-3 text-left ${on ? 'border-ink bg-card' : 'border-border'}`}
+                  >
+                    <span className={`mt-1 inline-block h-3 w-3 flex-shrink-0 rounded-full border ${on ? 'border-ink bg-ink' : 'border-border'}`} />
+                    <span>
+                      <span className="block text-sm font-medium text-ink">{opt.title}</span>
+                      <span className="mt-0.5 block text-xs text-ink-secondary">{opt.hint}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div className="ui-panel mt-4 divide-y divide-border p-0">
             {ROWS.map(row => (
               <button
                 key={row.key}
@@ -86,6 +140,7 @@ export default function NotificationSettingsPage() {
               </button>
             ))}
           </div>
+          </>
         )}
       </Shell>
     </div>

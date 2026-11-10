@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     const event = await prisma.ticketEvent.findUnique({
       where: { id: params.id },
-      select: { id: true, name: true, status: true, startsAt: true },
+      select: { id: true, name: true, status: true, startsAt: true, endsAt: true },
     })
     if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
@@ -57,7 +57,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         commissionPaid: money._sum.commission ?? 0,
         hostEarnings: money._sum.hostAmount ?? 0,
       },
-      tickets: { valid: byStatus('VALID'), checkedIn: byStatus('CHECKED_IN'), void: byStatus('VOID') },
+      // Ticket rows are deleted after the event: the scan log (kept) still says how many got in.
+      tickets: {
+        valid: byStatus('VALID'),
+        checkedIn: Math.max(byStatus('CHECKED_IN'), scans.OK ?? 0),
+        void: byStatus('VOID'),
+        purged: ticketGroups.length === 0 && (money._sum.quantity ?? 0) > 0,
+      },
       scans,
       activeCheckers: checkerCount,
       tiers,

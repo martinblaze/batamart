@@ -28,6 +28,8 @@ interface EmailPayload {
   text?: string
   /** 'otp' for verification codes, otherwise 'general'. */
   kind?: 'otp' | 'general'
+  /** Extra headers, e.g. List-Unsubscribe. */
+  headers?: Record<string, string>
 }
 
 type Provider = 'resend' | 'smtp' | 'brevo'
@@ -59,6 +61,18 @@ export function configuredProviders(kind: 'otp' | 'general' = 'general'): Provid
   return order.filter(p => isConfigured[p]())
 }
 
+/** Drops CR/LF and other control characters so a header value can never start a new header. */
+function cleanHeaders(h?: Record<string, string>): Record<string, string> | undefined {
+  if (!h) return undefined
+  const out: Record<string, string> = {}
+  for (const [k, v] of Object.entries(h)) {
+    const name = k.replace(/[^A-Za-z0-9-]/g, '')
+    const value = String(v).split('').filter(ch => ch.charCodeAt(0) > 31 && ch.charCodeAt(0) !== 127).join('').trim()
+    if (name && value) out[name] = value
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
 async function viaResend(p: EmailPayload): Promise<boolean> {
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -72,6 +86,7 @@ async function viaResend(p: EmailPayload): Promise<boolean> {
       subject: p.subject,
       html: p.html,
       ...(p.text ? { text: p.text } : {}),
+      ...(p.headers ? { headers: p.headers } : {}),
     }),
   })
   if (!res.ok) {
@@ -104,6 +119,7 @@ async function viaSmtp(p: EmailPayload): Promise<boolean> {
     subject: p.subject,
     html: p.html,
     ...(p.text ? { text: p.text } : {}),
+    ...(p.headers ? { headers: p.headers } : {}),
   })
   return true
 }
@@ -122,6 +138,7 @@ async function viaBrevo(p: EmailPayload): Promise<boolean> {
       subject: p.subject,
       htmlContent: p.html,
       ...(p.text ? { textContent: p.text } : {}),
+      ...(p.headers ? { headers: p.headers } : {}),
     }),
   })
   if (!res.ok) {
@@ -131,7 +148,8 @@ async function viaBrevo(p: EmailPayload): Promise<boolean> {
   return true
 }
 
-export async function sendEmail(payload: EmailPayload): Promise<boolean> {
+export async function sendEmail(input: EmailPayload): Promise<boolean> {
+  const payload: EmailPayload = { ...input, headers: cleanHeaders(input.headers) }
   const kind = payload.kind ?? 'general'
   const providers = configuredProviders(kind)
 

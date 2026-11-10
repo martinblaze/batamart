@@ -33,6 +33,9 @@ export const SALES_GRACE_HOURS_AFTER_START = 3
 export const salesCloseAt = (startsAt: Date, endsAt?: Date | null): number =>
   endsAt ? Math.max(endsAt.getTime(), startsAt.getTime()) : startsAt.getTime() + SALES_GRACE_HOURS_AFTER_START * 3_600_000
 
+/** Ticket rows are deleted this long after an event is over (purchases, scans and transfers are kept). */
+export const TICKET_PURGE_AFTER_HOURS = 24
+
 export const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://batamart.com').replace(/\/$/, '')
 
 /** The wallet reference prefix used for every ticket money movement. */
