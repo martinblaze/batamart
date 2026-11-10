@@ -5,6 +5,7 @@
 // It renders nothing until that data arrives, so a slow API never blocks the page.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import {
@@ -105,8 +106,8 @@ export default function HomePopups() {
   const s = slides[Math.min(index, slides.length - 1)]
   const autoplay = !reduced && !paused && slides.length > 1
 
-  return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center" role="presentation">
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-end justify-center sm:items-center" role="presentation">
       <div className="absolute inset-0 bg-ink/50 animate-[fadeIn_0.25s_ease-out]" onClick={() => close(true)} aria-hidden />
       <style>{`
         @keyframes promo-bar { from { transform: scaleX(0) } to { transform: scaleX(1) } }
@@ -163,8 +164,8 @@ export default function HomePopups() {
             {s.badge && <span className="absolute left-0 top-3 bg-primary px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-white">{s.badge}</span>}
             {slides.length > 1 && (
               <>
-                <button type="button" onClick={() => go(-1)} aria-label="Previous offer" className="absolute left-1 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center bg-card/90 text-ink hover:bg-card sm:flex"><ChevronLeft className="h-5 w-5" /></button>
-                <button type="button" onClick={() => go(1)} aria-label="Next offer" className="absolute right-1 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center bg-card/90 text-ink hover:bg-card sm:flex"><ChevronRight className="h-5 w-5" /></button>
+                <button type="button" onClick={() => go(-1)} aria-label="Previous offer" className="absolute left-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-card/90 text-ink hover:bg-card"><ChevronLeft className="h-5 w-5" /></button>
+                <button type="button" onClick={() => go(1)} aria-label="Next offer" className="absolute right-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center bg-card/90 text-ink hover:bg-card"><ChevronRight className="h-5 w-5" /></button>
               </>
             )}
           </div>
@@ -186,5 +187,5 @@ export default function HomePopups() {
         </div>
       </div>
     </div>
-  )
+    , document.body)
 }
