@@ -140,7 +140,7 @@ export default function CheckoutPage() {
       return
     }
     if (!user?.hostelName) {
-      router.push('/profile/setup')
+      router.push('/myprofile?setup=address&redirect=/checkout')
       return
     }
 
@@ -205,7 +205,7 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0 || !user) return (
     <div className="min-h-screen flex items-center justify-center bg-[#f7f8fa]">
-      <div className="animate-spin rounded-full h-10 w-10 border-4 border-BATAMART-primary border-t-transparent" />
+      <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
     </div>
   )
 
@@ -229,7 +229,7 @@ export default function CheckoutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/cart')}
-            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-BATAMART-primary transition-colors group"
+            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-primary transition-colors group"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Back to Cart
@@ -254,12 +254,12 @@ export default function CheckoutPage() {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-BATAMART-primary/10 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-BATAMART-primary" />
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary" />
                   </div>
                   <h2 className="font-black text-gray-900">Delivery Address</h2>
                 </div>
-                <Link href="/profile/setup" className="text-xs font-bold text-BATAMART-primary hover:text-BATAMART-dark transition-colors flex items-center gap-1">
+                <Link href="/myprofile?setup=address&redirect=/checkout" className="text-xs font-bold text-primary hover:text-primary transition-colors flex items-center gap-1">
                   Edit <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -323,7 +323,7 @@ export default function CheckoutPage() {
                           )}
 
                           <div className="flex items-center gap-3 mt-2">
-                            <span className="text-BATAMART-primary font-black text-base">{formatPrice(item.price * item.quantity)}</span>
+                            <span className="text-primary font-black text-base">{formatPrice(item.price * item.quantity)}</span>
                             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-semibold">
                               Qty: {item.quantity}
                             </span>
@@ -472,7 +472,7 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between mt-4 mb-5">
                 <span className="font-black text-gray-900">Total</span>
-                <span className="font-black text-BATAMART-primary text-xl">{formatPrice(totalAmount)}</span>
+                <span className="font-black text-primary text-xl">{formatPrice(totalAmount)}</span>
               </div>
 
               {hasNotes && (
@@ -486,7 +486,7 @@ export default function CheckoutPage() {
                   type="checkbox"
                   checked={deliverySuitabilityConfirmed}
                   onChange={(e) => setDeliverySuitabilityConfirmed(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-BATAMART-primary focus:ring-BATAMART-primary"
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <span className="text-xs text-red-600 font-semibold leading-relaxed">
                   I confirm these products can be delivered by riders. If a rider declines an oversized item, product payment is refunded to wallet but delivery fee is not refunded.
@@ -496,7 +496,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !paymentsStatusLoaded || !paymentsEnabled || !deliverySuitabilityConfirmed}
-                className="w-full flex items-center justify-center gap-2.5 bg-BATAMART-primary hover:bg-BATAMART-dark disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-xl font-black text-base shadow-lg shadow-BATAMART-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2.5 pay-cta disabled:opacity-50 disabled:cursor-not-allowed py-4 rounded-xl font-black text-base shadow-lg shadow-primary/25 hover:shadow-xl transition-all active:scale-[0.98]"
               >
                 {loading ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
