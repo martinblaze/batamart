@@ -36,6 +36,16 @@ const nextConfig = {
           { key: 'Content-Security-Policy', value: "default-src 'self'; img-src 'self' data: https://res.cloudinary.com https://lh3.googleusercontent.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.flutterwave.com https://api.paystack.co https://api.cloudinary.com; frame-ancestors *; base-uri 'self'; form-action 'self'" },
         ],
       },
+      {
+        // The Android app. Explicit type + attachment so Chrome downloads it
+        // (the global nosniff header above would otherwise leave the type to chance).
+        source: '/downloads/batamart.apk',
+        headers: [
+          { key: 'Content-Type', value: 'application/vnd.android.package-archive' },
+          { key: 'Content-Disposition', value: 'attachment; filename="batamart.apk"' },
+          { key: 'Cache-Control', value: 'public, max-age=300, must-revalidate' },
+        ],
+      },
     ]
   },
 };

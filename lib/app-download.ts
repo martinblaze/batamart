@@ -26,27 +26,23 @@
  *
  * Where the native Android app is distributed.
  *
- * The app is not on Google Play, so this points at the APK attached to the
- * latest GitHub release. `/releases/latest/download/<asset>` always resolves to
- * the newest release, so publishing a new one is enough — this URL never needs
- * changing. The asset must be named exactly `batamart.apk`.
+ * The app is not on Google Play, so the APK is served from this site itself:
+ * `public/downloads/batamart.apk` (see the `/downloads/batamart.apk` headers in
+ * next.config.js, which force a file download with the right MIME type).
  *
- * It deliberately points at `batamart-releases`, NOT the source repo. The
- * source repo is private, and a private repo's release assets are not publicly
- * downloadable — they answer 404 to anyone without repo access, so every user
- * tapping Download would have got nothing. A separate public repo holds the
- * APK and only the APK; the source stays private.
+ * It used to point at a GitHub release in `martinblaze/batamart-releases`. That
+ * repo was made private, which turned every public download link into a 404 and
+ * left Android users on a GitHub error page. Hosting the file here removes the
+ * dependency on GitHub entirely.
  *
- * Verified: an unauthenticated ranged GET from an Android Chrome user agent
- * returns 206 with real bytes, redirected to GitHub's release-asset CDN. None
- * of this traffic touches the site's own hosting.
+ * To ship a new build: replace `public/downloads/batamart.apk` (same name) and
+ * deploy. Keep the file under the host's static-file size limit.
  *
  * Consequences of sideloading rather than Play: Chrome warns the file "can harm
  * your device", and the user has to allow installs from their browser once.
  * `InstallPrompt` explains both after the download starts.
  */
-export const ANDROID_APK_URL =
-  'https://github.com/martinblaze/batamart-releases/releases/latest/download/batamart.apk'
+export const ANDROID_APK_URL = '/downloads/batamart.apk'
 
 /**
  * Android gets the real app; every other platform keeps the PWA prompt, since

@@ -50,9 +50,9 @@ export default function InstallPrompt() {
 
   const install = async () => {
     if (isAndroid) {
-      // Navigating rather than using <a download>: the asset is cross-origin,
-      // where the download attribute is ignored. GitHub serves the release
-      // asset as an attachment, so this downloads instead of navigating away.
+      // The APK is served from this site with Content-Disposition: attachment
+      // (next.config.js), so navigating to it downloads the file and the user
+      // stays on the page.
       setDownloadStarted(true)
       window.location.href = ANDROID_APK_URL
       return
